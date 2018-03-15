@@ -138,6 +138,8 @@ define('TINYIB_MAXKBDESC', '2 MB');
 define('TINYIB_THUMBNAIL', 'gd');
 // Allow the creation of new threads without uploading a file
 define('TINYIB_NOFILEOK', false);
+// Allow duplicate files
+define('TINYIB_FILE_ALLOW_DUPLICATE', false);
 // Thumbnail size - new thread
 define('TINYIB_MAXWOP', 230); // Width
 define('TINYIB_MAXHOP', 230); // Height

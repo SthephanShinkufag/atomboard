@@ -278,7 +278,9 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			$post['file_size'] = $_FILES['file']['size'];
 			$post['file_size_formatted'] = convertBytes($post['file_size']);
 
-			checkDuplicateFile($post['file_hex']);
+			if (TINYIB_FILE_ALLOW_DUPLICATE === false) {
+				checkDuplicateFile($post['file_hex']);
+			}
 
 			$fileMimeSplit = explode(' ', trim(mime_content_type($_FILES['file']['tmp_name'])));
 			if (count($fileMimeSplit) > 0) {
