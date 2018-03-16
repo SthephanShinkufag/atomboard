@@ -466,12 +466,9 @@ function createThumbnail($file_location, $thumb_location, $new_w, $new_h) {
 	} else { // imagemagick
 		$discard = '';
 		$exit_status = 1;
-		exec(
-			"convert $file_location -auto-orient -thumbnail '" . $new_w . "x" . $new_h .
-			"' -coalesce -layers OptimizeFrame -depth 4 -type palettealpha $thumb_location",
-			$discard,
-			$exit_status
-		);
+		exec("convert $file_location -auto-orient -thumbnail '" . $new_w . "x" . $new_h .
+			"' -coalesce -layers OptimizeFrame -depth 8 $thumb_location", $discard, $exit_status);
+
 		if ($exit_status != 0) {
 			return false;
 		}
