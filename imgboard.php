@@ -808,7 +808,6 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 }
 
 if ($redirect) {
-	echo '--&gt; --&gt; --&gt;<meta http-equiv="refresh" content="' . (isset($slowRedirect) ? '3' : '0') .
+	echo '<meta http-equiv="refresh" content="' . (isset($slowRedirect) ? '3' : '0') .
 		';url=' . (is_string($redirect) ? $redirect : TINYIB_INDEX) . '">';
-
 }
