@@ -1,27 +1,44 @@
-# TinyIB [![Donate](http://img.shields.io/liberapay/receives/rocketnine.space.svg?logo=liberapay)](https://liberapay.com/rocketnine.space)
-
-A lightweight and efficient [image board](https://en.wikipedia.org/wiki/Imageboard).  See [TinyIB Installations](https://gitlab.com/tslocum/tinyib/wikis/Home) for demos.
+TinyIB &mdash; a lightweight and efficient [imageboard](https://en.wikipedia.org/wiki/Imageboard) engine
+====
+See the [TinyIB installation](https://dscript.me/de/) for demo.
 
 Features
 ------------
 
-**Got database? Get speed.**  Use [MySQL](https://mysql.com), [PostgreSQL](https://www.postgresql.org) or [SQLite](https://sqlite.org) for an efficient set-up able to handle high amounts of traffic.
+**Got database? Get speed.**
+Use [MySQL](https://mysql.com), [PostgreSQL](https://www.postgresql.org) or [SQLite](https://sqlite.org) for an efficient set-up able to handle high amounts of traffic.
 
-**No database?  No problem.**  Store posts as text files for a portable set-up capable of running on virtually any PHP host.
+**No database?  No problem.**
+Store posts as text files for a portable set-up capable of running on virtually any PHP host.
 
-**Not looking for an image board script?**  TinyIB is able to allow new threads without requiring an image, or even disallow images entirely.  See the [Text Board Mode](https://gitlab.com/tslocum/tinyib/wikis/Text-Board-Mode) wiki page for instructions.
+**Not looking for an image board script?**
+TinyIB settings is able to allow new threads without requiring an image, or even disallow sending of images entirely.
 
+[Original TinyIB](https://gitlab.com/tslocum/tinyib) features:
  - GIF, JPG, PNG, SWF and WebM upload.
  - YouTube, Vimeo and SoundCloud embedding.
- - CAPTCHA  (A simple implementation is included, reCAPTCHA is also supported)
+ - CAPTCHA (A simple implementation is included, reCAPTCHA is also supported)
  - Reference links >>###
  - Delete post via password.
  - Management panel:
    - Administrators and moderators use separate passwords.
-     - Moderators are only able to sticky threads, delete posts, and approve posts when necessary.  (See ``TINYIB_REQMOD``)
+   - Moderators are only able to sticky threads, delete posts, and approve posts when necessary.  (See ``TINYIB_REQMOD``)
    - Ban offensive/abusive posters across all boards.
    - Post using raw HTML.
-   - Upgrade automatically when installed via git.  (Tested on Linux only)
+   - Upgrade automatically when installed via git. (Tested on Linux only)
+ 
+This fork features:
+ - Markdown text formatting: bbcode (multiline text and nested tags), wakabamark.
+ - Markup buttons under the text area in postform.
+ - "Quote text" button that inserts selected text into the textarea with `>` symbols.
+ - Named links formatting, like on github: `[TinyIB](https://github.com/SthephanShinkufag/TinyIB/`
+ - Upload, view and expand WEBM **and MP4** without instaled `mediainfo` and `ffmpegthumbnailer`. Videos are injected right in page without generated thumbnails.
+ - Convenient css support for mobile devices.
+ - Custom default post names.
+ - Truncating of long posts by size in bytes and by number of lines.
+ - Admin: posting with red name if admin is logged in.
+ - "Sage" indicator in posts.
+ - Post likes system (initial implementation, still in progress).
 
 Installing
 ------------
@@ -33,7 +50,7 @@ Installing
       - If you plan on disabling image uploads to use TinyIB as a text board only, this library is not required.
  2. CD to the directory you wish to install TinyIB.
  3. Run the command:
-    - `git clone https://gitlab.com/tslocum/tinyib.git ./`
+    - `git clone https://github.com/SthephanShinkufag/TinyIB.git ./`
  4. Copy **settings.default.php** to **settings.php**
  5. Configure **settings.php**
     - When setting ``TINYIB_DBMODE`` to ``flatfile``, note that all post and ban data are exposed as the database is composed of standard text files.  Access to ./inc/flatfile/ should be denied.
@@ -77,16 +94,16 @@ Updating
  1. Obtain the latest release.
     - If you installed via Git, run the following command in TinyIB's directory:
       - `git pull`
-    - Otherwise, [download](https://gitlab.com/tslocum/tinyib/-/archive/master/tinyib-master.zip) and extract a zipped archive.
+    - Otherwise, [download](https://github.com/SthephanShinkufag/TinyIB/archive/master.zip) and extract a zipped archive.
  2. Note which files were modified.
     - If **settings.default.php** was updated, migrate the changes to **settings.php**
       - Take care to not change the value of **TINYIB_TRIPSEED**, as it would result in different secure tripcodes.
     - If other files were updated, and you have made changes yourself:
-      - Visit [GitLab](https://gitlab.com/tslocum/tinyib) and review the changes made in the update.
+      - Visit [GitHub](https://github.com/SthephanShinkufag/TinyIB) and review the changes made in the update.
       - Ensure the update does not interfere with your changes.
- 3. Visit [GitLab](https://gitlab.com/tslocum/tinyib/wikis/NewSQLStructure) and check for new SQL queries which may be required to complete the update.
+ 3. Visit [wiki/NewSQLStructure](https://github.com/tslocum/TinyIB/wiki/NewSQLStructure) and check for new SQL queries which may be required to complete the update.
 
-**Database structure was last modified on *15th Sep 2015*.**  Are you unable to create new posts?  Run the SQL on [this page](https://gitlab.com/tslocum/tinyib/wikis/NewSQLStructure) to finish the upgrade process.
+**Database structure was last modified on *15th Sep 2015*.**  Are you unable to create new posts?  Run the SQL on [wiki/NewSQLStructure](https://github.com/tslocum/TinyIB/wiki/NewSQLStructure) to finish the upgrade process.
 
 Migrating
 ------------
@@ -114,13 +131,13 @@ Support
 ------------
 
  1. Ensure you are running the latest version of TinyIB.
- 2. Review the [open issues](https://gitlab.com/tslocum/tinyib/issues).
- 3. Open a [new issue](https://gitlab.com/tslocum/tinyib/issues/new).
+ 2. Review the [open issues](https://github.com/SthephanShinkufag/TinyIB/issues).
+ 3. Open a [new issue](https://github.com/SthephanShinkufag/TinyIB/issues/new).
 
 Contributing
 ------------
 
- 1. Read the [GitLab Forking Workflow](https://docs.gitlab.com/ce/workflow/forking_workflow.html).
  2. Fork TinyIB.
  3. Commit code changes to your forked repository.
  4. Submit a pull request describing your modifications.
+
