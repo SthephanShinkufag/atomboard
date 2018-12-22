@@ -76,8 +76,16 @@ class SimpleCaptcha {
 	 * - maxSize: max font size
 	 */
 	public $fonts = array(
-		'Roboto-Regular' => array('spacing' => 0, 'minSize' => 27, 'maxSize' => 27, 'font' => 'roboto_regular.ttf'),
-		'Roboto-Bold' => array('spacing' => 0, 'minSize' => 27, 'maxSize' => 27, 'font' => 'roboto_bold.ttf')
+		'Roboto-Regular' => array(
+			'spacing' => 0,
+			'minSize' => 27,
+			'maxSize' => 27,
+			'font' => 'roboto_regular.ttf'),
+		'Roboto-Bold' => array(
+			'spacing' => 0,
+			'minSize' => 27,
+			'maxSize' => 27,
+			'font' => 'roboto_bold.ttf')
 	);
 
 	/** Wave configuration in X and Y axes */
@@ -165,7 +173,13 @@ class SimpleCaptcha {
 			$this->backgroundColor[1],
 			$this->backgroundColor[2]
 		);
-		imagefilledrectangle($this->im, 0, 0, $this->width * $this->scale, $this->height * $this->scale, $this->GdBgColor);
+		imagefilledrectangle(
+			$this->im,
+			0,
+			0,
+			$this->width * $this->scale,
+			$this->height * $this->scale,
+			$this->GdBgColor);
 
 		// Foreground color
 		$color = $this->colors[mt_rand(0, sizeof($this->colors) - 1)];

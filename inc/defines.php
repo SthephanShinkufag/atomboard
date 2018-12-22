@@ -74,7 +74,8 @@ if (!isset($tinyib_uploads)) {
 	}
 	if (defined('TINYIB_WEBM') && TINYIB_WEBM) {
 		$tinyib_uploads['video/webm'] = array('webm');
-		$tinyib_uploads['adio/webm'] = array('webm');
+		$tinyib_uploads['audio/webm'] = array('webm');
+		$tinyib_uploads['video/mp4'] = array('mp4');
 	}
 }
 if (!isset($tinyib_embeds)) {

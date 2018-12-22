@@ -28,6 +28,7 @@ define('POST_THUMB', 19);
 define('POST_THUMB_WIDTH', 20);
 define('POST_THUMB_HEIGHT', 21);
 define('POST_STICKIED', 22);
+define('POST_LIKES', 23);
 
 # Ban Structure
 define('BANS_FILE', '.bans');
@@ -47,7 +48,12 @@ function uniquePosts() {
 }
 
 function postByID($id) {
-	return convertPostsToSQLStyle($GLOBALS['db']->selectWhere(POSTS_FILE, new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON), 1), true);
+	return convertPostsToSQLStyle(
+		$GLOBALS['db']->selectWhere(
+			POSTS_FILE,
+			new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON),
+			1
+		), true);
 }
 
 function threadExistsByID($id) {
@@ -83,12 +89,16 @@ function insertPost($newpost) {
 	$post[POST_THUMB_WIDTH]         = $newpost['thumb_width'];
 	$post[POST_THUMB_HEIGHT]        = $newpost['thumb_height'];
 	$post[POST_STICKIED]            = $newpost['stickied'];
+	$post[POST_LIKES]               = $newpost['likes'];
 
 	return $GLOBALS['db']->insertWithAutoId(POSTS_FILE, POST_ID, $post);
 }
 
 function stickyThreadByID($id, $setsticky) {
-	$rows = $GLOBALS['db']->selectWhere(POSTS_FILE, new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON), 1);
+	$rows = $GLOBALS['db']->selectWhere(
+		POSTS_FILE,
+		new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON),
+		1);
 	if (count($rows) > 0) {
 		foreach ($rows as $post) {
 			$post[POST_STICKIED] = intval($setsticky);
@@ -98,7 +108,10 @@ function stickyThreadByID($id, $setsticky) {
 }
 
 function bumpThreadByID($id) {
-	$rows = $GLOBALS['db']->selectWhere(POSTS_FILE, new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON), 1);
+	$rows = $GLOBALS['db']->selectWhere(
+		POSTS_FILE,
+		new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON),
+		1);
 	if (count($rows) > 0) {
 		foreach ($rows as $post) {
 			$post[POST_BUMPED] = time();
@@ -108,7 +121,9 @@ function bumpThreadByID($id) {
 }
 
 function countThreads() {
-	$rows = $GLOBALS['db']->selectWhere(POSTS_FILE, new SimpleWhereClause(POST_PARENT, '=', 0, INTEGER_COMPARISON));
+	$rows = $GLOBALS['db']->selectWhere(
+		POSTS_FILE,
+		new SimpleWhereClause(POST_PARENT, '=', 0, INTEGER_COMPARISON));
 	return count($rows);
 }
 
@@ -139,6 +154,7 @@ function convertPostsToSQLStyle($posts, $singlepost = false) {
 		$post['thumb_width']         = $oldpost[POST_THUMB_WIDTH];
 		$post['thumb_height']        = $oldpost[POST_THUMB_HEIGHT];
 		$post['stickied']            = isset($oldpost[POST_STICKIED]) ? $oldpost[POST_STICKIED] : 0;
+		$post['likes']               = $oldpost[POST_LIKES];
 
 		if ($post['parent'] == '') {
 			$post['parent'] = TINYIB_NEWTHREAD;
@@ -153,12 +169,20 @@ function convertPostsToSQLStyle($posts, $singlepost = false) {
 }
 
 function allThreads() {
-	$rows = $GLOBALS['db']->selectWhere(POSTS_FILE, new SimpleWhereClause(POST_PARENT, '=', 0, INTEGER_COMPARISON), -1, array(new OrderBy(POST_STICKIED, DESCENDING, INTEGER_COMPARISON), new OrderBy(POST_BUMPED, DESCENDING, INTEGER_COMPARISON)));
+	$rows = $GLOBALS['db']->selectWhere(
+		POSTS_FILE,
+		new SimpleWhereClause(POST_PARENT, '=', 0, INTEGER_COMPARISON),
+		-1,
+		array(
+			new OrderBy(POST_STICKIED, DESCENDING, INTEGER_COMPARISON),
+			new OrderBy(POST_BUMPED, DESCENDING, INTEGER_COMPARISON)));
 	return convertPostsToSQLStyle($rows);
 }
 
 function numRepliesToThreadByID($id) {
-	$rows = $GLOBALS['db']->selectWhere(POSTS_FILE, new SimpleWhereClause(POST_PARENT, '=', $id, INTEGER_COMPARISON));
+	$rows = $GLOBALS['db']->selectWhere(
+		POSTS_FILE,
+		new SimpleWhereClause(POST_PARENT, '=', $id, INTEGER_COMPARISON));
 	return count($rows);
 }
 
@@ -167,17 +191,28 @@ function postsInThreadByID($id, $moderated_only = true) {
 	$compClause->add(new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON));
 	$compClause->add(new SimpleWhereClause(POST_PARENT, '=', $id, INTEGER_COMPARISON));
 
-	$rows = $GLOBALS['db']->selectWhere(POSTS_FILE, $compClause, -1, new OrderBy(POST_ID, ASCENDING, INTEGER_COMPARISON));
+	$rows = $GLOBALS['db']->selectWhere(
+		POSTS_FILE,
+		$compClause,
+		-1,
+		new OrderBy(POST_ID, ASCENDING, INTEGER_COMPARISON));
 	return convertPostsToSQLStyle($rows);
 }
 
 function postsByHex($hex) {
-	$rows = $GLOBALS['db']->selectWhere(POSTS_FILE, new SimpleWhereClause(POST_FILE_HEX, '=', $hex, STRING_COMPARISON), 1);
+	$rows = $GLOBALS['db']->selectWhere(
+		POSTS_FILE,
+		new SimpleWhereClause(POST_FILE_HEX, '=', $hex, STRING_COMPARISON),
+		1);
 	return convertPostsToSQLStyle($rows);
 }
 
 function latestPosts($moderated = true) {
-	$rows = $GLOBALS['db']->selectWhere(POSTS_FILE, NULL, 10, new OrderBy(POST_TIMESTAMP, DESCENDING, INTEGER_COMPARISON));
+	$rows = $GLOBALS['db']->selectWhere(
+		POSTS_FILE,
+		NULL,
+		10,
+		new OrderBy(POST_TIMESTAMP, DESCENDING, INTEGER_COMPARISON));
 	return convertPostsToSQLStyle($rows);
 }
 
@@ -186,7 +221,9 @@ function deletePostByID($id) {
 	foreach ($posts as $post) {
 		if ($post['id'] != $id) {
 			deletePostImages($post);
-			$GLOBALS['db']->deleteWhere(POSTS_FILE, new SimpleWhereClause(POST_ID, '=', $post['id'], INTEGER_COMPARISON));
+			$GLOBALS['db']->deleteWhere(
+				POSTS_FILE,
+				new SimpleWhereClause(POST_ID, '=', $post['id'], INTEGER_COMPARISON));
 		} else {
 			$thispost = $post;
 		}
@@ -197,7 +234,9 @@ function deletePostByID($id) {
 			@unlink('res/' . $thispost['id'] . '.html');
 		}
 		deletePostImages($thispost);
-		$GLOBALS['db']->deleteWhere(POSTS_FILE, new SimpleWhereClause(POST_ID, '=', $thispost['id'], INTEGER_COMPARISON));
+		$GLOBALS['db']->deleteWhere(
+			POSTS_FILE,
+			new SimpleWhereClause(POST_ID, '=', $thispost['id'], INTEGER_COMPARISON));
 	}
 }
 
@@ -214,21 +253,37 @@ function trimThreads() {
 }
 
 function lastPostByIP() {
-	$rows = $GLOBALS['db']->selectWhere(POSTS_FILE, new SimpleWhereClause(POST_IP, '=', $_SERVER['REMOTE_ADDR'], STRING_COMPARISON), 1, new OrderBy(POST_ID, DESCENDING, INTEGER_COMPARISON));
+	$rows = $GLOBALS['db']->selectWhere(
+		POSTS_FILE,
+		new SimpleWhereClause(POST_IP, '=', $_SERVER['REMOTE_ADDR'], STRING_COMPARISON),
+		1,
+		new OrderBy(POST_ID, DESCENDING, INTEGER_COMPARISON));
 	return convertPostsToSQLStyle($rows, true);
 }
 
 # Ban Functions
 function banByID($id) {
-	return convertBansToSQLStyle($GLOBALS['db']->selectWhere(BANS_FILE, new SimpleWhereClause(BAN_ID, '=', $id, INTEGER_COMPARISON), 1), true);
+	return convertBansToSQLStyle($GLOBALS['db']->selectWhere(
+		BANS_FILE,
+		new SimpleWhereClause(BAN_ID, '=', $id, INTEGER_COMPARISON),
+		1
+	), true);
 }
 
 function banByIP($ip) {
-	return convertBansToSQLStyle($GLOBALS['db']->selectWhere(BANS_FILE, new SimpleWhereClause(BAN_IP, '=', $ip, STRING_COMPARISON), 1), true);
+	return convertBansToSQLStyle($GLOBALS['db']->selectWhere(
+		BANS_FILE,
+		new SimpleWhereClause(BAN_IP, '=', $ip, STRING_COMPARISON),
+		1
+	), true);
 }
 
 function allBans() {
-	$rows = $GLOBALS['db']->selectWhere(BANS_FILE, NULL, -1, new OrderBy(BAN_TIMESTAMP, DESCENDING, INTEGER_COMPARISON));
+	$rows = $GLOBALS['db']->selectWhere(
+		BANS_FILE,
+		NULL,
+		-1,
+		new OrderBy(BAN_TIMESTAMP, DESCENDING, INTEGER_COMPARISON));
 	return convertBansToSQLStyle($rows);
 }
 

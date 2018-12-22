@@ -1,12 +1,10 @@
 <?php
-# TinyIB
+# TinyIB, forked version by SthephanShi: https://github.com/SthephanShinkufag/TinyIB
+# Original repo: https://gitlab.com/tslocum/TinyIB
 #
-# https://gitlab.com/tslocum/tinyib
-#
-# Contact the author via trevor@rocketnine.space if you need support.
 # See README for instructions on configuring, moderating and upgrading your board.
-#
-# Set TINYIB_DBMODE to a MySQL-related mode if it's available.  By default it's set to flatfile, which can be very slow.
+# Set TINYIB_DBMODE to a PDO-related mode if it's available.
+# By default it's set to flatfile, which can be very slow.
 
 // Administrator/moderator credentials
 define('TINYIB_ADMINPASS', '');       // Administrators have full access to the board
@@ -16,15 +14,18 @@ define('TINYIB_MODPASS', '');         // Moderators only have access to delete (
 define('TINYIB_BOARD', 'b');          // Unique identifier for this board using only letters and numbers
 define('TINYIB_BOARDDESC', 'TinyIB'); // Displayed at the top of every page
 define('TINYIB_ALWAYSNOKO', false);   // Redirect to thread after posting
+define('TINYIB_POSTERNAME', 'Anonymous'); // Poster name in posts
 define('TINYIB_CAPTCHA', '');         // Reduce spam by requiring users to pass a CAPTCHA when posting: simple / recaptcha  (click Rebuild All in the management panel after enabling)  ['' to disable]
 define('TINYIB_REQMOD', '');          // Require moderation before displaying posts: files / all  (see README for instructions, only MySQL is supported)  ['' to disable]
+define('TINYIB_LIKES', false);        // Post likes system
 
 // Board appearance
 define('TINYIB_INDEX', 'index.html'); // Index file
 define('TINYIB_LOGO', '');            // Logo HTML
 define('TINYIB_THREADSPERPAGE', 10);  // Amount of threads shown per index page
 define('TINYIB_PREVIEWREPLIES', 3);   // Amount of replies previewed on index pages
-define('TINYIB_TRUNCATE', 15);        // Messages are truncated to this many lines on board index pages  [0 to disable]
+define('TINYIB_TRUNC_BR', 10);        // Messages are truncated to this many lines on board index pages [0 to disable]
+define('TINYIB_TRUNC_SIZE', 1536);    // Messages are truncated to this text size on board index pages [0 to disable]
 define('TINYIB_WORDBREAK', 80);       // Words longer than this many characters will be broken apart  [0 to disable]
 define('TINYIB_TIMEZONE', 'UTC');     // See https://secure.php.net/manual/en/timezones.php - e.g. America/Los_Angeles
 $tinyib_hidefieldsop = array();       // Fields to hide when creating a new thread - e.g. array('name', 'email', 'subject', 'message', 'file', 'embed', 'password')
