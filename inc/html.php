@@ -208,11 +208,11 @@ function buildPostForm($parent, $isRawPost = false) {
 					<tr>
 						<td class="postblock"></td>
 						<td id="markup-buttons">
-							<button class="markup-button" id="markup-bold">B</button>
-							<button class="markup-button" id="markup-italic">I</button>
-							<button class="markup-button" id="markup-spoiler">%</button>
-							<button class="markup-button" id="markup-code">C</button>
-							<button class="markup-button" id="markup-quote">&gt;</button>
+							<button class="markup-button" id="markup-bold" title="Bold">B</button>
+							<button class="markup-button" id="markup-italic" title="Italic">I</button>
+							<button class="markup-button" id="markup-spoiler" title="Spoiler">%</button>
+							<button class="markup-button" id="markup-code" title="Code">C</button>
+							<button class="markup-button" id="markup-quote" title="Select the text, then click to insert a quote">&gt;</button>
 						</td>
 					</tr>' : ''
 				) . (
