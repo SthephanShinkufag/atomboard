@@ -18,17 +18,10 @@ function pageHeader() {
 	<title>' . TINYIB_BOARDDESC . '</title>
 	<link rel="shortcut icon" href="/' . TINYIB_BOARD . '/favicon.png">
 	<link rel="stylesheet" type="text/css" href="/' . TINYIB_BOARD . '/css/global.css">
-	<script src="/' . TINYIB_BOARD . '/js/tinyib.js"></script>' .
-	(TINYIB_CAPTCHA === 'recaptcha' ? '
-	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
-	<!-- Global site tag (gtag.js) - Google Analytics -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-118978685-1"></script>
-	<script>
-		window.dataLayer = window.dataLayer || [];
-		function gtag(){dataLayer.push(arguments);}
-		gtag(\'js\', new Date());
-		gtag(\'config\', \'UA-118978685-1\');
-	</script>
+	<script src="/' . TINYIB_BOARD . '/js/tinyib.js"></script>
+	' . (TINYIB_CAPTCHA === 'recaptcha' ?
+		'<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
+	' . TINYIB_HTML_HEAD . '
 </head>
 ';
 }
@@ -37,22 +30,8 @@ function pageWrapper($returnHref) {
 	return '
 	<div class="aside aside-left">
 		<div class="aside-top">
-			<nav>
-				<a class="aside-btn" id="aside-btn-home" href="/" title="Home">
-					<svg><use xlink:href="#symbol-home"/></svg>
-				</a>
-				<a class="aside-btn" id="aside-btn-github" href="https://github.com/SthephanShinkufag/Dollchan-Extension-Tools/" title="Github">
-					<svg><use xlink:href="#symbol-github"/></svg>
-				</a>
-				<a class="aside-btn aside-btn-indent" id="aside-btn-chanstat" href="/chanstat/" title="Chanstat">
-					<svg><use xlink:href="#symbol-high"/></svg>
-				</a>
-				<a class="aside-btn aside-btn-board" href="/de/" title="Dollchan Extension board">
-					de
-				</a>
-				<a class="aside-btn aside-btn-board" href="/test/" title="Test board">
-					test
-				</a>
+			<nav>' .
+				TINYIB_HTML_LEFTSIDE . '
 			</nav>
 		</div>
 		<div class="aside-bottom">' . ($returnHref ? '
@@ -373,9 +352,9 @@ function buildPost($post, $res) {
 	$message = $post['message'];
 	if (!$res) {
 		$truncLen = 0;
-		if (TINYIB_TRUNC_BR > 0 && substr_count($message, '<br>') > TINYIB_TRUNC_BR) {
+		if (TINYIB_TRUNC_LINES > 0 && substr_count($message, '<br>') > TINYIB_TRUNC_LINES) {
 			$brOffsets = strallpos($message, '<br>');
-			$truncLen = $brOffsets[TINYIB_TRUNC_BR - 1];
+			$truncLen = $brOffsets[TINYIB_TRUNC_LINES - 1];
 		} elseif (TINYIB_TRUNC_SIZE > 0 && strlen($message) > TINYIB_TRUNC_SIZE) {
 			$truncLen = TINYIB_TRUNC_SIZE;
 		}

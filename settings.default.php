@@ -5,16 +5,7 @@
 # Set TINYIB_DBMODE to a PDO-related mode if it's available.
 # By default it's set to 'flatfile', which can be very slow.
 
-/* ==[ Administrator/moderator credentials ]=============================================================== */
-// Administrators have full access to the board
-define('TINYIB_ADMINPASS', '');
-// Moderators only have access to delete (and moderate if TINYIB_REQMOD is set) posts ['' to disable]
-define('TINYIB_MODPASS', '');
-// Require moderation before displaying posts:
-// files / all (see README for instructions, only MySQL is supported)  ['' to disable]
-define('TINYIB_REQMOD', '');
-
-/* ==[ Board description and behavior ]==================================================================== */
+/* ==[ Board description and customization ]=============================================================== */
 // Unique identifier for this board using only letters and numbers
 define('TINYIB_BOARD', 'b');
 // Displayed at the top of every page
@@ -25,6 +16,59 @@ define('TINYIB_LOGO', '');
 define('TINYIB_INDEX', 'index.html');
 // Timezone (see https://secure.php.net/manual/en/timezones.php - e.g. 'America/Los_Angeles')
 define('TINYIB_TIMEZONE', 'UTC');
+// <Head> HTML - specify your code to be added to the end of the <HEAD>
+define('TINYIB_HTML_HEAD', '');
+// Sidebar HTML - specify your navigation buttons to be added at the left side of the page
+define('TINYIB_HTML_LEFTSIDE', '
+				<a class="aside-btn" id="aside-btn-home" href="/" title="Home">
+					<svg><use xlink:href="#symbol-home"/></svg>
+				</a>
+				<a class="aside-btn aside-btn-board" href="/' . TINYIB_BOARD . '/" title="' .
+					TINYIB_BOARDDESC . '">' . TINYIB_BOARD .'</a>
+				<a class="aside-btn aside-btn-board" href="/test/" title="Test board">test</a>');
+
+/* ==[ Administrator/moderator credentials ]=============================================================== */
+// Administrators have full access to the board
+define('TINYIB_ADMINPASS', '');
+// Moderators only have access to delete (and moderate if TINYIB_REQMOD is set) posts ['' to disable]
+define('TINYIB_MODPASS', '');
+// Require moderation before displaying posts:
+// files / all (see README for instructions, only MySQL is supported)  ['' to disable]
+define('TINYIB_REQMOD', '');
+
+/* ==[ Database ]========================================================================================== */
+// Recommended database modes from best to worst: 'pdo', 'mysqli', 'mysql', 'sqlite', 'flatfile'
+// 'flatfile' is only useful if you need portability or lack any kind of database
+// Mode
+define('TINYIB_DBMODE', 'flatfile');
+// Enable database migration tool (see README for instructions)
+define('TINYIB_DBMIGRATE', false);
+// Bans table name in database (use the same bans table across boards for global bans)
+define('TINYIB_DBBANS', 'bans');
+// Posts table name in database
+define('TINYIB_DBPOSTS', TINYIB_BOARD . '_posts');
+
+/* ==[ Database configuration - MySQL / pgSQL ]============================================================ */
+// The following only apply when TINYIB_DBMODE is set to mysql,
+// mysqli or pdo with default (blank) TINYIB_DBDSN
+// Hostname
+define('TINYIB_DBHOST', 'localhost');
+// Port (set to 0 if you are using a UNIX socket as the host)
+define('TINYIB_DBPORT', 3306);
+// Username
+define('TINYIB_DBUSERNAME', '');
+// Password
+define('TINYIB_DBPASSWORD', '');
+// Database
+define('TINYIB_DBNAME', '');
+// Database configuration - PDO
+// The following only apply when TINYIB_DBMODE is set to 'pdo' (see README for instructions)
+// PDO driver to use: 'mysql', 'pgsql', 'sqlite'
+define('TINYIB_DBDRIVER', 'mysql');
+// Enter a custom DSN to override all of the connection/driver settings above  (see README for instructions)
+// When changing this, you should still set TINYIB_DBDRIVER appropriately.
+// If you're using PDO with a MySQL or pgSQL database, you should leave this blank.
+define('TINYIB_DBDSN', '');
 
 /* ==[ Posts and threads ]================================================================================= */
 // Default poster names
@@ -37,7 +81,7 @@ define('TINYIB_THREADSPERPAGE', 10);
 // Amount of replies previewed on index pages
 define('TINYIB_PREVIEWREPLIES', 5);
 // Amount of text lines to truncate posts on index pages [0 to disable]
-define('TINYIB_TRUNC_BR', 10);
+define('TINYIB_TRUNC_LINES', 10);
 // Text size in bytes to truncate posts on index pages [0 to disable]
 define('TINYIB_TRUNC_SIZE', 1536);
 // Words longer than this many characters will be broken apart [0 to disable]
@@ -109,38 +153,3 @@ define('TINYIB_CAPTCHA', 'simple');
 // For API keys visit https://www.google.com/recaptcha
 define('TINYIB_RECAPTCHA_SITE', '');   // Site key
 define('TINYIB_RECAPTCHA_SECRET', ''); // Secret key
-
-/* ==[ Database ]========================================================================================== */
-// Recommended database modes from best to worst: 'pdo', 'mysqli', 'mysql', 'sqlite', 'flatfile'
-// 'flatfile' is only useful if you need portability or lack any kind of database
-// Mode
-define('TINYIB_DBMODE', 'flatfile');
-// Enable database migration tool (see README for instructions)
-define('TINYIB_DBMIGRATE', false);
-// Bans table name in database (use the same bans table across boards for global bans)
-define('TINYIB_DBBANS', 'bans');
-// Posts table name in database
-define('TINYIB_DBPOSTS', TINYIB_BOARD . '_posts');
-
-/* ==[ Database configuration - MySQL / pgSQL ]============================================================ */
-// The following only apply when TINYIB_DBMODE is set to mysql,
-// mysqli or pdo with default (blank) TINYIB_DBDSN
-// Hostname
-define('TINYIB_DBHOST', 'localhost');
-// Port (set to 0 if you are using a UNIX socket as the host)
-define('TINYIB_DBPORT', 3306);
-// Username
-define('TINYIB_DBUSERNAME', '');
-// Password
-define('TINYIB_DBPASSWORD', '');
-// Database
-define('TINYIB_DBNAME', '');
-
-// Database configuration - PDO
-// The following only apply when TINYIB_DBMODE is set to 'pdo' (see README for instructions)
-// PDO driver to use: 'mysql', 'pgsql', 'sqlite'
-define('TINYIB_DBDRIVER', 'mysql');
-// Enter a custom DSN to override all of the connection/driver settings above  (see README for instructions)
-// When changing this, you should still set TINYIB_DBDRIVER appropriately.
-// If you're using PDO with a MySQL or pgSQL database, you should leave this blank.
-define('TINYIB_DBDSN', '');
