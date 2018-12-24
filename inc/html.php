@@ -210,6 +210,7 @@ function buildPostForm($parent, $isRawPost = false) {
 						<td id="markup-buttons">
 							<button class="markup-button" id="markup-bold" title="Bold">B</button>
 							<button class="markup-button" id="markup-italic" title="Italic">I</button>
+							<button class="markup-button" id="markup-strike" title="Strike">S</button>
 							<button class="markup-button" id="markup-spoiler" title="Spoiler">%</button>
 							<button class="markup-button" id="markup-code" title="Code">C</button>
 							<button class="markup-button" id="markup-quote" title="Select the text, then click to insert a quote">&gt;</button>

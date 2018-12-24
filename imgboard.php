@@ -134,15 +134,16 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				function($matches)
 			{
 				$m = $matches[1];
-				$m = str_replace("\r\n", '~!!END_OF_CODE_LINE!!~', $m);
-				$m = str_replace("\r", '~!!END_OF_CODE_LINE!!~', $m);
-				$m = str_replace("\n", '~!!END_OF_CODE_LINE!!~', $m);
+				$m = str_replace("\r\n", '@!@TINYIB_LINE_END@!@', $m);
+				$m = str_replace("\r", '@!@TINYIB_LINE_END@!@', $m);
+				$m = str_replace("\n", '@!@TINYIB_LINE_END@!@', $m);
 				$m = str_replace('`', '&#96;', $m);
 				$m = str_replace('<', '&lt;', $m);
 				$m = str_replace('>', '&gt;', $m);
 				$m = str_replace('[', '&#91;', $m);
 				$m = str_replace(']', '&#93;', $m);
 				$m = str_replace('*', '&#42;', $m);
+				$m = str_replace('~~', '&#126;&#126;', $m);
 				$m = str_replace('%%', '&#37;&#37;', $m);
 				return '<pre>' . $m . '</pre>';
 			}, $msg);
@@ -154,6 +155,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$m = str_replace('[', '&#91;', $m);
 				$m = str_replace(']', '&#93;', $m);
 				$m = str_replace('*', '&#42;', $m);
+				$m = str_replace('~~', '&#126;&#126;', $m);
 				$m = str_replace('%%', '&#37;&#37;', $m);
 				return '<code>' . $m . '</code>';
 			}, $msg);
@@ -177,6 +179,10 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			$msg = preg_replace('/\*([^\*\r\n]+)\*/', '<i>$1</i>', $msg);
 			// [i]Italic[/i]
 			$msg = preg_replace('/\[i\]\r?\n?([\s\S]*?)\r?\n?\[\/i\]/i', '<i>$1</i>', $msg);
+			// ~~Strike~~
+			$msg = preg_replace('/~~([^~\r\n]+)~~/', '<del>$1</del>', $msg);
+			// [s]Strike[/s]
+			$msg = preg_replace('/\[s\]\r?\n?([\s\S]*?)\r?\n?\[\/s\]/i', '<del>$1</del>', $msg);
 			// %%Spoiler%%
 			$msg = preg_replace('/%%([^\%\r\n]+)%%/', '<span class="spoiler">$1</span>', $msg);
 			// [spoiler]Spoiler[/spoiler]
@@ -194,7 +200,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			$msg = str_replace("\r", '<br>', $msg);
 			$msg = str_replace("\n", '<br>', $msg);
 			$msg = str_replace('<br>', "<br>\r\n", $msg);
-			$msg = str_replace('~!!END_OF_CODE_LINE!!~', "\r\n", $msg);
+			$msg = str_replace('@!@TINYIB_LINE_END@!@', "\r\n", $msg);
 
 			if (TINYIB_WORDBREAK > 0) {
 				$msg = finishWordBreak($msg);
