@@ -264,6 +264,10 @@ video.thumb {
 	color: #800000;
 }
 
+.underline {
+	text-decoration: underline;
+}
+
 .unkfunc {
 	background: inherit;
 	color: #789922;
@@ -290,6 +294,10 @@ video.thumb {
 
 #markup-italic {
 	font-style: italic;
+}
+
+#markup-underline {
+	text-decoration: underline;
 }
 
 #message {

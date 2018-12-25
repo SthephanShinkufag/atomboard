@@ -143,6 +143,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$m = str_replace('[', '&#91;', $m);
 				$m = str_replace(']', '&#93;', $m);
 				$m = str_replace('*', '&#42;', $m);
+				$m = str_replace('__', '&#95;&#95;', $m);
 				$m = str_replace('~~', '&#126;&#126;', $m);
 				$m = str_replace('%%', '&#37;&#37;', $m);
 				return '<pre>' . $m . '</pre>';
@@ -155,6 +156,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$m = str_replace('[', '&#91;', $m);
 				$m = str_replace(']', '&#93;', $m);
 				$m = str_replace('*', '&#42;', $m);
+				$m = str_replace('__', '&#95;&#95;', $m);
 				$m = str_replace('~~', '&#126;&#126;', $m);
 				$m = str_replace('%%', '&#37;&#37;', $m);
 				return '<code>' . $m . '</code>';
@@ -179,6 +181,11 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			$msg = preg_replace('/\*([^\*\r\n]+)\*/', '<i>$1</i>', $msg);
 			// [i]Italic[/i]
 			$msg = preg_replace('/\[i\]\r?\n?([\s\S]*?)\r?\n?\[\/i\]/i', '<i>$1</i>', $msg);
+			// __Underline__
+			$msg = preg_replace('/__([^~\r\n]+)__/', '<span class="underline">$1</span>', $msg);
+			// [u]Underline[/u]
+			$msg = preg_replace('/\[u\]\r?\n?([\s\S]*?)\r?\n?\[\/u\]/i',
+				'<span class="underline">$1</span>', $msg);
 			// ~~Strike~~
 			$msg = preg_replace('/~~([^~\r\n]+)~~/', '<del>$1</del>', $msg);
 			// [s]Strike[/s]

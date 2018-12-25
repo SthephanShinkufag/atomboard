@@ -86,6 +86,7 @@ function markupEvents(e) {
 	switch(e.target.id) {
 	case 'markup-bold': tag = 'b'; break;
 	case 'markup-italic': tag = 'i'; break;
+	case 'markup-underline': tag = 'u'; break;
 	case 'markup-strike': tag = 's'; break;
 	case 'markup-spoiler': tag = 'spoiler'; break;
 	case 'markup-code': tag = 'code'; break;
