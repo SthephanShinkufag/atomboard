@@ -139,7 +139,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$m = str_replace("\n", '@!@TINYIB_LINE_END@!@', $m);
 				$m = str_replace('`', '&#96;', $m);
 				$m = str_replace('<', '&lt;', $m);
-				$m = str_replace('>', '&gt;', $m);
+				$m = preg_replace('/>|&gt;/', '@!@TINYIB_GT@!@', $m);
 				$m = str_replace('[', '&#91;', $m);
 				$m = str_replace(']', '&#93;', $m);
 				$m = str_replace('*', '&#42;', $m);
@@ -152,7 +152,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			$msg = preg_replace_callback('/`([^\`\r\n]+)`/', function($matches) {
 				$m = $matches[1];
 				$m = str_replace('<', '&lt;', $m);
-				$m = str_replace('>', '&gt;', $m);
+				$m = preg_replace('/>|&gt;/', '@!@TINYIB_GT@!@', $m);
 				$m = str_replace('[', '&#91;', $m);
 				$m = str_replace(']', '&#93;', $m);
 				$m = str_replace('*', '&#42;', $m);
@@ -207,6 +207,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			$msg = str_replace("\r", '<br>', $msg);
 			$msg = str_replace("\n", '<br>', $msg);
 			$msg = str_replace('<br>', "<br>\r\n", $msg);
+			$msg = str_replace('@!@TINYIB_GT@!@', '&gt;', $msg);
 			$msg = str_replace('@!@TINYIB_LINE_END@!@', "\r\n", $msg);
 
 			if (TINYIB_WORDBREAK > 0) {

@@ -304,10 +304,10 @@ function checkFlood() {
 		$lastpost = lastPostByIP();
 		if ($lastpost) {
 			if ((time() - $lastpost['timestamp']) < TINYIB_DELAY) {
-				fancyDie("Please wait a moment before posting again.<br>' .
-					'You will be able to make another post in " .
+				fancyDie('Please wait a moment before posting again.<br>' .
+					'You will be able to make another post in ' .
 					(TINYIB_DELAY - (time() - $lastpost['timestamp'])) .
-					" " . plural("second", (TINYIB_DELAY - (time() - $lastpost['timestamp']))) . ".");
+					' ' . plural("second", (TINYIB_DELAY - (time() - $lastpost['timestamp']))) . '.');
 			}
 		}
 	}
