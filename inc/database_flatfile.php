@@ -38,6 +38,14 @@ define('BAN_TIMESTAMP', 2);
 define('BAN_EXPIRE', 3);
 define('BAN_REASON', 4);
 
+# Likes Structure
+define('LIKES_FILE', '.likes');
+define('LIKES_ID', 0);
+define('LIKES_IP', 1);
+define('LIKES_BOARD', 2);
+define('LIKES_POSTNUM', 3);
+define('LIKES_ISLIKE', 4);
+
 require_once 'flatfile/flatfile.php';
 $db = new Flatfile();
 $db->datadir = 'inc/flatfile/';
@@ -261,6 +269,42 @@ function lastPostByIP() {
 	return convertPostsToSQLStyle($rows, true);
 }
 
+function likePostByID($id, $ip) {
+	$compClause = new AndWhereClause();
+	$compClause->add(new SimpleWhereClause(LIKES_IP, '=', $ip, STRING_COMPARISON));
+	$compClause->add(new SimpleWhereClause(LIKES_BOARD, '=', TINYIB_BOARD, STRING_COMPARISON));
+	$compClause->add(new SimpleWhereClause(LIKES_POSTNUM, '=', $id, INTEGER_COMPARISON));
+	$rows = $GLOBALS['db']->selectWhere(LIKES_FILE, $compClause);
+	$isAlreadyLiked = count($rows);
+	if ($isAlreadyLiked) {
+		$GLOBALS['db']->deleteWhere(LIKES_FILE, $compClause);
+	} else {
+		$like = array();
+		$like[LIKES_ID] = '0';
+		$like[LIKES_IP] = $ip;
+		$like[LIKES_BOARD] = TINYIB_BOARD;
+		$like[LIKES_POSTNUM] = $id;
+		$like[LIKES_ISLIKE] = '1';
+		$GLOBALS['db']->insertWithAutoId(LIKES_FILE, LIKES_ID, $like);
+	}
+	$compClause = new AndWhereClause();
+	$compClause->add(new SimpleWhereClause(LIKES_BOARD, '=', TINYIB_BOARD, STRING_COMPARISON));
+	$compClause->add(new SimpleWhereClause(LIKES_POSTNUM, '=', $id, INTEGER_COMPARISON));
+	$rows = $GLOBALS['db']->selectWhere(LIKES_FILE, $compClause);
+	$countOfPostLikes = count($rows);
+	$rows = $GLOBALS['db']->selectWhere(
+		POSTS_FILE,
+		new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON),
+		1);
+	if (count($rows) > 0) {
+		foreach ($rows as $post) {
+			$post[POST_LIKES] = $countOfPostLikes;
+			$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post);
+		}
+	}
+	return array(!$isAlreadyLiked, $countOfPostLikes);
+}
+
 # Ban Functions
 function banByID($id) {
 	return convertBansToSQLStyle($GLOBALS['db']->selectWhere(
@@ -329,4 +373,28 @@ function clearExpiredBans() {
 
 function deleteBanByID($id) {
 	$GLOBALS['db']->deleteWhere(BANS_FILE, new SimpleWhereClause(BAN_ID, '=', $id, INTEGER_COMPARISON));
+}
+
+# Like functions
+function allLikes() {
+	$rows = $GLOBALS['db']->selectWhere(
+		LIKES_FILE,
+		NULL,
+		-1,
+		new OrderBy(LIKES_ID, ASCENDING, INTEGER_COMPARISON));
+	return convertLikesToSQLStyle($rows);
+}
+
+function convertLikesToSQLStyle($likes) {
+	$newlikes = array();
+	foreach ($likes as $oldlike) {
+		$like = array();
+		$like['id'] = $oldlike[LIKES_ID];
+		$like['ip'] = $oldlike[LIKES_IP];
+		$like['board'] = $oldlike[LIKES_BOARD];
+		$like['postnum'] = $oldlike[LIKES_POSTNUM];
+		$like['islike'] = $oldlike[LIKES_ISLIKE];
+		$newlikes[] = $like;
+	}
+	return $newlikes;
 }

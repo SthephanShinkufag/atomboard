@@ -29,7 +29,7 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		"thumb_height" smallint NOT NULL default \'0\',
 		"stickied" smallint NOT NULL default \'0\',
 		"moderated" smallint NOT NULL default \'1\',
-		"likes" smallint(5) NOT NULL default \'0\',
+		"likes" smallint NOT NULL default \'0\',
 		PRIMARY KEY	("id")
 	);
 	CREATE INDEX ON "' . TINYIB_DBPOSTS . '"("parent");
@@ -46,6 +46,16 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		PRIMARY KEY	("id")
 	);
 	CREATE INDEX ON "' . TINYIB_DBBANS . '"("ip");';
+
+	$likes_sql = 'CREATE TABLE "' . TINYIB_DBLIKES . '" (
+		"id" bigserial NOT NULL,
+		"ip" varchar(39) NOT NULL,
+		"board" varchar(16) NOT NULL,
+		"postnum" integer NOT NULL,
+		"islike" smallint NOT NULL default \'1\',
+		PRIMARY KEY	("id")
+	);
+	CREATE INDEX ON "' . TINYIB_DBLIKES . '"("ip");';
 } else {
 	$posts_sql = "CREATE TABLE `" . TINYIB_DBPOSTS . "` (
 		`id` mediumint(7) unsigned NOT NULL auto_increment,
@@ -88,6 +98,15 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		`reason` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 		PRIMARY KEY	(`id`),
 		KEY `ip` (`ip`)
+	)";
+
+	$likes_sql = "CREATE TABLE `" . TINYIB_DBLIKES . "` (
+		`id` mediumint(7) unsigned NOT NULL auto_increment,
+		`ip` varchar(39) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`board` varchar(16) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`postnum` mediumint(7) unsigned NOT NULL,
+		`islike` tinyint(1) NOT NULL default '1',
+		PRIMARY KEY	(`id`)
 	)";
 }
 

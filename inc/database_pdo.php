@@ -54,6 +54,19 @@ if (!$bans_exists) {
 	$dbh->exec($bans_sql);
 }
 
+// Create the likes table if it does not exist
+if (TINYIB_DBDRIVER === 'pgsql') {
+	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(TINYIB_DBLIKES);
+	$likes_exists = $dbh->query($query)->fetchColumn() != 0;
+} else {
+	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(TINYIB_DBLIKES));
+	$likes_exists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+}
+
+if (!$likes_exists) {
+	$dbh->exec($likes_sql);
+}
+
 # Utililty
 function pdoQuery($sql, $params = false) {
 	global $dbh;
@@ -273,6 +286,25 @@ function lastPostByIP() {
 		array($_SERVER['REMOTE_ADDR'])
 	);
 	return $result->fetch(PDO::FETCH_ASSOC);
+}
+
+function likePostByID($id, $ip) {
+	$result = pdoQuery("SELECT COUNT(*) FROM " . TINYIB_DBLIKES .
+		" WHERE ip = ? AND board = ? AND postnum = ?", array($ip, TINYIB_BOARD, $id));
+	$isAlreadyLiked = (int)$result->fetchColumn();
+	if ($isAlreadyLiked) {
+		pdoQuery("DELETE FROM " . TINYIB_DBLIKES .
+			" WHERE ip = ? AND board = ? AND postnum = ?", array($ip, TINYIB_BOARD, $id));
+	} else {
+		pdoQuery("INSERT INTO " . TINYIB_DBLIKES .
+			" (ip, board, postnum) VALUES (?, ?, ?)", array($ip, TINYIB_BOARD, $id));
+	}
+	$result = pdoQuery("SELECT COUNT(*) FROM " . TINYIB_DBLIKES .
+		" WHERE board = ? AND postnum = ?", array(TINYIB_BOARD, $id));
+	$countOfPostLikes = (int)$result->fetchColumn();
+	pdoQuery("UPDATE " . TINYIB_DBPOSTS . " SET likes = ?" .
+		" WHERE id = ?", array($countOfPostLikes, $id));
+	return array(!$isAlreadyLiked, $countOfPostLikes);
 }
 
 # Ban Functions

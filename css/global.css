@@ -396,6 +396,7 @@ video.thumb {
 	height: 16px;
 	display: inline-block;
 	vertical-align: -1px;
+	margin-left: 3px;
 	cursor: pointer;
 }
 

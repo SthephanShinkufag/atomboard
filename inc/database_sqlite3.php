@@ -59,6 +59,20 @@ if (!$result->fetchArray()) {
 	)");
 }
 
+// Create the likes table if it does not exist
+$result = $db->query(
+	"SELECT name FROM sqlite_master" .
+	" WHERE type='table' AND name='" . TINYIB_DBLIKES . "'");
+if (!$result->fetchArray()) {
+	$db->exec("CREATE TABLE " . TINYIB_DBLIKES . " (
+		id INTEGER PRIMARY KEY,
+		ip TEXT NOT NULL,
+		board TEXT NOT NULL,
+		postnum INTEGER NOT NULL,
+		islike INTEGER NOT NULL DEFAULT '1'
+	)");
+}
+
 // Add stickied column if it isn't present
 @$db->exec(
 	"ALTER TABLE " . TINYIB_DBPOSTS .
@@ -265,6 +279,38 @@ function lastPostByIP() {
 	while ($post = $result->fetchArray()) {
 		return $post;
 	}
+}
+
+function likePostByID($id, $ip) {
+	global $db;
+	$isAlreadyLiked = $db->querySingle(
+		"SELECT COUNT(*) FROM " . TINYIB_DBLIKES .
+		" WHERE ip = '" . $ip .
+			"' AND board = '" . TINYIB_BOARD .
+			"' AND postnum = " . $id);
+	if ($isAlreadyLiked) {
+		$db->exec(
+			"DELETE FROM " . TINYIB_DBLIKES .
+			" WHERE ip = '" . $ip .
+				"' AND board = '" . TINYIB_BOARD .
+				"' AND postnum = " . $id);
+	} else {
+		$db->exec(
+			"INSERT INTO " . TINYIB_DBLIKES .
+			" (ip, board, postnum) VALUES ('" .
+				$ip . "', '" .
+				TINYIB_BOARD . "', " .
+				$id . ")");
+	}
+	$countOfPostLikes = $db->querySingle(
+		"SELECT COUNT(*) FROM " . TINYIB_DBLIKES .
+		" WHERE board = '" . TINYIB_BOARD .
+			"' AND postnum = " . $id);
+	$db->exec(
+		"UPDATE " . TINYIB_DBPOSTS .
+		" SET likes = " . $countOfPostLikes .
+		" WHERE id = " . $id);
+	return array(!$isAlreadyLiked, $countOfPostLikes);
 }
 
 # Ban Functions

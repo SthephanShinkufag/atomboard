@@ -58,6 +58,20 @@ if (sqlite_num_rows($result) == 0) {
 	)");
 }
 
+// Create the likes table if it does not exist
+$result = sqlite_query($db,
+	"SELECT name FROM sqlite_master" .
+	" WHERE type='table' AND name='" . TINYIB_DBLIKES . "'");
+if (sqlite_num_rows($result) == 0) {
+	sqlite_query($db, "CREATE TABLE " . TINYIB_DBLIKES . " (
+		id INTEGER PRIMARY KEY,
+		ip TEXT NOT NULL,
+		board TEXT NOT NULL,
+		postnum INTEGER NOT NULL,
+		islike INTEGER NOT NULL DEFAULT '1'
+	)");
+}
+
 // Add stickied column if it isn't present
 sqlite_query($db,
 	"ALTER TABLE " . TINYIB_DBPOSTS .
@@ -250,6 +264,37 @@ function lastPostByIP() {
 	foreach ($result as $post) {
 		return $post;
 	}
+}
+
+function likePostByID($id, $ip) {
+	$isAlreadyLiked = sqlite_fetch_single(sqlite_query($GLOBALS["db"],
+		"SELECT COUNT(*) FROM " . TINYIB_DBLIKES .
+		" WHERE ip = '" . $ip .
+			"' AND board = '" . TINYIB_BOARD .
+			"' AND postnum = " . $id));
+	if ($isAlreadyLiked) {
+		sqlite_query($GLOBALS["db"],
+			"DELETE FROM " . TINYIB_DBLIKES .
+			" WHERE ip = '" . $ip .
+				"' AND board = '" . TINYIB_BOARD .
+				"' AND postnum = " . $id);
+	} else {
+		sqlite_query($GLOBALS["db"],
+			"INSERT INTO " . TINYIB_DBLIKES .
+			" (ip, board, postnum) VALUES ('" .
+				$ip . "', '" .
+				TINYIB_BOARD . "', " .
+				$id . ")");
+	}
+	$countOfPostLikes = sqlite_fetch_single(sqlite_query($GLOBALS["db"],
+		"SELECT COUNT(*) FROM " . TINYIB_DBLIKES .
+		" WHERE board = '" . TINYIB_BOARD .
+			"' AND postnum = " . $id));
+	sqlite_query($GLOBALS["db"],
+		"UPDATE " . TINYIB_DBPOSTS .
+		" SET likes = " . $countOfPostLikes .
+		" WHERE id = " . $id);
+	return array(!$isAlreadyLiked, $countOfPostLikes);
 }
 
 # Ban Functions

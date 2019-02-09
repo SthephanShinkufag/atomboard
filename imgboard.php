@@ -251,9 +251,9 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 
 		if ($fileMime == 'image/jpeg') {
 			$post['thumb'] = $tempFile . '.jpg';
-		} else if ($fileMime == 'image/gif') {
+		} elseif ($fileMime == 'image/gif') {
 			$post['thumb'] = $tempFile . '.gif';
-		} else if ($fileMime == 'image/png') {
+		} elseif ($fileMime == 'image/png') {
 			$post['thumb'] = $tempFile . '.png';
 		} else {
 			fancyDie('Error while processing audio/video.');
@@ -274,7 +274,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 
 		$post['file_original'] = cleanString($embed['title']);
 		$post['file'] = str_ireplace(array('src="https://', 'src="http://'), 'src="//', $embed['html']);
-	} else if (isset($_FILES['file']) && ($rawPost || !in_array('file', $hideFields))) {
+	} elseif (isset($_FILES['file']) && ($rawPost || !in_array('file', $hideFields))) {
 		if ($_FILES['file']['name'] != '') {
 			validateFileUpload();
 
@@ -359,7 +359,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 					$post['file_original'] = $mins . ':' . $secs .
 						($post['file_original'] != '' ? (', ' . $post['file_original']) : '');
 				}
-			} else if (in_array($fileMime,
+			} elseif (in_array($fileMime,
 				array('image/jpeg', 'image/pjpeg', 'image/png', 'image/gif', 'application/x-shockwave-flash'))
 			) {
 				$fileInfo = getimagesize($fileLocation);
@@ -378,7 +378,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				if ($fileMime == 'application/x-shockwave-flash') {
 					addVideoOverlay('thumb/' . $post['thumb']);
 				}
-			} else if (in_array($fileMime, array('image/jpeg', 'image/pjpeg', 'image/png', 'image/gif'))) {
+			} elseif (in_array($fileMime, array('image/jpeg', 'image/pjpeg', 'image/png', 'image/gif'))) {
 				$post['thumb'] = $fileName . 's.' . $tinyib_uploads[$fileMime][0];
 				list($thumbMaxWidth, $thumbMaxHeight) = thumbnailDimensions($post);
 
@@ -544,7 +544,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 
 				$onload = manageOnLoad('bans');
 				$text .= manageBanForm() . manageBansTable();
-			} else if (isset($_GET['update'])) {
+			} elseif (isset($_GET['update'])) {
 				if (is_dir('.git')) {
 					$gitOutput = shell_exec('git pull 2>&1');
 					$text .=
@@ -568,168 +568,10 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		</p>';
 				}
 			} elseif (isset($_GET['dbmigrate'])) {
-				if (TINYIB_DBMIGRATE) {
-					if (isset($_GET['go'])) {
-						if (TINYIB_DBMODE == 'flatfile') {
-							if (function_exists('mysqli_connect')) {
-								$link = @mysqli_connect(TINYIB_DBHOST, TINYIB_DBUSERNAME, TINYIB_DBPASSWORD);
-								if (!$link) {
-									fancyDie('Could not connect to database: ' . (
-										(is_object($link)) ? mysqli_error($link) :
-										(($link_error = mysqli_connect_error()) ?
-											$link_error : '(unknown error)')
-									));
-								}
-								$dbSelected = @mysqli_query($link, 'USE ' . constant('TINYIB_DBNAME'));
-								if (!$dbSelected) {
-									fancyDie('Could not select database: ' . (
-										(is_object($link)) ? mysqli_error($link) :
-										(($link_error = mysqli_connect_error()) ?
-											$link_error : '(unknown error)')
-									));
-								}
-								mysqli_set_charset($link, 'utf8');
-								if (mysqli_num_rows(mysqli_query($link,
-									"SHOW TABLES LIKE '" . TINYIB_DBPOSTS . "'")) == 0
-								) {
-									if (mysqli_num_rows(mysqli_query($link,
-										"SHOW TABLES LIKE '" . TINYIB_DBBANS . "'")) == 0
-									) {
-										mysqli_query($link, $posts_sql);
-										mysqli_query($link, $bans_sql);
-
-										$maxId = 0;
-										$threads = allThreads();
-										foreach ($threads as $thread) {
-											$posts = postsInThreadByID($thread['id']);
-											foreach ($posts as $post) {
-												mysqli_query($link,
-													'INSERT INTO `' . TINYIB_DBPOSTS . '` (
-														`id`,
-														`parent`,
-														`timestamp`,
-														`bumped`,
-														`ip`,
-														`name`,
-														`tripcode`,
-														`email`,
-														`nameblock`,
-														`subject`,
-														`message`,
-														`password`,
-														`file`,
-														`file_hex`,
-														`file_original`,
-														`file_size`,
-														`file_size_formatted`,
-														`image_width`,
-														`image_height`,
-														`thumb`,
-														`thumb_width`,
-														`thumb_height`,
-														`stickied`,
-														`likes`
-													) VALUES (' .
-														$post['id'] . ', ' .
-														$post['parent'] . ', ' .
-														time() . ', ' .
-														time() . ", '" .
-														$_SERVER['REMOTE_ADDR'] . "', '" .
-														mysqli_real_escape_string($link,
-															$post['name']) . "', '" .
-														mysqli_real_escape_string($link,
-															$post['tripcode']) . "', '" .
-														mysqli_real_escape_string($link,
-															$post['email']) . "', '" .
-														mysqli_real_escape_string($link,
-															$post['nameblock']) . "', '" .
-														mysqli_real_escape_string($link,
-															$post['subject']) . "', '" .
-														mysqli_real_escape_string($link,
-															$post['message']) . "', '" .
-														mysqli_real_escape_string($link,
-															$post['password']) . "', '" .
-														$post['file'] . "', '" .
-														$post['file_hex'] . "', '" .
-														mysqli_real_escape_string($link,
-															$post['file_original']) . "', " .
-														$post['file_size'] . ", '" .
-														$post['file_size_formatted'] . "', " .
-														$post['image_width'] . ", " .
-														$post['image_height'] . ", '" .
-														$post['thumb'] . "', " .
-														$post['thumb_width'] . ', ' .
-														$post['thumb_height'] . ', ' .
-														$post['stickied'] . ', ' .
-														$post['likes'] .
-													')');
-												$maxId = max($maxId, $post['id']);
-											}
-										}
-										if ($maxId > 0 && !mysqli_query($link,
-											'ALTER TABLE `' . TINYIB_DBPOSTS .
-											'` AUTO_INCREMENT = ' . ($maxId + 1))
-										) {
-											$text .= '<p><b>Warning!</b></p>' .
-												'<p>Unable to update the <code>AUTO_INCREMENT</code>' .
-												' value for table <code>' . TINYIB_DBPOSTS . '</code>,' .
-												' please set it to ' . ($maxId + 1) . '.</p>';
-										}
-
-										$maxId = 0;
-										$bans = allBans();
-										foreach ($bans as $ban) {
-											$maxId = max($maxId, $ban['id']);
-											mysqli_query($link,
-												'INSERT INTO `' . TINYIB_DBBANS . "` (
-													`id`,
-													`ip`,
-													`timestamp`,
-													`expire`,
-													`reason`
-												) VALUES ('" .
-													mysqli_real_escape_string($link, $ban['id']) . "', '" .
-													mysqli_real_escape_string($link, $ban['ip']) . "', '" .
-													mysqli_real_escape_string($link,
-														$ban['timestamp']) . "', '" .
-													mysqli_real_escape_string($link,
-														$ban['expire']) . "', '" .
-													mysqli_real_escape_string($link, $ban['reason']) . "')");
-										}
-										if ($maxId > 0 && !mysqli_query($link,
-											'ALTER TABLE `' . TINYIB_DBBANS .
-											'` AUTO_INCREMENT = ' . ($maxId + 1))
-										) {
-											$text .= '<p><b>Warning!</b></p>' .
-												'<p>Unable to update the <code>AUTO_INCREMENT</code>' .
-												' value for table <code>' . TINYIB_DBBANS . '</code>,' .
-												' please set it to ' . ($maxId + 1) . '.</p>';
-										}
-
-										$text .= '<p><b>Database migration complete!</b></p>' .
-											'<p>Set <code>TINYIB_DBMODE</code> to <code>mysqli</code> and' .
-											' <code>TINYIB_DBMIGRATE</code> to <code>false</code> in your' .
-											' settings.php file,<br>Then click <b>[Rebuild All]</b> above' .
-											' and ensure everything looks the way it should.</p>';
-									} else {
-										fancyDie('Bans table (' . TINYIB_DBBANS . ') already exists!<br>' .
-											'Please DROP this table and try again.');
-									}
-								} else {
-									fancyDie('Posts table (' . TINYIB_DBPOSTS . ') already exists!<br>' .
-										'Please DROP this table and try again.');
-								}
-							} else {
-								fancyDie('Please install the ' .
-									'<a href="http://php.net/manual/en/book.mysqli.php">' .
-									'MySQLi extension</a> and try again.');
-							}
-						} else {
-							fancyDie('settings.php: Set TINYIB_DBMODE to "flatfile" and enter your MySQL' .
-								' settings before migrating.');
-						}
-					} else {
-						$text .= '<p>
+				if (!TINYIB_DBMIGRATE) {
+					fancyDie('settings.php: Set TINYIB_DBMIGRATE to true to use this feature.');
+				} elseif (!isset($_GET['go'])) {
+					$text .= '<p>
 			This tool currently only supports migration from a flat file database to MySQL.<br>
 			Your original database will not be deleted.<br>
 			If the migration fails, disable the tool and your board will be unaffected.<br>
@@ -737,9 +579,179 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			<small>(<a href="README.md" target="_blank">alternate link</a>)</small> for instructions.<br><br>
 			<a href="?manage&dbmigrate&go"><b>Start the migration</b></a>
 		</p>';
-					}
+				} elseif (TINYIB_DBMODE != 'flatfile') {
+					fancyDie('settings.php: Set TINYIB_DBMODE to "flatfile" and enter your MySQL' .
+						' settings before migrating.');
+				} elseif (!function_exists('mysqli_connect')) {
+					fancyDie('Please install the <a href="http://php.net/manual/en/book.mysqli.php">' .
+						'MySQLi extension</a> and try again.');
 				} else {
-					fancyDie('settings.php: Set TINYIB_DBMIGRATE to true to use this feature.');
+					$link = @mysqli_connect(TINYIB_DBHOST, TINYIB_DBUSERNAME, TINYIB_DBPASSWORD);
+					if (!$link) {
+						fancyDie('Could not connect to database: ' . (
+							(is_object($link)) ? mysqli_error($link) :
+							(($link_error = mysqli_connect_error()) ? $link_error : '(unknown error)')
+						));
+					}
+					$dbSelected = @mysqli_query($link, 'USE ' . constant('TINYIB_DBNAME'));
+					if (!$dbSelected) {
+						fancyDie('Could not select database: ' . (
+							(is_object($link)) ? mysqli_error($link) :
+							(($link_error = mysqli_connect_error()) ? $link_error : '(unknown error)')
+						));
+					}
+					mysqli_set_charset($link, 'utf8');
+					if (mysqli_num_rows(mysqli_query($link,
+						"SHOW TABLES LIKE '" . TINYIB_DBPOSTS . "'")) != 0
+					) {
+						fancyDie('Posts table (' . TINYIB_DBPOSTS . ') already exists!<br>' .
+							'Please DROP this table and try again.');
+					} elseif (mysqli_num_rows(mysqli_query($link,
+						"SHOW TABLES LIKE '" . TINYIB_DBBANS . "'")) != 0
+					) {
+						fancyDie('Bans table (' . TINYIB_DBBANS . ') already exists!<br>' .
+							'Please DROP this table and try again.');
+					} elseif (mysqli_num_rows(mysqli_query($link,
+						"SHOW TABLES LIKE '" . TINYIB_DBLIKES . "'")) != 0
+					) {
+						fancyDie('Likes table (' . TINYIB_DBLIKES . ') already exists!<br>' .
+							'Please DROP this table and try again.');
+					} else {
+						mysqli_query($link, $posts_sql);
+						mysqli_query($link, $bans_sql);
+						mysqli_query($link, $likes_sql);
+
+						$maxId = 0;
+						$threads = allThreads();
+						foreach ($threads as $thread) {
+							$posts = postsInThreadByID($thread['id']);
+							foreach ($posts as $post) {
+								mysqli_query($link,
+									'INSERT INTO `' . TINYIB_DBPOSTS . '` (
+										`id`,
+										`parent`,
+										`timestamp`,
+										`bumped`,
+										`ip`,
+										`name`,
+										`tripcode`,
+										`email`,
+										`nameblock`,
+										`subject`,
+										`message`,
+										`password`,
+										`file`,
+										`file_hex`,
+										`file_original`,
+										`file_size`,
+										`file_size_formatted`,
+										`image_width`,
+										`image_height`,
+										`thumb`,
+										`thumb_width`,
+										`thumb_height`,
+										`stickied`,
+										`likes`
+									) VALUES (' .
+										$post['id'] . ', ' .
+										$post['parent'] . ', ' .
+										time() . ', ' .
+										time() . ", '" .
+										$_SERVER['REMOTE_ADDR'] . "', '" .
+										mysqli_real_escape_string($link, $post['name']) . "', '" .
+										mysqli_real_escape_string($link, $post['tripcode']) . "', '" .
+										mysqli_real_escape_string($link, $post['email']) . "', '" .
+										mysqli_real_escape_string($link, $post['nameblock']) . "', '" .
+										mysqli_real_escape_string($link, $post['subject']) . "', '" .
+										mysqli_real_escape_string($link, $post['message']) . "', '" .
+										mysqli_real_escape_string($link, $post['password']) . "', '" .
+										$post['file'] . "', '" .
+										$post['file_hex'] . "', '" .
+										mysqli_real_escape_string($link, $post['file_original']) . "', " .
+										$post['file_size'] . ", '" .
+										$post['file_size_formatted'] . "', " .
+										$post['image_width'] . ", " .
+										$post['image_height'] . ", '" .
+										$post['thumb'] . "', " .
+										$post['thumb_width'] . ', ' .
+										$post['thumb_height'] . ', ' .
+										$post['stickied'] . ', ' .
+										$post['likes'] .
+									')');
+								$maxId = max($maxId, $post['id']);
+							}
+						}
+						if ($maxId > 0 && !mysqli_query($link,
+							'ALTER TABLE `' . TINYIB_DBPOSTS .
+							'` AUTO_INCREMENT = ' . ($maxId + 1))
+						) {
+							$text .= '<p><b>Warning!</b></p>' .
+								'<p>Unable to update the <code>AUTO_INCREMENT</code> value for table <code>' .
+								TINYIB_DBPOSTS . '</code>,' . ' please set it to ' . ($maxId + 1) . '.</p>';
+						}
+
+						$maxId = 0;
+						$bans = allBans();
+						foreach ($bans as $ban) {
+							$maxId = max($maxId, $ban['id']);
+							mysqli_query($link,
+								'INSERT INTO `' . TINYIB_DBBANS . "` (
+									`id`,
+									`ip`,
+									`timestamp`,
+									`expire`,
+									`reason`
+								) VALUES ('" .
+									mysqli_real_escape_string($link, $ban['id']) . "', '" .
+									mysqli_real_escape_string($link, $ban['ip']) . "', '" .
+									mysqli_real_escape_string($link, $ban['timestamp']) . "', '" .
+									mysqli_real_escape_string($link, $ban['expire']) . "', '" .
+									mysqli_real_escape_string($link, $ban['reason']) . "')");
+						}
+						if ($maxId > 0 && !mysqli_query($link,
+							'ALTER TABLE `' . TINYIB_DBBANS .
+							'` AUTO_INCREMENT = ' . ($maxId + 1))
+						) {
+							$text .= '<p><b>Warning!</b></p>' .
+								'<p>Unable to update the <code>AUTO_INCREMENT</code>' .
+								' value for table <code>' . TINYIB_DBBANS . '</code>,' .
+								' please set it to ' . ($maxId + 1) . '.</p>';
+						}
+
+						$maxId = 0;
+						$likes = allLikes();
+						foreach ($likes as $like) {
+							$maxId = max($maxId, $like['id']);
+							mysqli_query($link,
+								'INSERT INTO `' . TINYIB_DBLIKES . "` (
+									`id`,
+									`ip`,
+									`board`,
+									`postnum`,
+									`islike`
+								) VALUES ('" .
+									mysqli_real_escape_string($link, $like['id']) . "', '" .
+									mysqli_real_escape_string($link, $like['ip']) . "', '" .
+									mysqli_real_escape_string($link, $like['board']) . "', '" .
+									mysqli_real_escape_string($link, $like['postnum']) . "', '" .
+									mysqli_real_escape_string($link, $like['islike']) . "')");
+						}
+						if ($maxId > 0 && !mysqli_query($link,
+							'ALTER TABLE `' . TINYIB_DBLIKES .
+							'` AUTO_INCREMENT = ' . ($maxId + 1))
+						) {
+							$text .= '<p><b>Warning!</b></p>' .
+								'<p>Unable to update the <code>AUTO_INCREMENT</code>' .
+								' value for table <code>' . TINYIB_DBLIKES . '</code>,' .
+								' please set it to ' . ($maxId + 1) . '.</p>';
+						}
+
+						$text .= '<p><b>Database migration complete!</b></p>' .
+							'<p>Set <code>TINYIB_DBMODE</code> to <code>mysqli</code> and' .
+							' <code>TINYIB_DBMIGRATE</code> to <code>false</code> in your' .
+							' settings.php file,<br>Then click <b>[Rebuild All]</b> above' .
+							' and ensure everything looks the way it should.</p>';
+					}
 				}
 			}
 		}
@@ -817,8 +829,21 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		$onload = manageOnLoad('login');
 		$text .= manageLogInForm();
 	}
-
 	echo managePage($text, $onload);
+} elseif (isset($_GET['like'])) {
+	$postNum = $_GET['like'];
+	$result = likePostByID($postNum, $_SERVER['REMOTE_ADDR']);
+	$post = postByID($postNum);
+	$post['likes'] = $result;
+	threadUpdated($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']);
+	echo '{
+		"status": "ok",
+		"message": "' . (
+			$result[0] ? 'Post №' . $postNum . ' succesfully liked!' :
+			'The like to post №' . $postNum . ' is cancelled!'
+		) . '",
+		"likes": ' . $result[1] . ' }';
+	$redirect = false;
 } elseif (!file_exists(TINYIB_INDEX) || countThreads() == 0) {
 	rebuildIndexes();
 }

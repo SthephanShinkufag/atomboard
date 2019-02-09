@@ -27,6 +27,11 @@ if (mysql_num_rows(mysql_query("SHOW TABLES LIKE '" . TINYIB_DBBANS . "'")) == 0
 	mysql_query($bans_sql);
 }
 
+// Create the likes table if it does not exist
+if (mysql_num_rows(mysql_query("SHOW TABLES LIKE '" . TINYIB_DBLIKES . "'")) == 0) {
+	mysql_query($likes_sql);
+}
+
 # Post Functions
 function uniquePosts() {
 	$row = mysql_fetch_row(mysql_query("SELECT COUNT(DISTINCT(`ip`)) FROM " . TINYIB_DBPOSTS));
@@ -241,6 +246,37 @@ function lastPostByIP() {
 			return $post;
 		}
 	}
+}
+
+function likePostByID($id, $ip) {
+	$isAlreadyLiked = mysql_result(mysql_query(
+		"SELECT COUNT(*) FROM `" . TINYIB_DBLIKES .
+		"` WHERE `ip` = '" . $ip .
+			"' AND `board` = '" . TINYIB_BOARD .
+			"' AND `postnum` = " . $id), 0, 0);
+	if ($isAlreadyLiked) {
+		mysql_query(
+			"DELETE FROM `" . TINYIB_DBLIKES .
+			"` WHERE `ip` = '" . $ip .
+				"' AND `board` = '" . TINYIB_BOARD .
+				"' AND postnum = " . $id);
+	} else {
+		mysql_query(
+			"INSERT INTO `" . TINYIB_DBLIKES .
+			"` (`ip`, `board`, `postnum`) VALUES ('" .
+				$ip . "', '" .
+				TINYIB_BOARD . "', " .
+				$id . ")");
+	}
+	$countOfPostLikes = mysql_result(mysql_query(
+		"SELECT COUNT(*) FROM `" . TINYIB_DBLIKES .
+		"` WHERE `board` = '" . TINYIB_BOARD .
+			"' AND `postnum` = " . $id), 0, 0);
+	mysql_query(
+		"UPDATE `" . TINYIB_DBPOSTS .
+		"` SET `likes` = " . $countOfPostLikes .
+		" WHERE `id` = " . $id);
+	return array(!$isAlreadyLiked, $countOfPostLikes);
 }
 
 # Ban Functions

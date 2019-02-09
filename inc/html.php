@@ -400,7 +400,8 @@ function buildPost($post, $res) {
 				(
 					TINYIB_LIKES ? '
 					<span class="like-container">
-						<span class="like-icon' . ($likes ? ' like-enabled' : ' like-disabled') . '">
+						<span class="like-icon' . ($likes ? ' like-enabled' : ' like-disabled') .
+							'" onclick="sendLike(this, ' . $id . ');">
 							<svg><use xlink:href="#symbol-like"></use></svg>
 						</span>
 						<span class="like-counter">' . ($likes ? $likes : '') . '</span>

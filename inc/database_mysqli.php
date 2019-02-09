@@ -31,6 +31,18 @@ if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . TINYIB_DBBANS . "
 	mysqli_query($link, $bans_sql);
 }
 
+// Create the likes table if it does not exist
+if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . TINYIB_DBLIKES . "'")) == 0) {
+	mysqli_query($link, $likes_sql);
+}
+
+# Utililty
+function mysqli_result($res, $row, $field = 0) {
+	$res->data_seek($row);
+	$datarow = $res->fetch_array();
+	return $datarow[$field];
+}
+
 # Post Functions
 function uniquePosts() {
 	global $link;
@@ -263,6 +275,38 @@ function lastPostByIP() {
 	}
 }
 
+function likePostByID($id, $ip) {
+	global $link;
+	$isAlreadyLiked = mysqli_result(mysqli_query($link,
+		"SELECT COUNT(*) FROM `" . TINYIB_DBLIKES .
+		"` WHERE `ip` = '" . $ip .
+			"' AND `board` = '" . TINYIB_BOARD .
+			"' AND `postnum` = " . $id), 0, 0);
+	if ($isAlreadyLiked) {
+		mysqli_query($link,
+			"DELETE FROM `" . TINYIB_DBLIKES .
+			"` WHERE `ip` = '" . $ip .
+				"' AND `board` = '" . TINYIB_BOARD .
+				"' AND postnum = " . $id);
+	} else {
+		mysqli_query($link,
+			"INSERT INTO `" . TINYIB_DBLIKES .
+			"` (`ip`, `board`, `postnum`) VALUES ('" .
+				$ip . "', '" .
+				TINYIB_BOARD . "', " .
+				$id . ")");
+	}
+	$countOfPostLikes = mysqli_result(mysqli_query($link,
+		"SELECT COUNT(*) FROM `" . TINYIB_DBLIKES .
+		"` WHERE `board` = '" . TINYIB_BOARD .
+			"' AND `postnum` = " . $id), 0, 0);
+	mysqli_query($link,
+		"UPDATE `" . TINYIB_DBPOSTS .
+		"` SET `likes` = " . $countOfPostLikes .
+		" WHERE `id` = " . $id);
+	return array(!$isAlreadyLiked, $countOfPostLikes);
+}
+
 # Ban Functions
 function banByID($id) {
 	global $link;
@@ -335,10 +379,4 @@ function deleteBanByID($id) {
 	mysqli_query($link,
 		"DELETE FROM `" . TINYIB_DBBANS .
 		"` WHERE `id` = " . mysqli_real_escape_string($link, $id) . " LIMIT 1");
-}
-
-function mysqli_result($res, $row, $field = 0) {
-	$res->data_seek($row);
-	$datarow = $res->fetch_array();
-	return $datarow[$field];
 }

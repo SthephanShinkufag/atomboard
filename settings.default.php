@@ -37,7 +37,7 @@ define('TINYIB_MODPASS', '');
 define('TINYIB_REQMOD', '');
 
 /* ==[ Database ]========================================================================================== */
-// Recommended database modes from best to worst: 'pdo', 'mysqli', 'mysql', 'sqlite', 'flatfile'
+// Recommended database modes from best to worst: 'pdo', 'mysqli', 'mysql', 'sqlite3', 'sqlite', 'flatfile'
 // 'flatfile' is only useful if you need portability or lack any kind of database
 // Mode
 define('TINYIB_DBMODE', 'flatfile');
@@ -45,6 +45,8 @@ define('TINYIB_DBMODE', 'flatfile');
 define('TINYIB_DBMIGRATE', false);
 // Bans table name in database (use the same bans table across boards for global bans)
 define('TINYIB_DBBANS', 'bans');
+// Likes table name in database (use the same likes table across boards for global likes)
+define('TINYIB_DBLIKES', 'likes');
 // Posts table name in database
 define('TINYIB_DBPOSTS', TINYIB_BOARD . '_posts');
 
