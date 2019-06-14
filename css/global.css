@@ -159,6 +159,10 @@ video.thumb {
 	line-height: 19px;
 }
 
+.oppost {
+	overflow: hidden;
+}
+
 .oppost > .filesize {
 	margin-left: 20px;
 }
