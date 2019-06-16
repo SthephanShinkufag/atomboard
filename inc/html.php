@@ -46,7 +46,7 @@ function pageWrapper($returnHref) {
 function pageFooter() {
 	return '
 		<div class="footer">
-			- <a href="https://github.com/SthephanShinkufag/TinyIB" target="_top">TinyIB</a> - forked by <a href="mailto:sthephan.shi@gmail.com">SthephanShi</a> - forked again by <a href="https://github.com/SthephanShinkufag/TinyIB" target="_top">nolifer</a>
+			- <a href="https://github.com/SthephanShinkufag/TinyIB" target="_top">TinyIB</a> - forked by <a href="mailto:sthephan.shi@gmail.com">SthephanShi</a> - forked again by <a href="https://github.com/nolifer1337/TinyIB" target="_top">nolifer</a>
 		</div>
 	</div>
 	<div class="aside aside-right">
