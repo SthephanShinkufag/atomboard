@@ -1,6 +1,4 @@
 TinyIB &mdash; a lightweight and efficient [imageboard](https://en.wikipedia.org/wiki/Imageboard) engine
-====
-See the [TinyIB installation](https://dscript.me/de/) for demo.
 
 Features
 ------------
@@ -40,9 +38,12 @@ This fork features:
  - "Sage" indicator in posts.
  - Post likes system (initial implementation, still in progress).
 
-This fork of the fork features (fork is not completed yet):
- - 4 files per post
- - bugfixes
+This fork of the fork features:
+ - Fork is based on `[TinyIB from SthephanShinkufag](https://github.com/SthephanShinkufag/TinyIB/)`
+ - DB schema changed!
+ - Now you can paste 4 files per post.
+ - Bugfixes.
+ - At this moment works only with PDO+MySQL (nofile / PostgreSQL / etc..  is not supported).
 
 
 Installing
@@ -55,7 +56,7 @@ Installing
       - If you plan on disabling image uploads to use TinyIB as a text board only, this library is not required.
  2. CD to the directory you wish to install TinyIB.
  3. Run the command:
-    - `git clone https://github.com/SthephanShinkufag/TinyIB.git ./`
+    - `git clone https://github.com/nolifer1337/TinyIB.git ./`
  4. Copy **settings.default.php** to **settings.php**
  5. Configure **settings.php**
     - When setting ``TINYIB_DBMODE`` to ``flatfile``, note that all post and ban data are exposed as the database is composed of standard text files.  Access to ./inc/flatfile/ should be denied.
@@ -99,12 +100,12 @@ Updating
  1. Obtain the latest release.
     - If you installed via Git, run the following command in TinyIB's directory:
       - `git pull`
-    - Otherwise, [download](https://github.com/SthephanShinkufag/TinyIB/archive/master.zip) and extract a zipped archive.
+    - Otherwise, [download](https://github.com/nolifer1337/TinyIB/archive/master.zip) and extract a zipped archive.
  2. Note which files were modified.
     - If **settings.default.php** was updated, migrate the changes to **settings.php**
       - Take care to not change the value of **TINYIB_TRIPSEED**, as it would result in different secure tripcodes.
     - If other files were updated, and you have made changes yourself:
-      - Visit [GitHub](https://github.com/SthephanShinkufag/TinyIB) and review the changes made in the update.
+      - Visit [GitHub](https://github.com/nolifer1337/TinyIB) and review the changes made in the update.
       - Ensure the update does not interfere with your changes.
  3. Visit [wiki/NewSQLStructure](https://github.com/tslocum/TinyIB/wiki/NewSQLStructure) and check for new SQL queries which may be required to complete the update.
 
@@ -136,8 +137,8 @@ Support
 ------------
 
  1. Ensure you are running the latest version of TinyIB.
- 2. Review the [open issues](https://github.com/SthephanShinkufag/TinyIB/issues).
- 3. Open a [new issue](https://github.com/SthephanShinkufag/TinyIB/issues/new).
+ 2. Review the [open issues](https://github.com/nolifer1337/TinyIB/issues).
+ 3. Open a [new issue](https://github.com/nolifer1337/TinyIB/issues/new).
 
 Contributing
 ------------

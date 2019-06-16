@@ -7,9 +7,9 @@
 
 /* ==[ Board description and customization ]=============================================================== */
 // Unique identifier for this board using only letters and numbers
-define('TINYIB_BOARD', 'bb');
+define('TINYIB_BOARD', '');
 // Displayed at the top of every page
-define('TINYIB_BOARDDESC', 'bb');
+define('TINYIB_BOARDDESC', '');
 // Logo HTML
 define('TINYIB_LOGO', '');
 // Index-file name
@@ -28,9 +28,9 @@ define('TINYIB_HTML_LEFTSIDE', '
 
 /* ==[ Administrator/moderator credentials ]=============================================================== */
 // Administrators have full access to the board
-define('TINYIB_ADMINPASS', 'bbadmin');
+define('TINYIB_ADMINPASS', '');
 // Moderators only have access to delete (and moderate if TINYIB_REQMOD is set) posts ['' to disable]
-define('TINYIB_MODPASS', 'bbmod');
+define('TINYIB_MODPASS', '');
 // Require moderation before displaying posts:
 // files / all (see README for instructions, only MySQL is supported)  ['' to disable]
 define('TINYIB_REQMOD', '');
@@ -57,11 +57,11 @@ define('TINYIB_DBHOST', 'localhost');
 // Port (set to 0 if you are using a UNIX socket as the host)
 define('TINYIB_DBPORT', 3306);
 // Username
-define('TINYIB_DBUSERNAME', 'bbuser');
+define('TINYIB_DBUSERNAME', '');
 // Password
-define('TINYIB_DBPASSWORD', 'bbpassword');
+define('TINYIB_DBPASSWORD', '');
 // Database
-define('TINYIB_DBNAME', 'bb');
+define('TINYIB_DBNAME', '');
 // Database configuration - PDO
 // The following only apply when TINYIB_DBMODE is set to 'pdo' (see README for instructions)
 // PDO driver to use: 'mysql', 'pgsql', 'sqlite'
@@ -76,9 +76,9 @@ define('TINYIB_DBDSN', '');
 define('TINYIB_POSTERNAME', 'Anonymous');
 // Tripcode seed - Must not change once set!
 // Enter some random text (used when generating secure tripcodes)
-define('TINYIB_TRIPSEED', 'tripper123');
+define('TINYIB_TRIPSEED', '');
 // Amount of threads shown per index page
-define('TINYIB_THREADSPERPAGE', 5);
+define('TINYIB_THREADSPERPAGE', 10);
 // Amount of replies previewed on index pages
 define('TINYIB_PREVIEWREPLIES', 3);
 // Amount of text lines to truncate posts on index pages [0 to disable]
@@ -92,7 +92,7 @@ define('TINYIB_LIKES', true);
 
 /* ==[ Post control ]====================================================================================== */
 // Delay (in seconds) between posts from the same IP address to help control flooding [0 to disable]
-define('TINYIB_DELAY', 0);
+define('TINYIB_DELAY', 3);
 // Oldest threads are discarded when the thread count passes this limit [0 to disable]
 define('TINYIB_MAXTHREADS', 100);
 // Maximum replies before a thread stops bumping [0 to disable]
