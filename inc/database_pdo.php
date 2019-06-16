@@ -103,6 +103,7 @@ function threadExistsByID($id) {
 	return $result->fetchColumn() != 0;
 }
 
+//shoud be changed if you want more files
 function insertPost($post) {
 	global $dbh;
 	$now = time();
@@ -119,19 +120,49 @@ function insertPost($post) {
 			subject,
 			message,
 			password,
-			file,
-			file_hex,
-			file_original,
-			file_size,
-			file_size_formatted,
-			image_width,
-			image_height,
-			thumb,
-			thumb_width,
-			thumb_height,
+			file0,
+			file0_hex,
+			file0_original,
+			file0_size,
+			file0_size_formatted,
+			image0_width,
+			image0_height,
+			thumb0,
+			thumb0_width,
+			thumb0_height,
+			file1,
+			file1_hex,
+			file1_original,
+			file1_size,
+			file1_size_formatted,
+			image1_width,
+			image1_height,
+			thumb1,
+			thumb1_width,
+			thumb1_height,
+			file2,
+			file2_hex,
+			file2_original,
+			file2_size,
+			file2_size_formatted,
+			image2_width,
+			image2_height,
+			thumb2,
+			thumb2_width,
+			thumb2_height,
+			file3,
+			file3_hex,
+			file3_original,
+			file3_size,
+			file3_size_formatted,
+			image3_width,
+			image3_height,
+			thumb3,
+			thumb3_width,
+			thumb3_height,
 			moderated,
 			likes
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 	$stm->execute(array(
 		$post['parent'],
 		$now,
@@ -144,16 +175,46 @@ function insertPost($post) {
 		$post['subject'],
 		$post['message'],
 		$post['password'],
-		$post['file'],
-		$post['file_hex'],
-		$post['file_original'],
-		$post['file_size'],
-		$post['file_size_formatted'],
-		$post['image_width'],
-		$post['image_height'],
-		$post['thumb'],
-		$post['thumb_width'],
-		$post['thumb_height'],
+		$post['file0'],
+		$post['file0_hex'],
+		$post['file0_original'],
+		$post['file0_size'],
+		$post['file0_size_formatted'],
+		$post['image0_width'],
+		$post['image0_height'],
+		$post['thumb0'],
+		$post['thumb0_width'],
+		$post['thumb0_height'],
+		$post['file1'],
+		$post['file1_hex'],
+		$post['file1_original'],
+		$post['file1_size'],
+		$post['file1_size_formatted'],
+		$post['image1_width'],
+		$post['image1_height'],
+		$post['thumb1'],
+		$post['thumb1_width'],
+		$post['thumb1_height'],
+		$post['file2'],
+		$post['file2_hex'],
+		$post['file2_original'],
+		$post['file2_size'],
+		$post['file2_size_formatted'],
+		$post['image2_width'],
+		$post['image2_height'],
+		$post['thumb2'],
+		$post['thumb2_width'],
+		$post['thumb2_height'],
+		$post['file3'],
+		$post['file3_hex'],
+		$post['file3_original'],
+		$post['file3_size'],
+		$post['file3_size_formatted'],
+		$post['image3_width'],
+		$post['image3_height'],
+		$post['thumb3'],
+		$post['thumb3_width'],
+		$post['thumb3_height'],
 		$post['moderated'],
 		$post['likes']
 	));
@@ -215,12 +276,13 @@ function postsInThreadByID($id, $moderated_only = true) {
 	return $posts;
 }
 
+//shoud be changed if you want more files
 function postsByHex($hex) {
 	$posts = array();
 	$results = pdoQuery(
 		"SELECT * FROM " . TINYIB_DBPOSTS .
-		" WHERE file_hex = ? AND moderated = 1 LIMIT 1",
-		array($hex)
+		" WHERE (file0_hex = ? OR file1_hex = ? OR file2_hex = ? OR file3_hex = ?) AND moderated = 1 LIMIT 1",
+		array($hex, $hex, $hex, $hex)
 	);
 	while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 		$posts[] = $row;
@@ -246,7 +308,7 @@ function deletePostByID($id) {
 	foreach ($posts as $post) {
 		if ($post['id'] != $id) {
 			deletePostImages($post);
-			pdoQuery("DELETE FROM " . TINYIB_DBPOSTS . " WHERE id = ?", array($id));
+			pdoQuery("DELETE FROM " . TINYIB_DBPOSTS . " WHERE id = ?", array($post['id']));
 		} else {
 			$thispost = $post;
 		}

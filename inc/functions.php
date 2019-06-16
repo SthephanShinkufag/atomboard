@@ -3,6 +3,11 @@ if (!defined('TINYIB_BOARD')) {
 	die('');
 }
 
+
+// if you wanna add more file_* entities you also have to change:
+// postsByHex()
+// insertPost()
+//
 if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 	$posts_sql = 'CREATE TABLE "' . TINYIB_DBPOSTS . '" (
 		"id" bigserial NOT NULL,
@@ -17,16 +22,46 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		"subject" varchar(75) NOT NULL,
 		"message" text NOT NULL,
 		"password" varchar(255) NOT NULL,
-		"file" text NOT NULL,
-		"file_hex" varchar(75) NOT NULL,
-		"file_original" varchar(255) NOT NULL,
-		"file_size" integer NOT NULL default \'0\',
-		"file_size_formatted" varchar(75) NOT NULL,
-		"image_width" smallint NOT NULL default \'0\',
-		"image_height" smallint NOT NULL default \'0\',
-		"thumb" varchar(255) NOT NULL,
-		"thumb_width" smallint NOT NULL default \'0\',
-		"thumb_height" smallint NOT NULL default \'0\',
+		"file0" text NOT NULL,
+		"file0_hex" varchar(75) NOT NULL,
+		"file0_original" varchar(255) NOT NULL,
+		"file0_size" integer NOT NULL default \'0\',
+		"file0_size_formatted" varchar(75) NOT NULL,
+		"image0_width" smallint NOT NULL default \'0\',
+		"image0_height" smallint NOT NULL default \'0\',
+		"thumb0" varchar(255) NOT NULL,
+		"thumb0_width" smallint NOT NULL default \'0\',
+		"thumb0_height" smallint NOT NULL default \'0\',
+		"file1" text NOT NULL,
+		"file1_hex" varchar(75) NOT NULL,
+		"file1_original" varchar(255) NOT NULL,
+		"file1_size" integer NOT NULL default \'0\',
+		"file1_size_formatted" varchar(75) NOT NULL,
+		"image1_width" smallint NOT NULL default \'0\',
+		"image1_height" smallint NOT NULL default \'0\',
+		"thumb1" varchar(255) NOT NULL,
+		"thumb1_width" smallint NOT NULL default \'0\',
+		"thumb1_height" smallint NOT NULL default \'0\',
+		"file2" text NOT NULL,
+		"file2_hex" varchar(75) NOT NULL,
+		"file2_original" varchar(255) NOT NULL,
+		"file2_size" integer NOT NULL default \'0\',
+		"file2_size_formatted" varchar(75) NOT NULL,
+		"image2_width" smallint NOT NULL default \'0\',
+		"image2_height" smallint NOT NULL default \'0\',
+		"thumb2" varchar(255) NOT NULL,
+		"thumb2_width" smallint NOT NULL default \'0\',
+		"thumb2_height" smallint NOT NULL default \'0\',
+		"file3" text NOT NULL,
+		"file3_hex" varchar(75) NOT NULL,
+		"file3_original" varchar(255) NOT NULL,
+		"file3_size" integer NOT NULL default \'0\',
+		"file3_size_formatted" varchar(75) NOT NULL,
+		"image3_width" smallint NOT NULL default \'0\',
+		"image3_height" smallint NOT NULL default \'0\',
+		"thumb3" varchar(255) NOT NULL,
+		"thumb3_width" smallint NOT NULL default \'0\',
+		"thumb3_height" smallint NOT NULL default \'0\',
 		"stickied" smallint NOT NULL default \'0\',
 		"moderated" smallint NOT NULL default \'1\',
 		"likes" smallint NOT NULL default \'0\',
@@ -70,16 +105,46 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		`subject` varchar(75) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 		`message` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 		`password` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
-		`file` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
-		`file_hex` varchar(75) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
-		`file_original` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
-		`file_size` int(20) unsigned NOT NULL default '0',
-		`file_size_formatted` varchar(75) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
-		`image_width` smallint(5) unsigned NOT NULL default '0',
-		`image_height` smallint(5) unsigned NOT NULL default '0',
-		`thumb` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
-		`thumb_width` smallint(5) unsigned NOT NULL default '0',
-		`thumb_height` smallint(5) unsigned NOT NULL default '0',
+		`file0` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`file0_hex` varchar(75) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`file0_original` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`file0_size` int(20) unsigned NOT NULL default '0',
+		`file0_size_formatted` varchar(75) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`image0_width` smallint(5) unsigned NOT NULL default '0',
+		`image0_height` smallint(5) unsigned NOT NULL default '0',
+		`thumb0` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`thumb0_width` smallint(5) unsigned NOT NULL default '0',
+		`thumb0_height` smallint(5) unsigned NOT NULL default '0',
+		`file1` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`file1_hex` varchar(75) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`file1_original` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`file1_size` int(20) unsigned NOT NULL default '0',
+		`file1_size_formatted` varchar(75) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`image1_width` smallint(5) unsigned NOT NULL default '0',
+		`image1_height` smallint(5) unsigned NOT NULL default '0',
+		`thumb1` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`thumb1_width` smallint(5) unsigned NOT NULL default '0',
+		`thumb1_height` smallint(5) unsigned NOT NULL default '0',
+		`file2` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`file2_hex` varchar(75) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`file2_original` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`file2_size` int(20) unsigned NOT NULL default '0',
+		`file2_size_formatted` varchar(75) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`image2_width` smallint(5) unsigned NOT NULL default '0',
+		`image2_height` smallint(5) unsigned NOT NULL default '0',
+		`thumb2` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`thumb2_width` smallint(5) unsigned NOT NULL default '0',
+		`thumb2_height` smallint(5) unsigned NOT NULL default '0',
+		`file3` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`file3_hex` varchar(75) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`file3_original` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`file3_size` int(20) unsigned NOT NULL default '0',
+		`file3_size_formatted` varchar(75) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`image3_width` smallint(5) unsigned NOT NULL default '0',
+		`image3_height` smallint(5) unsigned NOT NULL default '0',
+		`thumb3` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`thumb3_width` smallint(5) unsigned NOT NULL default '0',
+		`thumb3_height` smallint(5) unsigned NOT NULL default '0',
 		`stickied` tinyint(1) NOT NULL default '0',
 		`moderated` tinyint(1) NOT NULL default '1',
 		`likes` smallint(5) NOT NULL default '0',
@@ -140,16 +205,46 @@ function newPost($parent = TINYIB_NEWTHREAD) {
 		'subject' => '',
 		'message' => '',
 		'password' => '',
-		'file' => '',
-		'file_hex' => '',
-		'file_original' => '',
-		'file_size' => '0',
-		'file_size_formatted' => '',
-		'image_width' => '0',
-		'image_height' => '0',
-		'thumb' => '',
-		'thumb_width' => '0',
-		'thumb_height' => '0',
+		'file0' => '',
+		'file0_hex' => '',
+		'file0_original' => '',
+		'file0_size' => '0',
+		'file0_size_formatted' => '',
+		'image0_width' => '0',
+		'image0_height' => '0',
+		'thumb0' => '',
+		'thumb0_width' => '0',
+		'thumb0_height' => '0',
+		'file1' => '',
+		'file1_hex' => '',
+		'file1_original' => '',
+		'file1_size' => '0',
+		'file1_size_formatted' => '',
+		'image1_width' => '0',
+		'image1_height' => '0',
+		'thumb1' => '',
+		'thumb1_width' => '0',
+		'thumb1_height' => '0',
+		'file2' => '',
+		'file2_hex' => '',
+		'file2_original' => '',
+		'file2_size' => '0',
+		'file2_size_formatted' => '',
+		'image2_width' => '0',
+		'image2_height' => '0',
+		'thumb2' => '',
+		'thumb2_width' => '0',
+		'thumb2_height' => '0',
+		'file3' => '',
+		'file3_hex' => '',
+		'file3_original' => '',
+		'file3_size' => '0',
+		'file3_size_formatted' => '',
+		'image3_width' => '0',
+		'image3_height' => '0',
+		'thumb3' => '',
+		'thumb3_width' => '0',
+		'thumb3_height' => '0',
 		'stickied' => '0',
 		'moderated' => '1');
 }
@@ -223,7 +318,9 @@ function nameBlock($name, $tripcode, $email, $timestamp, $rawposttext) {
 		$output = '<a href="mailto:' . $email . '"' .
 			($lowEmail == 'sage' ? ' class="sage"' : '') . '>' . $output . '</a>';
 	}
-	return $output . $rawposttext . ' ' . date('y.m.d D H:i:s', $timestamp);
+
+//y.m.d -> d.m.y
+	return $output . $rawposttext . ' ' . date('d.m.y D H:i:s', $timestamp);
 }
 
 function writePage($filename, $contents) {
@@ -253,11 +350,13 @@ function finishWordBreak($message) {
 }
 
 function deletePostImages($post) {
-	if (!isEmbed($post['file_hex']) && $post['file'] != '') {
-		@unlink('src/' . $post['file']);
-	}
-	if ($post['thumb'] != '') {
-		@unlink('thumb/' . $post['thumb']);
+	for ($index=0; $index < MAXIMUM_FILES; $index++) {
+		if (!isEmbed($post['file'.$index.'_hex']) && $post['file'.$index] != '') {
+		 @unlink('src/' . $post['file'.$index]);
+		}
+		if ($post['thumb'.$index] != '') {
+ 		 @unlink('thumb/' . $post['thumb'.$index]);
+		}
 	}
 }
 
@@ -382,8 +481,8 @@ function isRawPost() {
 	return false;
 }
 
-function validateFileUpload() {
-	switch ($_FILES['file']['error']) {
+function validateFileUpload($error) {
+	switch ($error) {
 		case UPLOAD_ERR_OK:
 			break;
 		case UPLOAD_ERR_FORM_SIZE:
@@ -405,6 +504,9 @@ function validateFileUpload() {
 		case UPLOAD_ERR_CANT_WRITE:
 			fancyDie("Failed to write file to disk.");
 			break;
+		case UPLOAD_ERR_EXTENSION:
+			fancyDie("Unable to save the uploaded file. Extension error");
+			break;
 		default:
 			fancyDie("Unable to save the uploaded file.");
 	}
@@ -421,7 +523,9 @@ function checkDuplicateFile($hex) {
 	}
 }
 
-function thumbnailDimensions($post) {
+// added $imgIndex
+function thumbnailDimensions($post, $imgIndex=0) {
+// imgIndex=0 if not set
 	if ($post['parent'] == TINYIB_NEWTHREAD) {
 		$max_width = TINYIB_MAXWOP;
 		$max_height = TINYIB_MAXHOP;
@@ -429,9 +533,9 @@ function thumbnailDimensions($post) {
 		$max_width = TINYIB_MAXW;
 		$max_height = TINYIB_MAXH;
 	}
-	return ($post['image_width'] > $max_width || $post['image_height'] > $max_height) ?
+	return ($post['image'.$imgIndex.'_width'] > $max_width || $post['image'.$imgIndex.'_height'] > $max_height) ?
 		array($max_width, $max_height) :
-		array($post['image_width'], $post['image_height']);
+		array($post['image'.$imgIndex.'_width'], $post['image'.$imgIndex.'_height']);
 }
 
 function createThumbnail($file_location, $thumb_location, $new_w, $new_h) {
@@ -658,13 +762,20 @@ function isEmbed($file_hex) {
 }
 
 function getEmbed($url) {
-	global $tinyib_embeds;
-	foreach ($tinyib_embeds as $service => $service_url) {
-		$service_url = str_ireplace("TINYIBEMBED", urlencode($url), $service_url);
-		$result = json_decode(url_get_contents($service_url), true);
-		if (!empty($result)) {
-			return array($service, $result);
+global $tinyib_embeds;
+
+ if ( sizeof($tinyib_embeds)!=0 ) {
+		foreach ($tinyib_embeds as $service => $service_url) {
+
+			if ( strpos( strtolower($url), strtolower($service) ) !== false ) {
+			$service_url = str_ireplace("TINYIBEMBED", urlencode($url), $service_url);
+			$result = json_decode(url_get_contents($service_url), true);
+			 if (!empty($result)) {
+			 	return array($service, $result);
+			 }
+			}
 		}
-	}
-	return array('', array());
+ }
+
+return array('', array());
 }

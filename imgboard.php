@@ -117,8 +117,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		$post['message'] = $_POST['message'];
 		if ($rawPost) {
 			// Treat message as raw HTML
-			$rawPostText = $isAdmin ?
-				' <span style="color: red;">## Admin</span>' : ' <span style="color: purple;">## Mod</span>';
+			$rawPostText = ($isAdmin)?' <span style="color: red;">## Admin</span>':' <span style="color: purple;">## Mod</span>';
 		} else {
 			$msg = cleanString(rtrim($post['message']));
 			if (TINYIB_WORDBREAK > 0) {
@@ -221,11 +220,13 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	}
 	$post['nameblock'] = nameBlock($post['name'], $post['tripcode'], $post['email'], time(), $rawPostText);
 
+//EMBED-start
 	if (isset($_POST['embed']) &&
 		trim($_POST['embed']) != '' &&
 		($rawPost || !in_array('embed', $hideFields))
 	) {
-		if (isset($_FILES['file']) && $_FILES['file']['name'] != '') {
+
+		if (isset($_FILES['file']) && $_FILES['file']['name'][0] != '') {
 			fancyDie('Embedding a URL and uploading a file at the same time is not supported.');
 		}
 
@@ -239,116 +240,138 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				(implode('/', array_keys($tinyib_embeds))) . ' URLs are supported.');
 		}
 
-		$post['file_hex'] = $service;
-		$tempFile = time() . substr(microtime(), 2, 3);
+		$post['file0_hex'] = $service;
+		$tempFile = time() . substr(microtime(), 2, 3).'-0';
 		$fileLocation = 'thumb/' . $tempFile;
 		file_put_contents($fileLocation, url_get_contents($embed['thumbnail_url']));
 
 		$fileInfo = getimagesize($fileLocation);
 		$fileMime = mime_content_type($fileLocation);
-		$post['image_width'] = $fileInfo[0];
-		$post['image_height'] = $fileInfo[1];
+		$post['image0_width'] = $fileInfo[0];
+		$post['image0_height'] = $fileInfo[1];
 
 		if ($fileMime == 'image/jpeg') {
-			$post['thumb'] = $tempFile . '.jpg';
+			$post['thumb0'] = $tempFile . '.jpg';
 		} elseif ($fileMime == 'image/gif') {
-			$post['thumb'] = $tempFile . '.gif';
+			$post['thumb0'] = $tempFile . '.gif';
 		} elseif ($fileMime == 'image/png') {
-			$post['thumb'] = $tempFile . '.png';
+			$post['thumb0'] = $tempFile . '.png';
 		} else {
 			fancyDie('Error while processing audio/video.');
 		}
-		$thumbLocation = 'thumb/' . $post['thumb'];
+		$thumbLocation = 'thumb/' . $post['thumb0'];
 
-		list($thumbMaxWidth, $thumbMaxHeight) = thumbnailDimensions($post);
+		list($thumbMaxWidth, $thumbMaxHeight) = thumbnailDimensions($post,'0');
 
 		if (!createThumbnail($fileLocation, $thumbLocation, $thumbMaxWidth, $thumbMaxHeight)) {
 			fancyDie('Could not create thumbnail.');
 		}
 
-		addVideoOverlay($thumbLocation);
+		(ADD_VIDEO_OVERLAY_IMAGE)?addVideoOverlay($thumbLocation):'';
 
 		$thumbInfo = getimagesize($thumbLocation);
-		$post['thumb_width'] = $thumbInfo[0];
-		$post['thumb_height'] = $thumbInfo[1];
+		$post['thumb0_width'] = $thumbInfo[0];
+		$post['thumb0_height'] = $thumbInfo[1];
 
-		$post['file_original'] = cleanString($embed['title']);
-		$post['file'] = str_ireplace(array('src="https://', 'src="http://'), 'src="//', $embed['html']);
+		$post['file0_original'] = cleanString($embed['title']);
+		$post['file0'] = str_ireplace(array('src="https://', 'src="http://'), 'src="//', $embed['html']);
+// EMBED-off
+
+// PICTURES-start
 	} elseif (isset($_FILES['file']) && ($rawPost || !in_array('file', $hideFields))) {
-		if ($_FILES['file']['name'] != '') {
-			validateFileUpload();
+		if ($_FILES['file']['tmp_name'][0]) {
 
-			if (!is_file($_FILES['file']['tmp_name']) || !is_readable($_FILES['file']['tmp_name'])) {
+		$filesCount = 0;
+		$sizeOfCurrentFileInBytes = 0;
+		$sizeOfAllFilesInBytes = 0;
+
+		  foreach ($_FILES["file"]["error"] as $index => $error) {
+		  if ($filesCount < MAXIMUM_FILES){
+
+			validateFileUpload($error);
+
+			if (!is_file($_FILES['file']['tmp_name'][$index]) || !is_readable($_FILES['file']['tmp_name'][$index])) {
 				fancyDie('File transfer failure.<br>Please retry the submission.');
 			}
 
-			if ((TINYIB_MAXKB > 0) && (filesize($_FILES['file']['tmp_name']) > (TINYIB_MAXKB * 1024))) {
-				fancyDie('That file is larger than ' . TINYIB_MAXKBDESC . '.');
+			$sizeOfCurrentFileInBytes = filesize($_FILES['file']['tmp_name'][$index]);
+			$sizeOfAllFilesInBytes += $sizeOfCurrentFileInBytes;
+
+			if ( (TINYIB_MAXKB > 0) && ($sizeOfCurrentFileInBytes > (TINYIB_MAXKB * 1024)) ) {
+			fancyDie('That file is larger than ' . TINYIB_MAXKBDESC . '.');
 			}
 
-			$post['file_original'] =
-				trim(htmlentities(substr($_FILES['file']['name'], 0, 50), ENT_QUOTES, 'UTF-8'));
-			$post['file_hex'] = md5_file($_FILES['file']['tmp_name']);
-			$post['file_size'] = $_FILES['file']['size'];
-			$post['file_size_formatted'] = convertBytes($post['file_size']);
+			if ( (TINYIB_MAXKB > 0) && ($sizeOfAllFilesInBytes > (TINYIB_MAXKB * 1024)) ) {
+			continue;
+			// silently drop all remained files if comulative size is getting more than TINYIB_MAXKB.
+			// or uncomment fancyDie to get error message and lost post. 
+			// fancyDie('Size of all files is larger than ' . TINYIB_MAXKBDESC . '.');
+			}
+
+			$post['file'.$index.'_original'] = trim(htmlentities(substr(basename($_FILES['file']['name'][$index]), 0, 50), ENT_QUOTES, 'UTF-8'));
+			$post['file'.$index.'_hex'] = md5_file($_FILES['file']['tmp_name'][$index]);
+			$post['file'.$index.'_size'] = $_FILES['file']['size'][$index];
+			$post['file'.$index.'_size_formatted'] = convertBytes($post['file'.$index.'_size']);
 
 			if (TINYIB_FILE_ALLOW_DUPLICATE === false) {
-				checkDuplicateFile($post['file_hex']);
+				checkDuplicateFile($post['file'.$index.'_hex']);
 			}
 
-			$fileMimeSplit = explode(' ', trim(mime_content_type($_FILES['file']['tmp_name'])));
+			$fileMimeSplit = explode(' ', trim(mime_content_type($_FILES['file']['tmp_name'][$index])));
 			if (count($fileMimeSplit) > 0) {
 				$fileMime = strtolower(array_pop($fileMimeSplit));
 			} else {
-				if (!@getimagesize($_FILES['file']['tmp_name'])) {
+				if (!@getimagesize($_FILES['file']['tmp_name'][$index])) {
 					fancyDie('Failed to read the MIME type and size of the uploaded file.<br>' .
 						'Please retry the submission.');
 				}
 
-				$fileInfo = getimagesize($_FILES['file']['tmp_name']);
-				$fileMime = mime_content_type($_FILES['file']['tmp_name']);
+				$fileInfo = getimagesize($_FILES['file']['tmp_name'][$index]);
+				$fileMime = mime_content_type($_FILES['file']['tmp_name'][$index]);
 			}
 
 			if (empty($fileMime) || !isset($tinyib_uploads[$fileMime])) {
 				fancyDie(supportedFileTypes());
 			}
 
-			$fileName = time() . substr(microtime(), 2, 3);
-			$post['file'] = $fileName . '.' . $tinyib_uploads[$fileMime][0];
+			$fileName = time() . substr(microtime(), 2, 3).'-'.$index;
+			$post['file'.$index] = $fileName . '.' . $tinyib_uploads[$fileMime][0];
+			$fileLocation = 'src/' . $post['file'.$index];
 
-			$fileLocation = 'src/' . $post['file'];
-			if (!move_uploaded_file($_FILES['file']['tmp_name'], $fileLocation)) {
+			if (!move_uploaded_file($_FILES['file']['tmp_name'][$index], $fileLocation)) {
 				fancyDie('Could not copy uploaded file.');
 			}
 
-			if ($_FILES['file']['size'] != filesize($fileLocation)) {
+			if ($_FILES['file']['size'][$index] != filesize($fileLocation)) {
 				@unlink($fileLocation);
 				fancyDie('File transfer failure.<br>Please go back and try again.');
 			}
 
 			if ($fileMime == 'audio/webm' || $fileMime == 'video/webm' || $fileMime == 'video/mp4') {
-				$post['image_width'] = max(0, intval(shell_exec(
+				$post['image'.$index.'_width'] = max(0, intval(shell_exec(
 					'mediainfo --Inform="Video;%Width%" ' . $fileLocation)));
-				$post['image_height'] = max(0, intval(shell_exec(
+				$post['image'.$index.'_height'] = max(0, intval(shell_exec(
 					'mediainfo --Inform="Video;%Height%" ' . $fileLocation)));
 
-				if ($post['image_width'] > 0 && $post['image_height'] > 0) {
-					list($thumbMaxWidth, $thumbMaxHeight) = thumbnailDimensions($post);
-					$post['thumb'] = $fileName . 's.jpg';
-					shell_exec('ffmpegthumbnailer -s ' . max($thumbMaxWidth, $thumbMaxHeight) .
-						' -i ' . $fileLocation . ' -o thumb/' . $post['thumb']);
+				if ($post['image'.$index.'_width'] > 0 && $post['image'.$index.'_height'] > 0) {
 
-					$thumbInfo = getimagesize('thumb/' . $post['thumb']);
-					$post['thumb_width'] = $thumbInfo[0];
-					$post['thumb_height'] = $thumbInfo[1];
+					list($thumbMaxWidth, $thumbMaxHeight) = thumbnailDimensions($post,$index);
+					$post['thumb'.$index] = $fileName . 's.jpg';
 
-					if ($post['thumb_width'] <= 0 || $post['thumb_height'] <= 0) {
+					shell_exec('ffmpegthumbnailer -t 1 -s ' . max($thumbMaxWidth, $thumbMaxHeight) .
+						' -i ' . $fileLocation . ' -o thumb/' . $post['thumb'.$index]);
+
+					$thumbInfo = getimagesize('thumb/' . $post['thumb'.$index]);
+					$post['thumb'.$index.'_width'] = $thumbInfo[0];
+					$post['thumb'.$index.'_height'] = $thumbInfo[1];
+
+					if ($post['thumb'.$index.'_width'] <= 0 || $post['image'.$index.'_width'] > 32766 || $post['thumb'.$index.'_height'] <= 0 || $post['image'.$index.'_height'] > 32766) {
 						@unlink($fileLocation);
-						@unlink('thumb/' . $post['thumb']);
+						@unlink('thumb/' . $post['thumb'.$index]);
 						fancyDie('Sorry, your video appears to be corrupt.');
 					}
 
-					addVideoOverlay('thumb/' . $post['thumb']);
+					(ADD_VIDEO_OVERLAY_IMAGE)?addVideoOverlay('thumb/' . $post['thumb'.$index]):'';
 				}
 
 				$duration = intval(shell_exec('mediainfo --Inform="General;%Duration%" ' . $fileLocation));
@@ -356,35 +379,34 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 					$mins = floor(round($duration / 1000) / 60);
 					$secs = str_pad(floor(round($duration / 1000) % 60), 2, '0', STR_PAD_LEFT);
 
-					$post['file_original'] = $mins . ':' . $secs .
-						($post['file_original'] != '' ? (', ' . $post['file_original']) : '');
+					$post['file'.$index.'_original'] = $mins . ':' . $secs .
+						($post['file'.$index.'_original'] != '' ? (', ' . $post['file'.$index.'_original']) : '');
 				}
 			} elseif (in_array($fileMime,
 				array('image/jpeg', 'image/pjpeg', 'image/png', 'image/gif', 'application/x-shockwave-flash'))
 			) {
 				$fileInfo = getimagesize($fileLocation);
-
-				$post['image_width'] = $fileInfo[0];
-				$post['image_height'] = $fileInfo[1];
+				$post['image'.$index.'_width'] = $fileInfo[0];
+				$post['image'.$index.'_height'] = $fileInfo[1];
 			}
 
 			if (isset($tinyib_uploads[$fileMime][1])) {
 				$thumbFileSplit = explode('.', $tinyib_uploads[$fileMime][1]);
-				$post['thumb'] = $fileName . 's.' . array_pop($thumbFileSplit);
-				if (!copy($tinyib_uploads[$fileMime][1], 'thumb/' . $post['thumb'])) {
+				$post['thumb'.$index] = $fileName . 's.' . array_pop($thumbFileSplit);
+				if (!copy($tinyib_uploads[$fileMime][1], 'thumb/' . $post['thumb'.$index])) {
 					@unlink($fileLocation);
 					fancyDie('Could not create thumbnail.');
 				}
 				if ($fileMime == 'application/x-shockwave-flash') {
-					addVideoOverlay('thumb/' . $post['thumb']);
+					(ADD_VIDEO_OVERLAY_IMAGE)?addVideoOverlay('thumb/' . $post['thumb'.$index]):'';
 				}
 			} elseif (in_array($fileMime, array('image/jpeg', 'image/pjpeg', 'image/png', 'image/gif'))) {
-				$post['thumb'] = $fileName . 's.' . $tinyib_uploads[$fileMime][0];
-				list($thumbMaxWidth, $thumbMaxHeight) = thumbnailDimensions($post);
+				$post['thumb'.$index] = $fileName . 's.' . $tinyib_uploads[$fileMime][0];
+				list($thumbMaxWidth, $thumbMaxHeight) = thumbnailDimensions($post,$index);
 
 				if (!createThumbnail(
 					$fileLocation,
-					'thumb/' . $post['thumb'],
+					'thumb/' . $post['thumb'.$index],
 					$thumbMaxWidth,
 					$thumbMaxHeight)
 				) {
@@ -393,15 +415,20 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				}
 			}
 
-			if ($post['thumb'] != '') {
-				$thumbInfo = getimagesize('thumb/' . $post['thumb']);
-				$post['thumb_width'] = $thumbInfo[0];
-				$post['thumb_height'] = $thumbInfo[1];
+			if ($post['thumb'.$index] != '') {
+				$thumbInfo = getimagesize('thumb/' . $post['thumb'.$index]);
+				$post['thumb'.$index.'_width'] = $thumbInfo[0];
+				$post['thumb'.$index.'_height'] = $thumbInfo[1];
 			}
+
+		  $filesCount++;
+		  }
+		  }
 		}
 	}
+// PICTURES-off
 
-	if ($post['file'] == '') { // No file uploaded
+	if ($post['file0'] == '') { // No file uploaded
 		$allowed = '';
 		if (!empty($tinyib_uploads) && ($rawPost || !in_array('file', $hideFields))) {
 			$allowed = 'file';
@@ -427,7 +454,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		}
 	}
 
-	if (!$loggedIn && (($post['file'] != '' && TINYIB_REQMOD == 'files') || TINYIB_REQMOD == 'all')) {
+	if (!$loggedIn && (($post['file0'] != '' && TINYIB_REQMOD == 'files') || TINYIB_REQMOD == 'all')) {
 		$post['moderated'] = '0';
 		echo 'Your ' . ($post['parent'] == TINYIB_NEWTHREAD ? 'thread' : 'post') .
 			' will be shown <b>once it has been approved</b>.<br>';
@@ -460,6 +487,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 
 		rebuildIndexes();
 	}
+
 // Check if the request is to delete a post and/or its associated image
 } elseif (isset($_GET['delete']) && !isset($_GET['manage'])) {
 	if (!isset($_POST['delete'])) {
@@ -640,16 +668,46 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 										`subject`,
 										`message`,
 										`password`,
-										`file`,
-										`file_hex`,
-										`file_original`,
-										`file_size`,
-										`file_size_formatted`,
-										`image_width`,
-										`image_height`,
-										`thumb`,
-										`thumb_width`,
-										`thumb_height`,
+										`file0`,
+										`file0_hex`,
+										`file0_original`,
+										`file0_size`,
+										`file0_size_formatted`,
+										`image0_width`,
+										`image0_height`,
+										`thumb0`,
+										`thumb0_width`,
+										`thumb0_height`,
+										`file1`,
+										`file1_hex`,
+										`file1_original`,
+										`file1_size`,
+										`file1_size_formatted`,
+										`image1_width`,
+										`image1_height`,
+										`thumb1`,
+										`thumb1_width`,
+										`thumb1_height`,
+										`file2`,
+										`file2_hex`,
+										`file2_original`,
+										`file2_size`,
+										`file2_size_formatted`,
+										`image2_width`,
+										`image2_height`,
+										`thumb2`,
+										`thumb2_width`,
+										`thumb2_height`,
+										`file3`,
+										`file3_hex`,
+										`file3_original`,
+										`file3_size`,
+										`file3_size_formatted`,
+										`image3_width`,
+										`image3_height`,
+										`thumb3`,
+										`thumb3_width`,
+										`thumb3_height`,
 										`stickied`,
 										`likes`
 									) VALUES (' .
@@ -665,16 +723,46 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 										mysqli_real_escape_string($link, $post['subject']) . "', '" .
 										mysqli_real_escape_string($link, $post['message']) . "', '" .
 										mysqli_real_escape_string($link, $post['password']) . "', '" .
-										$post['file'] . "', '" .
-										$post['file_hex'] . "', '" .
-										mysqli_real_escape_string($link, $post['file_original']) . "', " .
-										$post['file_size'] . ", '" .
-										$post['file_size_formatted'] . "', " .
-										$post['image_width'] . ", " .
-										$post['image_height'] . ", '" .
-										$post['thumb'] . "', " .
-										$post['thumb_width'] . ', ' .
-										$post['thumb_height'] . ', ' .
+										$post['file0'] . "', '" .
+										$post['file0_hex'] . "', '" .
+										mysqli_real_escape_string($link, $post['file0_original']) . "', " .
+										$post['file0_size'] . ", '" .
+										$post['file0_size_formatted'] . "', " .
+										$post['image0_width'] . ", " .
+										$post['image0_height'] . ", '" .
+										$post['thumb0'] . "', " .
+										$post['thumb0_width'] . ', ' .
+										$post['thumb0_height'] . ', ' .
+										$post['file1'] . "', '" .
+										$post['file1_hex'] . "', '" .
+										mysqli_real_escape_string($link, $post['file1_original']) . "', " .
+										$post['file1_size'] . ", '" .
+										$post['file1_size_formatted'] . "', " .
+										$post['image1_width'] . ", " .
+										$post['image1_height'] . ", '" .
+										$post['thumb1'] . "', " .
+										$post['thumb1_width'] . ', ' .
+										$post['thumb1_height'] . ', ' .
+										$post['file2'] . "', '" .
+										$post['file2_hex'] . "', '" .
+										mysqli_real_escape_string($link, $post['file2_original']) . "', " .
+										$post['file2_size'] . ", '" .
+										$post['file2_size_formatted'] . "', " .
+										$post['image2_width'] . ", " .
+										$post['image2_height'] . ", '" .
+										$post['thumb2'] . "', " .
+										$post['thumb2_width'] . ', ' .
+										$post['thumb2_height'] . ', ' .
+										$post['file3'] . "', '" .
+										$post['file3_hex'] . "', '" .
+										mysqli_real_escape_string($link, $post['file3_original']) . "', " .
+										$post['file3_size'] . ", '" .
+										$post['file3_size_formatted'] . "', " .
+										$post['image3_width'] . ", " .
+										$post['image3_height'] . ", '" .
+										$post['thumb3'] . "', " .
+										$post['thumb3_width'] . ', ' .
+										$post['thumb3_height'] . ', ' .
 										$post['stickied'] . ', ' .
 										$post['likes'] .
 									')');

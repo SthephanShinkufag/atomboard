@@ -7,9 +7,9 @@
 
 /* ==[ Board description and customization ]=============================================================== */
 // Unique identifier for this board using only letters and numbers
-define('TINYIB_BOARD', 'b');
+define('TINYIB_BOARD', 'bb');
 // Displayed at the top of every page
-define('TINYIB_BOARDDESC', 'TinyIB board');
+define('TINYIB_BOARDDESC', 'bb');
 // Logo HTML
 define('TINYIB_LOGO', '');
 // Index-file name
@@ -24,14 +24,13 @@ define('TINYIB_HTML_LEFTSIDE', '
 					<svg><use xlink:href="#symbol-home"/></svg>
 				</a>
 				<a class="aside-btn aside-btn-board" href="/' . TINYIB_BOARD . '/" title="' .
-					TINYIB_BOARDDESC . '">' . TINYIB_BOARD .'</a>
-				<a class="aside-btn aside-btn-board" href="/test/" title="Test board">test</a>');
+					TINYIB_BOARDDESC . '">' . TINYIB_BOARD .'</a>');
 
 /* ==[ Administrator/moderator credentials ]=============================================================== */
 // Administrators have full access to the board
-define('TINYIB_ADMINPASS', '');
+define('TINYIB_ADMINPASS', 'bbadmin');
 // Moderators only have access to delete (and moderate if TINYIB_REQMOD is set) posts ['' to disable]
-define('TINYIB_MODPASS', '');
+define('TINYIB_MODPASS', 'bbmod');
 // Require moderation before displaying posts:
 // files / all (see README for instructions, only MySQL is supported)  ['' to disable]
 define('TINYIB_REQMOD', '');
@@ -40,7 +39,7 @@ define('TINYIB_REQMOD', '');
 // Recommended database modes from best to worst: 'pdo', 'mysqli', 'mysql', 'sqlite3', 'sqlite', 'flatfile'
 // 'flatfile' is only useful if you need portability or lack any kind of database
 // Mode
-define('TINYIB_DBMODE', 'flatfile');
+define('TINYIB_DBMODE', 'pdo');
 // Enable database migration tool (see README for instructions)
 define('TINYIB_DBMIGRATE', false);
 // Bans table name in database (use the same bans table across boards for global bans)
@@ -58,11 +57,11 @@ define('TINYIB_DBHOST', 'localhost');
 // Port (set to 0 if you are using a UNIX socket as the host)
 define('TINYIB_DBPORT', 3306);
 // Username
-define('TINYIB_DBUSERNAME', '');
+define('TINYIB_DBUSERNAME', 'bbuser');
 // Password
-define('TINYIB_DBPASSWORD', '');
+define('TINYIB_DBPASSWORD', 'bbpassword');
 // Database
-define('TINYIB_DBNAME', '');
+define('TINYIB_DBNAME', 'bb');
 // Database configuration - PDO
 // The following only apply when TINYIB_DBMODE is set to 'pdo' (see README for instructions)
 // PDO driver to use: 'mysql', 'pgsql', 'sqlite'
@@ -77,11 +76,11 @@ define('TINYIB_DBDSN', '');
 define('TINYIB_POSTERNAME', 'Anonymous');
 // Tripcode seed - Must not change once set!
 // Enter some random text (used when generating secure tripcodes)
-define('TINYIB_TRIPSEED', '');
+define('TINYIB_TRIPSEED', 'tripper123');
 // Amount of threads shown per index page
-define('TINYIB_THREADSPERPAGE', 10);
+define('TINYIB_THREADSPERPAGE', 5);
 // Amount of replies previewed on index pages
-define('TINYIB_PREVIEWREPLIES', 5);
+define('TINYIB_PREVIEWREPLIES', 3);
 // Amount of text lines to truncate posts on index pages [0 to disable]
 define('TINYIB_TRUNC_LINES', 10);
 // Text size in bytes to truncate posts on index pages [0 to disable]
@@ -89,15 +88,15 @@ define('TINYIB_TRUNC_SIZE', 1536);
 // Words longer than this many characters will be broken apart [0 to disable]
 define('TINYIB_WORDBREAK', 100);
 // Post likes system
-define('TINYIB_LIKES', false);
+define('TINYIB_LIKES', true);
 
 /* ==[ Post control ]====================================================================================== */
 // Delay (in seconds) between posts from the same IP address to help control flooding [0 to disable]
-define('TINYIB_DELAY', 30);
+define('TINYIB_DELAY', 0);
 // Oldest threads are discarded when the thread count passes this limit [0 to disable]
 define('TINYIB_MAXTHREADS', 100);
 // Maximum replies before a thread stops bumping [0 to disable]
-define('TINYIB_MAXREPLIES', 0);
+define('TINYIB_MAXREPLIES', 500);
 
 /* ==[ Reply form and posting ]============================================================================= */
 // Redirect to thread after posting
@@ -126,22 +125,26 @@ $tinyib_uploads = array(
 /* ==[ oEmbed APIs ]======================================================================================= */
 // Empty array to disable
 $tinyib_embeds = array(
-	'SoundCloud' => 'http://soundcloud.com/oembed?format=json&url=TINYIBEMBED',
-	'Vimeo'      => 'http://vimeo.com/api/oembed.json?url=TINYIBEMBED',
-	'YouTube'    => 'http://www.youtube.com/oembed?url=TINYIBEMBED&format=json'
+	'SoundCloud.com' => 'http://soundcloud.com/oembed?format=json&url=TINYIBEMBED',
+	'Vimeo.com'      => 'http://vimeo.com/api/oembed.json?url=TINYIBEMBED',
+	'YouTube.com'    => 'http://www.youtube.com/oembed?url=TINYIBEMBED&format=json'
 );
 
 /* ==[ File control ]====================================================================================== */
 // Maximum file size in kilobytes [0 to disable]
-define('TINYIB_MAXKB', 2048);
+define('TINYIB_MAXKB', 20480);
 // Human-readable representation of the maximum file size
-define('TINYIB_MAXKBDESC', '2 MB');
+define('TINYIB_MAXKBDESC', '20 MB');
+// Maximum number of uploaded files
+define('MAXIMUM_FILES', 4);
+// Add overlay image over video and imbedded files?
+define('ADD_VIDEO_OVERLAY_IMAGE', false);
 // Thumbnail method to use: 'gd', 'imagemagick' (see README for instructions)
 define('TINYIB_THUMBNAIL', 'gd');
 // Allow the creation of new threads without uploading a file
-define('TINYIB_NOFILEOK', false);
+define('TINYIB_NOFILEOK', true);
 // Allow duplicate files
-define('TINYIB_FILE_ALLOW_DUPLICATE', false);
+define('TINYIB_FILE_ALLOW_DUPLICATE', true);
 // Animate gif thumbnails
 // The following only apply when TINYIB_THUMBNAIL is set to 'imagemagick'
 define('TINYIB_FILE_ANIM_GIF_THUMB', true);
@@ -155,7 +158,7 @@ define('TINYIB_MAXH', 230); // Height
 /* ==[ Captcha ]=========================================================================================== */
 // Reduce spam by requiring users to pass a CAPTCHA when posting: 'simple', 'recaptcha'
 // (click Rebuild All in the management panel after enabling) ['' to disable]
-define('TINYIB_CAPTCHA', 'simple');
+define('TINYIB_CAPTCHA', '');
 // The following only apply when TINYIB_CAPTCHA is set to recaptcha
 // For API keys visit https://www.google.com/recaptcha
 define('TINYIB_RECAPTCHA_SITE', '');   // Site key

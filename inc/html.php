@@ -46,7 +46,7 @@ function pageWrapper($returnHref) {
 function pageFooter() {
 	return '
 		<div class="footer">
-			- <a href="https://github.com/SthephanShinkufag/TinyIB" target="_top">TinyIB</a> - forked by <a href="mailto:sthephan.shi@gmail.com">SthephanShi</a> -
+			- <a href="https://github.com/SthephanShinkufag/TinyIB" target="_top">TinyIB</a> - forked by <a href="mailto:sthephan.shi@gmail.com">SthephanShi</a> - forked again by <a href="https://github.com/SthephanShinkufag/TinyIB" target="_top">nolifer</a>
 		</div>
 	</div>
 	<div class="aside aside-right">
@@ -126,19 +126,24 @@ function buildPostForm($parent, $isRawPost = false) {
 	$fileTypesHtml = '';
 	$fileInputHtml = '';
 	$embedInputHtml = '';
+
 	if (!empty($tinyib_uploads) && ($isRawPost || !in_array('file', $hideFields))) {
 		if (TINYIB_MAXKB > 0) {
 			$maxFileSizeInputHtml = '<input type="hidden" name="MAX_FILE_SIZE" value="' .
 				strval(TINYIB_MAXKB * 1024) . '">';
-			$maxFileSizeRulesHtml = '<li>Maximum file size allowed is ' . TINYIB_MAXKBDESC . '.</li>';
+			$maxFileSizeRulesHtml = '<li>Maximum number of files is '.MAXIMUM_FILES.', '.TINYIB_MAXKBDESC.' total.</li>';
 		}
 		$fileTypesHtml = '<li>' . supportedFileTypes() . '</li>';
+
+// added file[] and MULTIPLE:
+
 		$fileInputHtml = '<tr>
 						<td class="postblock"></td>
 						<td>
-							<input type="file" name="file" size="35" accesskey="f">
+							<input type="file" name="file[]" size="35" accesskey="f" multiple>
 						</td>
 					</tr>';
+
 	}
 	if (!empty($tinyib_embeds) && ($isRawPost || !in_array('embed', $hideFields))) {
 		$embedInputHtml = '<tr>
@@ -170,13 +175,32 @@ function buildPostForm($parent, $isRawPost = false) {
 	}
 
 	// Build postform
+// isRawPost ## Admin mark
+// input type="text" class="postform-input" name="parent"
 	return '<div class="postarea">
 			<form name="postform" id="postform" action="/' . TINYIB_BOARD .
 				'/imgboard.php" method="post" enctype="multipart/form-data">
 			' . $maxFileSizeInputHtml . '
-			<input type="hidden" name="parent" value="' . $parent . '">
+			
 			<table class="postform-table reply">
 				<tbody>' . (
+					($isRawPost)? '
+					<tr>
+						<td class="postblock"></td>
+						<td>
+							<input type="checkbox" name="rawpost" checked style="margin: 0 auto;"> '.'<span style="font: 10px sans-serif;">Add <span style="color: red;">## Admin</span> or <span style="color: purple;">## Mod</span> mark</span>' . '
+						</td>
+					</tr>
+
+				<tr>
+					<td class="postblock"></td>
+					<td>
+						<input type="text" class="postform-input" name="parent" placeholder="Reply to (0 = new thread)" maxlength="75" accesskey="t">
+					</td>
+				</tr>
+
+						':'<input type="hidden" name="parent" value="' . $parent . '">'
+				) . (
 					$isRawPost || !in_array('name', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
@@ -288,6 +312,7 @@ function buildPostForm($parent, $isRawPost = false) {
 		</div>';
 }
 
+
 function buildPost($post, $res) {
 	$isOp = $post['parent'] == TINYIB_NEWTHREAD;
 	$id = $post['id'];
@@ -295,68 +320,95 @@ function buildPost($post, $res) {
 	if (!isset($post['omitted'])) {
 		$post['omitted'] = 0;
 	}
+	$filehtml = '';
 	// Build post file
-	$isEmbed = isEmbed($post['file_hex']);
-	$fWidth = $post['image_width'];
-	$fHeight = $post['image_height'];
-	$fName = $post['file'];
-	$isVideoFile = substr($fName, -5) == '.webm' || substr($fName, -4) == '.mp4';
+
+// cikl-start
+
+for($index=0; $index<MAXIMUM_FILES; $index++){
+ if($post['file'.$index.'_hex']){
+
+	$fWidth = $post['image'.$index.'_width'];
+	$fHeight = $post['image'.$index.'_height'];
+	$fName = $post['file'.$index];
+
+	$isEmbed = isEmbed($post['file'.$index.'_hex']);
+	$isVideoFile = (substr($fName, -5) == '.webm' || substr($fName, -4) == '.mp4')?true:false;
+	$isPictureFile = in_array(substr($fName, -4), array('.jpg', '.png', '.gif'));
+
 	$directLink = $isEmbed ? '#' : '/' . TINYIB_BOARD . '/src/' . $fName;
-	$expandClick = ' onclick="return expandFile(event, ' . $id . ');"';
-	$expandHtml = rawurlencode($isEmbed ? $fName : (
-		$isVideoFile ? (
-			'<video ' . (
-				$fWidth > 0 && $fHeight > 0 ?
-					'width="' . $fWidth . '" height="' . $fHeight . '"' :
-					'width="500"'
-			) . 'style="position: static; pointer-events: inherit; display: inline; ' .
-			'max-width: 100%; max-height: 100%;" controls autoplay loop>
-						<source src="' . $directLink . '"></source>
-					</video>'
-		) : (in_array(substr($fName, -4), array('.jpg', '.png', '.gif')) ? (
-			'<a href="' . $directLink . '"' . $expandClick . '>
-						<img src="/' . TINYIB_BOARD . '/src/' . $fName .
-							'" width="' . $fWidth . '" style="max-width: 100%; height: auto;"></a>'
-		) : '')
-	));
-	$origName = $post['file_original'];
-	$hasOrigName = $origName != '';
-	$thumblink = '<a href="' . $directLink . '" target="_blank"' .
-		($isEmbed || in_array(substr($fName, -4), array('.jpg', '.png', '.gif', 'webm', '.mp4')) ?
-			$expandClick : '') . ($hasOrigName ? ' download="' . $origName . '"' : '') . '>';
-	$filesize = $isEmbed ? (
-					'<a href="' . $directLink . '"' . $expandClick . '>' . $origName .
-					'</a>,&nbsp;' . $post['file_hex']
-		) : ($fName != '' ? (
-					$thumblink . ($hasOrigName ? $origName : $fName) .
-					'</a>,&nbsp;' . $post['file_size_formatted'] .
-					($fWidth > 0 && $fHeight > 0 ? ',&nbsp;' . $fWidth . 'x' . $fHeight : '')
-		) : '');
-	$filehtml = $filesize == '' ? '' : (!$isOp ? '
-				<br>' : '') . '
-				<span class="filesize">
-					' . $filesize . '
-				</span>
-				<br>
-				<div id="thumbfile' . $id . '">' . (
-				$post['thumb_width'] > 0 && $post['thumb_height'] > 0 ? '
-					' . $thumblink . '
-						<img src="/' . TINYIB_BOARD . '/thumb/' . $post['thumb'] . '" alt="' .$id .
-							'" class="thumb" id="thumbnail' . $id. '" width="' .
-							$post['thumb_width'] . '" height="' . $post['thumb_height'] . '">
-					</a>
-				' : (
-				$isVideoFile ? '
-					' . $thumblink . '
-						<video src="' . $directLink . '" alt="' .$id .
-							'" class="thumb" id="thumbnail' . $id. '">
-					</a>
-				' : '')) . '</div>' .
-				($expandHtml == '' ? '' : '
-				<div id="expand' . $id . '" style="display: none;">
-					' . $expandHtml . '
-				</div>
-				<div id="file' . $id . '" class="thumb" style="display: none;"></div>');
+	$expandClick = ' onclick="return expandFile(event, ' . $id.$index . ');"';
+
+
+if($isEmbed){
+$expandHtml = rawurlencode($fName);
+}
+else if($isVideoFile){
+	if($fWidth > 0 && $fHeight > 0){
+	$hwParams='width="' . $fWidth . '" height="' . $fHeight . '"';
+	}
+	else{
+	$hwParams='width="500"';
+	}
+$expandHtml = rawurlencode('<video ' . $hwParams . 'style="position: static; pointer-events: inherit; display: inline; max-width: 100%; max-height: 100%;" controls autoplay loop><source src="' . $directLink . '"></source></video>');
+}
+else if($isPictureFile){
+$expandHtml = rawurlencode('<a href="' . $directLink . '"' . $expandClick . '><img src="/' . TINYIB_BOARD . '/src/' . $fName .'" width="' . $fWidth . '" style="max-width: 100%; height: auto;"></a>');
+}
+
+	$origName = $post['file'.$index.'_original'];
+	$hasOrigName = ($origName != '');
+
+if ($isEmbed || in_array(substr($fName, -4), array('.jpg', '.png', '.gif', 'webm', '.mp4')) ){
+$thumblink = '<a href="' . $directLink . '" target="_blank"' . $expandClick;
+}
+else{
+$thumblink = '<a href="' . $directLink . '" target="_blank"';
+}
+if ($hasOrigName){
+$thumblink.=' download="' . $origName . '">';
+}
+else{
+$thumblink.='>';
+}
+
+if ($isEmbed){
+$filesize = '<a href="' . $directLink . '"' . $expandClick . '>' . $origName .'</a>,&nbsp;' . $post['file'.$index.'_hex'];
+}
+else{
+	if ($fName != ''){
+	$filesize = $thumblink . ($hasOrigName ? $origName : $fName) .'</a>'. '<br /> (' . $post['file'.$index.'_size_formatted'] . ($fWidth > 0 && $fHeight > 0 ? ',&nbsp;' . $fWidth . 'x' . $fHeight : '') . ')';
+	}
+	else{
+	$filesize = '';
+	}
+}
+
+if ($filesize == ''){
+$filehtml = '';
+}
+else{
+$filehtml .= '<div class="inlineblock"> <span class="filesize">' . $filesize . '</span><div id="thumbfile'.$id.$index.'">'; 
+
+ if ($post['thumb'.$index.'_width'] > 0 && $post['thumb'.$index.'_height'] > 0){
+ //if file have thumbnail
+ $filehtml .= '' . $thumblink . '<img src="/' . TINYIB_BOARD . '/thumb/' . $post['thumb'.$index] .'"' . ($isVideoFile?' style="border: 1px dashed #5d5d5d;" ':'') . 'alt="' .$id.$index .'" class="thumb" id="thumbnail' . $id.$index. '" width="' .$post['thumb'.$index.'_width'] . '" height="' . $post['thumb'.$index.'_height'] . '"></a>';
+ }
+ else if($isVideoFile){
+ //if file have no thumbnail but it is webm or mp4 file
+ $filehtml .= '' . $thumblink . '<video src="' . $directLink . '" alt="' .$id.$index .'" class="thumb" id="thumbnail' . $id.$index. '"></a>';
+ }
+ else {
+ $filehtml .= '';
+ }
+
+$filehtml .= '</div>' .($expandHtml == '' ? '' : '<div id="expand' . $id.$index . '" style="display: none;">' . $expandHtml . '</div><div id="file' . $id.$index . '" class="thumb" style="display: none;"></div> </div>');
+}
+
+ }
+}
+// cikl-stop
+
 	// Truncate messages on board index pages for readability
 	$message = $post['message'];
 	if (!$res) {
@@ -367,8 +419,9 @@ function buildPost($post, $res) {
 		} elseif (TINYIB_TRUNC_SIZE > 0 && strlen($message) > TINYIB_TRUNC_SIZE) {
 			$truncLen = TINYIB_TRUNC_SIZE;
 		}
+
 		if ($truncLen) {
-			$message = tidy_repair_string(substr($message, 0, $truncLen)) . '
+			$message = tidy_repair_string(substr($message, 0, $truncLen),array('quiet' => true),'utf8') . '
 					<div class="abbrev">
 						Post too long. <a href="/' . TINYIB_BOARD . '/res/' . $thrId . '.html#' . $id .
 						'">Click to view</a>.
@@ -378,9 +431,10 @@ function buildPost($post, $res) {
 	// Start post building
 	$omitted = $post['omitted'];
 	$likes = $post['likes'];
+
 	return PHP_EOL . ($isOp ? '
-			<div class="oppost" id="op' . $id . '">' . $filehtml : '
-			<table><tbody><tr><td class="reply" id="reply' . $id . '">') . '
+			<div class="oppost" id="op' . $id . '">' : '
+			<table border="0"><tbody><tr><td class="reply" id="reply' . $id . '">') . '
 				<a id="' . $id . '"></a>
 				<label>
 					<input type="checkbox" name="delete" value="' . $id . '">' .
@@ -404,13 +458,13 @@ function buildPost($post, $res) {
 							'" onclick="sendLike(this, ' . $id . ');">
 							<svg><use xlink:href="#symbol-like"></use></svg>
 						</span>
-						<span class="like-counter">' . ($likes ? $likes : '') . '</span>
+						<span class="like-counter">' . ($likes ? $likes:'') . '</span>
 					</span>' : ''
-				) . '
-				</span>' . (!$isOp ? $filehtml : '') .
-				($isOp && $res == TINYIB_INDEXPAGE ? '
-				&nbsp;<a class="gotothread" href="res/' . $id . '.html">Reply</a>' : '') . '
-				<div class="message">' . $message . '</div>
+				)  .'
+				</span>'. ($isOp && $res == TINYIB_INDEXPAGE ? '
+				&nbsp;<a class="gotothread" href="res/' . $id . '.html">Reply</a>' : '') . '<br />'. $filehtml . 
+				'
+				<div class="message">' .$message . '</div>
 			' . (!$isOp ? '</td></tr></tbody></table>' : '</div>' .
 			($res == TINYIB_INDEXPAGE && $omitted > 0 ? '
 			<div class="omittedposts">' . $omitted . ' ' .
@@ -552,7 +606,7 @@ function manageOnLoad($page) {
 	switch ($page) {
 	case 'login':    return ' onload="document.tinyib.managepassword.focus();"';
 	case 'moderate': return ' onload="document.tinyib.moderate.focus();"';
-	case 'rawpost':  return ' onload="document.tinyib.message.focus();"';
+	case 'rawpost':  return ' onload="document.postform.parent.focus();"';
 	case 'bans':     return ' onload="document.tinyib.ip.focus();"';
 	}
 }
@@ -639,77 +693,6 @@ function manageModeratePostForm() {
 				</small><br>
 			</fieldset>
 		</form><br>';
-}
-
-function manageRawPostForm() {
-	$maxFileSizeInputHtml = '';
-	if (TINYIB_MAXKB > 0) {
-		$maxFileSizeInputHtml = '<input type="hidden" name="MAX_FILE_SIZE" value="' .
-			strval(TINYIB_MAXKB * 1024) . '">';
-	}
-	return '
-	<div class="postarea">
-		<form id="tinyib" name="tinyib" method="post" action="?" enctype="multipart/form-data">
-		<input type="hidden" name="rawpost" value="1">
-		' . $maxFileSizeInputHtml . '
-		<table class="postform-table reply">
-			<tbody>
-				<tr>
-					<td class="postblock"></td>
-					<td>
-						<input type="text" class="postform-input" name="parent" placeholder="Reply to (0 = new thread)" maxlength="75" accesskey="t">
-					</td>
-				</tr>
-				<tr>
-					<td class="postblock"></td>
-					<td>
-						<input type="text" class="postform-input" name="name" placeholder="Name" maxlength="75" accesskey="n">
-					</td>
-				</tr>
-				<tr>
-					<td class="postblock"></td>
-					<td>
-						<input type="text" class="postform-input" name="email" placeholder="Mail" maxlength="75" accesskey="e">
-					</td>
-				</tr>
-				<tr>
-					<td class="postblock"></td>
-					<td>
-						<input type="text" class="postform-input" name="subject" placeholder="Subject" maxlength="75" accesskey="s" autocomplete="off">
-						<input type="submit" value="Submit" accesskey="z">
-					</td>
-				</tr>
-				<tr>
-					<td class="postblock"></td>
-					<td>
-						<textarea name="message" placeholder="Message" accesskey="m"></textarea>
-					</td>
-				</tr>
-				<tr>
-					<td class="postblock"></td>
-					<td>
-						<input type="file" name="file" size="35" accesskey="f">
-					</td>
-				</tr>
-				<tr>
-					<td class="postblock"></td>
-					<td>
-						<input type="password" name="password" size="8" accesskey="p">&nbsp;Deletion password
-					</td>
-				</tr>
-				<tr>
-					<td colspan="2" class="rules">
-						<ul>
-							<li>Text entered in the Message field will be posted as is with no formatting applied.</li>
-							<li>Line-breaks must be specified with "&lt;br&gt;".</li>
-						</ul>
-					</td>
-				</tr>
-			</tbody>
-		</table>
-		</form>
-	</div>
-';
 }
 
 function manageModeratePost($post) {

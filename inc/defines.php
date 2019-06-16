@@ -81,8 +81,8 @@ if (!isset($tinyib_uploads)) {
 if (!isset($tinyib_embeds)) {
 	$tinyib_embeds = array();
 	if (defined('TINYIB_EMBED') && TINYIB_EMBED) {
-		$tinyib_embeds['SoundCloud'] = 'http://soundcloud.com/oembed?format=json&url=TINYIBEMBED';
-		$tinyib_embeds['Vimeo'] = 'http://vimeo.com/api/oembed.json?url=TINYIBEMBED';
-		$tinyib_embeds['YouTube'] = 'http://www.youtube.com/oembed?url=TINYIBEMBED&format=json';
+		$tinyib_embeds['SoundCloud.com'] = 'http://soundcloud.com/oembed?format=json&url=TINYIBEMBED';
+		$tinyib_embeds['Vimeo.com'] = 'http://vimeo.com/api/oembed.json?url=TINYIBEMBED';
+		$tinyib_embeds['YouTube.com'] = 'http://www.youtube.com/oembed?url=TINYIBEMBED&format=json';
 	}
 }
