@@ -264,7 +264,11 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		list($thumbMaxWidth, $thumbMaxHeight) = thumbnailDimensions($post,'0');
 
 		if (!createThumbnail($fileLocation, $thumbLocation, $thumbMaxWidth, $thumbMaxHeight)) {
+			@unlink($fileLocation);
 			fancyDie('Could not create thumbnail.');
+		}
+		else {
+		@unlink($fileLocation);
 		}
 
 		(ADD_VIDEO_OVERLAY_IMAGE)?addVideoOverlay($thumbLocation):'';
