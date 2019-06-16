@@ -40,6 +40,11 @@ This fork features:
  - "Sage" indicator in posts.
  - Post likes system (initial implementation, still in progress).
 
+This fork of the fork features (fork is not completed yet):
+ - 4 files per post
+ - bugfixes
+
+
 Installing
 ------------
 
