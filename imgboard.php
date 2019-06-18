@@ -861,7 +861,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			} else {
 				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 			}
-		} elseif (isset($_GET['deleteimages'])) {
+		} elseif ( isset($_GET['deleteimages']) && isset($_GET["delete-img"]) ) {
 			$post = postByID($_GET['deleteimages']);
 			if ($post) {
 
