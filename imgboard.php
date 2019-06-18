@@ -279,6 +279,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 
 		$post['file0_original'] = cleanString($embed['title']);
 		$post['file0'] = str_ireplace(array('src="https://', 'src="http://'), 'src="//', $embed['html']);
+		
 // EMBED-off
 
 // PICTURES-start
@@ -860,6 +861,22 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			} else {
 				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 			}
+		} elseif (isset($_GET['deleteimages'])) {
+			$post = postByID($_GET['deleteimages']);
+			if ($post) {
+
+				deleteImagesByImageID($post, $_GET["delete-img"]);
+
+				if ($post['parent'] == TINYIB_NEWTHREAD) {
+					threadUpdated($post['id']);
+				} else {
+					threadUpdated($post['parent']);
+				}
+
+				$text .= manageInfo('Selected images from post No.' . $post['id'] . ' deleted.');
+			} else {
+				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
+			}
 		} elseif (isset($_GET['approve'])) {
 			if ($_GET['approve'] > 0) {
 				$post = postByID($_GET['approve']);
@@ -883,6 +900,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			if ($_GET['moderate'] > 0) {
 				$post = postByID($_GET['moderate']);
 				if ($post) {
+// call for [mod] page with thread opened in it.
 					$text .= manageModeratePost($post);
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
@@ -941,6 +959,5 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 }
 
 if ($redirect) {
-	echo '<meta http-equiv="refresh" content="' . (isset($slowRedirect) ? '3' : '0') .
-		';url=' . (is_string($redirect) ? $redirect : TINYIB_INDEX) . '">';
+	echo '<meta http-equiv="refresh" content="' . (isset($slowRedirect) ? '3' : '0') .'; url=' . (is_string($redirect) ? $redirect : TINYIB_INDEX) . '">';
 }

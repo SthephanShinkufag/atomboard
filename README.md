@@ -4,10 +4,7 @@ Features
 ------------
 
 **Got database? Get speed.**
-Use [MySQL](https://mysql.com), [PostgreSQL](https://www.postgresql.org) or [SQLite](https://sqlite.org) for an efficient set-up able to handle high amounts of traffic.
-
-**No database?  No problem.**
-Store posts as text files for a portable set-up capable of running on virtually any PHP host.
+Use [MySQL](https://mysql.com) for an efficient set-up able to handle high amounts of traffic.
 
 **Not looking for an image board script?**
 TinyIB settings is able to allow new threads without requiring an image, or even disallow sending of images entirely.
@@ -39,11 +36,12 @@ This fork features:
  - Post likes system (initial implementation, still in progress).
 
 This fork of the fork features:
- - Fork is based on `[TinyIB from SthephanShinkufag](https://github.com/SthephanShinkufag/TinyIB/)`
+ - Fork is based on [TinyIB from SthephanShinkufag](https://github.com/SthephanShinkufag/TinyIB/)
  - DB schema changed!
  - Now you can paste 4 files per post.
  - Bugfixes.
- - At this moment works only with PDO+MySQL (nofile / PostgreSQL / etc..  is not supported).
+ - At this moment works only with PDO+MySQL (Flatfile / PostgreSQL / SQlite is not supported yet).
+ - Now Administrators and Moderators can selectively delete attached files.
 
 
 Installing
@@ -59,17 +57,16 @@ Installing
     - `git clone https://github.com/nolifer1337/TinyIB.git ./`
  4. Copy **settings.default.php** to **settings.php**
  5. Configure **settings.php**
-    - When setting ``TINYIB_DBMODE`` to ``flatfile``, note that all post and ban data are exposed as the database is composed of standard text files.  Access to ./inc/flatfile/ should be denied.
-    - When setting ``TINYIB_DBMODE`` to ``pdo``, note that only the MySQL and PostgreSQL databases drivers have been tested. Theoretically it will work with any applicable driver, but this is not guaranteed.  If you use an alternative driver, please report back.
+    - When setting ``TINYIB_DBMODE`` to ``pdo``, note that only the MySQL databases drivers have been tested. Theoretically it will work with any applicable driver, but this is not guaranteed.  If you use an alternative driver, please report back.
     - To require moderation before displaying posts:
       - Ensure your ``TINYIB_DBMODE`` is set to ``mysql``, ``mysqli``, or ``pdo``.
       - Set ``TINYIB_REQMOD`` to ``files`` to require moderation for posts with files attached.
       - Set ``TINYIB_REQMOD`` to ``all`` to require moderation for all posts.
       - Moderate posts by visiting the management panel.
     - To allow WebM upload:
-      - Ensure your web host is running Linux.
-      - Install [mediainfo](https://mediaarea.net/en/MediaInfo) and [ffmpegthumbnailer](https://code.google.com/p/ffmpegthumbnailer/).  On Ubuntu, run ``sudo apt-get install mediainfo ffmpegthumbnailer``.
-    - To remove the play icon from .SWF and .WebM thumbnails, delete or rename **video_overlay.png**
+      - Ensure your web host is running Linux or FreeBSD.
+      - Install [mediainfo](https://mediaarea.net/en/MediaInfo) and [ffmpegthumbnailer](https://code.google.com/p/ffmpegthumbnailer/).  On Ubuntu, run ``sudo apt-get install mediainfo ffmpegthumbnailer``. On FreeBSD run ``pkg install mediainfo ffmpegthumbnailer``.
+    - To remove the play icon from .SWF and .WebM thumbnails, delete or rename **video_overlay.png** or set ADD_VIDEO_OVERLAY_IMAGE to false.
     - To use ImageMagick instead of GD when creating thumbnails:
       - Install ImageMagick and ensure that the ``convert`` command is available.
       - Set ``TINYIB_THUMBNAIL`` to ``imagemagick``.
@@ -92,7 +89,7 @@ Moderating
  2. On the board, tick the checkbox next to the offending post.
  3. Scroll to the bottom of the page.
  4. Click **Delete** with the password field blank.
-    - From this page you are able to delete the post and/or ban the author.
+    - From this page you are able to delete the post, attached files and/or ban the author.
 
 Updating
 ------------
@@ -107,31 +104,9 @@ Updating
     - If other files were updated, and you have made changes yourself:
       - Visit [GitHub](https://github.com/nolifer1337/TinyIB) and review the changes made in the update.
       - Ensure the update does not interfere with your changes.
- 3. Visit [wiki/NewSQLStructure](https://github.com/tslocum/TinyIB/wiki/NewSQLStructure) and check for new SQL queries which may be required to complete the update.
 
-**Database structure was last modified on *15th Sep 2015*.**  Are you unable to create new posts?  Run the SQL on [wiki/NewSQLStructure](https://github.com/tslocum/TinyIB/wiki/NewSQLStructure) to finish the upgrade process.
+**Database structure was last modified on *19th Jun 2019*.** 
 
-Migrating
-------------
-
-TinyIB includes a database migration tool, which currently only supports migrating from flat file to MySQL.  While the migration is in progress, visitors will not be able to create or delete posts.
-
- 1. Edit **settings.php**
-    - Ensure ``TINYIB_DBMODE`` is still set to ``flatfile``.
-    - Set ``TINYIB_DBMIGRATE`` to ``true``.
-    - Configure all MySQL-related settings.
- 2. Open the management panel.
- 3. Click **Migrate Database**
- 4. Click **Start the migration**
- 5. If the migration was successful:
-    - Edit **settings.php**
-      - Set ``TINYIB_DBMODE`` to ``mysqli``.
-      - Set ``TINYIB_DBMIGRATE`` to ``false``.
-    - Click **Rebuild All** and ensure the board still looks the way it should.
-
-If there was a warning about AUTO_INCREMENT not being updated, you'll need to update it manually via a more privileged MySQL user.  Run the following query for one or both of the tables, dependant of the warnings you were issued:
-
-``ALTER TABLE (table name) AUTO_INCREMENT = (value to be set)``
 
 Support
 ------------
@@ -146,4 +121,3 @@ Contributing
  2. Fork TinyIB.
  3. Commit code changes to your forked repository.
  4. Submit a pull request describing your modifications.
-

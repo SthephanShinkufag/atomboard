@@ -322,6 +322,18 @@ function deletePostByID($id) {
 	}
 }
 
+function deleteImagesByImageID($post, $imgList) {
+
+	deletePostImages($post, $imgList);
+
+  if ( ($imgList) && (count($imgList) <= MAXIMUM_FILES) ){
+	foreach ($imgList as $arrayIndex => $index){
+		$index=intval(trim(basename($index)));
+		pdoQuery("UPDATE " . TINYIB_DBPOSTS . " SET file".$index." = ?, file".$index."_hex = ?, file".$index."_original = ?, file".$index."_size = ?, file".$index."_size_formatted = ?, image".$index."_width = ?, image".$index."_height = ?, thumb".$index." = ?, thumb".$index."_width = ?, thumb".$index."_height = ? WHERE id = ?", array('','','','0','','0','0','','0','0',$post['id']) );
+	}
+  }
+}
+
 function trimThreads() {
 	$limit = (int)TINYIB_MAXTHREADS;
 	if ($limit > 0) {

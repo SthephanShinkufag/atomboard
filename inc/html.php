@@ -134,16 +134,12 @@ function buildPostForm($parent, $isRawPost = false) {
 			$maxFileSizeRulesHtml = '<li>Maximum number of files is '.MAXIMUM_FILES.', '.TINYIB_MAXKBDESC.' total.</li>';
 		}
 		$fileTypesHtml = '<li>' . supportedFileTypes() . '</li>';
-
-// added file[] and MULTIPLE:
-
 		$fileInputHtml = '<tr>
 						<td class="postblock"></td>
 						<td>
 							<input type="file" name="file[]" size="35" accesskey="f" multiple>
 						</td>
 					</tr>';
-
 	}
 	if (!empty($tinyib_embeds) && ($isRawPost || !in_array('embed', $hideFields))) {
 		$embedInputHtml = '<tr>
@@ -175,13 +171,10 @@ function buildPostForm($parent, $isRawPost = false) {
 	}
 
 	// Build postform
-// isRawPost ## Admin mark
-// input type="text" class="postform-input" name="parent"
 	return '<div class="postarea">
 			<form name="postform" id="postform" action="/' . TINYIB_BOARD .
 				'/imgboard.php" method="post" enctype="multipart/form-data">
 			' . $maxFileSizeInputHtml . '
-			
 			<table class="postform-table reply">
 				<tbody>' . (
 					($isRawPost)? '
@@ -192,12 +185,12 @@ function buildPostForm($parent, $isRawPost = false) {
 						</td>
 					</tr>
 
-				<tr>
-					<td class="postblock"></td>
-					<td>
-						<input type="text" class="postform-input" name="parent" placeholder="Reply to (0 = new thread)" maxlength="75" accesskey="t">
-					</td>
-				</tr>
+					<tr>
+						<td class="postblock"></td>
+						<td>
+							<input type="text" class="postform-input" name="parent" placeholder="Reply to (0 = new thread)" maxlength="75" accesskey="t">
+						</td>
+					</tr>
 
 						':'<input type="hidden" name="parent" value="' . $parent . '">'
 				) . (
@@ -313,7 +306,7 @@ function buildPostForm($parent, $isRawPost = false) {
 }
 
 
-function buildPost($post, $res) {
+function buildPost($post, $res, $forModForm='', $postID='') {
 	$isOp = $post['parent'] == TINYIB_NEWTHREAD;
 	$id = $post['id'];
 	$thrId = $isOp ? $id : $post['parent'];
@@ -324,10 +317,11 @@ function buildPost($post, $res) {
 	// Build post file
 
 // cikl-start
-
+$postHaveImages=false;
 for($index=0; $index<MAXIMUM_FILES; $index++){
- if($post['file'.$index.'_hex']){
+if($post['file'.$index.'_hex']){
 
+	$postHaveImages=true;
 	$fWidth = $post['image'.$index.'_width'];
 	$fHeight = $post['image'.$index.'_height'];
 	$fName = $post['file'.$index];
@@ -338,7 +332,6 @@ for($index=0; $index<MAXIMUM_FILES; $index++){
 
 	$directLink = $isEmbed ? '#' : '/' . TINYIB_BOARD . '/src/' . $fName;
 	$expandClick = ' onclick="return expandFile(event, ' . $id.$index . ');"';
-
 
 if($isEmbed){
 $expandHtml = rawurlencode($fName);
@@ -377,7 +370,8 @@ $filesize = '<a href="' . $directLink . '"' . $expandClick . '>' . $origName .'<
 }
 else{
 	if ($fName != ''){
-	$filesize = $thumblink . ($hasOrigName ? $origName : $fName) .'</a>'. '<br /> (' . $post['file'.$index.'_size_formatted'] . ($fWidth > 0 && $fHeight > 0 ? ',&nbsp;' . $fWidth . 'x' . $fHeight : '') . ')';
+	$filesize = $thumblink . ($hasOrigName ? $origName : $fName) .'</a>'. 
+	'<br />('.$post['file'.$index.'_size_formatted'].($fWidth > 0 && $fHeight > 0 ? ',&nbsp;' . $fWidth . 'x' . $fHeight : '').')';
 	}
 	else{
 	$filesize = '';
@@ -388,7 +382,7 @@ if ($filesize == ''){
 $filehtml = '';
 }
 else{
-$filehtml .= '<div class="inlineblock"> <span class="filesize">' . $filesize . '</span><div id="thumbfile'.$id.$index.'">'; 
+$filehtml .= '<div class="inlineblock"> <span class="filesize">'. (($forModForm && $postID==$post['id'])?'<input type="checkbox" name="delete-img[]" value="'.$index.'">':'') . $filesize . '</span><div id="thumbfile'.$id.$index.'">'; 
 
  if ($post['thumb'.$index.'_width'] > 0 && $post['thumb'.$index.'_height'] > 0){
  //if file have thumbnail
@@ -462,7 +456,12 @@ $filehtml .= '</div>' .($expandHtml == '' ? '' : '<div id="expand' . $id.$index 
 					</span>' : ''
 				)  .'
 				</span>'. ($isOp && $res == TINYIB_INDEXPAGE ? '
-				&nbsp;<a class="gotothread" href="res/' . $id . '.html">Reply</a>' : '') . '<br />'. $filehtml . 
+				&nbsp;<a class="gotothread" href="res/' . $id . '.html">Reply</a>' : '') . '<br />' .
+				( ($forModForm && $postID==$post['id'] && $postHaveImages)?'<form method="get" action="?"><input type="hidden" name="manage" value=""><input type="hidden" name="deleteimages" value="'.$post['id'].'"><input type="submit" value="Delete Selected Images" class="managebutton"><br /><br />':'').
+
+				$filehtml . 
+
+				( ($forModForm && $postID==$post['id'] && $postHaveImages)?'</form>':'' ) .
 				'
 				<div class="message">' .$message . '</div>
 			' . (!$isOp ? '</td></tr></tbody></table>' : '</div>' .
@@ -726,10 +725,10 @@ H;
 		$postHtml = '';
 		$posts = postsInThreadByID($post['id']);
 		foreach ($posts as $postTemp) {
-			$postHtml .= buildPost($postTemp, TINYIB_INDEXPAGE);
+			$postHtml .= buildPost($postTemp, TINYIB_INDEXPAGE, 'forModForm', $post['id']);
 		}
 	} else {
-		$postHtml = buildPost($post, TINYIB_INDEXPAGE);
+		$postHtml = buildPost($post, TINYIB_INDEXPAGE, 'forModForm', $post['id']);
 	}
 	return <<<H
 	<fieldset>

@@ -3,7 +3,6 @@ if (!defined('TINYIB_BOARD')) {
 	die('');
 }
 
-
 // if you wanna add more file_* entities you also have to change:
 // postsByHex()
 // insertPost()
@@ -318,7 +317,6 @@ function nameBlock($name, $tripcode, $email, $timestamp, $rawposttext) {
 		$output = '<a href="mailto:' . $email . '"' .
 			($lowEmail == 'sage' ? ' class="sage"' : '') . '>' . $output . '</a>';
 	}
-
 //y.m.d -> d.m.y
 	return $output . $rawposttext . ' ' . date('d.m.y D H:i:s', $timestamp);
 }
@@ -349,7 +347,20 @@ function finishWordBreak($message) {
 	);
 }
 
-function deletePostImages($post) {
+function deletePostImages($post, $imgList = array() ) {
+ if ( ($imgList) && (count($imgList) <= MAXIMUM_FILES) ){
+	foreach ($imgList as $arrayIndex => $index){
+		
+		$index=intval(trim(basename($index)));
+	
+		if (!isEmbed($post['file'.$index.'_hex']) && $post['file'.$index] != '') {
+		 @unlink('src/' . $post['file'.$index]);
+		}
+		if ($post['thumb'.$index] != '') {
+ 		 @unlink('thumb/' . $post['thumb'.$index]);
+		}
+	}
+ } else {
 	for ($index=0; $index < MAXIMUM_FILES; $index++) {
 		if (!isEmbed($post['file'.$index.'_hex']) && $post['file'.$index] != '') {
 		 @unlink('src/' . $post['file'.$index]);
@@ -358,6 +369,7 @@ function deletePostImages($post) {
  		 @unlink('thumb/' . $post['thumb'.$index]);
 		}
 	}
+ }
 }
 
 function checkCAPTCHA() {
@@ -523,9 +535,7 @@ function checkDuplicateFile($hex) {
 	}
 }
 
-// added $imgIndex
 function thumbnailDimensions($post, $imgIndex=0) {
-// imgIndex=0 if not set
 	if ($post['parent'] == TINYIB_NEWTHREAD) {
 		$max_width = TINYIB_MAXWOP;
 		$max_height = TINYIB_MAXHOP;
