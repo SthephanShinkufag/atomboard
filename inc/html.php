@@ -709,6 +709,7 @@ function manageModeratePost($post) {
 	$deleteInfo = $isOp ? 'This will delete the entire thread below.' : 'This will delete the post below.';
 	$postOrThread = $isOp ? 'Thread' : 'Post';
 	$stickyHtml = '';
+	$lockedHtml = '';
 	if ($isOp) {
 		$stickySet = $post['stickied'] == 1 ? '0' : '1';
 		$stickyUnsticky = $post['stickied'] == 1 ? 'Un-sticky' : 'Sticky';
