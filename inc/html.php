@@ -445,6 +445,9 @@ $filehtml .= '</div>' .($expandHtml == '' ? '' : '<div id="expand' . $id.$index 
 					($post['stickied'] == 1 ? '
 					<img src="/' . TINYIB_BOARD .
 						'/sticky.png" title="Thread is sticked" width="16" height="16">' : '') .
+					($post['email'] == LOCKED_THREAD_COOKIE ? '
+					<img src="/' . TINYIB_BOARD .
+						'/locked.png" title="Thread is locked" width="11" height="16">' : '') .
 				(
 					TINYIB_LIKES ? '
 					<span class="like-container">
@@ -722,6 +725,21 @@ function manageModeratePost($post) {
 		</form>
 	</td><td><small>$stickyUnstickyHelp</small></td></tr>
 H;
+		$lockedSet = $post['email'] == LOCKED_THREAD_COOKIE ? '' : LOCKED_THREAD_COOKIE;
+		$lockUnlock = $post['email'] == LOCKED_THREAD_COOKIE ? 'Un-lock' : 'Lock';
+		$lockedUnlockedHelp = $post['email'] == LOCKED_THREAD_COOKIE ? 'Unlock this thread.' :
+			'Lock this thread.';
+		$lockedHtml = <<<H
+	<tr><td colspan="2">&nbsp;</td></tr>
+	<tr><td align="right" width="50%;">
+		<form method="get" action="?">
+		<input type="hidden" name="manage" value="">
+		<input type="hidden" name="locked" value="${post['id']}">
+		<input type="hidden" name="setlocked" value="$lockedSet">
+		<input type="submit" value="$lockUnlock Thread" class="managebutton" style="width: 50%;">
+		</form>
+	</td><td><small>$lockedUnlockedHelp</small></td></tr>
+H;
 		$postHtml = '';
 		$posts = postsInThreadByID($post['id']);
 		foreach ($posts as $postTemp) {
@@ -758,6 +776,8 @@ H;
 	</td><td><small>$banInfo</small></td></tr>
 
 	$stickyHtml
+
+	$lockedHtml
 
 	</table>
 

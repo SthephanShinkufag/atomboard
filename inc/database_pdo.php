@@ -229,6 +229,10 @@ function stickyThreadByID($id, $setsticky) {
 	pdoQuery("UPDATE " . TINYIB_DBPOSTS . " SET stickied = ? WHERE id = ?", array($setsticky, $id));
 }
 
+function lockThreadByID($id, $setlocked) {
+	pdoQuery("UPDATE " . TINYIB_DBPOSTS . " SET email = ? WHERE id = ?", array($setlocked, $id));
+}
+
 function bumpThreadByID($id) {
 	$now = time();
 	pdoQuery("UPDATE " . TINYIB_DBPOSTS . " SET bumped = ? WHERE id = ?", array($now, $id));

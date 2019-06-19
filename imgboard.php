@@ -100,6 +100,14 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	}
 
 	$post = newPost(setParent());
+	
+	if($post['parent'] != TINYIB_NEWTHREAD && !$loggedIn){
+	$parentPost=postByID($post['parent']);
+		if ($parentPost['email'] == LOCKED_THREAD_COOKIE){
+		fancyDie('Posting in this thread is currently disabled.<br>Thread is locked.');
+		}
+	}
+
 	$hideFields = $post['parent'] == TINYIB_NEWTHREAD ? $tinyib_hidefieldsop : $tinyib_hidefields;
 
 	$post['ip'] = $_SERVER['REMOTE_ADDR'];
@@ -108,7 +116,12 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		$post['name'] = cleanString(substr($post['name'], 0, 75));
 	}
 	if ($rawPost || !in_array('email', $hideFields)) {
-		$post['email'] = cleanString(str_replace('"', '&quot;', substr($_POST['email'], 0, 75)));
+		$providedEmail = cleanString(str_replace('"', '&quot;', substr($_POST['email'], 0, 75)));
+		if ($providedEmail == LOCKED_THREAD_COOKIE){
+		$post['email'] = '';
+		} else {
+		$post['email'] = $providedEmail;
+		}
 	}
 	if ($rawPost || !in_array('subject', $hideFields)) {
 		$post['subject'] = cleanString(substr($_POST['subject'], 0, 75));
@@ -908,6 +921,21 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			} else {
 				$onload = manageOnLoad('moderate');
 				$text .= manageModeratePostForm();
+			}
+		} elseif (isset($_GET['locked']) && isset($_GET['setlocked'])) {
+			if ($_GET['locked'] > 0) {
+				$post = postByID($_GET['locked']);
+				if ($post && $post['parent'] == TINYIB_NEWTHREAD) {
+					lockThreadByID($post['id'], $_GET['setlocked']);
+					threadUpdated($post['id']);
+
+					$text .= manageInfo('Thread No.' . $post['id'] . ' ' .
+						($_GET['setlocked'] == LOCKED_THREAD_COOKIE ? 'locked' : 'un-locked') . '.');
+				} else {
+					fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
+				}
+			} else {
+				fancyDie('Form data was lost. Please go back and try again.');
 			}
 		} elseif (isset($_GET['sticky']) && isset($_GET['setsticky'])) {
 			if ($_GET['sticky'] > 0) {

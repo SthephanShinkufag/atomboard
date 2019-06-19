@@ -37,12 +37,12 @@ This fork features:
 
 This fork of the fork features:
  - Fork is based on [TinyIB from SthephanShinkufag](https://github.com/SthephanShinkufag/TinyIB/)
- - DB schema changed!
- - Now you can paste 4 files per post.
- - Bugfixes.
  - At this moment works only with PDO+MySQL (Flatfile / PostgreSQL / SQlite is not supported yet).
- - Now Administrators and Moderators can selectively delete attached files.
-
+ - DB schema changed!
+ - Bugfixes.
+ - You can paste 4 files per post.
+ - Administrators and Moderators can selectively delete attached files.
+ - Now threads can be locked for posting.
 
 Installing
 ------------

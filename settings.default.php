@@ -97,6 +97,8 @@ define('TINYIB_DELAY', 3);
 define('TINYIB_MAXTHREADS', 100);
 // Maximum replies before a thread stops bumping [0 to disable]
 define('TINYIB_MAXREPLIES', 500);
+// Cookie in e-mail field what indicates what thread is locked for posting
+define('LOCKED_THREAD_COOKIE','thread@is.locked');
 
 /* ==[ Reply form and posting ]============================================================================= */
 // Redirect to thread after posting
