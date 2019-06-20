@@ -926,11 +926,11 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			if ($_GET['locked'] > 0) {
 				$post = postByID($_GET['locked']);
 				if ($post && $post['parent'] == TINYIB_NEWTHREAD) {
-					lockThreadByID($post['id'], $_GET['setlocked']);
+					lockThreadByID($post['id'], (intval($_GET['setlocked'])));
 					threadUpdated($post['id']);
 
 					$text .= manageInfo('Thread No.' . $post['id'] . ' ' .
-						($_GET['setlocked'] == LOCKED_THREAD_COOKIE ? 'locked' : 'un-locked') . '.');
+						($_GET['setlocked'] == 1 ? 'locked' : 'un-locked') . '.');
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
 				}

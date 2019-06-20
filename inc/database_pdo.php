@@ -230,6 +230,11 @@ function stickyThreadByID($id, $setsticky) {
 }
 
 function lockThreadByID($id, $setlocked) {
+	if ($setlocked == 1){
+	$setlocked = LOCKED_THREAD_COOKIE;
+	} elseif ($setlocked == 0){
+	$setlocked = '';
+	}
 	pdoQuery("UPDATE " . TINYIB_DBPOSTS . " SET email = ? WHERE id = ?", array($setlocked, $id));
 }
 

@@ -726,7 +726,7 @@ function manageModeratePost($post) {
 		</form>
 	</td><td><small>$stickyUnstickyHelp</small></td></tr>
 H;
-		$lockedSet = $post['email'] == LOCKED_THREAD_COOKIE ? '' : LOCKED_THREAD_COOKIE;
+		$lockedSet = $post['email'] == LOCKED_THREAD_COOKIE ? '0' : '1';
 		$lockUnlock = $post['email'] == LOCKED_THREAD_COOKIE ? 'Un-lock' : 'Lock';
 		$lockedUnlockedHelp = $post['email'] == LOCKED_THREAD_COOKIE ? 'Unlock this thread.' :
 			'Lock this thread.';
