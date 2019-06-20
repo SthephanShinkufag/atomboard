@@ -415,7 +415,7 @@ $filehtml .= '</div>' .($expandHtml == '' ? '' : '<div id="expand' . $id.$index 
 		}
 
 		if ($truncLen) {
-			$message = tidy_repair_string(substr($message, 0, $truncLen),array('quiet' => true),'utf8') . '
+			$message = tidy_repair_string(substr($message, 0, $truncLen),array('quiet' => true, 'show-body-only' => true),'utf8') . '
 					<div class="abbrev">
 						Post too long. <a href="/' . TINYIB_BOARD . '/res/' . $thrId . '.html#' . $id .
 						'">Click to view</a>.
