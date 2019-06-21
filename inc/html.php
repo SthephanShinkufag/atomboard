@@ -460,13 +460,19 @@ $filehtml .= '</div>' .($expandHtml == '' ? '' : '<div id="expand' . $id.$index 
 				)  .'
 				</span>'. ($isOp && $res == TINYIB_INDEXPAGE ? '
 				&nbsp;<a class="gotothread" href="res/' . $id . '.html">Reply</a>' : '') . '<br />' .
-				( ($forModForm && $postID==$post['id'] && $postHaveImages)?'<form method="get" action="?"><input type="hidden" name="manage" value=""><input type="hidden" name="deleteimages" value="'.$post['id'].'"><input type="submit" value="Delete Selected Images" class="managebutton"><br /><br />':'').
+				( ($forModForm && $postID==$post['id'] && $postHaveImages)?'<form method="get" action="?"><input type="hidden" name="manage" value=""><input type="hidden" name="deleteimages" value="'.$postID.'"><input type="submit" value="Delete Selected Images" class="managebutton"><br /><br />':'').
 
 				$filehtml . 
 
 				( ($forModForm && $postID==$post['id'] && $postHaveImages)?'</form>':'' ) .
 				'
-				<div class="message">' .$message . '</div>
+				<div class="message">' .
+				( ($forModForm && $postID==$post['id'])?'<form method="post" action="?manage&editpost='.$postID.'" enctype="multipart/form-data"><textarea id="message" name="message">':'') .
+
+				$message .
+
+				( ($forModForm && $postID==$post['id'])?'</textarea><br /><input type="submit" value="Edit" class="managebutton"></form>':'') .
+				'</div>
 			' . (!$isOp ? '</td></tr></tbody></table>' : '</div>' .
 			($res == TINYIB_INDEXPAGE && $omitted > 0 ? '
 			<div class="omittedposts">' . $omitted . ' ' .

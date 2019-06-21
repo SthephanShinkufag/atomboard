@@ -890,6 +890,24 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			} else {
 				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 			}
+		} elseif ( isset($_GET['editpost']) &&  isset($_POST['message']) ) {
+			$post = postByID($_GET['editpost']);
+			$newMessage = $_POST['message'].'<br /><br /><span style="color: purple;">Message edited: '.( date('d.m.y D H:i:s', time()) ).'</span>';
+			if ($post) {
+
+				editMessageInPostById($post['id'], $newMessage);
+
+				if ($post['parent'] == TINYIB_NEWTHREAD) {
+					threadUpdated($post['id']);
+				} else {
+					threadUpdated($post['parent']);
+				}
+
+				$text .= manageInfo('Message in post No.' . $post['id'] . ' changed.');
+			} else {
+				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
+			}
+
 		} elseif (isset($_GET['approve'])) {
 			if ($_GET['approve'] > 0) {
 				$post = postByID($_GET['approve']);
@@ -913,7 +931,6 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			if ($_GET['moderate'] > 0) {
 				$post = postByID($_GET['moderate']);
 				if ($post) {
-// call for [mod] page with thread opened in it.
 					$text .= manageModeratePost($post);
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');

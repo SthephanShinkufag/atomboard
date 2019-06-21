@@ -41,8 +41,9 @@ This fork of the fork features:
  - DB schema changed!
  - Bugfixes.
  - You can paste 4 files per post.
- - Administrators and Moderators can selectively delete attached files.
- - Now threads can be locked for posting.
+ - Administrator and Moderators can selectively delete attached files.
+ - Threads can be locked for posting.
+ - Now Administrator and Moderators can edit message text in posts.
 
 Installing
 ------------
