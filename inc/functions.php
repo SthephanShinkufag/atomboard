@@ -372,6 +372,22 @@ function deletePostImages($post, $imgList = array() ) {
  }
 }
 
+function replaceImagePreviewByFiller($post, $imgList){
+
+ if ( ($imgList) && (count($imgList) <= MAXIMUM_FILES) ){
+	foreach ($imgList as $arrayIndex => $index){
+		
+		$index=intval(trim(basename($index)));
+	
+		if ($post['thumb'.$index] != '') {
+		  @unlink('thumb/' . $post['thumb'.$index]);
+		  @copy('filler.png', 'thumb/' . $post['thumb'.$index]);
+		}
+	}
+ }
+
+}
+
 function checkCAPTCHA() {
 	if (TINYIB_CAPTCHA === 'recaptcha') {
 		require_once 'inc/recaptcha/autoload.php';

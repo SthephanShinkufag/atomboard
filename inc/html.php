@@ -460,7 +460,7 @@ $filehtml .= '</div>' .($expandHtml == '' ? '' : '<div id="expand' . $id.$index 
 				)  .'
 				</span>'. ($isOp && $res == TINYIB_INDEXPAGE ? '
 				&nbsp;<a class="gotothread" href="res/' . $id . '.html">Reply</a>' : '') . '<br />' .
-				( ($forModForm && $postID==$post['id'] && $postHaveImages)?'<form method="get" action="?"><input type="hidden" name="manage" value=""><input type="hidden" name="deleteimages" value="'.$postID.'"><input type="submit" value="Delete Selected Images" class="managebutton"><br /><br />':'').
+				( ($forModForm && $postID==$post['id'] && $postHaveImages)?'<form method="get" action="?"><input type="hidden" name="manage" value=""><input type="hidden" name="deleteimages" value="'.$postID.'"><input type="submit" value="Delete/Hide Selected Images" class="managebutton"> Action: <select name="action" class="managebutton"><option value="delete" selected>Delete Image</option><option value="hide">Hide Preview</option></select><br /><br />':'').
 
 				$filehtml . 
 

@@ -43,7 +43,8 @@ This fork of the fork features:
  - You can paste 4 files per post.
  - Administrator and Moderators can selectively delete attached files.
  - Threads can be locked for posting.
- - Now Administrator and Moderators can edit message text in posts.
+ - Administrator and Moderators can edit message text in posts.
+ - Preview for attached files can be replaced by filler image.
 
 Installing
 ------------
