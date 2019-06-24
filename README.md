@@ -45,6 +45,7 @@ This fork of the fork features:
  - Threads can be locked for posting.
  - Administrator and Moderators can edit message text in posts.
  - Preview for attached files can be replaced by filler image.
+ - Generation of catalog.html.
 
 Installing
 ------------
