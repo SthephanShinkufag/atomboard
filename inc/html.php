@@ -942,9 +942,9 @@ $OPposts = allThreads();
 
 	$catalogHTML .= '<div class="catalogblock">
 	<a href="res/'.$OPpostID.'.html"><img src="'.$thumb.'" width="'.$thumb_width.'" height="'.$thumb_height.'" /></a><br />
-	<center>
-	<span class="filetitle">'.$OPpostSubject.'</span><br />
-	<span class="postername">'.$OPuserName.' (R: '.$numOfReplies.')</span><br />
+	<center>'.
+	(($OPpostSubject)?'<span class="filetitle">'.$OPpostSubject.'</span><br />':'').
+	'<span class="postername">'.$OPuserName.' (R: '.$numOfReplies.')</span><br />
 	</center>
 	<div class="message" style="text-align: left">'.$OPpostMessage.'</div><br />
 	</div>';
@@ -956,8 +956,8 @@ $OPposts = allThreads();
 			' . TINYIB_LOGO . TINYIB_BOARDDESC . ' / Catalog
 		</div>
 		<hr />
-		<br />' .
-		$catalogHTML .
+		<br /> <div style="text-align: center">'.
+		$catalogHTML . '</div>'.
 		pageFooter();
 }
 

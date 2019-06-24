@@ -164,12 +164,19 @@ video.thumb {
 	overflow: hidden; 
 	vertical-align: top; 
 	display: inline-block; 
-	max-width: 230px; 
-	width: 230px; 
-	max-height: 370px; 
-	height: 370px; 
+	max-width: 236px; 
+	width: 236px; 
+	max-height: 350px; 
+	height: 350px; 
 	text-align: center;
-	margin: 2px;
+	margin: 3px;
+	padding-top: 6px;
+	background: #ddd;
+	color: #34343f;
+	border: 1px solid #ccc;
+	padding-left: 3px;
+	padding-right: 3px;
+	border-radius: 8px;
 }
 
 .message {
