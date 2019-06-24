@@ -919,7 +919,13 @@ $OPposts = allThreads();
 
 	foreach ($OPposts as $post) {
 	$numOfReplies = numRepliesToThreadByID($post['id']);
+
+	if (function_exists('mb_substr') && extension_loaded('mbstring')){
+	$OPpostMessage = tidy_repair_string(mb_substr($post['message'], 0, 160,'UTF-8'),array('quiet' => true, 'show-body-only' => true),'utf8');
+	} else {
 	$OPpostMessage = tidy_repair_string(substr($post['message'], 0, 160),array('quiet' => true, 'show-body-only' => true),'utf8');
+	}
+
 	$OPpostSubject = $post['subject'];
 	
 	if($post['name'] == ''){
