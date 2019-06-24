@@ -514,7 +514,7 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 		<div class="logo">
 			' . TINYIB_LOGO . TINYIB_BOARDDESC . '
 		</div>
-		' .buildPostForm($parent) . '
+		' .buildPostForm($parent) .( ($isOnPage)?'<br /><div style="text-align: center"><a href="/'.TINYIB_BOARD.'/catalog.html">Catalog</div>':''). '
 		<hr>
 		<form id="delform" action="/' . TINYIB_BOARD . '/imgboard.php?delete" method="post">
 			<input type="hidden" name="board" value="' . TINYIB_BOARD . '">' .
@@ -570,6 +570,7 @@ function rebuildIndexes() {
 		$file = ($page == 0) ? TINYIB_INDEX : $page . '.html';
 		writePage($file, buildPage($htmlPosts, 0, $pages, $page));
 	}
+createCatalog();
 }
 
 function rebuildThread($id) {
@@ -900,4 +901,66 @@ function manageStatus() {
 			</fieldset>
 		</fieldset>
 		<br>';
+}
+
+function buildCatalogPage(){
+$catalogHTML = '';
+$numOfReplies = 0;
+$OPuserName = '';
+$OPpostSubject = '';
+$OPpostMessage = '';
+$OPpostID = '';
+
+$thumb = 'noimage.png';
+$thumb_width = TINYIB_MAXW;
+$thumb_height = TINYIB_MAXH;
+
+$OPposts = allThreads();
+
+	foreach ($OPposts as $post) {
+	$numOfReplies = numRepliesToThreadByID($post['id']);
+	$OPpostMessage = tidy_repair_string(substr($post['message'], 0, 160),array('quiet' => true, 'show-body-only' => true),'utf8');
+	$OPpostSubject = $post['subject'];
+	
+	if($post['name'] == ''){
+	$OPuserName = TINYIB_POSTERNAME;
+	} else {
+	$OPuserName = $post['name'];
+	}
+	
+	$OPpostID = $post['id'];
+
+	  if($post['thumb0'] != '' && $post['thumb0_width'] > 0 && $post['thumb0_height'] > 0){
+	  $thumb = 'thumb/'.$post['thumb0'];
+	  $thumb_width = $post['thumb0_width'];
+	  $thumb_height = $post['thumb0_height'];
+	  } else {
+	  $thumb = 'noimage.png';
+	  $thumb_width = TINYIB_MAXW;
+	  $thumb_height = TINYIB_MAXH;
+	  }
+
+	$catalogHTML .= '<div class="catalogblock">
+	<a href="res/'.$OPpostID.'.html"><img src="'.$thumb.'" width="'.$thumb_width.'" height="'.$thumb_height.'" /></a><br />
+	<center>
+	<span class="filetitle">'.$OPpostSubject.'</span><br />
+	<span class="postername">'.$OPuserName.' (R: '.$numOfReplies.')</span><br />
+	</center>
+	<div class="message" style="text-align: left">'.$OPpostMessage.'</div><br />
+	</div>';
+
+	}
+
+	return pageHeader() . '<body>' . pageWrapper('back') . '
+		<div class="logo">
+			' . TINYIB_LOGO . TINYIB_BOARDDESC . ' / Catalog
+		</div>
+		<hr />
+		<br />' .
+		$catalogHTML .
+		pageFooter();
+}
+
+function createCatalog(){
+writePage('catalog.html', buildCatalogPage());
 }
