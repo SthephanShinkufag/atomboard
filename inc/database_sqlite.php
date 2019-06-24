@@ -329,7 +329,7 @@ function allBans() {
 
 function insertBan($ban) {
 	sqlite_query($GLOBALS["db"],
-		"INSERT INTO " . TINYIB_DBBANS . 
+		"INSERT INTO " . TINYIB_DBBANS .
 		" (ip, timestamp, expire, reason)" .
 		" VALUES ('" .
 			sqlite_escape_string($ban['ip']) . "', " .

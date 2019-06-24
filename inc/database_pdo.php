@@ -2,7 +2,6 @@
 if (!defined('TINYIB_BOARD')) {
 	die('');
 }
-
 if (TINYIB_DBDSN == '') { // Build a default (likely MySQL) DSN
 	$dsn = TINYIB_DBDRIVER . ":host=" . TINYIB_DBHOST;
 	if (TINYIB_DBPORT > 0) {
@@ -12,7 +11,6 @@ if (TINYIB_DBDSN == '') { // Build a default (likely MySQL) DSN
 } else { // Use a custom DSN
 	$dsn = TINYIB_DBDSN;
 }
-
 if (TINYIB_DBDRIVER === 'pgsql') {
 	$options = array(PDO::ATTR_PERSISTENT => true,
 		PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION);
@@ -21,7 +19,6 @@ if (TINYIB_DBDRIVER === 'pgsql') {
 		PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
 		PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8');
 }
-
 try {
 	$dbh = new PDO($dsn, TINYIB_DBUSERNAME, TINYIB_DBPASSWORD, $options);
 } catch (PDOException $e) {
@@ -49,7 +46,6 @@ if (TINYIB_DBDRIVER === 'pgsql') {
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(TINYIB_DBBANS));
 	$bans_exists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
 }
-
 if (!$bans_exists) {
 	$dbh->exec($bans_sql);
 }
@@ -62,7 +58,6 @@ if (TINYIB_DBDRIVER === 'pgsql') {
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(TINYIB_DBLIKES));
 	$likes_exists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
 }
-
 if (!$likes_exists) {
 	$dbh->exec($likes_sql);
 }
@@ -103,7 +98,7 @@ function threadExistsByID($id) {
 	return $result->fetchColumn() != 0;
 }
 
-//shoud be changed if you want more files
+// Shoud be changed if you want more files
 function insertPost($post) {
 	global $dbh;
 	$now = time();
@@ -230,10 +225,10 @@ function stickyThreadByID($id, $setsticky) {
 }
 
 function lockThreadByID($id, $setlocked) {
-	if ($setlocked == 1){
-	$setlocked = LOCKED_THREAD_COOKIE;
-	} elseif ($setlocked == 0){
-	$setlocked = '';
+	if ($setlocked == 1) {
+		$setlocked = TINYIB_LOCKTHR_COOKIE;
+	} elseif ($setlocked == 0) {
+		$setlocked = '';
 	}
 	pdoQuery("UPDATE " . TINYIB_DBPOSTS . " SET email = ? WHERE id = ?", array($setlocked, $id));
 }
@@ -285,7 +280,7 @@ function postsInThreadByID($id, $moderated_only = true) {
 	return $posts;
 }
 
-//shoud be changed if you want more files
+// Shoud be changed if you want more files
 function postsByHex($hex) {
 	$posts = array();
 	$results = pdoQuery(
@@ -332,19 +327,28 @@ function deletePostByID($id) {
 }
 
 function deleteImagesByImageID($post, $imgList) {
-
 	deletePostImages($post, $imgList);
-
-  if ( ($imgList) && (count($imgList) <= MAXIMUM_FILES) ){
-	foreach ($imgList as $arrayIndex => $index){
-		$index=intval(trim(basename($index)));
-		pdoQuery("UPDATE " . TINYIB_DBPOSTS . " SET file".$index." = ?, file".$index."_hex = ?, file".$index."_original = ?, file".$index."_size = ?, file".$index."_size_formatted = ?, image".$index."_width = ?, image".$index."_height = ?, thumb".$index." = ?, thumb".$index."_width = ?, thumb".$index."_height = ? WHERE id = ?", array('','','','0','','0','0','','0','0',$post['id']) );
+	if (($imgList) && (count($imgList) <= TINYIB_MAXIMUM_FILES)) {
+		foreach ($imgList as $arrayIndex => $index) {
+			$index = intval(trim(basename($index)));
+			pdoQuery("UPDATE " . TINYIB_DBPOSTS .
+			" SET file" . $index . " = ?,
+				file" . $index . "_hex = ?,
+				file" . $index . "_original = ?,
+				file" . $index . "_size = ?,
+				file" . $index . "_size_formatted = ?,
+				image" . $index . "_width = ?,
+				image" . $index . "_height = ?,
+				thumb" . $index . " = ?,
+				thumb" . $index . "_width = ?,
+				thumb" . $index . "_height = ?
+			WHERE id = ?", array('', '', '', '0', '', '0', '0', '', '0', '0', $post['id']));
+		}
 	}
-  }
 }
 
-function editMessageInPostById($id, $newMessage){
-pdoQuery("UPDATE " . TINYIB_DBPOSTS . " SET message = ? WHERE id = ?", array($newMessage,$id));
+function editMessageInPostById($id, $newMessage) {
+	pdoQuery("UPDATE " . TINYIB_DBPOSTS . " SET message = ? WHERE id = ?", array($newMessage,$id));
 }
 
 function trimThreads() {
@@ -357,7 +361,7 @@ function trimThreads() {
 		);
 		# old mysql, sqlite3: SELECT id FROM $table ORDER BY bumped LIMIT $limit,100
 		# mysql, postgresql, sqlite3: SELECT id FROM $table ORDER BY bumped LIMIT 100 OFFSET $limit
-		# oracle: SELECT id FROM ( SELECT id, rownum FROM $table ORDER BY bumped) WHERE rownum >= $limit
+		# oracle: SELECT id FROM (SELECT id, rownum FROM $table ORDER BY bumped) WHERE rownum >= $limit
 		# MSSQL: WITH ts AS (SELECT ROWNUMBER() OVER (ORDER BY bumped) AS 'rownum', * FROM $table)
 		#        SELECT id FROM ts WHERE rownum >= $limit
 		foreach ($results as $post) {

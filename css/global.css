@@ -155,23 +155,18 @@ video.thumb {
 	font-weight: bold;
 }
 
-.inlineblock {
+.image-container {
 	display: inline-block;
-	//float: left;
+}
+
+.image-container > .filesize {
+	margin-left: 20px;
+	display: block;
 }
 
 .message {
 	margin: 1em 20px;
 	line-height: 19px;
-}
-
-//.oppost {
-//	overflow: hidden;
-//}
-
-.inlineblock > .filesize {
-	margin-left: 20px;
-	display: block;
 }
 
 .oppost > .filesize {

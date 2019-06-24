@@ -80,7 +80,7 @@ define('TINYIB_TRIPSEED', '');
 // Amount of threads shown per index page
 define('TINYIB_THREADSPERPAGE', 10);
 // Amount of replies previewed on index pages
-define('TINYIB_PREVIEWREPLIES', 3);
+define('TINYIB_PREVIEWREPLIES', 5);
 // Amount of text lines to truncate posts on index pages [0 to disable]
 define('TINYIB_TRUNC_LINES', 10);
 // Text size in bytes to truncate posts on index pages [0 to disable]
@@ -92,13 +92,13 @@ define('TINYIB_LIKES', true);
 
 /* ==[ Post control ]====================================================================================== */
 // Delay (in seconds) between posts from the same IP address to help control flooding [0 to disable]
-define('TINYIB_DELAY', 3);
+define('TINYIB_DELAY', 20);
 // Oldest threads are discarded when the thread count passes this limit [0 to disable]
 define('TINYIB_MAXTHREADS', 100);
 // Maximum replies before a thread stops bumping [0 to disable]
 define('TINYIB_MAXREPLIES', 500);
-// Cookie in e-mail field what indicates what thread is locked for posting
-define('LOCKED_THREAD_COOKIE','thread@is.locked');
+// Cookie in e-mail field that indicates what thread is locked for posting
+define('TINYIB_LOCKTHR_COOKIE','thread@is.locked');
 
 /* ==[ Reply form and posting ]============================================================================= */
 // Redirect to thread after posting
@@ -137,16 +137,16 @@ $tinyib_embeds = array(
 define('TINYIB_MAXKB', 20480);
 // Human-readable representation of the maximum file size
 define('TINYIB_MAXKBDESC', '20 MB');
-// Maximum number of uploaded files
-define('MAXIMUM_FILES', 4);
-// Add overlay image over video and imbedded files?
-define('ADD_VIDEO_OVERLAY_IMAGE', false);
+// Maximum number of uploaded files (up to 4)
+define('TINYIB_MAXIMUM_FILES', 4);
+// Add overlay image over video and embedded files
+define('TINYIB_VIDEO_OVERLAY', false);
 // Thumbnail method to use: 'gd', 'imagemagick' (see README for instructions)
 define('TINYIB_THUMBNAIL', 'gd');
 // Allow the creation of new threads without uploading a file
-define('TINYIB_NOFILEOK', true);
+define('TINYIB_NOFILEOK', false);
 // Allow duplicate files
-define('TINYIB_FILE_ALLOW_DUPLICATE', true);
+define('TINYIB_FILE_ALLOW_DUPLICATE', false);
 // Animate gif thumbnails
 // The following only apply when TINYIB_THUMBNAIL is set to 'imagemagick'
 define('TINYIB_FILE_ANIM_GIF_THUMB', true);
@@ -160,7 +160,7 @@ define('TINYIB_MAXH', 230); // Height
 /* ==[ Captcha ]=========================================================================================== */
 // Reduce spam by requiring users to pass a CAPTCHA when posting: 'simple', 'recaptcha'
 // (click Rebuild All in the management panel after enabling) ['' to disable]
-define('TINYIB_CAPTCHA', '');
+define('TINYIB_CAPTCHA', 'simple');
 // The following only apply when TINYIB_CAPTCHA is set to recaptcha
 // For API keys visit https://www.google.com/recaptcha
 define('TINYIB_RECAPTCHA_SITE', '');   // Site key

@@ -18,10 +18,10 @@ function pageHeader() {
 	<title>' . TINYIB_BOARDDESC . '</title>
 	<link rel="shortcut icon" href="/' . TINYIB_BOARD . '/favicon.png">
 	<link rel="stylesheet" type="text/css" href="/' . TINYIB_BOARD . '/css/global.css">
-	<script src="/' . TINYIB_BOARD . '/js/tinyib.js"></script>
-	' . (TINYIB_CAPTCHA === 'recaptcha' ?
-		'<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
-	' . TINYIB_HTML_HEAD . '
+	<script src="/' . TINYIB_BOARD . '/js/tinyib.js"></script>' .
+	(TINYIB_CAPTCHA === 'recaptcha' ? '
+	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') .
+	TINYIB_HTML_HEAD . '
 </head>
 ';
 }
@@ -46,7 +46,7 @@ function pageWrapper($returnHref) {
 function pageFooter() {
 	return '
 		<div class="footer">
-			- <a href="https://github.com/SthephanShinkufag/TinyIB" target="_top">TinyIB</a> - forked by <a href="mailto:sthephan.shi@gmail.com">SthephanShi</a> - forked again by <a href="https://github.com/nolifer1337/TinyIB" target="_top">nolifer</a>
+			- <a href="https://github.com/tslocum/TinyIB" target="_top">TinyIB</a> - forked by <a href="https://github.com/SthephanShinkufag/TinyIB">SthephanShi</a> & <a href="https://github.com/nolifer1337/TinyIB" target="_top">nolifer</a> -
 		</div>
 	</div>
 	<div class="aside aside-right">
@@ -105,16 +105,15 @@ function buildPostForm($parent, $isRawPost = false) {
 	global $tinyib_hidefieldsop, $tinyib_hidefields, $tinyib_uploads, $tinyib_embeds;
 	$isOnPage = $parent == TINYIB_NEWTHREAD;
 	$hideFields = $isOnPage ? $tinyib_hidefieldsop : $tinyib_hidefields;
-
 	$postformExtra = array('name' => '', 'email' => '', 'subject' => '', 'footer' => '');
 	$inputSubmit = '<input type="submit" value="Submit" accesskey="z">';
 	if ($isRawPost || !in_array('subject', $hideFields)) {
 		$postformExtra['subject'] = $inputSubmit;
-	} else if (!in_array('email', $hideFields)) {
+	} elseif (!in_array('email', $hideFields)) {
 		$postformExtra['email'] = $inputSubmit;
-	} else if (!in_array('name', $hideFields)) {
+	} elseif (!in_array('name', $hideFields)) {
 		$postformExtra['name'] = $inputSubmit;
-	} else if (!in_array('email', $hideFields)) {
+	} elseif (!in_array('email', $hideFields)) {
 		$postformExtra['email'] = $inputSubmit;
 	} else {
 		$postformExtra['footer'] = $inputSubmit;
@@ -126,12 +125,12 @@ function buildPostForm($parent, $isRawPost = false) {
 	$fileTypesHtml = '';
 	$fileInputHtml = '';
 	$embedInputHtml = '';
-
 	if (!empty($tinyib_uploads) && ($isRawPost || !in_array('file', $hideFields))) {
 		if (TINYIB_MAXKB > 0) {
 			$maxFileSizeInputHtml = '<input type="hidden" name="MAX_FILE_SIZE" value="' .
 				strval(TINYIB_MAXKB * 1024) . '">';
-			$maxFileSizeRulesHtml = '<li>Maximum number of files is '.MAXIMUM_FILES.', '.TINYIB_MAXKBDESC.' total.</li>';
+			$maxFileSizeRulesHtml = '<li>Maximum number of files is ' . TINYIB_MAXIMUM_FILES . ', ' .
+				TINYIB_MAXKBDESC . ' total.</li>';
 		}
 		$fileTypesHtml = '<li>' . supportedFileTypes() . '</li>';
 		$fileInputHtml = '<tr>
@@ -156,9 +155,10 @@ function buildPostForm($parent, $isRawPost = false) {
 	}
 	$thumbnailsHtml = '';
 	if (isset($tinyib_uploads['image/jpeg']) ||
-	   isset($tinyib_uploads['image/pjpeg']) ||
-	   isset($tinyib_uploads['image/png']) ||
-	   isset($tinyib_uploads['image/gif'])) {
+		isset($tinyib_uploads['image/pjpeg']) ||
+		isset($tinyib_uploads['image/png']) ||
+		isset($tinyib_uploads['image/gif'])
+	) {
 		$thumbnailsHtml = '<li>Images greater than ' . TINYIB_MAXWOP . 'x' . TINYIB_MAXHOP . (
 			TINYIB_MAXW == TINYIB_MAXWOP && TINYIB_MAXH == TINYIB_MAXHOP ? '' :
 				' (new thread) or ' . TINYIB_MAXW . 'x' . TINYIB_MAXH . ' (reply)'
@@ -174,25 +174,28 @@ function buildPostForm($parent, $isRawPost = false) {
 	return '<div class="postarea">
 			<form name="postform" id="postform" action="/' . TINYIB_BOARD .
 				'/imgboard.php" method="post" enctype="multipart/form-data">
-			' . $maxFileSizeInputHtml . '
+			' . $maxFileSizeInputHtml .
+			(!$isRawPost ? '
+			<input type="hidden" name="parent" value="' . $parent . '">' : '') . '
 			<table class="postform-table reply">
 				<tbody>' . (
-					($isRawPost)? '
+					$isRawPost ? '
 					<tr>
 						<td class="postblock"></td>
 						<td>
-							<input type="checkbox" name="rawpost" checked style="margin: 0 auto;"> '.'<span style="font: 10px sans-serif;">Add <span style="color: red;">## Admin</span> or <span style="color: purple;">## Mod</span> mark</span>' . '
+							<input type="checkbox" name="rawpost" checked style="margin: 0 auto;">
+							<span style="font: 12px sans-serif;">Add
+								<span style="color: red;">## Admin</span> or
+								<span style="color: purple;">## Mod</span> mark
+							</span>
 						</td>
 					</tr>
-
 					<tr>
 						<td class="postblock"></td>
 						<td>
 							<input type="text" class="postform-input" name="parent" placeholder="Reply to (0 = new thread)" maxlength="75" accesskey="t">
 						</td>
-					</tr>
-
-						':'<input type="hidden" name="parent" value="' . $parent . '">'
+					</tr>' : ''
 				) . (
 					$isRawPost || !in_array('name', $hideFields) ? '
 					<tr>
@@ -305,103 +308,107 @@ function buildPostForm($parent, $isRawPost = false) {
 		</div>';
 }
 
-
-function buildPost($post, $res, $forModForm='', $postID='') {
+function buildPost($post, $res, $isModPanel = false) {
 	$isOp = $post['parent'] == TINYIB_NEWTHREAD;
 	$id = $post['id'];
 	$thrId = $isOp ? $id : $post['parent'];
 	if (!isset($post['omitted'])) {
 		$post['omitted'] = 0;
 	}
-	$filehtml = '';
+
 	// Build post file
-
-// cikl-start
-$postHaveImages=false;
-for($index=0; $index<MAXIMUM_FILES; $index++){
-if($post['file'.$index.'_hex']){
-
-	$postHaveImages=true;
-	$fWidth = $post['image'.$index.'_width'];
-	$fHeight = $post['image'.$index.'_height'];
-	$fName = $post['file'.$index];
-
-	$isEmbed = isEmbed($post['file'.$index.'_hex']);
-	$isVideoFile = (substr($fName, -5) == '.webm' || substr($fName, -4) == '.mp4')?true:false;
-	$isPictureFile = in_array(substr($fName, -4), array('.jpg', '.png', '.gif'));
-
-	$directLink = $isEmbed ? '#' : '/' . TINYIB_BOARD . '/src/' . $fName;
-	$expandClick = ' onclick="return expandFile(event, ' . $id.$index . ');"';
-
-if($isEmbed){
-$expandHtml = rawurlencode($fName);
-}
-else if($isVideoFile){
-	if($fWidth > 0 && $fHeight > 0){
-	$hwParams='width="' . $fWidth . '" height="' . $fHeight . '"';
+	$filehtml = '';
+	$hasImages = false;
+	for($index = 0; $index < TINYIB_MAXIMUM_FILES; $index++) {
+		if ($post['file' . $index . '_hex']) {
+			$hasImages = true;
+			$fWidth = $post['image' . $index . '_width'];
+			$fHeight = $post['image' . $index . '_height'];
+			$fName = $post['file' . $index];
+			$isEmbed = isEmbed($post['file' . $index . '_hex']);
+			$isVideo = !!(substr($fName, -5) == '.webm' || substr($fName, -4) == '.mp4');
+			$isImage = in_array(substr($fName, -4), array('.jpg', '.png', '.gif'));
+			$directLink = $isEmbed ? '#' : '/' . TINYIB_BOARD . '/src/' . $fName;
+			$expandClick = ' onclick="return expandFile(event, ' . $id . $index . ');"';
+			if ($isEmbed) {
+				$expandHtml = rawurlencode($fName);
+			} elseif ($isVideo) {
+				if ($fWidth > 0 && $fHeight > 0) {
+					$hwParams = 'width="' . $fWidth . '" height="' . $fHeight . '"';
+				} else {
+					$hwParams = 'width="500"';
+				}
+				$expandHtml = rawurlencode('<video ' . $hwParams . 'style="position: static;' .
+					' pointer-events: inherit; display: inline; max-width: 100%; max-height: 100%;"' .
+					' controls autoplay loop><source src="' . $directLink . '"></source></video>');
+			} elseif ($isImage) {
+				$expandHtml = rawurlencode('<a href="' . $directLink . '"' . $expandClick . '><img src="/' .
+					TINYIB_BOARD . '/src/' . $fName . '" width="' . $fWidth .
+					'" style="max-width: 100%; height: auto;"></a>');
+			}
+			$origName = $post['file' . $index . '_original'];
+			$hasOrigName = $origName != '';
+			if ($isEmbed || in_array(substr($fName, -4), array('.jpg', '.png', '.gif', '.webm', '.mp4')) ) {
+				$thumblink = '<a href="' . $directLink . '" target="_blank"' . $expandClick;
+			} else {
+				$thumblink = '<a href="' . $directLink . '" target="_blank"';
+			}
+			if ($hasOrigName) {
+				$thumblink .= ' download="' . $origName . '">';
+			} else {
+				$thumblink .= '>';
+			}
+			if ($isEmbed) {
+				$filesize = '<a href="' . $directLink . '"' . $expandClick . '>' . $origName .
+					'</a>,&nbsp;' . $post['file' . $index . '_hex'];
+			} elseif ($fName != '') {
+				$filesize = $thumblink . ($hasOrigName ? $origName : $fName) . '</a><br>(' .
+					$post['file' . $index . '_size_formatted'] .
+					($fWidth > 0 && $fHeight > 0 ? ',&nbsp;' . $fWidth . 'x' . $fHeight : '') . ')';
+			} else {
+				$filesize = '';
+			}
+			if ($filesize == '') {
+				$filehtml = '';
+			} else {
+				$filehtml .= '
+				<div class="image-container">
+					<span class="filesize">' .
+					($isModPanel ? '
+						<input type="checkbox" name="delete-img-mod[]" value="' . $index . '">' : '') . '
+						' . $filesize . '
+					</span>
+					<div id="thumbfile' . $id . $index . '">';
+				if ($post['thumb' . $index . '_width'] > 0 && $post['thumb' . $index . '_height'] > 0) {
+					// If a file have a thumbnail
+					$filehtml .= '
+						' . $thumblink . '
+							<img src="/' . TINYIB_BOARD . '/thumb/' . $post['thumb' . $index] . '"' .
+							($isVideo ? ' style="border: 1px dashed #5d5d5d;" ' : '') .
+							' alt="' . $id . $index . '" class="thumb" id="thumbnail' . $id . $index.
+							'" width="' . $post['thumb' . $index . '_width'] .
+							'" height="' . $post['thumb' . $index . '_height'] . '">
+						</a>';
+				} elseif ($isVideo) {
+					// If a webm or mp4 file have no thumbnail
+				$filehtml .= '
+						' . $thumblink . '
+							<video src="' . $directLink . '" alt="' . $id . $index .
+							'" class="thumb" id="thumbnail' . $id . $index. '"></video>
+						</a>';
+				} else {
+					$filehtml .= '';
+				}
+				$filehtml .= '
+					</div>' . ($expandHtml == '' ? '' : '
+					<div id="expand' . $id . $index . '" style="display: none;">' . '
+						' . $expandHtml . '
+					</div>
+					<div id="file' . $id . $index . '" class="thumb" style="display: none;"></div>
+				</div>');
+			}
+		}
 	}
-	else{
-	$hwParams='width="500"';
-	}
-$expandHtml = rawurlencode('<video ' . $hwParams . 'style="position: static; pointer-events: inherit; display: inline; max-width: 100%; max-height: 100%;" controls autoplay loop><source src="' . $directLink . '"></source></video>');
-}
-else if($isPictureFile){
-$expandHtml = rawurlencode('<a href="' . $directLink . '"' . $expandClick . '><img src="/' . TINYIB_BOARD . '/src/' . $fName .'" width="' . $fWidth . '" style="max-width: 100%; height: auto;"></a>');
-}
-
-	$origName = $post['file'.$index.'_original'];
-	$hasOrigName = ($origName != '');
-
-if ($isEmbed || in_array(substr($fName, -4), array('.jpg', '.png', '.gif', 'webm', '.mp4')) ){
-$thumblink = '<a href="' . $directLink . '" target="_blank"' . $expandClick;
-}
-else{
-$thumblink = '<a href="' . $directLink . '" target="_blank"';
-}
-if ($hasOrigName){
-$thumblink.=' download="' . $origName . '">';
-}
-else{
-$thumblink.='>';
-}
-
-if ($isEmbed){
-$filesize = '<a href="' . $directLink . '"' . $expandClick . '>' . $origName .'</a>,&nbsp;' . $post['file'.$index.'_hex'];
-}
-else{
-	if ($fName != ''){
-	$filesize = $thumblink . ($hasOrigName ? $origName : $fName) .'</a>'. 
-	'<br />('.$post['file'.$index.'_size_formatted'].($fWidth > 0 && $fHeight > 0 ? ',&nbsp;' . $fWidth . 'x' . $fHeight : '').')';
-	}
-	else{
-	$filesize = '';
-	}
-}
-
-if ($filesize == ''){
-$filehtml = '';
-}
-else{
-$filehtml .= '<div class="inlineblock"> <span class="filesize">'. (($forModForm && $postID==$post['id'])?'<input type="checkbox" name="delete-img[]" value="'.$index.'">':'') . $filesize . '</span><div id="thumbfile'.$id.$index.'">'; 
-
- if ($post['thumb'.$index.'_width'] > 0 && $post['thumb'.$index.'_height'] > 0){
- //if file have thumbnail
- $filehtml .= '' . $thumblink . '<img src="/' . TINYIB_BOARD . '/thumb/' . $post['thumb'.$index] .'"' . ($isVideoFile?' style="border: 1px dashed #5d5d5d;" ':'') . 'alt="' .$id.$index .'" class="thumb" id="thumbnail' . $id.$index. '" width="' .$post['thumb'.$index.'_width'] . '" height="' . $post['thumb'.$index.'_height'] . '"></a>';
- }
- else if($isVideoFile){
- //if file have no thumbnail but it is webm or mp4 file
- $filehtml .= '' . $thumblink . '<video src="' . $directLink . '" alt="' .$id.$index .'" class="thumb" id="thumbnail' . $id.$index. '"></a>';
- }
- else {
- $filehtml .= '';
- }
-
-$filehtml .= '</div>' .($expandHtml == '' ? '' : '<div id="expand' . $id.$index . '" style="display: none;">' . $expandHtml . '</div><div id="file' . $id.$index . '" class="thumb" style="display: none;"></div> </div>');
-}
-
- }
-}
-// cikl-stop
 
 	// Truncate messages on board index pages for readability
 	$message = $post['message'];
@@ -413,19 +420,22 @@ $filehtml .= '</div>' .($expandHtml == '' ? '' : '<div id="expand' . $id.$index 
 		} elseif (TINYIB_TRUNC_SIZE > 0 && strlen($message) > TINYIB_TRUNC_SIZE) {
 			$truncLen = TINYIB_TRUNC_SIZE;
 		}
-
 		if ($truncLen) {
-			$message = tidy_repair_string(substr($message, 0, $truncLen),array('quiet' => true, 'show-body-only' => true),'utf8') . '
+			$message = tidy_repair_string(
+				substr($message, 0, $truncLen),
+				array('quiet' => true, 'show-body-only' => true),
+				'utf8'
+			) . '
 					<div class="abbrev">
 						Post too long. <a href="/' . TINYIB_BOARD . '/res/' . $thrId . '.html#' . $id .
 						'">Click to view</a>.
 					</div>';
 		}
 	}
+
 	// Start post building
 	$omitted = $post['omitted'];
 	$likes = $post['likes'];
-
 	return PHP_EOL . ($isOp ? '
 			<div class="oppost" id="op' . $id . '">' : '
 			<table border="0"><tbody><tr><td class="reply" id="reply' . $id . '">') . '
@@ -445,39 +455,48 @@ $filehtml .= '</div>' .($expandHtml == '' ? '' : '<div id="expand' . $id.$index 
 					($post['stickied'] == 1 ? '
 					<img src="/' . TINYIB_BOARD .
 						'/sticky.png" title="Thread is sticked" width="16" height="16">' : '') .
-					($post['email'] == LOCKED_THREAD_COOKIE ? '
+					($post['email'] == TINYIB_LOCKTHR_COOKIE ? '
 					<img src="/' . TINYIB_BOARD .
 						'/locked.png" title="Thread is locked" width="11" height="16">' : '') .
-				(
-					TINYIB_LIKES ? '
+					(TINYIB_LIKES ? '
 					<span class="like-container">
 						<span class="like-icon' . ($likes ? ' like-enabled' : ' like-disabled') .
 							'" onclick="sendLike(this, ' . $id . ');">
 							<svg><use xlink:href="#symbol-like"></use></svg>
 						</span>
-						<span class="like-counter">' . ($likes ? $likes:'') . '</span>
-					</span>' : ''
-				)  .'
-				</span>'. ($isOp && $res == TINYIB_INDEXPAGE ? '
-				&nbsp;<a class="gotothread" href="res/' . $id . '.html">Reply</a>' : '') . '<br />' .
-				( ($forModForm && $postID==$post['id'] && $postHaveImages)?'<form method="get" action="?"><input type="hidden" name="manage" value=""><input type="hidden" name="deleteimages" value="'.$postID.'"><input type="submit" value="Delete Selected Images" class="managebutton"><br /><br />':'').
-
-				$filehtml . 
-
-				( ($forModForm && $postID==$post['id'] && $postHaveImages)?'</form>':'' ) .
-				'
+						<span class="like-counter">' . ($likes ? $likes : '') . '</span>
+					</span>' : '') . '
+				</span>' .
+				($isOp && $res == TINYIB_INDEXPAGE ? '&nbsp;<a class="gotothread" href="res/' .
+					$id . '.html">Reply</a>' : '') . '
+				<br>' .
+				($isModPanel && $hasImages ? '
+				<form method="get" action="?">
+					<input type="hidden" name="manage" value="">
+					<input type="hidden" name="delete-img" value="' . $id . '">
+					<input type="submit" value="Delete Selected Images" class="managebutton">
+					<br>
+					<br>' : '') .
+					$filehtml .
+					($isModPanel && $hasImages ? '
+				</form>' : '') . '
 				<div class="message">' .
-				( ($forModForm && $postID==$post['id'])?'<form method="post" action="?manage&editpost='.$postID.'" enctype="multipart/form-data"><textarea id="message" name="message">':'') .
-
-				$message .
-
-				( ($forModForm && $postID==$post['id'])?'</textarea><br /><input type="submit" value="Edit" class="managebutton"></form>':'') .
-				'</div>
-			' . (!$isOp ? '</td></tr></tbody></table>' : '</div>' .
+					($isModPanel ? '
+					<form method="post" action="?manage&editpost=' .
+						$id . '" enctype="multipart/form-data">
+						<textarea id="message" name="message">' : '') .
+							$message . ($isModPanel ? '
+						</textarea>
+						<br>
+						<input type="submit" value="Edit" class="managebutton">
+					</form>' : '') . '
+				</div>
+			' .
+			(!$isOp ? '</td></tr></tbody></table>' : '</div>' .
 			($res == TINYIB_INDEXPAGE && $omitted > 0 ? '
 			<div class="omittedposts">' . $omitted . ' ' .
 				plural('post', $omitted) . ' omitted. Click Reply to view.
-			</div>' : '')) . PHP_EOL;
+			</div>' : ''));
 }
 
 function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
@@ -556,10 +575,11 @@ function rebuildIndexes() {
 		for($j = count($replies) - 1; $j > $thread['omitted']; $j--) {
 			$htmlReplies[] = buildPost($replies[$j], TINYIB_INDEXPAGE);
 		}
-		$htmlPosts .= buildPost($thread, TINYIB_INDEXPAGE) . implode('', array_reverse($htmlReplies)) . '
+		$htmlPosts .= buildPost($thread, TINYIB_INDEXPAGE) . implode('', array_reverse($htmlReplies)) .
+			PHP_EOL . '
 			<hr>';
 		if (++$i >= TINYIB_THREADSPERPAGE) {
-			$file = ($page == 0) ? TINYIB_INDEX : $page . '.html';
+			$file = $page == 0 ? TINYIB_INDEX : $page . '.html';
 			writePage($file, buildPage($htmlPosts, 0, $pages, $page));
 			$page++;
 			$i = 0;
@@ -567,7 +587,7 @@ function rebuildIndexes() {
 		}
 	}
 	if ($page == 0 || $htmlPosts != '') {
-		$file = ($page == 0) ? TINYIB_INDEX : $page . '.html';
+		$file = $page == 0 ? TINYIB_INDEX : $page . '.html';
 		writePage($file, buildPage($htmlPosts, 0, $pages, $page));
 	}
 }
@@ -638,7 +658,8 @@ function manageBanForm() {
 			<legend>Ban an IP-address</legend>
 			<label for="ip">IP-address:</label>
 			<input type="text" name="ip" id="ip" value="' . $_GET['bans'] . '">
-			<input type="submit" value="Submit" class="managebutton"><br>
+			<input type="submit" value="Submit" class="managebutton">
+			<br>
 			<label for="expire">Expire (sec):</label>
 			<input type="text" name="expire" id="expire" value="0">&nbsp;&nbsp;
 			<small>[
@@ -670,8 +691,8 @@ function manageBansTable() {
 				<th>&nbsp;</th>
 			</tr>';
 		foreach ($allbans as $ban) {
-			$expire = ($ban['expire'] > 0) ? date('y.m.d D H:i:s', $ban['expire']) : 'Does not expire';
-			$reason = ($ban['reason'] == '') ? '&nbsp;' : htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8');
+			$expire = $ban['expire'] > 0 ? date('y.m.d D H:i:s', $ban['expire']) : 'Does not expire';
+			$reason = $ban['reason'] == '' ? '&nbsp;' : htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8');
 			$text .= '<tr>
 				<td>' . $ban['ip'] . '</td>
 				<td>' . date('y.m.d D H:i:s', $ban['timestamp']) . '</td>
@@ -694,7 +715,8 @@ function manageModeratePostForm() {
 					<label for="moderate">Post ID:</label>
 					<input type="text" name="moderate" id="moderate">
 					<input type="submit" value="Submit" class="managebutton">
-				</div><br>
+				</div>
+				<br>
 				<small>
 					<b>Tip:</b> While browsing the image board, you can easily moderate a post if you are logged in:<br>
 					Tick the box next to a post and click "Delete" at the bottom of the page with a blank password.
@@ -707,10 +729,10 @@ function manageModeratePost($post) {
 	global $isAdmin;
 	$ip = $post['ip'];
 	$ban = banByIP($ip);
-	$banDisabled = (!$ban && $isAdmin) ? '' : ' disabled';
-	$banInfo = (!$ban) ?
-		((!$isAdmin) ? 'Only an administrator may ban an IP address.' : ('IP address: ' . $ip)) :
-		(' A ban record already exists for ' . $ip);
+	$banDisabled = !$ban && $isAdmin ? '' : ' disabled';
+	$banInfo = $ban ?
+		' A ban record already exists for ' . $ip :
+		$isAdmin ? 'IP address: ' . $ip : 'Only an administrator may ban an IP address.';
 	$isOp = $post['parent'] == TINYIB_NEWTHREAD;
 	$deleteInfo = $isOp ? 'This will delete the entire thread below.' : 'This will delete the post below.';
 	$postOrThread = $isOp ? 'Thread' : 'Post';
@@ -721,83 +743,83 @@ function manageModeratePost($post) {
 		$stickyUnsticky = $post['stickied'] == 1 ? 'Un-sticky' : 'Sticky';
 		$stickyUnstickyHelp = $post['stickied'] == 1 ? 'Return this thread to a normal state.' :
 			'Keep this thread at the top of the board.';
-		$stickyHtml = <<<H
-	<tr><td colspan="2">&nbsp;</td></tr>
-	<tr><td align="right" width="50%;">
-		<form method="get" action="?">
-		<input type="hidden" name="manage" value="">
-		<input type="hidden" name="sticky" value="${post['id']}">
-		<input type="hidden" name="setsticky" value="$stickySet">
-		<input type="submit" value="$stickyUnsticky Thread" class="managebutton" style="width: 50%;">
-		</form>
-	</td><td><small>$stickyUnstickyHelp</small></td></tr>
-H;
-		$lockedSet = $post['email'] == LOCKED_THREAD_COOKIE ? '0' : '1';
-		$lockUnlock = $post['email'] == LOCKED_THREAD_COOKIE ? 'Un-lock' : 'Lock';
-		$lockedUnlockedHelp = $post['email'] == LOCKED_THREAD_COOKIE ? 'Unlock this thread.' :
+		$stickyHtml = '
+					<tr><td colspan="2">&nbsp;</td></tr>
+					<tr>
+						<td align="right" width="50%;">
+							<form method="get" action="?">
+								<input type="hidden" name="manage" value="">
+								<input type="hidden" name="sticky" value="' . $post['id'] . '">
+								<input type="hidden" name="setsticky" value="' . $stickySet . '">
+								<input type="submit" value="' . $stickyUnsticky .
+									' Thread" class="managebutton" style="width: 50%;">
+							</form>
+						</td>
+						<td><small>' . $stickyUnstickyHelp . '</small></td>
+					</tr>';
+		$lockedSet = $post['email'] == TINYIB_LOCKTHR_COOKIE ? '0' : '1';
+		$lockUnlock = $post['email'] == TINYIB_LOCKTHR_COOKIE ? 'Un-lock' : 'Lock';
+		$lockedUnlockedHelp = $post['email'] == TINYIB_LOCKTHR_COOKIE ? 'Unlock this thread.' :
 			'Lock this thread.';
-		$lockedHtml = <<<H
-	<tr><td colspan="2">&nbsp;</td></tr>
-	<tr><td align="right" width="50%;">
-		<form method="get" action="?">
-		<input type="hidden" name="manage" value="">
-		<input type="hidden" name="locked" value="${post['id']}">
-		<input type="hidden" name="setlocked" value="$lockedSet">
-		<input type="submit" value="$lockUnlock Thread" class="managebutton" style="width: 50%;">
-		</form>
-	</td><td><small>$lockedUnlockedHelp</small></td></tr>
-H;
+		$lockedHtml = '
+					<tr><td colspan="2">&nbsp;</td></tr>
+					<tr>
+						<td align="right" width="50%;">
+							<form method="get" action="?">
+								<input type="hidden" name="manage" value="">
+								<input type="hidden" name="locked" value="' . $post['id'] . '">
+								<input type="hidden" name="setlocked" value="' . $lockedSet . '">
+								<input type="submit" value="' . $lockUnlock .
+									' Thread" class="managebutton" style="width: 50%;">
+							</form>
+						</td>
+						<td><small>' . $lockedUnlockedHelp . '</small></td>
+					</tr>';
 		$postHtml = '';
 		$posts = postsInThreadByID($post['id']);
 		foreach ($posts as $postTemp) {
-			$postHtml .= buildPost($postTemp, TINYIB_INDEXPAGE, 'forModForm', $post['id']);
+			$postHtml .= buildPost($postTemp, TINYIB_INDEXPAGE, true);
 		}
 	} else {
-		$postHtml = buildPost($post, TINYIB_INDEXPAGE, 'forModForm', $post['id']);
+		$postHtml = buildPost($post, TINYIB_INDEXPAGE, true);
 	}
-	return <<<H
-	<fieldset>
-	<legend>Moderating No.${post['id']}</legend>
-
-	<fieldset>
-	<legend>Action</legend>
-
-	<table border="0" cellspacing="0" cellpadding="0" width="100%">
-	<tr><td align="right" width="50%;">
-
-	<form method="get" action="?">
-	<input type="hidden" name="manage" value="">
-	<input type="hidden" name="delete" value="${post['id']}">
-	<input type="submit" value="Delete $postOrThread" class="managebutton" style="width: 50%;">
-	</form>
-
-	</td><td><small>$deleteInfo</small></td></tr>
-	<tr><td align="right" width="50%;">
-
-	<form method="get" action="?">
-	<input type="hidden" name="manage" value="">
-	<input type="hidden" name="bans" value="${post['ip']}">
-	<input type="submit" value="Ban Poster" class="managebutton" style="width: 50%;"$banDisabled>
-	</form>
-
-	</td><td><small>$banInfo</small></td></tr>
-
-	$stickyHtml
-
-	$lockedHtml
-
-	</table>
-
-	</fieldset>
-
-	<fieldset>
-	<legend>$postOrThread</legend>
-	$postHtml
-	</fieldset>
-
-	</fieldset>
-	<br>
-H;
+	return '<fieldset>
+			<legend>Moderating No.' . $post['id'] . '</legend>
+			<fieldset>
+				<legend>Action</legend>
+				<table border="0" cellspacing="0" cellpadding="0" width="100%">
+					<tr>
+						<td align="right" width="50%;">
+							<form method="get" action="?">
+								<input type="hidden" name="manage" value="">
+								<input type="hidden" name="delete" value="' . $post['id'] . '">
+								<input type="submit" value="Delete ' . $postOrThread .
+									'" class="managebutton" style="width: 50%;">
+							</form>
+						</td>
+						<td><small>' . $deleteInfo . '</small></td>
+					</tr>
+					<tr>
+						<td align="right" width="50%;">
+							<form method="get" action="?">
+								<input type="hidden" name="manage" value="">
+								<input type="hidden" name="bans" value="' . $post['ip'] . '">
+								<input type="submit" value="Ban Poster"' . $banDisabled .
+									' class="managebutton" style="width: 50%;">
+							</form>
+						</td>
+						<td><small>' . $banInfo . '</small></td>
+					</tr>' .
+					$stickyHtml .
+					$lockedHtml . '
+				</table>
+			</fieldset>
+			<fieldset>
+				<legend>' . $postOrThread . '</legend>' .
+				$postHtml . '
+			</fieldset>
+		</fieldset>
+		<br>';
 }
 
 function manageStatus() {
@@ -812,7 +834,8 @@ function manageStatus() {
 			$reqModPostHtml .= ($reqModPostHtml != '' ? '
 				<tr><td colspan="2"><hr></td></tr>' : '') . '
 				<tr>
-					<td>' . buildPost($post, TINYIB_INDEXPAGE) . '</td>
+					<td>' . buildPost($post, TINYIB_INDEXPAGE) . PHP_EOL . '
+					</td>
 					<td valign="top" align="right">
 						<table border="0">
 							<tr>
@@ -851,9 +874,11 @@ function manageStatus() {
 		$postHtml .= ($postHtml != '' ? '
 					<tr><td colspan="2"><hr></td></tr>' : '') . '
 					<tr>
-						<td>' . buildPost($post, TINYIB_INDEXPAGE) . '</td>
+						<td>' . buildPost($post, TINYIB_INDEXPAGE) . PHP_EOL . '
+						</td>
 						<td valign="top" align="right">
-							<form method="get" action="?"><input type="hidden" name="manage" value="">
+							<form method="get" action="?">
+								<input type="hidden" name="manage" value="">
 								<input type="hidden" name="moderate" value="' . $post['id'] . '">
 								<input type="submit" value="Moderate" class="managebutton">
 							</form>
@@ -866,16 +891,15 @@ function manageStatus() {
 			<p><b>TINYIB_DBMODE</b> is currently <b>mysql</b> in <b>settings.php</b>, but
 				<a href="http://www.php.net/manual/en/book.mysqli.php">MySQLi</a> is installed.
 				Please change it to <b>mysqli</b>. This will not affect your data.</p>
-		</fieldset>' : '') . '
-		<fieldset>
+		</fieldset>' : '') .
+		'<fieldset>
 			<legend>Status</legend>
 			<fieldset>
 				<legend>Info</legend>
 				<table border="0" cellspacing="0" cellpadding="0" width="100%"><tbody><tr>
-					<td>
-						' . $threads . ' ' . plural('thread', $threads) . ', ' .
-							$bans . ' ' . plural('ban', $bans) . '
-					</td>' . ($isAdmin ? '
+					<td>' . $threads . ' ' . plural('thread', $threads) . ', ' .
+							$bans . ' ' . plural('ban', $bans) . '</td>' .
+					($isAdmin ? '
 					<td valign="top" align="right">
 						<form method="get" action="?">
 							<input type="hidden" name="manage">
@@ -894,8 +918,8 @@ function manageStatus() {
 			</fieldset>' : '') . '
 			<fieldset>
 				<legend>Recent posts</legend>
-				<table border="0" cellspacing="0" cellpadding="0" width="100%">
-					' . $postHtml . '
+				<table border="0" cellspacing="0" cellpadding="0" width="100%">' .
+					$postHtml . '
 				</table>
 			</fieldset>
 		</fieldset>

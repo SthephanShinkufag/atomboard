@@ -21,7 +21,7 @@ TinyIB settings is able to allow new threads without requiring an image, or even
    - Ban offensive/abusive posters across all boards.
    - Post using raw HTML.
    - Upgrade automatically when installed via git. (Tested on Linux only)
- 
+
 This fork features:
  - Markdown text formatting: bbcode (multiline text and nested tags), wakabamark.
  - Markup buttons under the text area in postform.
@@ -55,7 +55,7 @@ Installing
       - If you plan on disabling image uploads to use TinyIB as a text board only, this library is not required.
  2. CD to the directory you wish to install TinyIB.
  3. Run the command:
-    - `git clone https://github.com/nolifer1337/TinyIB.git ./`
+    - `git clone https://github.com/SthephanShinkufag/TinyIB.git ./`
  4. Copy **settings.default.php** to **settings.php**
  5. Configure **settings.php**
     - When setting ``TINYIB_DBMODE`` to ``pdo``, note that only the MySQL databases drivers have been tested. Theoretically it will work with any applicable driver, but this is not guaranteed.  If you use an alternative driver, please report back.
@@ -67,7 +67,7 @@ Installing
     - To allow WebM upload:
       - Ensure your web host is running Linux or FreeBSD.
       - Install [mediainfo](https://mediaarea.net/en/MediaInfo) and [ffmpegthumbnailer](https://code.google.com/p/ffmpegthumbnailer/).  On Ubuntu, run ``sudo apt-get install mediainfo ffmpegthumbnailer``. On FreeBSD run ``pkg install mediainfo ffmpegthumbnailer``.
-    - To remove the play icon from .SWF and .WebM thumbnails, delete or rename **video_overlay.png** or set ADD_VIDEO_OVERLAY_IMAGE to false.
+    - To remove the play icon from .SWF and .WebM thumbnails, delete or rename **video_overlay.png** or set TINYIB_VIDEO_OVERLAY to false.
     - To use ImageMagick instead of GD when creating thumbnails:
       - Install ImageMagick and ensure that the ``convert`` command is available.
       - Set ``TINYIB_THUMBNAIL`` to ``imagemagick``.
@@ -98,23 +98,23 @@ Updating
  1. Obtain the latest release.
     - If you installed via Git, run the following command in TinyIB's directory:
       - `git pull`
-    - Otherwise, [download](https://github.com/nolifer1337/TinyIB/archive/master.zip) and extract a zipped archive.
+    - Otherwise, [download](https://github.com/SthephanShinkufag/TinyIB/archive/master.zip) and extract a zipped archive.
  2. Note which files were modified.
     - If **settings.default.php** was updated, migrate the changes to **settings.php**
       - Take care to not change the value of **TINYIB_TRIPSEED**, as it would result in different secure tripcodes.
     - If other files were updated, and you have made changes yourself:
-      - Visit [GitHub](https://github.com/nolifer1337/TinyIB) and review the changes made in the update.
+      - Visit [GitHub](https://github.com/SthephanShinkufag/TinyIB) and review the changes made in the update.
       - Ensure the update does not interfere with your changes.
 
-**Database structure was last modified on *19th Jun 2019*.** 
+**Database structure was last modified on *19th Jun 2019*.**
 
 
 Support
 ------------
 
  1. Ensure you are running the latest version of TinyIB.
- 2. Review the [open issues](https://github.com/nolifer1337/TinyIB/issues).
- 3. Open a [new issue](https://github.com/nolifer1337/TinyIB/issues/new).
+ 2. Review the [open issues](https://github.com/SthephanShinkufag/TinyIB/issues).
+ 3. Open a [new issue](https://github.com/SthephanShinkufag/TinyIB/issues/new).
 
 Contributing
 ------------

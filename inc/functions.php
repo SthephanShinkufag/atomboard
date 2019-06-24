@@ -3,10 +3,9 @@ if (!defined('TINYIB_BOARD')) {
 	die('');
 }
 
-// if you wanna add more file_* entities you also have to change:
+// if you wannt to add more file_* entities you also have to change:
 // postsByHex()
 // insertPost()
-//
 if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 	$posts_sql = 'CREATE TABLE "' . TINYIB_DBPOSTS . '" (
 		"id" bigserial NOT NULL,
@@ -275,7 +274,7 @@ function nameAndTripcode($name) {
 		} elseif (strpos($name, '!') === false) {
 			$cap_delimiter = '#';
 		} else {
-			$cap_delimiter = (strpos($name, '#') < strpos($name, '!')) ? '#' : '!';
+			$cap_delimiter = strpos($name, '#') < strpos($name, '!') ? '#' : '!';
 		}
 		if (preg_match("/(.*)(" . $cap_delimiter . ")(.*)/", $cap, $regs_secure)) {
 			$cap = $regs_secure[1];
@@ -307,7 +306,7 @@ function nameAndTripcode($name) {
 function nameBlock($name, $tripcode, $email, $timestamp, $rawposttext) {
 	list($loggedIn, $isAdmin) = manageCheckLogIn();
 	$output = '<span class="postername' . ($loggedIn && $name != '' ? ' postername-admin' : '') . '">';
-	$output .= ($name == '' && $tripcode == '') ? TINYIB_POSTERNAME : $name;
+	$output .= $name == '' && $tripcode == '' ? TINYIB_POSTERNAME : $name;
 	if ($tripcode != '') {
 		$output .= '</span><span class="postertrip">!' . $tripcode;
 	}
@@ -317,7 +316,6 @@ function nameBlock($name, $tripcode, $email, $timestamp, $rawposttext) {
 		$output = '<a href="mailto:' . $email . '"' .
 			($lowEmail == 'sage' ? ' class="sage"' : '') . '>' . $output . '</a>';
 	}
-//y.m.d -> d.m.y
 	return $output . $rawposttext . ' ' . date('d.m.y D H:i:s', $timestamp);
 }
 
@@ -347,29 +345,27 @@ function finishWordBreak($message) {
 	);
 }
 
-function deletePostImages($post, $imgList = array() ) {
- if ( ($imgList) && (count($imgList) <= MAXIMUM_FILES) ){
-	foreach ($imgList as $arrayIndex => $index){
-		
-		$index=intval(trim(basename($index)));
-	
-		if (!isEmbed($post['file'.$index.'_hex']) && $post['file'.$index] != '') {
-		 @unlink('src/' . $post['file'.$index]);
+function deletePostImages($post, $imgList = array()) {
+	if (($imgList) && (count($imgList) <= TINYIB_MAXIMUM_FILES)) {
+		foreach ($imgList as $arrayIndex => $index) {
+			$index = intval(trim(basename($index)));
+			if (!isEmbed($post['file' . $index . '_hex']) && $post['file' . $index] != '') {
+				@unlink('src/' . $post['file' . $index]);
+			}
+			if ($post['thumb' . $index] != '') {
+				@unlink('thumb/' . $post['thumb' . $index]);
+			}
 		}
-		if ($post['thumb'.$index] != '') {
- 		 @unlink('thumb/' . $post['thumb'.$index]);
+	} else {
+		for ($index = 0; $index < TINYIB_MAXIMUM_FILES; $index++) {
+			if (!isEmbed($post['file' . $index . '_hex']) && $post['file' . $index] != '') {
+				@unlink('src/' . $post['file' . $index]);
+			}
+			if ($post['thumb' . $index] != '') {
+				@unlink('thumb/' . $post['thumb' . $index]);
+			}
 		}
 	}
- } else {
-	for ($index=0; $index < MAXIMUM_FILES; $index++) {
-		if (!isEmbed($post['file'.$index.'_hex']) && $post['file'.$index] != '') {
-		 @unlink('src/' . $post['file'.$index]);
-		}
-		if ($post['thumb'.$index] != '') {
- 		 @unlink('thumb/' . $post['thumb'.$index]);
-		}
-	}
- }
 }
 
 function checkCAPTCHA() {
@@ -417,10 +413,10 @@ function checkBanned() {
 	$ban = banByIP($_SERVER['REMOTE_ADDR']);
 	if ($ban) {
 		if ($ban['expire'] == 0 || $ban['expire'] > time()) {
-			$expire = ($ban['expire'] > 0) ?
+			$expire = $ban['expire'] > 0 ?
 				('<br>This ban will expire ' . date('y.m.d D H:i:s', $ban['expire'])) :
 				'<br>This ban is permanent and will not expire.';
-			$reason = ($ban['reason'] == '') ? '' : ('<br>Reason: ' . $ban['reason']);
+			$reason = $ban['reason'] == '' ? '' : '<br>Reason: ' . $ban['reason'];
 			fancyDie('Your IP address ' . $ban['ip'] . ' has been banned from posting on this image board. ' .
 				$expire . $reason);
 		} else {
@@ -495,32 +491,32 @@ function isRawPost() {
 
 function validateFileUpload($error) {
 	switch ($error) {
-		case UPLOAD_ERR_OK:
-			break;
-		case UPLOAD_ERR_FORM_SIZE:
-			fancyDie("That file is larger than " . TINYIB_MAXKBDESC . ".");
-			break;
-		case UPLOAD_ERR_INI_SIZE:
-			fancyDie("The uploaded file exceeds the upload_max_filesize directive (" .
-				ini_get('upload_max_filesize') . ") in php.ini.");
-			break;
-		case UPLOAD_ERR_PARTIAL:
-			fancyDie("The uploaded file was only partially uploaded.");
-			break;
-		case UPLOAD_ERR_NO_FILE:
-			fancyDie("No file was uploaded.");
-			break;
-		case UPLOAD_ERR_NO_TMP_DIR:
-			fancyDie("Missing a temporary folder.");
-			break;
-		case UPLOAD_ERR_CANT_WRITE:
-			fancyDie("Failed to write file to disk.");
-			break;
-		case UPLOAD_ERR_EXTENSION:
-			fancyDie("Unable to save the uploaded file. Extension error");
-			break;
-		default:
-			fancyDie("Unable to save the uploaded file.");
+	case UPLOAD_ERR_OK:
+		break;
+	case UPLOAD_ERR_FORM_SIZE:
+		fancyDie("That file is larger than " . TINYIB_MAXKBDESC . ".");
+		break;
+	case UPLOAD_ERR_INI_SIZE:
+		fancyDie("The uploaded file exceeds the upload_max_filesize directive (" .
+			ini_get('upload_max_filesize') . ") in php.ini.");
+		break;
+	case UPLOAD_ERR_PARTIAL:
+		fancyDie("The uploaded file was only partially uploaded.");
+		break;
+	case UPLOAD_ERR_NO_FILE:
+		fancyDie("No file was uploaded.");
+		break;
+	case UPLOAD_ERR_NO_TMP_DIR:
+		fancyDie("Missing a temporary folder.");
+		break;
+	case UPLOAD_ERR_CANT_WRITE:
+		fancyDie("Failed to write file to disk.");
+		break;
+	case UPLOAD_ERR_EXTENSION:
+		fancyDie("Unable to save the uploaded file. Extension error");
+		break;
+	default:
+		fancyDie("Unable to save the uploaded file.");
 	}
 }
 
@@ -529,13 +525,13 @@ function checkDuplicateFile($hex) {
 	if (count($hexmatches) > 0) {
 		foreach ($hexmatches as $hexmatch) {
 			fancyDie("Duplicate file uploaded.<br>That file has already been posted <a href=\"res/" .
-				(($hexmatch["parent"] == TINYIB_NEWTHREAD) ? $hexmatch["id"] : $hexmatch["parent"]) .
+				($hexmatch["parent"] == TINYIB_NEWTHREAD ? $hexmatch["id"] : $hexmatch["parent"]) .
 				".html#" . $hexmatch["id"] . "\">here</a>.");
 		}
 	}
 }
 
-function thumbnailDimensions($post, $imgIndex=0) {
+function thumbnailDimensions($post, $imgIndex = 0) {
 	if ($post['parent'] == TINYIB_NEWTHREAD) {
 		$max_width = TINYIB_MAXWOP;
 		$max_height = TINYIB_MAXHOP;
@@ -543,9 +539,11 @@ function thumbnailDimensions($post, $imgIndex=0) {
 		$max_width = TINYIB_MAXW;
 		$max_height = TINYIB_MAXH;
 	}
-	return ($post['image'.$imgIndex.'_width'] > $max_width || $post['image'.$imgIndex.'_height'] > $max_height) ?
-		array($max_width, $max_height) :
-		array($post['image'.$imgIndex.'_width'], $post['image'.$imgIndex.'_height']);
+	return (
+		$post['image' . $imgIndex . '_width'] > $max_width ||
+		$post['image' . $imgIndex . '_height'] > $max_height
+	) ? array($max_width, $max_height) :
+		array($post['image' . $imgIndex . '_width'], $post['image' . $imgIndex . '_height']);
 }
 
 function createThumbnail($file_location, $thumb_location, $new_w, $new_h) {
@@ -567,7 +565,7 @@ function createThumbnail($file_location, $thumb_location, $new_w, $new_h) {
 		}
 		$old_x = imageSX($src_img);
 		$old_y = imageSY($src_img);
-		$percent = ($old_x > $old_y) ? ($new_w / $old_x) : ($new_h / $old_y);
+		$percent = $old_x > $old_y ? $new_w / $old_x : $new_h / $old_y;
 		$thumb_w = round($old_x * $percent);
 		$thumb_h = round($old_y * $percent);
 		$dst_img = imagecreatetruecolor($thumb_w, $thumb_h);
@@ -600,7 +598,6 @@ function createThumbnail($file_location, $thumb_location, $new_w, $new_h) {
 		$discard = '';
 		$exit_status = 1;
 		$extension = pathinfo($thumb_location, PATHINFO_EXTENSION);
-
 		if ($extension === 'gif') {
 			if (TINYIB_FILE_ANIM_GIF_THUMB) {
 				exec("convert $file_location -auto-orient -thumbnail '" . $new_w . "x" . $new_h .
@@ -613,7 +610,6 @@ function createThumbnail($file_location, $thumb_location, $new_w, $new_h) {
 			exec("convert $file_location -auto-orient -thumbnail '" . $new_w . "x" . $new_h .
 				"' -layers OptimizeFrame -depth 8 $thumb_location", $discard, $exit_status);
 		}
-
 		if ($exit_status != 0) {
 			return false;
 		}
@@ -693,7 +689,6 @@ function addVideoOverlay($thumb_location) {
 	if (!file_exists('video_overlay.png')) {
 		return;
 	}
-
 	if (TINYIB_THUMBNAIL == 'gd') {
 		if (substr($thumb_location, -4) == ".jpg") {
 			$thumbnail = imagecreatefromjpeg($thumb_location);
@@ -733,7 +728,7 @@ function addVideoOverlay($thumb_location) {
 	} else { // imagemagick
 		$discard = '';
 		$exit_status = 1;
-		exec('convert '. $thumb_location . ' video_overlay.png -gravity center -composite -quality 75 ' .
+		exec('convert ' . $thumb_location . ' video_overlay.png -gravity center -composite -quality 75 ' .
 			$thumb_location, $discard, $exit_status);
 	}
 }
@@ -772,20 +767,17 @@ function isEmbed($file_hex) {
 }
 
 function getEmbed($url) {
-global $tinyib_embeds;
-
- if ( sizeof($tinyib_embeds)!=0 ) {
+	global $tinyib_embeds;
+	if (sizeof($tinyib_embeds) != 0) {
 		foreach ($tinyib_embeds as $service => $service_url) {
-
-			if ( strpos( strtolower($url), strtolower($service) ) !== false ) {
-			$service_url = str_ireplace("TINYIBEMBED", urlencode($url), $service_url);
-			$result = json_decode(url_get_contents($service_url), true);
-			 if (!empty($result)) {
-			 	return array($service, $result);
-			 }
+			if (strpos(strtolower($url), strtolower($service)) !== false) {
+				$service_url = str_ireplace("TINYIBEMBED", urlencode($url), $service_url);
+				$result = json_decode(url_get_contents($service_url), true);
+				if (!empty($result)) {
+					return array($service, $result);
+				}
 			}
 		}
- }
-
-return array('', array());
+	}
+	return array('', array());
 }
