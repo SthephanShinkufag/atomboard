@@ -328,7 +328,7 @@ function deletePostByID($id) {
 
 function deleteImagesByImageID($post, $imgList) {
 	deletePostImages($post, $imgList);
-	if (($imgList) && (count($imgList) <= TINYIB_MAXIMUM_FILES)) {
+	if ($imgList && count($imgList) <= TINYIB_MAXIMUM_FILES) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
 			pdoQuery("UPDATE " . TINYIB_DBPOSTS .
