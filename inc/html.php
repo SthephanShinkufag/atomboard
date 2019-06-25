@@ -412,7 +412,7 @@ function buildPost($post, $res, $isModPanel = false) {
 
 	// Truncate messages on board index pages for readability
 	$message = $post['message'];
-	if (!$res) {
+	if (!$res && !$isModPanel) {
 		$truncLen = 0;
 		if (TINYIB_TRUNC_LINES > 0 && substr_count($message, '<br>') > TINYIB_TRUNC_LINES) {
 			$brOffsets = strallpos($message, '<br>');
