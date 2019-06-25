@@ -281,7 +281,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		$sizeOfCurrentFileInBytes = 0;
 		$sizeOfAllFilesInBytes = 0;
 		foreach ($_FILES["file"]["error"] as $index => $error) {
-			if ($filesCount >= TINYIB_MAXIMUM_FILES) {
+			if (!$_FILES['file']['tmp_name'][$index] || $filesCount >= TINYIB_MAXIMUM_FILES) {
 				continue;
 			}
 			validateFileUpload($error);
