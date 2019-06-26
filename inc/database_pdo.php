@@ -348,7 +348,7 @@ function deleteImagesByImageID($post, $imgList) {
 }
 
 function editMessageInPostById($id, $newMessage) {
-	pdoQuery("UPDATE " . TINYIB_DBPOSTS . " SET message = ? WHERE id = ?", array($newMessage,$id));
+	pdoQuery("UPDATE " . TINYIB_DBPOSTS . " SET message = ? WHERE id = ?", array($newMessage, $id));
 }
 
 function trimThreads() {

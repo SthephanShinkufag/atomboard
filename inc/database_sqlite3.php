@@ -30,16 +30,46 @@ if (!$result->fetchArray()) {
 		subject TEXT NOT NULL,
 		message TEXT NOT NULL,
 		password TEXT NOT NULL,
-		file TEXT NOT NULL,
-		file_hex TEXT NOT NULL,
-		file_original TEXT NOT NULL,
-		file_size INTEGER NOT NULL DEFAULT '0',
-		file_size_formatted TEXT NOT NULL,
-		image_width INTEGER NOT NULL DEFAULT '0',
-		image_height INTEGER NOT NULL DEFAULT '0',
-		thumb TEXT NOT NULL,
-		thumb_width INTEGER NOT NULL DEFAULT '0',
-		thumb_height INTEGER NOT NULL DEFAULT '0',
+		file0 TEXT NOT NULL,
+		file0_hex TEXT NOT NULL,
+		file0_original TEXT NOT NULL,
+		file0_size INTEGER NOT NULL DEFAULT '0',
+		file0_size_formatted TEXT NOT NULL,
+		image0_width INTEGER NOT NULL DEFAULT '0',
+		image0_height INTEGER NOT NULL DEFAULT '0',
+		thumb0 TEXT NOT NULL,
+		thumb0_width INTEGER NOT NULL DEFAULT '0',
+		thumb0_height INTEGER NOT NULL DEFAULT '0',
+		file1 TEXT NOT NULL,
+		file1_hex TEXT NOT NULL,
+		file1_original TEXT NOT NULL,
+		file1_size INTEGER NOT NULL DEFAULT '0',
+		file1_size_formatted TEXT NOT NULL,
+		image1_width INTEGER NOT NULL DEFAULT '0',
+		image1_height INTEGER NOT NULL DEFAULT '0',
+		thumb1 TEXT NOT NULL,
+		thumb1_width INTEGER NOT NULL DEFAULT '0',
+		thumb1_height INTEGER NOT NULL DEFAULT '0',
+		file2 TEXT NOT NULL,
+		file2_hex TEXT NOT NULL,
+		file2_original TEXT NOT NULL,
+		file2_size INTEGER NOT NULL DEFAULT '0',
+		file2_size_formatted TEXT NOT NULL,
+		image2_width INTEGER NOT NULL DEFAULT '0',
+		image2_height INTEGER NOT NULL DEFAULT '0',
+		thumb2 TEXT NOT NULL,
+		thumb2_width INTEGER NOT NULL DEFAULT '0',
+		thumb2_height INTEGER NOT NULL DEFAULT '0',
+		file3 TEXT NOT NULL,
+		file3_hex TEXT NOT NULL,
+		file3_original TEXT NOT NULL,
+		file3_size INTEGER NOT NULL DEFAULT '0',
+		file3_size_formatted TEXT NOT NULL,
+		image3_width INTEGER NOT NULL DEFAULT '0',
+		image3_height INTEGER NOT NULL DEFAULT '0',
+		thumb3 TEXT NOT NULL,
+		thumb3_width INTEGER NOT NULL DEFAULT '0',
+		thumb3_height INTEGER NOT NULL DEFAULT '0',
 		stickied INTEGER NOT NULL DEFAULT '0',
 		likes INTEGER NOT NULL DEFAULT '0'
 	)");
@@ -116,16 +146,46 @@ function insertPost($post) {
 			subject,
 			message,
 			password,
-			file,
-			file_hex,
-			file_original,
-			file_size,
-			file_size_formatted,
-			image_width,
-			image_height,
-			thumb,
-			thumb_width,
-			thumb_height,
+			file0,
+			file0_hex,
+			file0_original,
+			file0_size,
+			file0_size_formatted,
+			image0_width,
+			image0_height,
+			thumb0,
+			thumb0_width,
+			thumb0_height,
+			file1,
+			file1_hex,
+			file1_original,
+			file1_size,
+			file1_size_formatted,
+			image1_width,
+			image1_height,
+			thumb1,
+			thumb1_width,
+			thumb1_height,
+			file2,
+			file2_hex,
+			file2_original,
+			file2_size,
+			file2_size_formatted,
+			image2_width,
+			image2_height,
+			thumb2,
+			thumb2_width,
+			thumb2_height,
+			file3,
+			file3_hex,
+			file3_original,
+			file3_size,
+			file3_size_formatted,
+			image3_width,
+			image3_height,
+			thumb3,
+			thumb3_width,
+			thumb3_height,
 			likes
 		) VALUES (" .
 			$post['parent'] . ", " .
@@ -139,16 +199,46 @@ function insertPost($post) {
 			$db->escapeString($post['subject']) . "', '" .
 			$db->escapeString($post['message']) . "', '" .
 			$db->escapeString($post['password']) . "', '" .
-			$post['file'] . "', '" .
-			$post['file_hex'] . "', '" .
-			$db->escapeString($post['file_original']) . "', " .
-			$post['file_size'] . ", '" .
-			$post['file_size_formatted'] . "', " .
-			$post['image_width'] . ", " .
-			$post['image_height'] . ", '" .
-			$post['thumb'] . "', " .
-			$post['thumb_width'] . ", " .
-			$post['thumb_height'] . ", " .
+			$post['file0'] . "', '" .
+			$post['file0_hex'] . "', '" .
+			$db->escapeString($post['file0_original']) . "', " .
+			$post['file0_size'] . ", '" .
+			$post['file0_size_formatted'] . "', " .
+			$post['image0_width'] . ", " .
+			$post['image0_height'] . ", '" .
+			$post['thumb0'] . "', " .
+			$post['thumb0_width'] . ", " .
+			$post['thumb0_height'] . ", '" .
+			$post['file1'] . "', '" .
+			$post['file1_hex'] . "', '" .
+			$db->escapeString($post['file1_original']) . "', " .
+			$post['file1_size'] . ", '" .
+			$post['file1_size_formatted'] . "', " .
+			$post['image1_width'] . ", " .
+			$post['image1_height'] . ", '" .
+			$post['thumb1'] . "', " .
+			$post['thumb1_width'] . ", " .
+			$post['thumb1_height'] . ", '" .
+			$post['file2'] . "', '" .
+			$post['file2_hex'] . "', '" .
+			$db->escapeString($post['file2_original']) . "', " .
+			$post['file2_size'] . ", '" .
+			$post['file2_size_formatted'] . "', " .
+			$post['image2_width'] . ", " .
+			$post['image2_height'] . ", '" .
+			$post['thumb2'] . "', " .
+			$post['thumb2_width'] . ", " .
+			$post['thumb2_height'] . ", '" .
+			$post['file3'] . "', '" .
+			$post['file3_hex'] . "', '" .
+			$db->escapeString($post['file3_original']) . "', " .
+			$post['file3_size'] . ", '" .
+			$post['file3_size_formatted'] . "', " .
+			$post['image3_width'] . ", " .
+			$post['image3_height'] . ", '" .
+			$post['thumb3'] . "', " .
+			$post['thumb3_width'] . ", " .
+			$post['thumb3_height'] . ", " .
 			$post['likes'] .
 		")");
 	return $db->lastInsertRowID();
@@ -159,6 +249,19 @@ function stickyThreadByID($id, $setsticky) {
 	$db->exec(
 		"UPDATE " . TINYIB_DBPOSTS .
 		" SET stickied = '" . $db->escapeString($setsticky) .
+		"' WHERE id = " . $id);
+}
+
+function lockThreadByID($id, $setlocked) {
+	global $db;
+	if ($setlocked == 1) {
+		$setlocked = TINYIB_LOCKTHR_COOKIE;
+	} elseif ($setlocked == 0) {
+		$setlocked = '';
+	}
+	$db->exec(
+		"UPDATE " . TINYIB_DBPOSTS .
+		" SET email = '" . $db->escapeString($setlocked) .
 		"' WHERE id = " . $id);
 }
 
@@ -214,7 +317,11 @@ function postsByHex($hex) {
 	$posts = array();
 	$result = $db->query(
 		"SELECT id, parent FROM " . TINYIB_DBPOSTS .
-		" WHERE file_hex = '" . $db->escapeString($hex) . "' LIMIT 1");
+		" WHERE (file0_hex = '" . $db->escapeString($hex) .
+			"' OR file1_hex = '" . $db->escapeString($hex) .
+			"' OR file2_hex = '" . $db->escapeString($hex) .
+			"' OR file3_hex = '" . $db->escapeString($hex) .
+			"') LIMIT 1");
 	while ($post = $result->fetchArray()) {
 		$posts[] = $post;
 	}
@@ -255,6 +362,37 @@ function deletePostByID($id) {
 			"DELETE FROM " . TINYIB_DBPOSTS .
 			" WHERE id = " . $thispost['id']);
 	}
+}
+
+function deleteImagesByImageID($post, $imgList) {
+	global $db;
+	deletePostImages($post, $imgList);
+	if ($imgList && count($imgList) <= TINYIB_MAXIMUM_FILES) {
+		foreach ($imgList as $arrayIndex => $index) {
+			$index = intval(trim(basename($index)));
+			$db->exec(
+				"UPDATE " . TINYIB_DBPOSTS .
+				" SET file" . $index . " = '',
+					file" . $index . "_hex = '',
+					file" . $index . "_original = '',
+					file" . $index . "_size = 0,
+					file" . $index . "_size_formatted = '',
+					image" . $index . "_width = 0,
+					image" . $index . "_height = 0,
+					thumb" . $index . " = '',
+					thumb" . $index . "_width = 0,
+					thumb" . $index . "_height = 0
+				WHERE id = " . $post['id']);
+		}
+	}
+}
+
+function editMessageInPostById($id, $newMessage) {
+	global $db;
+	$db->exec(
+		"UPDATE " . TINYIB_DBPOSTS .
+		" SET message = '" . $newMessage .
+		"' WHERE id = " . $id);
 }
 
 function trimThreads() {

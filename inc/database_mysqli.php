@@ -85,16 +85,46 @@ function insertPost($post) {
 			`subject`,
 			`message`,
 			`password`,
-			`file`,
-			`file_hex`,
-			`file_original`,
-			`file_size`,
-			`file_size_formatted`,
-			`image_width`,
-			`image_height`,
-			`thumb`,
-			`thumb_width`,
-			`thumb_height`,
+			`file0`,
+			`file0_hex`,
+			`file0_original`,
+			`file0_size`,
+			`file0_size_formatted`,
+			`image0_width`,
+			`image0_height`,
+			`thumb0`,
+			`thumb0_width`,
+			`thumb0_height`,
+			`file1`,
+			`file1_hex`,
+			`file1_original`,
+			`file1_size`,
+			`file1_size_formatted`,
+			`image1_width`,
+			`image1_height`,
+			`thumb1`,
+			`thumb1_width`,
+			`thumb1_height`,
+			`file2`,
+			`file2_hex`,
+			`file2_original`,
+			`file2_size`,
+			`file2_size_formatted`,
+			`image2_width`,
+			`image2_height`,
+			`thumb2`,
+			`thumb2_width`,
+			`thumb2_height`,
+			`file3`,
+			`file3_hex`,
+			`file3_original`,
+			`file3_size`,
+			`file3_size_formatted`,
+			`image3_width`,
+			`image3_height`,
+			`thumb3`,
+			`thumb3_width`,
+			`thumb3_height`,
 			`moderated`,
 			`likes`
 		) VALUES (" .
@@ -109,16 +139,46 @@ function insertPost($post) {
 			mysqli_real_escape_string($link, $post['subject']) . "', '" .
 			mysqli_real_escape_string($link, $post['message']) . "', '" .
 			mysqli_real_escape_string($link, $post['password']) . "', '" .
-			$post['file'] . "', '" .
-			$post['file_hex'] . "', '" .
-			mysqli_real_escape_string($link, $post['file_original']) . "', " .
-			$post['file_size'] . ", '" .
-			$post['file_size_formatted'] . "', " .
-			$post['image_width'] . ", " .
-			$post['image_height'] . ", '" .
-			$post['thumb'] . "', " .
-			$post['thumb_width'] . ", " .
-			$post['thumb_height'] . ", " .
+			$post['file0'] . "', '" .
+			$post['file0_hex'] . "', '" .
+			mysqli_real_escape_string($link, $post['file0_original']) . "', " .
+			$post['file0_size'] . ", '" .
+			$post['file0_size_formatted'] . "', " .
+			$post['image0_width'] . ", " .
+			$post['image0_height'] . ", '" .
+			$post['thumb0'] . "', " .
+			$post['thumb0_width'] . ", " .
+			$post['thumb0_height'] . ", '" .
+			$post['file1'] . "', '" .
+			$post['file1_hex'] . "', '" .
+			mysqli_real_escape_string($link, $post['file1_original']) . "', " .
+			$post['file1_size'] . ", '" .
+			$post['file1_size_formatted'] . "', " .
+			$post['image1_width'] . ", " .
+			$post['image1_height'] . ", '" .
+			$post['thumb1'] . "', " .
+			$post['thumb1_width'] . ", " .
+			$post['thumb1_height'] . ", '" .
+			$post['file2'] . "', '" .
+			$post['file2_hex'] . "', '" .
+			mysqli_real_escape_string($link, $post['file2_original']) . "', " .
+			$post['file2_size'] . ", '" .
+			$post['file2_size_formatted'] . "', " .
+			$post['image2_width'] . ", " .
+			$post['image2_height'] . ", '" .
+			$post['thumb2'] . "', " .
+			$post['thumb2_width'] . ", " .
+			$post['thumb2_height'] . ", '" .
+			$post['file3'] . "', '" .
+			$post['file3_hex'] . "', '" .
+			mysqli_real_escape_string($link, $post['file3_original']) . "', " .
+			$post['file3_size'] . ", '" .
+			$post['file3_size_formatted'] . "', " .
+			$post['image3_width'] . ", " .
+			$post['image3_height'] . ", '" .
+			$post['thumb3'] . "', " .
+			$post['thumb3_width'] . ", " .
+			$post['thumb3_height'] . ", " .
 			$post['moderated'] . ", " .
 			$post['likes'] .
 		")");
@@ -139,6 +199,20 @@ function stickyThreadByID($id, $setsticky) {
 		"` SET `stickied` = '" . mysqli_real_escape_string($link, $setsticky) .
 		"' WHERE `id` = " . $id . " LIMIT 1");
 }
+
+function lockThreadByID($id, $setlocked) {
+	global $link;
+	if ($setlocked == 1) {
+		$setlocked = TINYIB_LOCKTHR_COOKIE;
+	} elseif ($setlocked == 0) {
+		$setlocked = '';
+	}
+	mysqli_query($link,
+		"UPDATE `" . TINYIB_DBPOSTS .
+		"` SET `email` = '" . mysqli_real_escape_string($link, $setlocked) .
+		"' WHERE `id` = " . $id . " LIMIT 1");
+}
+
 
 function bumpThreadByID($id) {
 	global $link;
@@ -198,8 +272,11 @@ function postsByHex($hex) {
 	$posts = array();
 	$result = mysqli_query($link,
 		"SELECT `id`, `parent` FROM `" . TINYIB_DBPOSTS .
-		"` WHERE `file_hex` = '" . mysqli_real_escape_string($link, $hex) .
-		"' AND `moderated` = 1 LIMIT 1");
+		"` WHERE (`file0_hex` = '" . mysqli_real_escape_string($link, $hex) .
+			"' OR `file1_hex` = '" . mysqli_real_escape_string($link, $hex) .
+			"' OR `file2_hex` = '" . mysqli_real_escape_string($link, $hex) .
+			"' OR `file3_hex` = '" . mysqli_real_escape_string($link, $hex) .
+			"') AND `moderated` = 1 LIMIT 1");
 	if ($result) {
 		while ($post = mysqli_fetch_assoc($result)) {
 			$posts[] = $post;
@@ -245,6 +322,37 @@ function deletePostByID($id) {
 			"DELETE FROM `" . TINYIB_DBPOSTS .
 			"` WHERE `id` = " . $thispost['id'] . " LIMIT 1");
 	}
+}
+
+function deleteImagesByImageID($post, $imgList) {
+	global $link;
+	deletePostImages($post, $imgList);
+	if ($imgList && count($imgList) <= TINYIB_MAXIMUM_FILES) {
+		foreach ($imgList as $arrayIndex => $index) {
+			$index = intval(trim(basename($index)));
+			mysqli_query($link,
+				"UPDATE `" . TINYIB_DBPOSTS .
+				"` SET `file" . $index . "` = '',
+					`file" . $index . "_hex` = '',
+					`file" . $index . "_original` = '',
+					`file" . $index . "_size` = 0,
+					`file" . $index . "_size_formatted` = '',
+					`image" . $index . "_width` = 0,
+					`image" . $index . "_height` = 0,
+					`thumb" . $index . "` = '',
+					`thumb" . $index . "_width` = 0,
+					`thumb" . $index . "_height` = 0
+				WHERE `id` = " . $post['id'] . " LIMIT 1");
+		}
+	}
+}
+
+function editMessageInPostById($id, $newMessage) {
+	global $link;
+	mysqli_query($link,
+		"UPDATE `" . TINYIB_DBPOSTS .
+		"` SET `message` = '" . $newMessage .
+		"' WHERE `id` = " . $id . " LIMIT 1");
 }
 
 function trimThreads() {

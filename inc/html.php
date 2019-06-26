@@ -474,8 +474,7 @@ function buildPost($post, $res, $isModPanel = false) {
 				<form method="get" action="?">
 					<input type="hidden" name="manage" value="">
 					<input type="hidden" name="delete-img" value="' . $id . '">
-					<input type="submit" value="Delete Selected Images" class="managebutton">
-					<br>
+					<input type="submit" value="Delete selected images" class="managebutton">
 					<br>' : '') .
 					$filehtml .
 					($isModPanel && $hasImages ? '
