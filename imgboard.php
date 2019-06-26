@@ -692,7 +692,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 										$post['image0_height'] . ", '" .
 										$post['thumb0'] . "', " .
 										$post['thumb0_width'] . ', ' .
-										$post['thumb0_height'] . ', ' .
+										$post['thumb0_height'] . ", '" .
 										$post['file1'] . "', '" .
 										$post['file1_hex'] . "', '" .
 										mysqli_real_escape_string($link, $post['file1_original']) . "', " .
@@ -702,7 +702,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 										$post['image1_height'] . ", '" .
 										$post['thumb1'] . "', " .
 										$post['thumb1_width'] . ', ' .
-										$post['thumb1_height'] . ', ' .
+										$post['thumb1_height'] . ", '" .
 										$post['file2'] . "', '" .
 										$post['file2_hex'] . "', '" .
 										mysqli_real_escape_string($link, $post['file2_original']) . "', " .
@@ -712,7 +712,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 										$post['image2_height'] . ", '" .
 										$post['thumb2'] . "', " .
 										$post['thumb2_width'] . ', ' .
-										$post['thumb2_height'] . ', ' .
+										$post['thumb2_height'] . ", '" .
 										$post['file3'] . "', '" .
 										$post['file3_hex'] . "', '" .
 										mysqli_real_escape_string($link, $post['file3_original']) . "', " .
