@@ -46,6 +46,8 @@ This fork of the fork features:
  - Administrator and Moderators can edit message text in posts.
  - Preview for attached files can be replaced by filler image.
  - Generation of catalog.html.
+ - You can set list of Moderators.
+ - Generation of modlog.html.
 
 Installing
 ------------
@@ -108,7 +110,7 @@ Updating
       - Visit [GitHub](https://github.com/nolifer1337/TinyIB) and review the changes made in the update.
       - Ensure the update does not interfere with your changes.
 
-**Database structure was last modified on *19th Jun 2019*.** 
+**Database structure was last modified on *26th Jun 2019*.** 
 
 
 Support

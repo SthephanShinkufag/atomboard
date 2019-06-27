@@ -571,6 +571,7 @@ function rebuildIndexes() {
 		writePage($file, buildPage($htmlPosts, 0, $pages, $page));
 	}
 createCatalog();
+createModLog();
 }
 
 function rebuildThread($id) {
@@ -589,6 +590,7 @@ function adminBar() {
 	return !$loggedIn ? '' : '
 			[<a href="?manage">Status</a>]
 			[' . ($isAdmin ? '<a href="?manage&bans">Bans</a>]
+			[<a href="?manage&modlog">ModLog</a>]
 			[' : '') . '<a href="?manage&moderate">Moderate Post</a>]
 			[<a href="?manage&rawpost">Raw Post</a>]
 			[' . ($isAdmin ? '<a href="?manage&rebuildall">Rebuild All</a>]
@@ -969,4 +971,77 @@ $OPposts = allThreads();
 
 function createCatalog(){
 writePage('catalog.html', buildCatalogPage());
+}
+
+function generateModLogForm(){
+$form = '
+<form method="post" action="?manage&modlog">
+
+<span>From: </span><input name="from" type="date" value="'.date("Y-m-d", strtotime("-2 day")).'"> <span>To: </span><input name="to" type="date" value="'.date("Y-m-d").'">&nbsp;
+<input type="submit" value="Show records" class="managebutton"><br /><br />
+
+</form>
+';
+return $form;
+}
+
+function generateModLogTable($private='0', $fromtime='0', $totime='0') {
+
+	$pereodEndDate = '0';
+	$pereodStartDate = '0';
+
+	($private === 'all')?$private='1':$private='0';
+	// 1 = all records; 0 = only for public modlog
+
+	if($private === '1' && $fromtime !== '0' && $totime !== '0'){
+	$pereodEndDate = max($fromtime,$totime);
+	$pereodStartDate = min($fromtime,$totime);
+	}
+
+	$text = '';
+	$modLogs = allModLogRecords($private,$pereodEndDate,$pereodStartDate);
+	$countOfLogs = count($modLogs);
+	if ($countOfLogs > 0) {
+		$text .= (($private == '1')?'Total Records: '.$countOfLogs:'') .'
+		<table id="ban-table"><tbody>
+			<tr>
+				<th>Date / Time:</th>' .
+				(($private == '1')?
+				'<th>User:</th>':'') . 
+				'<th>Action:</th>
+			</tr>';
+		foreach ($modLogs as $log) {
+			$action = $log['action'];
+			
+			$text .= '<tr' . (($private =='1')?' style="color: '. $log['color'] .'"':'') . '>
+				<td>' . date('d.m.y D H:i:s', $log['timestamp']) . '</td>' .
+				(($private == '1')?
+				'<td>' . $log['username'] . '</td>':'') .
+				'<td>' . $log['action'] . '</td>
+			</tr>';
+
+		}
+		$text .= '
+		</tbody></table>'.'<br />';
+	}
+	return $text;
+}
+
+function buildModLogPage(){
+$modLogHTML = generateModLogTable();
+
+	return pageHeader() . '<body>' . pageWrapper('back') . '
+		<div class="logo">
+			' . TINYIB_LOGO . TINYIB_BOARDDESC . ' / Modlog
+		</div>
+		<hr />
+		<br /> <center>'.
+		$modLogHTML . '</center>'.
+		pageFooter();
+}
+
+function createModLog(){
+	if(TINYIB_MODLOG){
+	writePage('modlog.html', buildModLogPage());
+	}
 }

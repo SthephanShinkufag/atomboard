@@ -590,6 +590,19 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 
 				$onload = manageOnLoad('bans');
 				$text .= manageBanForm() . manageBansTable();
+			} elseif (isset($_GET['modlog'])){
+			$fromtime=0;
+			$totime=0;
+
+				if( isset($_POST['from']) && isset($_POST['to']) ){
+				  	if ( ($fromtime = strtotime($_POST['from'])) === false || ($totime = strtotime($_POST['to'])) === false ) {
+				    	fancyDie('Wrong time format. Use yyyy-mm-dd format.');
+				  	}
+				$fromtime = intval(strtotime($_POST['from']));
+				$totime = intval(strtotime($_POST['to']));
+				}
+
+			$text .= generateModLogForm() . generateModLogTable('all', $fromtime, $totime);
 			} elseif (isset($_GET['update'])) {
 				if (is_dir('.git')) {
 					$gitOutput = shell_exec('git pull 2>&1');
@@ -869,6 +882,9 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				rebuildIndexes();
 				if ($post['parent'] != TINYIB_NEWTHREAD) {
 					rebuildThread($post['parent']);
+					modLog('Post No. ' . $post['id'] .' in thread No. '. $post['parent']. ' deleted.', '0', 'Black');
+				} elseif($post['parent'] == TINYIB_NEWTHREAD) {
+					modLog('Thread No.' . $post['id'] . ' deleted.', '0', 'Black');
 				}
 				$text .= manageInfo('Post No.' . $post['id'] . ' deleted.');
 			} else {
@@ -1000,6 +1016,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		} elseif (isset($_GET['logout'])) {
 			$_SESSION['tinyib'] = '';
 			session_destroy();
+			(!$isAdmin)?modLog('Logout','1','BlueViolet'):'';
 			die('<meta http-equiv="refresh" content="0;url=' . $returnlink . '?manage">');
 		}
 		if ($text == '') {
