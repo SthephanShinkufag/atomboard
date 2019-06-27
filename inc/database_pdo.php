@@ -347,6 +347,17 @@ function deleteImagesByImageID($post, $imgList) {
 	}
 }
 
+function hideImagesByImageID($post, $imgList) {
+	replaceImageThumbByFiller($post, $imgList);
+	if ($imgList && (count($imgList) <= TINYIB_MAXIMUM_FILES) ) {
+		foreach ($imgList as $arrayIndex => $index) {
+		$index = intval(trim(basename($index)));
+		pdoQuery("UPDATE " . TINYIB_DBPOSTS . " SET thumb" . $index . "_width = ?, thumb" . $index .
+			"_height = ? WHERE id = ?", array('230', '230', $post['id']));
+	}
+  }
+}
+
 function editMessageInPostById($id, $newMessage) {
 	pdoQuery("UPDATE " . TINYIB_DBPOSTS . " SET message = ? WHERE id = ?", array($newMessage, $id));
 }

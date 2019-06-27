@@ -118,12 +118,12 @@ function sendLike(likeEl, num) {
 	var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
 	xhr.onreadystatechange = function(e) {
 		var xhr = e.target;
-		if(xhr.readyState !== 4 || xhr.status !== 200 && xhr.status !== 304) {
+		if (xhr.readyState !== 4 || xhr.status !== 200 && xhr.status !== 304) {
 			return;
 		}
 		try {
 			var obj = JSON.parse(xhr.responseText);
-			if(obj.status === 'ok') {
+			if (obj.status === 'ok') {
 				console.log(obj.message);
 				likeEl.classList.toggle('like-enabled', obj.likes);
 				likeEl.classList.toggle('like-disabled', !obj.likes);

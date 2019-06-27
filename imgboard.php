@@ -812,16 +812,29 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			} else {
 				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 			}
-		} elseif (isset($_GET['delete-img']) && isset($_GET["delete-img-mod"])) {
-			$post = postByID($_GET['delete-img']);
-			if ($post) {
-				deleteImagesByImageID($post, $_GET["delete-img-mod"]);
-				threadUpdated($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']);
-				$text .= manageInfo('Selected images from post No.' . $post['id'] . ' deleted.');
-			} else {
-				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
+		} elseif (isset($_GET['delete-img']) && isset($_GET["delete-img-mod"]) && isset($_GET["action"])) {
+			if ($_GET["action"] == 'delete') {
+				$post = postByID($_GET['delete-img']);
+				if ($post) {
+					deleteImagesByImageID($post, $_GET["delete-img-mod"]);
+					threadUpdated($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']);
+					$text .= manageInfo('Selected images from post No.' .
+						$post['id'] . ' are deleted.');
+				} else {
+					fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
+				}
+			} elseif ($_GET["action"] == 'hide') {
+				$post = postByID($_GET['delete-img']);
+				if ($post) {
+					hideImagesByImageID($post, $_GET["delete-img-mod"]);
+					threadUpdated($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']);
+					$text .= manageInfo('Thumbnails for selected images from post No.' .
+						$post['id'] . ' are changed.');
+				} else {
+					fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
+				}
 			}
-		} elseif (isset($_GET['editpost']) &&  isset($_POST['message'])) {
+		} elseif (isset($_GET['editpost']) && isset($_POST['message']) ) {
 			$post = postByID($_GET['editpost']);
 			$newMessage = $_POST['message'] . '<br><br><span style="color: purple;">Message edited: ' .
 				(date('d.m.y D H:i:s', time())) . '</span>';

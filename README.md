@@ -30,7 +30,7 @@ This fork features:
  - Markup buttons under the text area in postform.
  - "Quote text" button that inserts selected text into the textarea with `>` symbols.
  - Named links formatting, like on github: `[TinyIB](https://github.com/SthephanShinkufag/TinyIB/)`
- - Upload, view and expand WEBM **and MP4** without instaled `mediainfo` and `ffmpegthumbnailer`. Videos are injected right in page without generated thumbnails.
+ - Upload, view and expand WEBM and MP4 videos without instaled `mediainfo` and `ffmpegthumbnailer`. Videos are injected right in page without generated thumbnails.
  - Convenient css support for mobile devices.
  - Custom default post names.
  - Truncating of long posts by size in bytes and by number of lines.
@@ -42,6 +42,8 @@ This fork features:
  - Threads can be locked for posting.
  - Administrator and Moderators can selectively delete attached files.
  - Administrator and Moderators can edit message text in posts.
+ - Thumbnail for attached files can be replaced by filler image.
+ - Catalog page `catalog.html`.
 
 Installing
 ------------

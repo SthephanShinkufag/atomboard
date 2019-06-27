@@ -23,7 +23,7 @@ spl_autoload_register(function ($class) {
      * we look here first, so that we don't waste time searching for
      * test classes in the common case.
      */
-    $path = dirname(__FILE__).'/'.$class.'.php';
+    $path = dirname(__FILE__).'/' . $class . '.php';
     if (is_readable($path)) {
         require_once $path;
     }
@@ -31,7 +31,7 @@ spl_autoload_register(function ($class) {
     /* If we didn't find what we're looking for already, maybe it's
      * a test class?
      */
-    $path = dirname(__FILE__).'/../tests/'.$class.'.php';
+    $path = dirname(__FILE__).'/../tests/' . $class . '.php';
     if (is_readable($path)) {
         require_once $path;
     }

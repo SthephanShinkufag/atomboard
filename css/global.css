@@ -164,6 +164,25 @@ video.thumb {
 	display: block;
 }
 
+.catalog-block {
+	overflow: hidden;
+	vertical-align: top;
+	display: inline-block;
+	max-width: 236px;
+	width: 236px;
+	max-height: 350px;
+	height: 350px;
+	text-align: center;
+	margin: 3px;
+	padding-top: 6px;
+	background: #ddd;
+	color: #34343f;
+	border: 1px solid #ccc;
+	padding-left: 3px;
+	padding-right: 3px;
+	border-radius: 8px;
+}
+
 .message {
 	margin: 1em 20px;
 	line-height: 19px;

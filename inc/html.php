@@ -319,95 +319,78 @@ function buildPost($post, $res, $isModPanel = false) {
 	// Build post file
 	$filehtml = '';
 	$hasImages = false;
-	for($index = 0; $index < TINYIB_MAXIMUM_FILES; $index++) {
-		if ($post['file' . $index . '_hex']) {
-			$hasImages = true;
-			$fWidth = $post['image' . $index . '_width'];
-			$fHeight = $post['image' . $index . '_height'];
-			$fName = $post['file' . $index];
-			$isEmbed = isEmbed($post['file' . $index . '_hex']);
-			$isVideo = !!(substr($fName, -5) == '.webm' || substr($fName, -4) == '.mp4');
-			$isImage = in_array(substr($fName, -4), array('.jpg', '.png', '.gif'));
-			$directLink = $isEmbed ? '#' : '/' . TINYIB_BOARD . '/src/' . $fName;
-			$expandClick = ' onclick="return expandFile(event, ' . $id . $index . ');"';
-			if ($isEmbed) {
-				$expandHtml = rawurlencode($fName);
-			} elseif ($isVideo) {
-				if ($fWidth > 0 && $fHeight > 0) {
-					$hwParams = 'width="' . $fWidth . '" height="' . $fHeight . '"';
-				} else {
-					$hwParams = 'width="500"';
-				}
-				$expandHtml = rawurlencode('<video ' . $hwParams . 'style="position: static;' .
-					' pointer-events: inherit; display: inline; max-width: 100%; max-height: 100%;"' .
-					' controls autoplay loop><source src="' . $directLink . '"></source></video>');
-			} elseif ($isImage) {
-				$expandHtml = rawurlencode('<a href="' . $directLink . '"' . $expandClick . '><img src="/' .
-					TINYIB_BOARD . '/src/' . $fName . '" width="' . $fWidth .
-					'" style="max-width: 100%; height: auto;"></a>');
-			}
-			$origName = $post['file' . $index . '_original'];
-			$hasOrigName = $origName != '';
-			if ($isEmbed || in_array(substr($fName, -4), array('.jpg', '.png', '.gif', '.webm', '.mp4')) ) {
-				$thumblink = '<a href="' . $directLink . '" target="_blank"' . $expandClick;
-			} else {
-				$thumblink = '<a href="' . $directLink . '" target="_blank"';
-			}
-			if ($hasOrigName) {
-				$thumblink .= ' download="' . $origName . '">';
-			} else {
-				$thumblink .= '>';
-			}
-			if ($isEmbed) {
-				$filesize = '<a href="' . $directLink . '"' . $expandClick . '>' . $origName .
-					'</a>,&nbsp;' . $post['file' . $index . '_hex'];
-			} elseif ($fName != '') {
-				$filesize = $thumblink . ($hasOrigName ? $origName : $fName) . '</a><br>(' .
-					$post['file' . $index . '_size_formatted'] .
-					($fWidth > 0 && $fHeight > 0 ? ',&nbsp;' . $fWidth . 'x' . $fHeight : '') . ')';
-			} else {
-				$filesize = '';
-			}
-			if ($filesize == '') {
-				$filehtml = '';
-			} else {
-				$filehtml .= '
+	for ($index = 0; $index < TINYIB_MAXIMUM_FILES; $index++) {
+		if (!$post['file' . $index . '_hex']) {
+			continue;
+		}
+		$hasImages = true;
+		$fWidth = $post['image' . $index . '_width'];
+		$fHeight = $post['image' . $index . '_height'];
+		$fName = $post['file' . $index];
+		$isEmbed = isEmbed($post['file' . $index . '_hex']);
+		$isVideo = !!(substr($fName, -5) == '.webm' || substr($fName, -4) == '.mp4');
+		$directLink = $isEmbed ? '#' : '/' . TINYIB_BOARD . '/src/' . $fName;
+		$expandClick = ' onclick="return expandFile(event, ' . $id . $index . ');"';
+		$expandHtml = '';
+		if ($isEmbed) {
+			$expandHtml = rawurlencode($fName);
+		} elseif ($isVideo) {
+			$expandHtml = rawurlencode('<video ' .
+				($fWidth > 0 && $fHeight > 0 ? 'width="' . $fWidth . '" height="' . $fHeight . '"' :
+					'width="500"') .
+				'style="position: static;' .
+				' pointer-events: inherit; display: inline; max-width: 100%; max-height: 100%;"' .
+				' controls autoplay loop><source src="' . $directLink . '"></source></video>');
+		} elseif (in_array(substr($fName, -4), array('.jpg', '.png', '.gif'))) {
+			$expandHtml = rawurlencode('<a href="' . $directLink . '"' . $expandClick . '><img src="/' .
+				TINYIB_BOARD . '/src/' . $fName . '" width="' . $fWidth .
+				'" style="max-width: 100%; height: auto;"></a>');
+		}
+		$origName = $post['file' . $index . '_original'];
+		$hasOrigName = $origName != '';
+		$thumblink = '<a href="' . $directLink . '" target="_blank"' .
+			($isEmbed || in_array(substr($fName, -4), array('.jpg', '.png', '.gif', 'webm', '.mp4')) ?
+				$expandClick : '') .
+			($hasOrigName ? ' download="' . $origName . '">' : '>');
+		$filesize = '';
+		if ($isEmbed) {
+			$filesize = '<a href="' . $directLink . '"' . $expandClick . '>' . $origName .
+				'</a>,&nbsp;' . $post['file' . $index . '_hex'];
+		} elseif ($fName != '') {
+			$filesize = $thumblink . ($hasOrigName ? $origName : $fName) . '</a><br>(' .
+				$post['file' . $index . '_size_formatted'] .
+				($fWidth > 0 && $fHeight > 0 ? ',&nbsp;' . $fWidth . 'x' . $fHeight : '') . ')';
+		}
+		if ($filesize == '') {
+			continue;
+		}
+		$filehtml .= '
 				<div class="image-container">
 					<span class="filesize">' .
 					($isModPanel ? '
 						<input type="checkbox" name="delete-img-mod[]" value="' . $index . '">' : '') . '
 						' . $filesize . '
 					</span>
-					<div id="thumbfile' . $id . $index . '">';
-				if ($post['thumb' . $index . '_width'] > 0 && $post['thumb' . $index . '_height'] > 0) {
-					// If a file have a thumbnail
-					$filehtml .= '
+					<div id="thumbfile' . $id . $index . '">' .
+						($post['thumb' . $index] != '' /* If a file have a thumbnail */ ? '
 						' . $thumblink . '
 							<img src="/' . TINYIB_BOARD . '/thumb/' . $post['thumb' . $index] . '"' .
 							($isVideo ? ' style="border: 1px dashed #5d5d5d;" ' : '') .
 							' alt="' . $id . $index . '" class="thumb" id="thumbnail' . $id . $index.
 							'" width="' . $post['thumb' . $index . '_width'] .
 							'" height="' . $post['thumb' . $index . '_height'] . '">
-						</a>';
-				} elseif ($isVideo) {
-					// If a webm or mp4 file have no thumbnail
-				$filehtml .= '
+						</a>' :
+						($isVideo /* If a webm or mp4 file have no thumbnail */ ? '
 						' . $thumblink . '
 							<video src="' . $directLink . '" alt="' . $id . $index .
 							'" class="thumb" id="thumbnail' . $id . $index. '"></video>
-						</a>';
-				} else {
-					$filehtml .= '';
-				}
-				$filehtml .= '
+						</a>' : '')) . '
 					</div>' . ($expandHtml == '' ? '' : '
 					<div id="expand' . $id . $index . '" style="display: none;">' . '
 						' . $expandHtml . '
 					</div>
 					<div id="file' . $id . $index . '" class="thumb" style="display: none;"></div>
 				</div>');
-			}
-		}
 	}
 
 	// Truncate messages on board index pages for readability
@@ -448,7 +431,7 @@ function buildPost($post, $res, $isModPanel = false) {
 				</label>
 				<span class="reflink">' . ($res == TINYIB_RESPAGE ? '
 					<a href="' . $thrId . '.html#' . $id . '">No.</a>' .
-					'<a href="' . $thrId . '.html#q' . $id . '" onclick="quotePost(' .$id . ');">' .
+					'<a href="' . $thrId . '.html#q' . $id . '" onclick="quotePost(' . $id . ');">' .
 						$id . '</a>' : '
 					<a href="/' . TINYIB_BOARD . '/res/' . $thrId . '.html#' . $id . '">No.</a>' .
 					'<a href="/' . TINYIB_BOARD . '/res/' . $thrId . '.html#q' . $id . '">' . $id . '</a>') .
@@ -474,7 +457,11 @@ function buildPost($post, $res, $isModPanel = false) {
 				<form method="get" action="?">
 					<input type="hidden" name="manage" value="">
 					<input type="hidden" name="delete-img" value="' . $id . '">
-					<input type="submit" value="Delete selected images" class="managebutton">
+					<input type="submit" value="Delete/Hide selected images" class="managebutton"> Action:
+					<select name="action" class="managebutton">
+						<option value="delete" selected>Delete Image</option>
+						<option value="hide">Hide Thumbnail</option>
+					</select>
 					<br>' : '') .
 					$filehtml .
 					($isModPanel && $hasImages ? '
@@ -512,7 +499,7 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 						</form>
 					</td>') . '
 					<td>';
-		for($i = 0; $i <= $pages; $i++) {
+		for ($i = 0; $i <= $pages; $i++) {
 			if ($thispage == $i) {
 				$pagelinks .= '&#91;' . $i . '&#93; ';
 			} else {
@@ -532,7 +519,12 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 		<div class="logo">
 			' . TINYIB_LOGO . TINYIB_BOARDDESC . '
 		</div>
-		' .buildPostForm($parent) . '
+		' . buildPostForm($parent) .
+		($isOnPage ? '
+		<br>
+		<div style="text-align: center;">
+			<a href="/' . TINYIB_BOARD . '/catalog.html">Catalog</a>
+		</div>' : ''). '
 		<hr>
 		<form id="delform" action="/' . TINYIB_BOARD . '/imgboard.php?delete" method="post">
 			<input type="hidden" name="board" value="' . TINYIB_BOARD . '">' .
@@ -571,7 +563,7 @@ function rebuildIndexes() {
 		$thread['omitted'] = max(0, count($replies) - TINYIB_PREVIEWREPLIES - 1);
 		// Build replies for preview
 		$htmlReplies = array();
-		for($j = count($replies) - 1; $j > $thread['omitted']; $j--) {
+		for ($j = count($replies) - 1; $j > $thread['omitted']; $j--) {
 			$htmlReplies[] = buildPost($replies[$j], TINYIB_INDEXPAGE);
 		}
 		$htmlPosts .= buildPost($thread, TINYIB_INDEXPAGE) . implode('', array_reverse($htmlReplies)) .
@@ -589,6 +581,7 @@ function rebuildIndexes() {
 		$file = $page == 0 ? TINYIB_INDEX : $page . '.html';
 		writePage($file, buildPage($htmlPosts, 0, $pages, $page));
 	}
+	createCatalog();
 }
 
 function rebuildThread($id) {
@@ -923,4 +916,73 @@ function manageStatus() {
 			</fieldset>
 		</fieldset>
 		<br>';
+}
+
+function buildCatalogPage() {
+	$catalogHTML = '';
+	$numOfReplies = 0;
+	$OPuserName = '';
+	$OPpostSubject = '';
+	$OPpostMessage = '';
+	$OPpostID = '';
+	$thumb = 'noimage.png';
+	$thumb_width = TINYIB_MAXW;
+	$thumb_height = TINYIB_MAXH;
+	$OPposts = allThreads();
+	foreach ($OPposts as $post) {
+		$numOfReplies = numRepliesToThreadByID($post['id']);
+		if (function_exists('mb_substr') && extension_loaded('mbstring')) {
+			$OPpostMessage = tidy_repair_string(
+				mb_substr($post['message'], 0, 160, 'UTF-8'),
+				array('quiet' => true, 'show-body-only' => true),
+				'utf8');
+		} else {
+			$OPpostMessage = tidy_repair_string(
+				substr($post['message'], 0, 160),
+				array('quiet' => true, 'show-body-only' => true),
+				'utf8');
+		}
+		$OPpostSubject = $post['subject'];
+		$OPuserName = $post['name'] != '' ? $post['name'] : TINYIB_POSTERNAME;
+		$OPpostID = $post['id'];
+		if ($post['thumb0'] != '' && $post['thumb0_width'] > 0 && $post['thumb0_height'] > 0) {
+			$thumb = 'thumb/' . $post['thumb0'];
+			$thumb_width = $post['thumb0_width'];
+			$thumb_height = $post['thumb0_height'];
+		} else {
+			$thumb = 'noimage.png';
+			$thumb_width = TINYIB_MAXW;
+			$thumb_height = TINYIB_MAXH;
+		}
+		$catalogHTML .= '
+			<div class="catalog-block">
+				<a href="res/' . $OPpostID . '.html">
+					<img src="' . $thumb . '" width="' . $thumb_width . '" height="' . $thumb_height . '" />
+				</a>
+				<br>
+				<center>' .
+					($OPpostSubject ? '
+					<span class="filetitle">' . $OPpostSubject . '</span>
+					<br>' : '') . '
+					<span class="postername">' . $OPuserName.' (R: ' . $numOfReplies . ')</span>
+					<br>
+				</center>
+				<div class="message" style="text-align: left">' . $OPpostMessage . '</div>
+				<br>
+			</div>';
+	}
+	return pageHeader() . '<body>' . pageWrapper('back') . '
+		<div class="logo">
+			' . TINYIB_LOGO . TINYIB_BOARDDESC . ' / Catalog
+		</div>
+		<hr>
+		<br>
+		<div style="text-align: center">' .
+			$catalogHTML . '
+		</div>'.
+		pageFooter();
+}
+
+function createCatalog() {
+	writePage('catalog.html', buildCatalogPage());
 }
