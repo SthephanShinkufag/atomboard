@@ -48,6 +48,7 @@ This fork of the fork features:
  - Generation of catalog.html.
  - You can set list of Moderators.
  - Generation of modlog.html.
+ - Indication of replies to post.
 
 Installing
 ------------

@@ -174,9 +174,12 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				return '<code>' . $m . '</code>';
 			}, $msg);
 			// Post links
+			$replyedTo = array();
 			$msg = preg_replace_callback('/&gt;&gt;([0-9]+)/', function($matches) {
 				$post = postByID($matches[1]);
 				if ($post) {
+					global $replyedTo;
+					$replyedTo[] = intval($matches[1]);
 					return '<a href="/' . TINYIB_BOARD . '/res/' .
 						($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']) .
 						'.html#' . $matches[1] . '">' . $matches[0] . '</a>';
@@ -225,7 +228,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			if (TINYIB_WORDBREAK > 0) {
 				$msg = finishWordBreak($msg);
 			}
-			$post['message'] = $msg;
+			$post['message'] = $msg . '<br>';
 		}
 	}
 	if ($rawPost || !in_array('password', $hideFields)) {
@@ -482,6 +485,22 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	$post['likes'] = 0;
 
 	$post['id'] = insertPost($post);
+
+	if (sizeof($replyedTo) != 0) {
+
+		foreach ($replyedTo as $arrayIndex => $postID) {
+		$OriginalPost = array();
+		$newMessage = '';
+
+		$OriginalPost = postByID($postID);
+		$newMessage = $OriginalPost['message'];
+
+		$newMessage .= ' &iexcl;&iexcl;' . ($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']) . '&lt;&lt;'. $post['id'];
+
+		editMessageInPostById($postID, $newMessage);
+		}
+
+	}
 
 	if ($post['moderated'] == '1') {
 		if (TINYIB_ALWAYSNOKO || strtolower($post['email']) == 'noko') {
