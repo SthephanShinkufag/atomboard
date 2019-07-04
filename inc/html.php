@@ -429,7 +429,7 @@ $filehtml .= '</div>' .($expandHtml == '' ? '' : '<div id="expand' . $id.$index 
 				'.html#';
 			}, $message);
 
-	$message = preg_replace_callback('/&lt;&lt;([0-9]+)/', function($matches) {
+	$message = preg_replace_callback('/&cent;&cent;([0-9]+)/', function($matches) {
 			return  $matches[1] . '">' . ' &gt;&gt;' . $matches[1] . 
 				'</a>';
 			}, $message);
@@ -938,7 +938,7 @@ $OPposts = allThreads();
 			return '';
 			}, $post['message']);
 
-	$post['message'] = preg_replace_callback('/&lt;&lt;([0-9]+)/', function($matches) {
+	$post['message'] = preg_replace_callback('/&cent;&cent;([0-9]+)/', function($matches) {
 			return '';
 			}, $post['message']);
 

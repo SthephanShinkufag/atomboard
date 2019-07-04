@@ -488,6 +488,8 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 
 	if (sizeof($replyedTo) != 0) {
 
+		$replyedTo = array_unique($replyedTo);
+
 		foreach ($replyedTo as $arrayIndex => $postID) {
 		$OriginalPost = array();
 		$newMessage = '';
@@ -495,7 +497,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		$OriginalPost = postByID($postID);
 		$newMessage = $OriginalPost['message'];
 
-		$newMessage .= ' &iexcl;&iexcl;' . ($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']) . '&lt;&lt;'. $post['id'];
+		$newMessage .= ' &iexcl;&iexcl;' . ($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']) . '&cent;&cent;'. $post['id'];
 
 		editMessageInPostById($postID, $newMessage);
 		}
