@@ -105,8 +105,8 @@ if (!$result->fetchArray()) {
 
 // Add stickied column if it isn't present
 @$db->exec(
-	"ALTER TABLE " . TINYIB_DBPOSTS .
-	" ADD COLUMN stickied INTEGER NOT NULL DEFAULT '0'");
+	"ALTER TABLE " . TINYIB_DBPOSTS . "
+	ADD COLUMN stickied INTEGER NOT NULL DEFAULT '0'");
 
 # Post Functions
 function uniquePosts() {
@@ -117,8 +117,8 @@ function uniquePosts() {
 function postByID($id) {
 	global $db;
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBPOSTS .
-		" WHERE id = '" . $db->escapeString($id) . "' LIMIT 1");
+		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		WHERE id = '" . $db->escapeString($id) . "' LIMIT 1");
 	while ($post = $result->fetchArray()) {
 		return $post;
 	}
@@ -127,8 +127,8 @@ function postByID($id) {
 function threadExistsByID($id) {
 	global $db;
 	return $db->querySingle(
-		"SELECT COUNT(*) FROM " . TINYIB_DBPOSTS .
-		" WHERE id = '" . $db->escapeString($id) . "' AND parent = 0 LIMIT 1") > 0;
+		"SELECT COUNT(*) FROM " . TINYIB_DBPOSTS . "
+		WHERE id = '" . $db->escapeString($id) . "' AND parent = 0 LIMIT 1") > 0;
 }
 
 function insertPost($post) {
@@ -187,69 +187,69 @@ function insertPost($post) {
 			thumb3_width,
 			thumb3_height,
 			likes
-		) VALUES (" .
-			$post['parent'] . ", " .
-			time() . ", " .
-			time() . ", '" .
-			$_SERVER['REMOTE_ADDR'] . "', '" .
-			$db->escapeString($post['name']) . "', '" .
-			$db->escapeString($post['tripcode']) . "', '" .
-			$db->escapeString($post['email']) . "', '" .
-			$db->escapeString($post['nameblock']) . "', '" .
-			$db->escapeString($post['subject']) . "', '" .
-			$db->escapeString($post['message']) . "', '" .
-			$db->escapeString($post['password']) . "', '" .
-			$post['file0'] . "', '" .
-			$post['file0_hex'] . "', '" .
-			$db->escapeString($post['file0_original']) . "', " .
-			$post['file0_size'] . ", '" .
-			$post['file0_size_formatted'] . "', " .
-			$post['image0_width'] . ", " .
-			$post['image0_height'] . ", '" .
-			$post['thumb0'] . "', " .
-			$post['thumb0_width'] . ", " .
-			$post['thumb0_height'] . ", '" .
-			$post['file1'] . "', '" .
-			$post['file1_hex'] . "', '" .
-			$db->escapeString($post['file1_original']) . "', " .
-			$post['file1_size'] . ", '" .
-			$post['file1_size_formatted'] . "', " .
-			$post['image1_width'] . ", " .
-			$post['image1_height'] . ", '" .
-			$post['thumb1'] . "', " .
-			$post['thumb1_width'] . ", " .
-			$post['thumb1_height'] . ", '" .
-			$post['file2'] . "', '" .
-			$post['file2_hex'] . "', '" .
-			$db->escapeString($post['file2_original']) . "', " .
-			$post['file2_size'] . ", '" .
-			$post['file2_size_formatted'] . "', " .
-			$post['image2_width'] . ", " .
-			$post['image2_height'] . ", '" .
-			$post['thumb2'] . "', " .
-			$post['thumb2_width'] . ", " .
-			$post['thumb2_height'] . ", '" .
-			$post['file3'] . "', '" .
-			$post['file3_hex'] . "', '" .
-			$db->escapeString($post['file3_original']) . "', " .
-			$post['file3_size'] . ", '" .
-			$post['file3_size_formatted'] . "', " .
-			$post['image3_width'] . ", " .
-			$post['image3_height'] . ", '" .
-			$post['thumb3'] . "', " .
-			$post['thumb3_width'] . ", " .
-			$post['thumb3_height'] . ", " .
-			$post['likes'] .
-		")");
+		) VALUES (
+			" . $post['parent'] . ",
+			" . time() . ",
+			" . time() . ",
+			'" . $_SERVER['REMOTE_ADDR'] . "',
+			'" . $db->escapeString($post['name']) . "',
+			'" . $db->escapeString($post['tripcode']) . "',
+			'" . $db->escapeString($post['email']) . "',
+			'" . $db->escapeString($post['nameblock']) . "',
+			'" . $db->escapeString($post['subject']) . "',
+			'" . $db->escapeString($post['message']) . "',
+			'" . $db->escapeString($post['password']) . "',
+			'" . $post['file0'] . "',
+			'" . $post['file0_hex'] . "',
+			'" . $db->escapeString($post['file0_original']) . "',
+			" . $post['file0_size'] . ",
+			'" . $post['file0_size_formatted'] . "',
+			" . $post['image0_width'] . ",
+			" . $post['image0_height'] . ",
+			'" . $post['thumb0'] . "',
+			" . $post['thumb0_width'] . ",
+			" . $post['thumb0_height'] . ",
+			'" . $post['file1'] . "',
+			'" . $post['file1_hex'] . "',
+			'" . $db->escapeString($post['file1_original']) . "',
+			" . $post['file1_size'] . ",
+			'" . $post['file1_size_formatted'] . "',
+			" . $post['image1_width'] . ",
+			" . $post['image1_height'] . ",
+			'" . $post['thumb1'] . "',
+			" . $post['thumb1_width'] . ",
+			" . $post['thumb1_height'] . ",
+			'" . $post['file2'] . "',
+			'" . $post['file2_hex'] . "',
+			'" . $db->escapeString($post['file2_original']) . "',
+			" . $post['file2_size'] . ",
+			'" . $post['file2_size_formatted'] . "',
+			" . $post['image2_width'] . ",
+			" . $post['image2_height'] . ",
+			'" . $post['thumb2'] . "',
+			" . $post['thumb2_width'] . ",
+			" . $post['thumb2_height'] . ",
+			'" . $post['file3'] . "',
+			'" . $post['file3_hex'] . "',
+			'" . $db->escapeString($post['file3_original']) . "',
+			" . $post['file3_size'] . ",
+			'" . $post['file3_size_formatted'] . "',
+			" . $post['image3_width'] . ",
+			" . $post['image3_height'] . ",
+			'" . $post['thumb3'] . "',
+			" . $post['thumb3_width'] . ",
+			" . $post['thumb3_height'] . ",
+			" . $post['likes'] . "
+		)");
 	return $db->lastInsertRowID();
 }
 
 function stickyThreadByID($id, $setsticky) {
 	global $db;
 	$db->exec(
-		"UPDATE " . TINYIB_DBPOSTS .
-		" SET stickied = '" . $db->escapeString($setsticky) .
-		"' WHERE id = " . $id);
+		"UPDATE " . TINYIB_DBPOSTS . "
+		SET stickied = '" . $db->escapeString($setsticky) . "'
+		WHERE id = " . $id);
 }
 
 function lockThreadByID($id, $setlocked) {
@@ -260,32 +260,33 @@ function lockThreadByID($id, $setlocked) {
 		$setlocked = '';
 	}
 	$db->exec(
-		"UPDATE " . TINYIB_DBPOSTS .
-		" SET email = '" . $db->escapeString($setlocked) .
-		"' WHERE id = " . $id);
+		"UPDATE " . TINYIB_DBPOSTS . "
+		SET email = '" . $db->escapeString($setlocked) . "'
+		WHERE id = " . $id);
 }
 
 function bumpThreadByID($id) {
 	global $db;
 	$db->exec(
-		"UPDATE " . TINYIB_DBPOSTS .
-		" SET bumped = " . time() .
-		" WHERE id = " . $id);
+		"UPDATE " . TINYIB_DBPOSTS . "
+		SET bumped = " . time() . "
+		WHERE id = " . $id);
 }
 
 function countThreads() {
 	global $db;
 	return $db->querySingle(
-		"SELECT COUNT(*) FROM " . TINYIB_DBPOSTS .
-		" WHERE parent = 0");
+		"SELECT COUNT(*) FROM " . TINYIB_DBPOSTS . "
+		WHERE parent = 0");
 }
 
 function allThreads() {
 	global $db;
 	$threads = array();
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBPOSTS .
-		" WHERE parent = 0 ORDER BY stickied DESC, bumped DESC");
+		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		WHERE parent = 0
+		ORDER BY stickied DESC, bumped DESC");
 	while ($thread = $result->fetchArray()) {
 		$threads[] = $thread;
 	}
@@ -295,17 +296,17 @@ function allThreads() {
 function numRepliesToThreadByID($id) {
 	global $db;
 	return $db->querySingle(
-		"SELECT COUNT(*) FROM " . TINYIB_DBPOSTS .
-		" WHERE parent = " . $id);
+		"SELECT COUNT(*) FROM " . TINYIB_DBPOSTS . "
+		WHERE parent = " . $id);
 }
 
 function postsInThreadByID($id, $moderated_only = true) {
 	global $db;
 	$posts = array();
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBPOSTS .
-		" WHERE id = " . $id . " OR parent = " . $id .
-		" ORDER BY id ASC");
+		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		WHERE id = " . $id . " OR parent = " . $id . "
+		ORDER BY id ASC");
 	while ($post = $result->fetchArray()) {
 		$posts[] = $post;
 	}
@@ -316,12 +317,12 @@ function postsByHex($hex) {
 	global $db;
 	$posts = array();
 	$result = $db->query(
-		"SELECT id, parent FROM " . TINYIB_DBPOSTS .
-		" WHERE (file0_hex = '" . $db->escapeString($hex) .
-			"' OR file1_hex = '" . $db->escapeString($hex) .
-			"' OR file2_hex = '" . $db->escapeString($hex) .
-			"' OR file3_hex = '" . $db->escapeString($hex) .
-			"') LIMIT 1");
+		"SELECT id, parent FROM " . TINYIB_DBPOSTS . "
+		WHERE (
+			file0_hex = '" . $db->escapeString($hex) . "'
+			OR file1_hex = '" . $db->escapeString($hex) . "'
+			OR file2_hex = '" . $db->escapeString($hex) . "'
+			OR file3_hex = '" . $db->escapeString($hex) . "') LIMIT 1");
 	while ($post = $result->fetchArray()) {
 		$posts[] = $post;
 	}
@@ -332,8 +333,8 @@ function latestPosts($moderated = true) {
 	global $db;
 	$posts = array();
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBPOSTS .
-		" ORDER BY timestamp DESC LIMIT 10");
+		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		ORDER BY timestamp DESC LIMIT 10");
 	while ($post = $result->fetchArray()) {
 		$posts[] = $post;
 	}
@@ -347,8 +348,8 @@ function deletePostByID($id) {
 		if ($post['id'] != $id) {
 			deletePostImages($post);
 			$db->exec(
-				"DELETE FROM " . TINYIB_DBPOSTS .
-				" WHERE id = " . $post['id']);
+				"DELETE FROM " . TINYIB_DBPOSTS . "
+				WHERE id = " . $post['id']);
 		} else {
 			$thispost = $post;
 		}
@@ -359,8 +360,8 @@ function deletePostByID($id) {
 		}
 		deletePostImages($thispost);
 		$db->exec(
-			"DELETE FROM " . TINYIB_DBPOSTS .
-			" WHERE id = " . $thispost['id']);
+			"DELETE FROM " . TINYIB_DBPOSTS . "
+			WHERE id = " . $thispost['id']);
 	}
 }
 
@@ -371,8 +372,8 @@ function deleteImagesByImageID($post, $imgList) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
 			$db->exec(
-				"UPDATE " . TINYIB_DBPOSTS .
-				" SET file" . $index . " = '',
+				"UPDATE " . TINYIB_DBPOSTS . "
+				SET file" . $index . " = '',
 					file" . $index . "_hex = '',
 					file" . $index . "_original = '',
 					file" . $index . "_size = 0,
@@ -387,21 +388,37 @@ function deleteImagesByImageID($post, $imgList) {
 	}
 }
 
+function hideImagesByImageID($post, $imgList) {
+	global $db;
+	deletePostImagesThumb($post, $imgList);
+	if ($imgList && (count($imgList) <= TINYIB_MAXIMUM_FILES) ) {
+		foreach ($imgList as $arrayIndex => $index) {
+			$index = intval(trim(basename($index)));
+			$db->exec(
+				"UPDATE " . TINYIB_DBPOSTS . "
+				SET thumb" . $index . " = 'spoiler.png',
+					thumb" . $index . "_width = " . TINYIB_MAXW . ",
+					thumb" . $index . "_height = " . TINYIB_MAXW . "
+				WHERE id = " . $post['id']);
+		}
+	}
+}
+
 function editMessageInPostById($id, $newMessage) {
 	global $db;
 	$db->exec(
-		"UPDATE " . TINYIB_DBPOSTS .
-		" SET message = '" . $newMessage .
-		"' WHERE id = " . $id);
+		"UPDATE " . TINYIB_DBPOSTS . "
+		SET message = '" . $newMessage . "'
+		WHERE id = " . $id);
 }
 
 function trimThreads() {
 	global $db;
 	if (TINYIB_MAXTHREADS > 0) {
 		$result = $db->query(
-			"SELECT id FROM " . TINYIB_DBPOSTS .
-			" WHERE parent = 0" .
-			" ORDER BY stickied DESC, bumped DESC LIMIT " . TINYIB_MAXTHREADS . ", 10");
+			"SELECT id FROM " . TINYIB_DBPOSTS . "
+			WHERE parent = 0" . "
+			ORDER BY stickied DESC, bumped DESC LIMIT " . TINYIB_MAXTHREADS . ", 10");
 		while ($post = $result->fetchArray()) {
 			deletePostByID($post['id']);
 		}
@@ -411,9 +428,9 @@ function trimThreads() {
 function lastPostByIP() {
 	global $db;
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBPOSTS .
-		" WHERE ip = '" . $_SERVER['REMOTE_ADDR'] .
-		"' ORDER BY id DESC LIMIT 1");
+		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		WHERE ip = '" . $_SERVER['REMOTE_ADDR'] . "'
+		ORDER BY id DESC LIMIT 1");
 	while ($post = $result->fetchArray()) {
 		return $post;
 	}
@@ -422,32 +439,29 @@ function lastPostByIP() {
 function likePostByID($id, $ip) {
 	global $db;
 	$isAlreadyLiked = $db->querySingle(
-		"SELECT COUNT(*) FROM " . TINYIB_DBLIKES .
-		" WHERE ip = '" . $ip .
-			"' AND board = '" . TINYIB_BOARD .
-			"' AND postnum = " . $id);
+		"SELECT COUNT(*) FROM " . TINYIB_DBLIKES . "
+		WHERE ip = '" . $ip . "'
+			AND board = '" . TINYIB_BOARD . "'
+			AND postnum = " . $id);
 	if ($isAlreadyLiked) {
 		$db->exec(
-			"DELETE FROM " . TINYIB_DBLIKES .
-			" WHERE ip = '" . $ip .
-				"' AND board = '" . TINYIB_BOARD .
-				"' AND postnum = " . $id);
+			"DELETE FROM " . TINYIB_DBLIKES . "
+			WHERE ip = '" . $ip . "'
+				AND board = '" . TINYIB_BOARD . "'
+				AND postnum = " . $id);
 	} else {
 		$db->exec(
-			"INSERT INTO " . TINYIB_DBLIKES .
-			" (ip, board, postnum) VALUES ('" .
-				$ip . "', '" .
-				TINYIB_BOARD . "', " .
-				$id . ")");
+			"INSERT INTO " . TINYIB_DBLIKES . "
+			(ip, board, postnum)
+			VALUES ('" . $ip . "', '" . TINYIB_BOARD . "', " . $id . ")");
 	}
 	$countOfPostLikes = $db->querySingle(
-		"SELECT COUNT(*) FROM " . TINYIB_DBLIKES .
-		" WHERE board = '" . TINYIB_BOARD .
-			"' AND postnum = " . $id);
+		"SELECT COUNT(*) FROM " . TINYIB_DBLIKES . "
+		WHERE board = '" . TINYIB_BOARD . "' AND postnum = " . $id);
 	$db->exec(
-		"UPDATE " . TINYIB_DBPOSTS .
-		" SET likes = " . $countOfPostLikes .
-		" WHERE id = " . $id);
+		"UPDATE " . TINYIB_DBPOSTS . "
+		SET likes = " . $countOfPostLikes . "
+		WHERE id = " . $id);
 	return array(!$isAlreadyLiked, $countOfPostLikes);
 }
 
@@ -455,8 +469,8 @@ function likePostByID($id, $ip) {
 function banByID($id) {
 	global $db;
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBBANS .
-		" WHERE id = '" . $db->escapeString($id) . "' LIMIT 1");
+		"SELECT * FROM " . TINYIB_DBBANS . "
+		WHERE id = '" . $db->escapeString($id) . "' LIMIT 1");
 	while ($ban = $result->fetchArray()) {
 		return $ban;
 	}
@@ -465,8 +479,8 @@ function banByID($id) {
 function banByIP($ip) {
 	global $db;
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBBANS .
-		" WHERE ip = '" . $db->escapeString($ip) . "' LIMIT 1");
+		"SELECT * FROM " . TINYIB_DBBANS . "
+		WHERE ip = '" . $db->escapeString($ip) . "' LIMIT 1");
 	while ($ban = $result->fetchArray()) {
 		return $ban;
 	}
@@ -476,8 +490,8 @@ function allBans() {
 	global $db;
 	$bans = array();
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBBANS .
-		" ORDER BY timestamp DESC");
+		"SELECT * FROM " . TINYIB_DBBANS . "
+		ORDER BY timestamp DESC");
 	while ($ban = $result->fetchArray()) {
 		$bans[] = $ban;
 	}
@@ -487,32 +501,32 @@ function allBans() {
 function insertBan($ban) {
 	global $db;
 	$db->exec(
-		"INSERT INTO " . TINYIB_DBBANS .
-		" (ip, timestamp, expire, reason)" .
-		" VALUES ('" .
-			$db->escapeString($ban['ip']) . "', " .
-			time() . ", '" .
-			$db->escapeString($ban['expire']) . "', '" .
-			$db->escapeString($ban['reason']) .
-		"')");
+		"INSERT INTO " . TINYIB_DBBANS . "
+		(ip, timestamp, expire, reason)
+		VALUES (
+			'" . $db->escapeString($ban['ip']) . "',
+			" . time() . ",
+			'" . $db->escapeString($ban['expire']) . "',
+			'" . $db->escapeString($ban['reason']) . "'
+		)");
 	return $db->lastInsertRowID();
 }
 
 function clearExpiredBans() {
 	global $db;
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBBANS .
-		" WHERE expire > 0 AND expire <= " . time());
+		"SELECT * FROM " . TINYIB_DBBANS . "
+		WHERE expire > 0 AND expire <= " . time());
 	while ($ban = $result->fetchArray()) {
 		$db->exec(
-			"DELETE FROM " . TINYIB_DBBANS .
-			" WHERE id = " . $ban['id']);
+			"DELETE FROM " . TINYIB_DBBANS . "
+			WHERE id = " . $ban['id']);
 	}
 }
 
 function deleteBanByID($id) {
 	global $db;
 	$db->exec(
-		"DELETE FROM " . TINYIB_DBBANS .
-		" WHERE id = " . $db->escapeString($id));
+		"DELETE FROM " . TINYIB_DBBANS . "
+		WHERE id = " . $db->escapeString($id));
 }

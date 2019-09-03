@@ -181,7 +181,8 @@ function insertPost($post) {
 			" . $post['thumb3_width'] . ",
 			" . $post['thumb3_height'] . ",
 			" . $post['moderated'] . ",
-			" . $post['likes'] . ")");
+			" . $post['likes'] . "
+		)");
 	return mysqli_insert_id($link);
 }
 
@@ -360,7 +361,7 @@ function hideImagesByImageID($post, $imgList) {
 				SET `thumb" . $index . "` = 'spoiler.png',
 					`thumb" . $index . "_width` = " . TINYIB_MAXW . ",
 					`thumb" . $index . "_height` = " . TINYIB_MAXW . "
-				WHERE id = " . $post['id']);
+				WHERE `id` = " . $post['id']);
 		}
 	}
 }
@@ -478,7 +479,8 @@ function insertBan($ban) {
 			'" . mysqli_real_escape_string($link, $ban['ip']) . "',
 			'" . time() . "',
 			'" . mysqli_real_escape_string($link, $ban['expire']) . "',
-			'" . mysqli_real_escape_string($link, $ban['reason']) . "')");
+			'" . mysqli_real_escape_string($link, $ban['reason']) . "'
+		)");
 	return mysqli_insert_id($link);
 }
 

@@ -113,61 +113,61 @@ function insertPost($post) {
 			`thumb3_height`,
 			`moderated`,
 			`likes`
-		) VALUES (" .
-			$post['parent'] . ", " .
-			time() . ", " .
-			time() . ", '" .
-			$_SERVER['REMOTE_ADDR'] . "', '" .
-			mysql_real_escape_string($post['name']) . "', '" .
-			mysql_real_escape_string($post['tripcode']) . "', '" .
-			mysql_real_escape_string($post['email']) . "', '" .
-			mysql_real_escape_string($post['nameblock']) . "', '" .
-			mysql_real_escape_string($post['subject']) . "', '" .
-			mysql_real_escape_string($post['message']) . "', '" .
-			mysql_real_escape_string($post['password']) . "', '" .
-			$post['file0'] . "', '" .
-			$post['file0_hex'] . "', '" .
-			mysql_real_escape_string($post['file0_original']) . "', " .
-			$post['file0_size'] . ", '" .
-			$post['file0_size_formatted'] . "', " .
-			$post['image0_width'] . ", " .
-			$post['image0_height'] . ", '" .
-			$post['thumb0'] . "', " .
-			$post['thumb0_width'] . ", " .
-			$post['thumb0_height'] . ", '" .
-			$post['file1'] . "', '" .
-			$post['file1_hex'] . "', '" .
-			mysql_real_escape_string($post['file1_original']) . "', " .
-			$post['file1_size'] . ", '" .
-			$post['file1_size_formatted'] . "', " .
-			$post['image1_width'] . ", " .
-			$post['image1_height'] . ", '" .
-			$post['thumb1'] . "', " .
-			$post['thumb1_width'] . ", " .
-			$post['thumb1_height'] . ", '" .
-			$post['file2'] . "', '" .
-			$post['file2_hex'] . "', '" .
-			mysql_real_escape_string($post['file2_original']) . "', " .
-			$post['file2_size'] . ", '" .
-			$post['file2_size_formatted'] . "', " .
-			$post['image2_width'] . ", " .
-			$post['image2_height'] . ", '" .
-			$post['thumb2'] . "', " .
-			$post['thumb2_width'] . ", " .
-			$post['thumb2_height'] . ", '" .
-			$post['file3'] . "', '" .
-			$post['file3_hex'] . "', '" .
-			mysql_real_escape_string($post['file3_original']) . "', " .
-			$post['file3_size'] . ", '" .
-			$post['file3_size_formatted'] . "', " .
-			$post['image3_width'] . ", " .
-			$post['image3_height'] . ", '" .
-			$post['thumb3'] . "', " .
-			$post['thumb3_width'] . ", " .
-			$post['thumb3_height'] . ", " .
-			$post['moderated'] . ", " .
-			$post['likes'] .
-		")");
+		) VALUES (
+			" . $post['parent'] . ",
+			" . time() . ",
+			" . time() . ",
+			'" . $_SERVER['REMOTE_ADDR'] . "',
+			'" . mysql_real_escape_string($post['name']) . "',
+			'" . mysql_real_escape_string($post['tripcode']) . "',
+			'" . mysql_real_escape_string($post['email']) . "',
+			'" . mysql_real_escape_string($post['nameblock']) . "',
+			'" . mysql_real_escape_string($post['subject']) . "',
+			'" . mysql_real_escape_string($post['message']) . "',
+			'" . mysql_real_escape_string($post['password']) . "',
+			'" . $post['file0'] . "',
+			'" . $post['file0_hex'] . "',
+			'" . mysql_real_escape_string($post['file0_original']) . "',
+			" . $post['file0_size'] . ",
+			'" . $post['file0_size_formatted'] . "',
+			" . $post['image0_width'] . ",
+			" . $post['image0_height'] . ",
+			'" . $post['thumb0'] . "',
+			" . $post['thumb0_width'] . ",
+			" . $post['thumb0_height'] . ",
+			'" . $post['file1'] . "',
+			'" . $post['file1_hex'] . "',
+			'" . mysql_real_escape_string($post['file1_original']) . "',
+			" . $post['file1_size'] . ",
+			'" . $post['file1_size_formatted'] . "',
+			" . $post['image1_width'] . ",
+			" . $post['image1_height'] . ",
+			'" . $post['thumb1'] . "',
+			" . $post['thumb1_width'] . ",
+			" . $post['thumb1_height'] . ",
+			'" . $post['file2'] . "',
+			'" . $post['file2_hex'] . "',
+			'" . mysql_real_escape_string($post['file2_original']) . "',
+			" . $post['file2_size'] . ",
+			'" . $post['file2_size_formatted'] . "',
+			" . $post['image2_width'] . ",
+			" . $post['image2_height'] . ",
+			'" . $post['thumb2'] . "',
+			" . $post['thumb2_width'] . ",
+			" . $post['thumb2_height'] . ",
+			'" . $post['file3'] . "',
+			'" . $post['file3_hex'] . "',
+			'" . mysql_real_escape_string($post['file3_original']) . "',
+			" . $post['file3_size'] . ",
+			'" . $post['file3_size_formatted'] . "',
+			" . $post['image3_width'] . ",
+			" . $post['image3_height'] . ",
+			'" . $post['thumb3'] . "',
+			" . $post['thumb3_width'] . ",
+			" . $post['thumb3_height'] . ",
+			" . $post['moderated'] . ",
+			" . $post['likes'] . "
+		)");
 	return mysql_insert_id();
 }
 
@@ -389,8 +389,7 @@ function likePostByID($id, $ip) {
 	}
 	$countOfPostLikes = mysql_result(mysql_query(
 		"SELECT COUNT(*) FROM `" . TINYIB_DBLIKES . "`
-		WHERE `board` = '" . TINYIB_BOARD . "'
-			AND `postnum` = " . $id), 0, 0);
+		WHERE `board` = '" . TINYIB_BOARD . "' AND `postnum` = " . $id), 0, 0);
 	mysql_query(
 		"UPDATE `" . TINYIB_DBPOSTS . "`
 		SET `likes` = " . $countOfPostLikes . "
@@ -442,7 +441,8 @@ function insertBan($ban) {
 			'" . mysql_real_escape_string($ban['ip']) . "',
 			" . time() . ",
 			'" . mysql_real_escape_string($ban['expire']) . "',
-			'" . mysql_real_escape_string($ban['reason']) . "')");
+			'" . mysql_real_escape_string($ban['reason']) . "'
+		)");
 	return mysql_insert_id();
 }
 
