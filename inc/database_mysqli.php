@@ -46,15 +46,16 @@ function mysqli_result($res, $row, $field = 0) {
 # Post Functions
 function uniquePosts() {
 	global $link;
-	$row = mysqli_fetch_row(mysqli_query($link, "SELECT COUNT(DISTINCT(`ip`)) FROM " . TINYIB_DBPOSTS));
+	$row = mysqli_fetch_row(mysqli_query($link,
+		"SELECT COUNT(DISTINCT(`ip`)) FROM " . TINYIB_DBPOSTS));
 	return $row[0];
 }
 
 function postByID($id) {
 	global $link;
 	$result = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBPOSTS .
-		"` WHERE `id` = '" . mysqli_real_escape_string($link, $id) . "' LIMIT 1");
+		"SELECT * FROM `" . TINYIB_DBPOSTS . "`
+		WHERE `id` = '" . mysqli_real_escape_string($link, $id) . "' LIMIT 1");
 	if ($result) {
 		while ($post = mysqli_fetch_assoc($result)) {
 			return $post;
@@ -65,9 +66,9 @@ function postByID($id) {
 function threadExistsByID($id) {
 	global $link;
 	return mysqli_result(mysqli_query($link,
-		"SELECT COUNT(*) FROM `" . TINYIB_DBPOSTS .
-		"` WHERE `id` = '" . mysqli_real_escape_string($link, $id) .
-		"' AND `parent` = 0 AND `moderated` = 1 LIMIT 1"), 0, 0) > 0;
+		"SELECT COUNT(*) FROM `" . TINYIB_DBPOSTS . "`
+		WHERE `id` = '" . mysqli_real_escape_string($link, $id) . "'
+			AND `parent` = 0 AND `moderated` = 1 LIMIT 1"), 0, 0) > 0;
 }
 
 function insertPost($post) {
@@ -127,77 +128,77 @@ function insertPost($post) {
 			`thumb3_height`,
 			`moderated`,
 			`likes`
-		) VALUES (" .
-			$post['parent'] . ", " .
-			time() . ", " .
-			time() . ", '" .
-			$_SERVER['REMOTE_ADDR'] . "', '" .
-			mysqli_real_escape_string($link, $post['name']) . "', '" .
-			mysqli_real_escape_string($link, $post['tripcode']) . "', '" .
-			mysqli_real_escape_string($link, $post['email']) . "', '" .
-			mysqli_real_escape_string($link, $post['nameblock']) . "', '" .
-			mysqli_real_escape_string($link, $post['subject']) . "', '" .
-			mysqli_real_escape_string($link, $post['message']) . "', '" .
-			mysqli_real_escape_string($link, $post['password']) . "', '" .
-			$post['file0'] . "', '" .
-			$post['file0_hex'] . "', '" .
-			mysqli_real_escape_string($link, $post['file0_original']) . "', " .
-			$post['file0_size'] . ", '" .
-			$post['file0_size_formatted'] . "', " .
-			$post['image0_width'] . ", " .
-			$post['image0_height'] . ", '" .
-			$post['thumb0'] . "', " .
-			$post['thumb0_width'] . ", " .
-			$post['thumb0_height'] . ", '" .
-			$post['file1'] . "', '" .
-			$post['file1_hex'] . "', '" .
-			mysqli_real_escape_string($link, $post['file1_original']) . "', " .
-			$post['file1_size'] . ", '" .
-			$post['file1_size_formatted'] . "', " .
-			$post['image1_width'] . ", " .
-			$post['image1_height'] . ", '" .
-			$post['thumb1'] . "', " .
-			$post['thumb1_width'] . ", " .
-			$post['thumb1_height'] . ", '" .
-			$post['file2'] . "', '" .
-			$post['file2_hex'] . "', '" .
-			mysqli_real_escape_string($link, $post['file2_original']) . "', " .
-			$post['file2_size'] . ", '" .
-			$post['file2_size_formatted'] . "', " .
-			$post['image2_width'] . ", " .
-			$post['image2_height'] . ", '" .
-			$post['thumb2'] . "', " .
-			$post['thumb2_width'] . ", " .
-			$post['thumb2_height'] . ", '" .
-			$post['file3'] . "', '" .
-			$post['file3_hex'] . "', '" .
-			mysqli_real_escape_string($link, $post['file3_original']) . "', " .
-			$post['file3_size'] . ", '" .
-			$post['file3_size_formatted'] . "', " .
-			$post['image3_width'] . ", " .
-			$post['image3_height'] . ", '" .
-			$post['thumb3'] . "', " .
-			$post['thumb3_width'] . ", " .
-			$post['thumb3_height'] . ", " .
-			$post['moderated'] . ", " .
-			$post['likes'] .
-		")");
+		) VALUES (
+			" . $post['parent'] . ",
+			" . time() . ",
+			" . time() . ",
+			'" . $_SERVER['REMOTE_ADDR'] . "',
+			'" . mysqli_real_escape_string($link, $post['name']) . "',
+			'" . mysqli_real_escape_string($link, $post['tripcode']) . "',
+			'" . mysqli_real_escape_string($link, $post['email']) . "',
+			'" . mysqli_real_escape_string($link, $post['nameblock']) . "',
+			'" . mysqli_real_escape_string($link, $post['subject']) . "',
+			'" . mysqli_real_escape_string($link, $post['message']) . "',
+			'" . mysqli_real_escape_string($link, $post['password']) . "',
+			'" . $post['file0'] . "',
+			'" . $post['file0_hex'] . "',
+			'" . mysqli_real_escape_string($link, $post['file0_original']) . "',
+			" . $post['file0_size'] . ",
+			'" . $post['file0_size_formatted'] . "',
+			" . $post['image0_width'] . ",
+			" . $post['image0_height'] . ",
+			'" . $post['thumb0'] . "',
+			" . $post['thumb0_width'] . ",
+			" . $post['thumb0_height'] . ",
+			'" . $post['file1'] . "',
+			'" . $post['file1_hex'] . "',
+			'" . mysqli_real_escape_string($link, $post['file1_original']) . "',
+			" . $post['file1_size'] . ",
+			'" . $post['file1_size_formatted'] . "',
+			" . $post['image1_width'] . ",
+			" . $post['image1_height'] . ",
+			'" . $post['thumb1'] . "',
+			" . $post['thumb1_width'] . ",
+			" . $post['thumb1_height'] . ",
+			'" . $post['file2'] . "',
+			'" . $post['file2_hex'] . "',
+			'" . mysqli_real_escape_string($link, $post['file2_original']) . "',
+			" . $post['file2_size'] . ",
+			'" . $post['file2_size_formatted'] . "',
+			" . $post['image2_width'] . ",
+			" . $post['image2_height'] . ",
+			'" . $post['thumb2'] . "',
+			" . $post['thumb2_width'] . ",
+			" . $post['thumb2_height'] . ",
+			'" . $post['file3'] . "',
+			'" . $post['file3_hex'] . "',
+			'" . mysqli_real_escape_string($link, $post['file3_original']) . "',
+			" . $post['file3_size'] . ",
+			'" . $post['file3_size_formatted'] . "',
+			" . $post['image3_width'] . ",
+			" . $post['image3_height'] . ",
+			'" . $post['thumb3'] . "',
+			" . $post['thumb3_width'] . ",
+			" . $post['thumb3_height'] . ",
+			" . $post['moderated'] . ",
+			" . $post['likes'] . ")");
 	return mysqli_insert_id($link);
 }
 
 function approvePostByID($id) {
 	global $link;
 	mysqli_query($link,
-		"UPDATE `" . TINYIB_DBPOSTS .
-		"` SET `moderated` = 1 WHERE `id` = " . $id . " LIMIT 1");
+		"UPDATE `" . TINYIB_DBPOSTS . "`
+		SET `moderated` = 1
+		WHERE `id` = " . $id . " LIMIT 1");
 }
 
 function stickyThreadByID($id, $setsticky) {
 	global $link;
 	mysqli_query($link,
-		"UPDATE `" . TINYIB_DBPOSTS .
-		"` SET `stickied` = '" . mysqli_real_escape_string($link, $setsticky) .
-		"' WHERE `id` = " . $id . " LIMIT 1");
+		"UPDATE `" . TINYIB_DBPOSTS . "`
+		SET `stickied` = '" . mysqli_real_escape_string($link, $setsticky) . "'
+		WHERE `id` = " . $id . " LIMIT 1");
 }
 
 function lockThreadByID($id, $setlocked) {
@@ -208,34 +209,34 @@ function lockThreadByID($id, $setlocked) {
 		$setlocked = '';
 	}
 	mysqli_query($link,
-		"UPDATE `" . TINYIB_DBPOSTS .
-		"` SET `email` = '" . mysqli_real_escape_string($link, $setlocked) .
-		"' WHERE `id` = " . $id . " LIMIT 1");
+		"UPDATE `" . TINYIB_DBPOSTS . "`
+		SET `email` = '" . mysqli_real_escape_string($link, $setlocked) . "'
+		WHERE `id` = " . $id . " LIMIT 1");
 }
 
 
 function bumpThreadByID($id) {
 	global $link;
 	mysqli_query($link,
-		"UPDATE `" . TINYIB_DBPOSTS .
-		"` SET `bumped` = " . time() .
-		" WHERE `id` = " . $id . " LIMIT 1");
+		"UPDATE `" . TINYIB_DBPOSTS . "`
+		SET `bumped` = " . time() . "
+		WHERE `id` = " . $id . " LIMIT 1");
 }
 
 function countThreads() {
 	global $link;
 	return mysqli_result(mysqli_query($link,
-		"SELECT COUNT(*) FROM `" . TINYIB_DBPOSTS .
-		"` WHERE `parent` = 0 AND `moderated` = 1"), 0, 0);
+		"SELECT COUNT(*) FROM `" . TINYIB_DBPOSTS . "`
+		WHERE `parent` = 0 AND `moderated` = 1"), 0, 0);
 }
 
 function allThreads() {
 	global $link;
 	$threads = array();
 	$result = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBPOSTS .
-		"` WHERE `parent` = 0 AND `moderated` = 1" .
-		" ORDER BY `stickied` DESC, `bumped` DESC");
+		"SELECT * FROM `" . TINYIB_DBPOSTS . "`
+		WHERE `parent` = 0 AND `moderated` = 1
+		ORDER BY `stickied` DESC, `bumped` DESC");
 	if ($result) {
 		while ($thread = mysqli_fetch_assoc($result)) {
 			$threads[] = $thread;
@@ -247,16 +248,16 @@ function allThreads() {
 function numRepliesToThreadByID($id) {
 	global $link;
 	return mysqli_result(mysqli_query($link,
-		"SELECT COUNT(*) FROM `" . TINYIB_DBPOSTS .
-		"` WHERE `parent` = " . $id . " AND `moderated` = 1"), 0, 0);
+		"SELECT COUNT(*) FROM `" . TINYIB_DBPOSTS . "`
+		WHERE `parent` = " . $id . " AND `moderated` = 1"), 0, 0);
 }
 
 function postsInThreadByID($id, $moderated_only = true) {
 	global $link;
 	$posts = array();
 	$result = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBPOSTS .
-		"` WHERE (`id` = " . $id . " OR `parent` = " . $id . ")" .
+		"SELECT * FROM `" . TINYIB_DBPOSTS . "`
+		WHERE (`id` = " . $id . " OR `parent` = " . $id . ")" .
 		($moderated_only ? " AND `moderated` = 1" : "") .
 		" ORDER BY `id` ASC");
 	if ($result) {
@@ -271,12 +272,13 @@ function postsByHex($hex) {
 	global $link;
 	$posts = array();
 	$result = mysqli_query($link,
-		"SELECT `id`, `parent` FROM `" . TINYIB_DBPOSTS .
-		"` WHERE (`file0_hex` = '" . mysqli_real_escape_string($link, $hex) .
-			"' OR `file1_hex` = '" . mysqli_real_escape_string($link, $hex) .
-			"' OR `file2_hex` = '" . mysqli_real_escape_string($link, $hex) .
-			"' OR `file3_hex` = '" . mysqli_real_escape_string($link, $hex) .
-			"') AND `moderated` = 1 LIMIT 1");
+		"SELECT `id`, `parent` FROM `" . TINYIB_DBPOSTS . "`
+		WHERE (
+			`file0_hex` = '" . mysqli_real_escape_string($link, $hex) . "'
+			OR `file1_hex` = '" . mysqli_real_escape_string($link, $hex) . "'
+			OR `file2_hex` = '" . mysqli_real_escape_string($link, $hex) . "'
+			OR `file3_hex` = '" . mysqli_real_escape_string($link, $hex) . "'
+		) AND `moderated` = 1 LIMIT 1");
 	if ($result) {
 		while ($post = mysqli_fetch_assoc($result)) {
 			$posts[] = $post;
@@ -289,9 +291,9 @@ function latestPosts($moderated = true) {
 	global $link;
 	$posts = array();
 	$result = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBPOSTS .
-		"` WHERE `moderated` = " . ($moderated ? '1' : '0') .
-		" ORDER BY `timestamp` DESC LIMIT 10");
+		"SELECT * FROM `" . TINYIB_DBPOSTS . "`
+		WHERE `moderated` = " . ($moderated ? '1' : '0') . "
+		ORDER BY `timestamp` DESC LIMIT 10");
 	if ($result) {
 		while ($post = mysqli_fetch_assoc($result)) {
 			$posts[] = $post;
@@ -307,8 +309,8 @@ function deletePostByID($id) {
 		if ($post['id'] != $id) {
 			deletePostImages($post);
 			mysqli_query($link,
-				"DELETE FROM `" . TINYIB_DBPOSTS .
-				"` WHERE `id` = " . $post['id'] . " LIMIT 1");
+				"DELETE FROM `" . TINYIB_DBPOSTS . "`
+				WHERE `id` = " . $post['id'] . " LIMIT 1");
 		} else {
 			$thispost = $post;
 		}
@@ -319,8 +321,8 @@ function deletePostByID($id) {
 		}
 		deletePostImages($thispost);
 		mysqli_query($link,
-			"DELETE FROM `" . TINYIB_DBPOSTS .
-			"` WHERE `id` = " . $thispost['id'] . " LIMIT 1");
+			"DELETE FROM `" . TINYIB_DBPOSTS . "`
+			WHERE `id` = " . $thispost['id'] . " LIMIT 1");
 	}
 }
 
@@ -331,8 +333,8 @@ function deleteImagesByImageID($post, $imgList) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
 			mysqli_query($link,
-				"UPDATE `" . TINYIB_DBPOSTS .
-				"` SET `file" . $index . "` = '',
+				"UPDATE `" . TINYIB_DBPOSTS . "`
+				SET `file" . $index . "` = '',
 					`file" . $index . "_hex` = '',
 					`file" . $index . "_original` = '',
 					`file" . $index . "_size` = 0,
@@ -347,21 +349,37 @@ function deleteImagesByImageID($post, $imgList) {
 	}
 }
 
+function hideImagesByImageID($post, $imgList) {
+	global $link;
+	deletePostImagesThumb($post, $imgList);
+	if ($imgList && (count($imgList) <= TINYIB_MAXIMUM_FILES) ) {
+		foreach ($imgList as $arrayIndex => $index) {
+			$index = intval(trim(basename($index)));
+			mysqli_query($link,
+				"UPDATE `" . TINYIB_DBPOSTS . "`
+				SET `thumb" . $index . "` = 'spoiler.png',
+					`thumb" . $index . "_width` = " . TINYIB_MAXW . ",
+					`thumb" . $index . "_height` = " . TINYIB_MAXW . "
+				WHERE id = " . $post['id']);
+		}
+	}
+}
+
 function editMessageInPostById($id, $newMessage) {
 	global $link;
 	mysqli_query($link,
-		"UPDATE `" . TINYIB_DBPOSTS .
-		"` SET `message` = '" . $newMessage .
-		"' WHERE `id` = " . $id . " LIMIT 1");
+		"UPDATE `" . TINYIB_DBPOSTS . "`
+		SET `message` = '" . $newMessage . "'
+		WHERE `id` = " . $id . " LIMIT 1");
 }
 
 function trimThreads() {
 	global $link;
 	if (TINYIB_MAXTHREADS > 0) {
 		$result = mysqli_query($link,
-			"SELECT `id` FROM `" . TINYIB_DBPOSTS .
-			"` WHERE `parent` = 0 AND `moderated` = 1" .
-			" ORDER BY `stickied` DESC, `bumped` DESC LIMIT " . TINYIB_MAXTHREADS . ", 10");
+			"SELECT `id` FROM `" . TINYIB_DBPOSTS . "`
+			WHERE `parent` = 0 AND `moderated` = 1
+			ORDER BY `stickied` DESC, `bumped` DESC LIMIT " . TINYIB_MAXTHREADS . ", 10");
 		if ($result) {
 			while ($post = mysqli_fetch_assoc($result)) {
 				deletePostByID($post['id']);
@@ -373,9 +391,9 @@ function trimThreads() {
 function lastPostByIP() {
 	global $link;
 	$replies = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBPOSTS .
-		"` WHERE `ip` = '" . $_SERVER['REMOTE_ADDR'] .
-		"' ORDER BY `id` DESC LIMIT 1");
+		"SELECT * FROM `" . TINYIB_DBPOSTS . "`
+		WHERE `ip` = '" . $_SERVER['REMOTE_ADDR'] . "'
+		ORDER BY `id` DESC LIMIT 1");
 	if ($replies) {
 		while ($post = mysqli_fetch_assoc($replies)) {
 			return $post;
@@ -386,32 +404,29 @@ function lastPostByIP() {
 function likePostByID($id, $ip) {
 	global $link;
 	$isAlreadyLiked = mysqli_result(mysqli_query($link,
-		"SELECT COUNT(*) FROM `" . TINYIB_DBLIKES .
-		"` WHERE `ip` = '" . $ip .
-			"' AND `board` = '" . TINYIB_BOARD .
-			"' AND `postnum` = " . $id), 0, 0);
+		"SELECT COUNT(*) FROM `" . TINYIB_DBLIKES . "`
+		WHERE `ip` = '" . $ip . "'
+			AND `board` = '" . TINYIB_BOARD . "'
+			AND `postnum` = " . $id), 0, 0);
 	if ($isAlreadyLiked) {
 		mysqli_query($link,
-			"DELETE FROM `" . TINYIB_DBLIKES .
-			"` WHERE `ip` = '" . $ip .
-				"' AND `board` = '" . TINYIB_BOARD .
-				"' AND postnum = " . $id);
+			"DELETE FROM `" . TINYIB_DBLIKES . "`
+			WHERE `ip` = '" . $ip . "'
+				AND `board` = '" . TINYIB_BOARD . "'
+				AND postnum = " . $id);
 	} else {
 		mysqli_query($link,
-			"INSERT INTO `" . TINYIB_DBLIKES .
-			"` (`ip`, `board`, `postnum`) VALUES ('" .
-				$ip . "', '" .
-				TINYIB_BOARD . "', " .
-				$id . ")");
+			"INSERT INTO `" . TINYIB_DBLIKES . "`
+			(`ip`, `board`, `postnum`)
+			VALUES ('" . $ip . "', '" . TINYIB_BOARD . "', " . $id . ")");
 	}
 	$countOfPostLikes = mysqli_result(mysqli_query($link,
-		"SELECT COUNT(*) FROM `" . TINYIB_DBLIKES .
-		"` WHERE `board` = '" . TINYIB_BOARD .
-			"' AND `postnum` = " . $id), 0, 0);
+		"SELECT COUNT(*) FROM `" . TINYIB_DBLIKES . "`
+		WHERE `board` = '" . TINYIB_BOARD . "' AND `postnum` = " . $id), 0, 0);
 	mysqli_query($link,
-		"UPDATE `" . TINYIB_DBPOSTS .
-		"` SET `likes` = " . $countOfPostLikes .
-		" WHERE `id` = " . $id);
+		"UPDATE `" . TINYIB_DBPOSTS . "`
+		SET `likes` = " . $countOfPostLikes . "
+		WHERE `id` = " . $id);
 	return array(!$isAlreadyLiked, $countOfPostLikes);
 }
 
@@ -419,8 +434,8 @@ function likePostByID($id, $ip) {
 function banByID($id) {
 	global $link;
 	$result = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBBANS .
-		"` WHERE `id` = '" . mysqli_real_escape_string($link, $id) . "' LIMIT 1");
+		"SELECT * FROM `" . TINYIB_DBBANS . "`
+		WHERE `id` = '" . mysqli_real_escape_string($link, $id) . "' LIMIT 1");
 	if ($result) {
 		while ($ban = mysqli_fetch_assoc($result)) {
 			return $ban;
@@ -431,8 +446,8 @@ function banByID($id) {
 function banByIP($ip) {
 	global $link;
 	$result = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBBANS .
-		"` WHERE `ip` = '" . mysqli_real_escape_string($link, $ip) . "' LIMIT 1");
+		"SELECT * FROM `" . TINYIB_DBBANS . "`
+		WHERE `ip` = '" . mysqli_real_escape_string($link, $ip) . "' LIMIT 1");
 	if ($result) {
 		while ($ban = mysqli_fetch_assoc($result)) {
 			return $ban;
@@ -444,8 +459,8 @@ function allBans() {
 	global $link;
 	$bans = array();
 	$result = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBBANS .
-		"` ORDER BY `timestamp` DESC");
+		"SELECT * FROM `" . TINYIB_DBBANS . "`
+		ORDER BY `timestamp` DESC");
 	if ($result) {
 		while ($ban = mysqli_fetch_assoc($result)) {
 			$bans[] = $ban;
@@ -457,27 +472,26 @@ function allBans() {
 function insertBan($ban) {
 	global $link;
 	mysqli_query($link,
-		"INSERT INTO `" . TINYIB_DBBANS .
-		"` (`ip`, `timestamp`, `expire`, `reason`)" .
-		" VALUES ('" .
-			mysqli_real_escape_string($link, $ban['ip']) . "', '" .
-			time() . "', '" .
-			mysqli_real_escape_string($link, $ban['expire']) . "', '" .
-			mysqli_real_escape_string($link, $ban['reason']) .
-		"')");
+		"INSERT INTO `" . TINYIB_DBBANS . "`
+		(`ip`, `timestamp`, `expire`, `reason`)" . "
+		VALUES (
+			'" . mysqli_real_escape_string($link, $ban['ip']) . "',
+			'" . time() . "',
+			'" . mysqli_real_escape_string($link, $ban['expire']) . "',
+			'" . mysqli_real_escape_string($link, $ban['reason']) . "')");
 	return mysqli_insert_id($link);
 }
 
 function clearExpiredBans() {
 	global $link;
 	$result = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBBANS .
-		"` WHERE `expire` > 0 AND `expire` <= " . time());
+		"SELECT * FROM `" . TINYIB_DBBANS . "`
+		WHERE `expire` > 0 AND `expire` <= " . time());
 	if ($result) {
 		while ($ban = mysqli_fetch_assoc($result)) {
 			mysqli_query($link,
-				"DELETE FROM `" . TINYIB_DBBANS .
-				"` WHERE `id` = " . $ban['id'] . " LIMIT 1");
+				"DELETE FROM `" . TINYIB_DBBANS . "`
+				WHERE `id` = " . $ban['id'] . " LIMIT 1");
 		}
 	}
 }
@@ -485,6 +499,6 @@ function clearExpiredBans() {
 function deleteBanByID($id) {
 	global $link;
 	mysqli_query($link,
-		"DELETE FROM `" . TINYIB_DBBANS .
-		"` WHERE `id` = " . mysqli_real_escape_string($link, $id) . " LIMIT 1");
+		"DELETE FROM `" . TINYIB_DBBANS . "`
+		WHERE `id` = " . mysqli_real_escape_string($link, $id) . " LIMIT 1");
 }
