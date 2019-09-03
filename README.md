@@ -42,7 +42,7 @@ This fork features:
  - Threads can be locked for posting.
  - Administrator and Moderators can selectively delete attached files.
  - Administrator and Moderators can edit message text in posts.
- - Thumbnail for attached files can be replaced by filler image.
+ - Thumbnail for attached files can be replaced by spoiler.png file.
  - Catalog page `catalog.html`.
 
 Installing

@@ -385,6 +385,29 @@ function deleteImagesByImageID($post, $imgList) {
 	}
 }
 
+function hideImagesByImageID($post, $imgList) {
+	deletePostImagesThumb($post, $imgList);
+	if ($imgList && (count($imgList) <= TINYIB_MAXIMUM_FILES) ) {
+		foreach ($imgList as $arrayIndex => $index) {
+			$idx10 = intval(trim(basename($index))) * 10;
+			$rows = $GLOBALS['db']->selectWhere(
+				POSTS_FILE,
+				new SimpleWhereClause(POST_ID, '=', $post['id'], INTEGER_COMPARISON),
+				1);
+			if (count($rows) == 0) {
+				continue;
+			}
+			foreach ($rows as $post_) {
+				$post_[POST_THUMB0 + $idx10] = 'spoiler.png';
+				$post_[POST_THUMB0_WIDTH + $idx10] = TINYIB_MAXW;
+				$post_[POST_THUMB0_HEIGHT + $idx10] = TINYIB_MAXW;
+				$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post_);
+			}
+		}
+	}
+}
+
+
 function editMessageInPostById($id, $newMessage) {
 	$rows = $GLOBALS['db']->selectWhere(
 		POSTS_FILE,

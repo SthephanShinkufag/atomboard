@@ -354,7 +354,7 @@ function deletePostImages($post, $imgList = array()) {
 			}
 			$thumbName = $post['thumb' . $index];
 			if ($thumbName != '' && $thumbName != 'spoiler.png') {
-				@unlink('thumb/' . $post['thumb' . $index]);
+				@unlink('thumb/' . $thumbName);
 			}
 		}
 	} else {
@@ -364,7 +364,7 @@ function deletePostImages($post, $imgList = array()) {
 			}
 			$thumbName = $post['thumb' . $index];
 			if ($thumbName != '' && $thumbName != 'spoiler.png') {
-				@unlink('thumb/' . $post['thumb' . $index]);
+				@unlink('thumb/' . $thumbName);
 			}
 		}
 	}
@@ -374,8 +374,9 @@ function deletePostImagesThumb($post, $imgList) {
 	if ($imgList && (count($imgList) <= TINYIB_MAXIMUM_FILES)) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
-			if ($post['thumb' . $index] != '') {
-				@unlink('thumb/' . $post['thumb' . $index]);
+			$thumbName = $post['thumb' . $index];
+			if ($thumbName != '' && $thumbName != 'spoiler.png') {
+				@unlink('thumb/' . $thumbName);
 			}
 		}
 	}
