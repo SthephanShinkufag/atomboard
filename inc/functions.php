@@ -352,7 +352,8 @@ function deletePostImages($post, $imgList = array()) {
 			if (!isEmbed($post['file' . $index . '_hex']) && $post['file' . $index] != '') {
 				@unlink('src/' . $post['file' . $index]);
 			}
-			if ($post['thumb' . $index] != '') {
+			$thumbName = $post['thumb' . $index];
+			if ($thumbName != '' && $thumbName != 'spoiler.png') {
 				@unlink('thumb/' . $post['thumb' . $index]);
 			}
 		}
@@ -361,20 +362,20 @@ function deletePostImages($post, $imgList = array()) {
 			if (!isEmbed($post['file' . $index . '_hex']) && $post['file' . $index] != '') {
 				@unlink('src/' . $post['file' . $index]);
 			}
-			if ($post['thumb' . $index] != '') {
+			$thumbName = $post['thumb' . $index];
+			if ($thumbName != '' && $thumbName != 'spoiler.png') {
 				@unlink('thumb/' . $post['thumb' . $index]);
 			}
 		}
 	}
 }
 
-function replaceImageThumbByFiller($post, $imgList) {
+function deletePostImagesThumb($post, $imgList) {
 	if ($imgList && (count($imgList) <= TINYIB_MAXIMUM_FILES)) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
 			if ($post['thumb' . $index] != '') {
 				@unlink('thumb/' . $post['thumb' . $index]);
-				@copy('filler.png', 'thumb/' . $post['thumb' . $index]);
 			}
 		}
 	}

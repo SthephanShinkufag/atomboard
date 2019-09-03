@@ -348,12 +348,15 @@ function deleteImagesByImageID($post, $imgList) {
 }
 
 function hideImagesByImageID($post, $imgList) {
-	replaceImageThumbByFiller($post, $imgList);
+	deletePostImagesThumb($post, $imgList);
 	if ($imgList && (count($imgList) <= TINYIB_MAXIMUM_FILES) ) {
 		foreach ($imgList as $arrayIndex => $index) {
 		$index = intval(trim(basename($index)));
-		pdoQuery("UPDATE " . TINYIB_DBPOSTS . " SET thumb" . $index . "_width = ?, thumb" . $index .
-			"_height = ? WHERE id = ?", array('230', '230', $post['id']));
+		pdoQuery("UPDATE " . TINYIB_DBPOSTS .
+		" SET thumb" . $index . " = ?,
+			thumb" . $index . "_width = ?,
+			thumb" . $index . "_height = ?
+		WHERE id = ?", array('spoiler.png', TINYIB_MAXW, TINYIB_MAXW, $post['id']));
 	}
   }
 }
