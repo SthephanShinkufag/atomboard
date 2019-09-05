@@ -89,6 +89,18 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		PRIMARY KEY	("id")
 	);
 	CREATE INDEX ON "' . TINYIB_DBLIKES . '"("ip");';
+
+	$modlog_sql = 'CREATE TABLE "' . TINYIB_DBMODLOG . '" (
+		"id" bigserial NOT NULL,
+		"timestamp" integer NOT NULL,
+		"boardname" varchar(255) NOT NULL,
+		"username" varchar(75) NOT NULL,
+		"action" text NOT NULL,
+		"color" varchar(75) NOT NULL,
+		"private" smallint NOT NULL default \'1\',
+	);
+	CREATE INDEX ON "' . TINYIB_DBMODLOG . '"("boardname");';
+
 } else {
 	$posts_sql = "CREATE TABLE `" . TINYIB_DBPOSTS . "` (
 		`id` mediumint(7) unsigned NOT NULL auto_increment,
@@ -169,6 +181,17 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		`board` varchar(16) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 		`postnum` mediumint(7) unsigned NOT NULL,
 		`islike` tinyint(1) NOT NULL default '1',
+		PRIMARY KEY	(`id`)
+	)";
+
+	$modlog_sql = "CREATE TABLE `" . TINYIB_DBMODLOG . "` (
+		`id` mediumint(7) unsigned NOT NULL auto_increment,
+		`timestamp` int(20) NOT NULL,
+		`boardname` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`username` varchar(75) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`action` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`color` varchar(75) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`private` tinyint(1) NOT NULL default '1',
 		PRIMARY KEY	(`id`)
 	)";
 }
@@ -461,20 +484,28 @@ function checkMessageSize() {
 }
 
 function manageCheckLogIn() {
+	global $tinyib_moderators;
 	$loggedIn = false;
 	$isAdmin = false;
 	if (isset($_POST['managepassword'])) {
-		if ($_POST['managepassword'] === TINYIB_ADMINPASS) {
+		$providedPassword = substr($_POST['managepassword'],0,256);
+		if ($providedPassword != '' && $providedPassword === TINYIB_ADMINPASS) {
 			$_SESSION['tinyib'] = TINYIB_ADMINPASS;
-		} elseif (TINYIB_MODPASS != '' && $_POST['managepassword'] === TINYIB_MODPASS) {
-			$_SESSION['tinyib'] = TINYIB_MODPASS;
+			$_SESSION['tinyib_user'] = 'admin';
+		} elseif ($providedPassword != '' && count($tinyib_moderators) != 0 && $modname=array_search($providedPassword,$tinyib_moderators,true)) {
+			$_SESSION['tinyib'] = $tinyib_moderators[$modname];
+			$_SESSION['tinyib_user'] = $modname;
+			modLog('Login','1','BlueViolet');
+		} else {
+			// uncomment if you want a lot of "failed login" records in modLog
+			// modLog('Failed login attempt','1','Orange');
 		}
 	}
 	if (isset($_SESSION['tinyib'])) {
 		if ($_SESSION['tinyib'] === TINYIB_ADMINPASS) {
 			$loggedIn = true;
 			$isAdmin = true;
-		} elseif (TINYIB_MODPASS != '' && $_SESSION['tinyib'] === TINYIB_MODPASS) {
+		} elseif (count($tinyib_moderators) != 0 && array_search($_SESSION['tinyib'],$tinyib_moderators,true)) {
 			$loggedIn = true;
 		}
 	}

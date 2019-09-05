@@ -29,8 +29,19 @@ define('TINYIB_HTML_LEFTSIDE', '
 /* ==[ Administrator/moderator credentials ]=============================================================== */
 // Administrators have full access to the board
 define('TINYIB_ADMINPASS', '');
-// Moderators only have access to delete (and moderate if TINYIB_REQMOD is set) posts ['' to disable]
-define('TINYIB_MODPASS', '');
+// Moderators only have access to delete (and moderate if TINYIB_REQMOD is set) posts
+// Moderators disabled by default. Uncomment array and set you own list of Mods.
+// 'ModeratorName' => 'Password'
+/*
+$tinyib_moderators = array(
+	'Mod1'	=> '',
+	'Mod2'  => '',
+	'Mod3' => ''
+);
+*/
+$tinyib_moderators = array();
+// To generate public modlog.html
+define('TINYIB_MODLOG', false);
 // Require moderation before displaying posts:
 // files / all (see README for instructions, only MySQL is supported)  ['' to disable]
 define('TINYIB_REQMOD', '');
@@ -46,6 +57,9 @@ define('TINYIB_DBMIGRATE', false);
 define('TINYIB_DBBANS', 'bans');
 // Likes table name in database (use the same likes table across boards for global likes)
 define('TINYIB_DBLIKES', 'likes');
+// Modlog table name in database (use the same modlog table across boards for global modlog)
+// define('TINYIB_DBMODLOG', 'modlog');
+define('TINYIB_DBMODLOG', TINYIB_BOARD . '_modlog');
 // Posts table name in database
 define('TINYIB_DBPOSTS', TINYIB_BOARD . '_posts');
 

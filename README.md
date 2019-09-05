@@ -23,27 +23,32 @@ TinyIB settings is able to allow new threads without requiring an image, or even
    - Moderators are only able to sticky threads, delete posts, and approve posts when necessary. (See `TINYIB_REQMOD`)
    - Ban offensive/abusive posters across all boards.
    - Post using raw HTML.
-   - Upgrade automatically when installed via git. (Tested on Linux only)
 
 This fork features:
- - Markdown text formatting: bbcode (multiline text and nested tags), wakabamark.
- - Markup buttons under the text area in postform.
- - "Quote text" button that inserts selected text into the textarea with `>` symbols.
- - Named links formatting, like on github: `[TinyIB](https://github.com/SthephanShinkufag/TinyIB/)`
- - Upload, view and expand WEBM and MP4 videos without instaled `mediainfo` and `ffmpegthumbnailer`. Videos are injected right in page without generated thumbnails.
- - Convenient css support for mobile devices.
- - Custom default post names.
- - Truncating of long posts by size in bytes and by number of lines.
- - Admin: posting with red name if Admin is logged in.
- - "Sage" indicator in posts.
- - Post likes system.
- - DB schema changed!
- - You can upload 4 files per post.
- - Threads can be locked for posting.
- - Administrator and Moderators can selectively delete attached files.
- - Administrator and Moderators can edit message text in posts.
- - Thumbnail for attached files can be replaced by spoiler.png file.
+ - Text formatting:
+   - Markup buttons under the text area in postform.
+   - bbcode formatting (multiline text and nested tags), wakabamark.
+   - "Quote text" button that inserts selected text into the textarea with `>` symbols.
+   - Named links formatting, like on github: `[TinyIB](https://github.com/SthephanShinkufag/TinyIB/)`
+ - Administration:
+   - You can set list of Moderators.
+   - Moderation log in `modlog.html`.
+   - Admins and Mods can edit message text in posts.
+   - Admins and Mods can selectively delete attached files.
+   - Admins and Mods can selectively replace thumbnails of attached files by `spoiler.png` file.
+   - Posting with red name if Admin is logged in.
+ - Post files:
+   - You can upload 4 files per post.
+   - Upload, view and expand WEBM and MP4 videos without instaled `mediainfo` and `ffmpegthumbnailer`. Videos are injected right in page without generated thumbnails.
+ - Posts and threads:
+   - Added likes to posts.
+   - "Sage" indicator in posts.
+   - Threads can be locked for posting.
+   - Truncating of long posts by size in bytes and by number of lines.
+   - Indication of replies to posts.
+   - Custom default posts names.
  - Catalog page `catalog.html`.
+ - Convenient css support for mobile devices.
 
 Installing
 ------------
@@ -103,7 +108,7 @@ Updating
       - Visit [GitHub](https://github.com/SthephanShinkufag/TinyIB) and review the changes made in the update.
       - Ensure the update does not interfere with your changes.
 
-**Database structure was last modified on *19th Jun 2019*.**
+**Database structure was last modified on *04th Sep 2019*.**
 
 Migrating
 ------------

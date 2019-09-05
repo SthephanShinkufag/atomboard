@@ -163,9 +163,12 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				return '<code>' . $m . '</code>';
 			}, $msg);
 			// Post links
+			$replyedTo = array();
 			$msg = preg_replace_callback('/&gt;&gt;([0-9]+)/', function($matches) {
 				$post = postByID($matches[1]);
 				if ($post) {
+					global $replyedTo;
+					$replyedTo[] = intval($matches[1]);
 					return '<a href="/' . TINYIB_BOARD . '/res/' .
 						($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']) .
 						'.html#' . $matches[1] . '">' . $matches[0] . '</a>';
@@ -213,7 +216,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			if (TINYIB_WORDBREAK > 0) {
 				$msg = finishWordBreak($msg);
 			}
-			$post['message'] = $msg;
+			$post['message'] = $msg . '<br>';
 		}
 	}
 	if ($rawPost || !in_array('password', $hideFields)) {
@@ -443,6 +446,20 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	$post['likes'] = 0;
 	$post['id'] = insertPost($post);
 
+	if (sizeof($replyedTo) != 0) {
+		$replyedTo = array_unique($replyedTo);
+		foreach ($replyedTo as $arrayIndex => $postID) {
+			$OriginalPost = array();
+			$newMessage = '';
+			$OriginalPost = postByID($postID);
+			$newMessage = $OriginalPost['message'];
+			$newMessage .= ' &iexcl;&iexcl;' .
+				($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']) .
+				'&cent;&cent;' . $post['id'];
+			editMessageInPostById($postID, $newMessage);
+		}
+	}
+
 	if ($post['moderated'] == '1') {
 		if (TINYIB_ALWAYSNOKO || strtolower($post['email']) == 'noko') {
 			$redirect = 'res/' . ($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']) .
@@ -533,6 +550,19 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				}
 				$onload = manageOnLoad('bans');
 				$text .= manageBanForm() . manageBansTable();
+			} elseif (isset($_GET['modlog'])) {
+				$fromtime = 0;
+				$totime = 0;
+				if(isset($_POST['from']) && isset($_POST['to'])) {
+					if (($fromtime = strtotime($_POST['from'])) === false ||
+						($totime = strtotime($_POST['to'])) === false
+					) {
+						fancyDie('Wrong time format. Use yyyy-mm-dd format.');
+					}
+					$fromtime = intval(strtotime($_POST['from']));
+					$totime = intval(strtotime($_POST['to']));
+				}
+				$text .= generateModLogForm() . generateModLogTable('all', $fromtime, $totime);
 			} elseif (isset($_GET['update'])) {
 				if (is_dir('.git')) {
 					$gitOutput = shell_exec('git pull 2>&1');
@@ -807,6 +837,10 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				rebuildIndexes();
 				if ($post['parent'] != TINYIB_NEWTHREAD) {
 					rebuildThread($post['parent']);
+					modLog('Post No. ' . $post['id'] . ' in thread No. ' .
+						$post['parent'] . ' deleted.', '0', 'Black');
+				} elseif($post['parent'] == TINYIB_NEWTHREAD) {
+					modLog('Thread No.' . $post['id'] . ' deleted.', '0', 'Black');
 				}
 				$text .= manageInfo('Post No.' . $post['id'] . ' deleted.');
 			} else {
@@ -834,7 +868,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 					fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 				}
 			}
-		} elseif (isset($_GET['editpost']) && isset($_POST['message']) ) {
+		} elseif (isset($_GET['editpost']) && isset($_POST['message'])) {
 			$post = postByID($_GET['editpost']);
 			$newMessage = $_POST['message'] . '<br><br><span style="color: purple;">Message edited: ' .
 				(date('d.m.y D H:i:s', time())) . '</span>';
@@ -908,6 +942,9 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		} elseif (isset($_GET['logout'])) {
 			$_SESSION['tinyib'] = '';
 			session_destroy();
+			if (!$isAdmin) {
+				modLog('Logout', '1', 'BlueViolet');
+			};
 			die('<meta http-equiv="refresh" content="0;url=' . $returnlink . '?manage">');
 		}
 		if ($text == '') {
