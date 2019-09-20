@@ -417,12 +417,14 @@ function buildPost($post, $res, $isModPanel = false) {
 	}
 
 	// Make >>backlinks for replies to posts
+	/*
 	$message = preg_replace_callback('/&iexcl;&iexcl;([0-9]+)/', function($matches) {
 		return '<a href="/' . TINYIB_BOARD . '/res/' . $matches[1] . '.html#';
 	}, $message);
 	$message = preg_replace_callback('/&cent;&cent;([0-9]+)/', function($matches) {
 		return $matches[1] . '">' . ' &gt;&gt;' . $matches[1] . '</a>';
 	}, $message);
+	*/
 
 	// Start post building
 	$omitted = $post['omitted'];
@@ -941,6 +943,14 @@ function buildCatalogPage() {
 	$OPposts = allThreads();
 	foreach ($OPposts as $post) {
 		$numOfReplies = numRepliesToThreadByID($post['id']);
+		/*
+		$post['message'] = preg_replace_callback('/&iexcl;&iexcl;([0-9]+)/', function($matches) {
+			return '';
+		}, $post['message']);
+		$post['message'] = preg_replace_callback('/&cent;&cent;([0-9]+)/', function($matches) {
+			return '';
+		}, $post['message']);
+		*/
 		if (function_exists('mb_substr') && extension_loaded('mbstring')) {
 			$OPpostMessage = tidy_repair_string(
 				mb_substr($post['message'], 0, 160, 'UTF-8'),

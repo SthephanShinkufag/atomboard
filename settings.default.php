@@ -163,7 +163,7 @@ define('TINYIB_NOFILEOK', false);
 define('TINYIB_FILE_ALLOW_DUPLICATE', false);
 // Animate gif thumbnails
 // The following only apply when TINYIB_THUMBNAIL is set to 'imagemagick'
-define('TINYIB_FILE_ANIM_GIF_THUMB', true);
+define('TINYIB_FILE_ANIM_GIF_THUMB', false);
 // Thumbnail size - new thread
 define('TINYIB_MAXWOP', 230); // Width
 define('TINYIB_MAXHOP', 230); // Height

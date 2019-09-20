@@ -45,7 +45,6 @@ This fork features:
    - "Sage" indicator in posts.
    - Threads can be locked for posting.
    - Truncating of long posts by size in bytes and by number of lines.
-   - Indication of replies to posts.
    - Custom default posts names.
  - Catalog page `catalog.html`.
  - Convenient css support for mobile devices.
