@@ -525,7 +525,7 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 					</td>');
 	}
 	// Build page's body
-	return pageHeader() . '<body>' . pageWrapper(!$isOnPage) . '
+	return pageHeader() . '<body class="tinyib">' . pageWrapper(!$isOnPage) . '
 		<div class="logo">
 			' . TINYIB_LOGO . TINYIB_BOARDDESC . '
 		</div>
