@@ -589,6 +589,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			<b>.git</b> folder.
 		</p>';
 				}
+			// Flatfile to MySQLi migration
 			} elseif (isset($_GET['dbmigrate'])) {
 				if (!TINYIB_DBMIGRATE) {
 					fancyDie('settings.php: Set TINYIB_DBMIGRATE to true to use this feature.');

@@ -103,7 +103,6 @@ if (!$result->fetchArray()) {
 	)");
 }
 
-
 // Create the modlog table if it does not exist
 $result = $db->query(
 	"SELECT name FROM sqlite_master" .
@@ -119,7 +118,6 @@ if (!$result->fetchArray()) {
 		private INTEGER NOT NULL DEFAULT '1'
 	)");
 }
-
 
 // Add stickied column if it isn't present
 @$db->exec(

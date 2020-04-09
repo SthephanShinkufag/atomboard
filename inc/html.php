@@ -1010,11 +1010,13 @@ function createCatalog() {
 }
 
 function generateModLogForm() {
+	$periodStartDate = isset($_POST['from']) ? $_POST['from'] : date("Y-m-d", strtotime("-2 day"));
+	$periodEndDate = isset($_POST['to']) ? $_POST['to'] : date("Y-m-d", strtotime("+1 day"));
 	return '<form method="post" action="?manage&modlog">
 			<span>From:</span>
-			<input name="from" type="date" value="' . date("Y-m-d", strtotime("-2 day")) . '">
+			<input name="from" type="date" value="' . $periodStartDate . '">
 			<span>To: </span>
-			<input name="to" type="date" value="' . date("Y-m-d", strtotime("+1 day")) . '">&nbsp;
+			<input name="to" type="date" value="' . $periodEndDate . '">&nbsp;
 			<input type="submit" value="Show records" class="managebutton">
 		</form><br><br>';
 }

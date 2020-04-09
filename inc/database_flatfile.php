@@ -76,6 +76,16 @@ define('LIKES_BOARD', 2);
 define('LIKES_POSTNUM', 3);
 define('LIKES_ISLIKE', 4);
 
+# Modlog Structure
+define('MODLOG_FILE', '.modlog');
+define('MODLOG_ID', 0);
+define('MODLOG_TIMESTAMP', 1);
+define('MODLOG_BOARDNAME', 2);
+define('MODLOG_USERNAME', 3);
+define('MODLOG_ACTION', 4);
+define('MODLOG_COLOR', 5);
+define('MODLOG_PRIVATE', 6);
+
 require_once 'flatfile/flatfile.php';
 $db = new Flatfile();
 $db->datadir = 'inc/flatfile/';
@@ -505,12 +515,12 @@ function allBans() {
 function convertBansToSQLStyle($bans, $singleban = false) {
 	$newbans = array();
 	foreach ($bans as $oldban) {
-		$ban = array();
-		$ban['id'] = $oldban[BAN_ID];
-		$ban['ip'] = $oldban[BAN_IP];
-		$ban['timestamp'] = $oldban[BAN_TIMESTAMP];
-		$ban['expire'] = $oldban[BAN_EXPIRE];
-		$ban['reason'] = $oldban[BAN_REASON];
+		$ban = array(
+			'id' => $oldban[BAN_ID],
+			'ip' => $oldban[BAN_IP],
+			'timestamp' => $oldban[BAN_TIMESTAMP],
+			'expire' => $oldban[BAN_EXPIRE],
+			'reason' => $oldban[BAN_REASON]);
 		if ($singleban) {
 			return $ban;
 		}
@@ -543,7 +553,79 @@ function deleteBanByID($id) {
 	$GLOBALS['db']->deleteWhere(BANS_FILE, new SimpleWhereClause(BAN_ID, '=', $id, INTEGER_COMPARISON));
 }
 
-# Like functions
+
+function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
+	$modLogs = array();
+	$rows = array();
+	// If we need a modlog for the admin panel with all public+private records
+	if($private === '1') {
+		if($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
+			$rows = $GLOBALS['db']->selectWhere(
+				MODLOG_FILE,
+				new SimpleWhereClause(MODLOG_BOARDNAME, '=', TINYIB_BOARD, STRING_COMPARISON),
+				100,
+				new OrderBy(MODLOG_TIMESTAMP, DESCENDING, INTEGER_COMPARISON));
+			foreach ($rows as $row) {
+				$modLogs[] = array(
+					'timestamp' => $row[MODLOG_TIMESTAMP],
+					'username' => $row[MODLOG_USERNAME],
+					'action' => $row[MODLOG_ACTION],
+					'color' => $row[MODLOG_COLOR]);
+			}
+		} elseif ($periodEndDate !== 0 && $periodStartDate !== 0) { // If the date range is set
+			$compClause = new AndWhereClause();
+			$compClause->add(new SimpleWhereClause(MODLOG_BOARDNAME, '=', TINYIB_BOARD, STRING_COMPARISON));
+			$compClause->add(new SimpleWhereClause(MODLOG_TIMESTAMP, '>=', $periodStartDate,
+				INTEGER_COMPARISON));
+			$compClause->add(new SimpleWhereClause(MODLOG_TIMESTAMP, '<=', $periodEndDate,
+				INTEGER_COMPARISON));
+			$rows = $GLOBALS['db']->selectWhere(
+				MODLOG_FILE,
+				$compClause,
+				-1,
+				new OrderBy(MODLOG_TIMESTAMP, DESCENDING, INTEGER_COMPARISON));
+			foreach ($rows as $row) {
+				$modLogs[] = array(
+					'timestamp' => $row[MODLOG_TIMESTAMP],
+					'username' => $row[MODLOG_USERNAME],
+					'action' => $row[MODLOG_ACTION],
+					'color' => $row[MODLOG_COLOR]);
+			}
+		}
+	// If we need only public records
+	} elseif ($private === '0') {
+		$compClause = new AndWhereClause();
+		$compClause->add(new SimpleWhereClause(MODLOG_BOARDNAME, '=', TINYIB_BOARD, STRING_COMPARISON));
+		$compClause->add(new SimpleWhereClause(MODLOG_PRIVATE, '=', '0', INTEGER_COMPARISON));
+		$rows = $GLOBALS['db']->selectWhere(
+			MODLOG_FILE,
+			$compClause,
+			100,
+			new OrderBy(MODLOG_TIMESTAMP, DESCENDING, INTEGER_COMPARISON));
+		foreach ($rows as $row) {
+			$modLogs[] = array(
+				'timestamp' => $row[MODLOG_TIMESTAMP],
+				'action' => $row[MODLOG_ACTION]);
+		}
+	}
+	return $modLogs;
+}
+
+function modLog($action, $private = '1', $color = 'Black') {
+	// modLog('Text to show in modlog', '[1, 0]', 'Color');
+	// '[1, 0]': 1 = Private record. 0 = Public record.
+	// 'Color': Choose what to put in style="color: " for this record
+	$row = array();
+	$row[MODLOG_ID] = '0';
+	$row[MODLOG_TIMESTAMP] = time();
+	$row[MODLOG_BOARDNAME] = TINYIB_BOARD;
+	$row[MODLOG_USERNAME] = isset($_SESSION['tinyib_user']) ? $_SESSION['tinyib_user'] : 'UNKNOWN';
+	$row[MODLOG_ACTION] = $action;
+	$row[MODLOG_COLOR] = $color;
+	$row[MODLOG_PRIVATE] = $private;
+	return $GLOBALS['db']->insertWithAutoId(MODLOG_FILE, MODLOG_ID, $row);
+}
+
 function allLikes() {
 	$rows = $GLOBALS['db']->selectWhere(
 		LIKES_FILE,
@@ -556,13 +638,12 @@ function allLikes() {
 function convertLikesToSQLStyle($likes) {
 	$newlikes = array();
 	foreach ($likes as $oldlike) {
-		$like = array();
-		$like['id'] = $oldlike[LIKES_ID];
-		$like['ip'] = $oldlike[LIKES_IP];
-		$like['board'] = $oldlike[LIKES_BOARD];
-		$like['postnum'] = $oldlike[LIKES_POSTNUM];
-		$like['islike'] = $oldlike[LIKES_ISLIKE];
-		$newlikes[] = $like;
+		$newlikes[] = array(
+			'id' => $oldlike[LIKES_ID],
+			'ip' => $oldlike[LIKES_IP],
+			'board' => $oldlike[LIKES_BOARD],
+			'postnum' => $oldlike[LIKES_POSTNUM],
+			'islike' => $oldlike[LIKES_ISLIKE]);
 	}
 	return $newlikes;
 }
