@@ -102,6 +102,22 @@ if (sqlite_num_rows($result) == 0) {
 	)");
 }
 
+// Create the modlog table if it does not exist
+$result = sqlite_query($db,
+	"SELECT name FROM sqlite_master" .
+	" WHERE type='table' AND name='" . TINYIB_DBMODLOG . "'");
+if (sqlite_num_rows($result) == 0) {
+	sqlite_query($db, "CREATE TABLE " . TINYIB_DBMODLOG . " (
+		id INTEGER PRIMARY KEY,
+		timestamp TIMESTAMP NOT NULL,
+		boardname TEXT NOT NULL,
+		username TEXT NOT NULL,
+		action TEXT NOT NULL,
+		color TEXT NOT NULL,
+		private INTEGER NOT NULL DEFAULT '1'
+	)");
+}
+
 // Add stickied column if it isn't present
 sqlite_query($db,
 	"ALTER TABLE " . TINYIB_DBPOSTS . "
@@ -258,7 +274,6 @@ function lockThreadByID($id, $setlocked) {
 		SET email = '" . sqlite_escape_string($setlocked) . "'
 		WHERE id = " . $id);
 }
-
 
 function bumpThreadByID($id) {
 	sqlite_query($GLOBALS["db"],
@@ -505,4 +520,59 @@ function deleteBanByID($id) {
 	sqlite_query($GLOBALS["db"],
 		"DELETE FROM " . TINYIB_DBBANS . "
 		WHERE id = " . sqlite_escape_string($id));
+}
+
+function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
+	$modLogs = array();
+	// If we need a modlog for the admin panel with all public+private records
+	if($private === '1') {
+		if($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
+			$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
+				"SELECT timestamp, username, action, color FROM " . TINYIB_DBMODLOG . "
+				WHERE boardname = '" . TINYIB_BOARD . "'
+				ORDER BY timestamp DESC LIMIT 100"));
+			foreach ($result as $row) {
+				$modLogs[] = $row;
+			}
+		} elseif ($periodEndDate !== 0 && $periodStartDate !== 0) { // If the date range is set
+			$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
+				"SELECT timestamp, username, action, color FROM " . TINYIB_DBMODLOG . "
+				WHERE boardname = '" . TINYIB_BOARD . "'
+					AND timestamp >= " . $periodStartDate . "
+					AND timestamp <= " . $periodEndDate . "
+				ORDER BY timestamp DESC"));
+			foreach ($result as $row) {
+				$modLogs[] = $row;
+			}
+		}
+	// If we need only public records
+	} elseif ($private === '0') {
+		$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
+			"SELECT timestamp, action FROM `" . TINYIB_DBMODLOG . "`
+			WHERE boardname = '" . TINYIB_BOARD . "'
+				AND private = '0'
+			ORDER BY timestamp DESC LIMIT 100"));
+		foreach ($result as $row) {
+			$modLogs[] = $row;
+		}
+	}
+	return $modLogs;
+}
+
+function modLog($action, $private = '1', $color = 'Black') {
+	// modLog('Text to show in modlog', '[1, 0]', 'Color');
+	// '[1, 0]': 1 = Private record. 0 = Public record.
+	// 'Color': Choose what to put in style="color: " for this record
+	$userName = isset($_SESSION['tinyib_user']) ? $_SESSION['tinyib_user'] : 'UNKNOWN';
+	sqlite_fetch_all(sqlite_query($GLOBALS["db"],
+		"INSERT INTO " . TINYIB_DBMODLOG . "
+		(timestamp, boardname, username, action, color, private)
+		VALUES (
+			" . time() . ",
+			'" . TINYIB_BOARD . "',
+			'" . sqlite_escape_string($userName) . "',
+			'" . sqlite_escape_string($action) . "',
+			'" . $color . "',
+			'" . $private . "'
+		)"));
 }

@@ -36,6 +36,11 @@ if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . TINYIB_DBLIKES . 
 	mysqli_query($link, $likes_sql);
 }
 
+// Create the modlog table if it does not exist
+if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . TINYIB_DBMODLOG . "'")) == 0) {
+	mysqli_query($link, $modlog_sql);
+}
+
 # Utililty
 function mysqli_result($res, $row, $field = 0) {
 	$res->data_seek($row);
@@ -214,7 +219,6 @@ function lockThreadByID($id, $setlocked) {
 		SET `email` = '" . mysqli_real_escape_string($link, $setlocked) . "'
 		WHERE `id` = " . $id . " LIMIT 1");
 }
-
 
 function bumpThreadByID($id) {
 	global $link;
@@ -474,10 +478,10 @@ function insertBan($ban) {
 	global $link;
 	mysqli_query($link,
 		"INSERT INTO `" . TINYIB_DBBANS . "`
-		(`ip`, `timestamp`, `expire`, `reason`)" . "
+		(`ip`, `timestamp`, `expire`, `reason`)
 		VALUES (
 			'" . mysqli_real_escape_string($link, $ban['ip']) . "',
-			'" . time() . "',
+			" . time() . ",
 			'" . mysqli_real_escape_string($link, $ban['expire']) . "',
 			'" . mysqli_real_escape_string($link, $ban['reason']) . "'
 		)");
@@ -503,4 +507,67 @@ function deleteBanByID($id) {
 	mysqli_query($link,
 		"DELETE FROM `" . TINYIB_DBBANS . "`
 		WHERE `id` = " . mysqli_real_escape_string($link, $id) . " LIMIT 1");
+}
+
+function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
+	global $link;
+	$modLogs = array();
+	// If we need a modlog for the admin panel with all public+private records
+	if($private === '1') {
+		if($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
+			$result = mysqli_query($link,
+				"SELECT `timestamp`, `username`, `action`, `color` FROM `" . TINYIB_DBMODLOG . "`
+				WHERE `boardname` = '" . TINYIB_BOARD . "'
+				ORDER BY `timestamp` DESC LIMIT 100");
+			if ($result) {
+				while ($row = mysqli_fetch_assoc($result)) {
+					$modLogs[] = $row;
+				}
+			}
+		} elseif ($periodEndDate !== 0 && $periodStartDate !== 0) { // If the date range is set
+			$result = mysqli_query($link,
+				"SELECT `timestamp`, `username`, `action`, `color` FROM `" . TINYIB_DBMODLOG . "`
+				WHERE `boardname` = '" . TINYIB_BOARD . "'
+					AND `timestamp` >= " . $periodStartDate . "
+					AND `timestamp` <= " . $periodEndDate . "
+				ORDER BY `timestamp` DESC");
+			if ($result) {
+				while ($row = mysqli_fetch_assoc($result)) {
+					$modLogs[] = $row;
+				}
+			}
+		}
+	// If we need only public records
+	} elseif ($private === '0') {
+		$result = mysqli_query($link,
+			"SELECT `timestamp`, `action` FROM `" . TINYIB_DBMODLOG . "`
+			WHERE `boardname` = '" . TINYIB_BOARD . "'
+				AND `private` = '0'
+			ORDER BY `timestamp` DESC LIMIT 100");
+		if ($result) {
+			while ($row = mysqli_fetch_assoc($result)) {
+				$modLogs[] = $row;
+			}
+		}
+	}
+	return $modLogs;
+}
+
+function modLog($action, $private = '1', $color = 'Black') {
+	global $link;
+	// modLog('Text to show in modlog', '[1, 0]', 'Color');
+	// '[1, 0]': 1 = Private record. 0 = Public record.
+	// 'Color': Choose what to put in style="color: " for this record
+	$userName = isset($_SESSION['tinyib_user']) ? $_SESSION['tinyib_user'] : 'UNKNOWN';
+	mysqli_query($link,
+		"INSERT INTO `" . TINYIB_DBMODLOG . "`
+		(`timestamp`, `boardname`, `username`, `action`, `color`, `private`)
+		VALUES (
+			" . time() . ",
+			'" . TINYIB_BOARD . "',
+			'" . mysqli_real_escape_string($link, $userName) . "',
+			'" . mysqli_real_escape_string($link, $action) . "',
+			'" . $color . "',
+			'" . $private . "'
+		)");
 }

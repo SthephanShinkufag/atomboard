@@ -11,7 +11,6 @@ define('STRING_COL', 'string');
 /** Constant to indicating a column holding unix timestamps */
 define('DATE_COL', 'date');
 
-
 /** EXPERIMENTAL: Encapsulates info about a column in a flatfile DB */
 class Column {
 	/**

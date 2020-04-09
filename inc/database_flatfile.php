@@ -191,7 +191,6 @@ function lockThreadByID($id, $setlocked) {
 	}
 }
 
-
 function bumpThreadByID($id) {
 	$rows = $GLOBALS['db']->selectWhere(
 		POSTS_FILE,
@@ -406,7 +405,6 @@ function hideImagesByImageID($post, $imgList) {
 		}
 	}
 }
-
 
 function editMessageInPostById($id, $newMessage) {
 	$rows = $GLOBALS['db']->selectWhere(

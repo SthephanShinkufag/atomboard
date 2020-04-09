@@ -63,7 +63,7 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		"stickied" smallint NOT NULL default \'0\',
 		"moderated" smallint NOT NULL default \'1\',
 		"likes" smallint NOT NULL default \'0\',
-		PRIMARY KEY	("id")
+		PRIMARY KEY ("id")
 	);
 	CREATE INDEX ON "' . TINYIB_DBPOSTS . '"("parent");
 	CREATE INDEX ON "' . TINYIB_DBPOSTS . '"("bumped");
@@ -76,7 +76,7 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		"timestamp" integer NOT NULL,
 		"expire" integer NOT NULL,
 		"reason" text NOT NULL,
-		PRIMARY KEY	("id")
+		PRIMARY KEY ("id")
 	);
 	CREATE INDEX ON "' . TINYIB_DBBANS . '"("ip");';
 
@@ -86,7 +86,7 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		"board" varchar(16) NOT NULL,
 		"postnum" integer NOT NULL,
 		"islike" smallint NOT NULL default \'1\',
-		PRIMARY KEY	("id")
+		PRIMARY KEY ("id")
 	);
 	CREATE INDEX ON "' . TINYIB_DBLIKES . '"("ip");';
 
@@ -158,7 +158,7 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		`stickied` tinyint(1) NOT NULL default '0',
 		`moderated` tinyint(1) NOT NULL default '1',
 		`likes` smallint(5) NOT NULL default '0',
-		PRIMARY KEY	(`id`),
+		PRIMARY KEY (`id`),
 		KEY `parent` (`parent`),
 		KEY `bumped` (`bumped`),
 		KEY `stickied` (`stickied`),
@@ -171,7 +171,7 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		`timestamp` int(20) NOT NULL,
 		`expire` int(20) NOT NULL,
 		`reason` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
-		PRIMARY KEY	(`id`),
+		PRIMARY KEY (`id`),
 		KEY `ip` (`ip`)
 	)";
 
@@ -181,7 +181,7 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		`board` varchar(16) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 		`postnum` mediumint(7) unsigned NOT NULL,
 		`islike` tinyint(1) NOT NULL default '1',
-		PRIMARY KEY	(`id`)
+		PRIMARY KEY (`id`)
 	)";
 
 	$modlog_sql = "CREATE TABLE `" . TINYIB_DBMODLOG . "` (
@@ -192,7 +192,7 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		`action` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 		`color` varchar(75) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 		`private` tinyint(1) NOT NULL default '1',
-		PRIMARY KEY	(`id`)
+		PRIMARY KEY (`id`)
 	)";
 }
 
@@ -488,24 +488,29 @@ function manageCheckLogIn() {
 	$loggedIn = false;
 	$isAdmin = false;
 	if (isset($_POST['managepassword'])) {
-		$providedPassword = substr($_POST['managepassword'],0,256);
+		$providedPassword = substr($_POST['managepassword'], 0, 256);
 		if ($providedPassword != '' && $providedPassword === TINYIB_ADMINPASS) {
 			$_SESSION['tinyib'] = TINYIB_ADMINPASS;
 			$_SESSION['tinyib_user'] = 'admin';
-		} elseif ($providedPassword != '' && count($tinyib_moderators) != 0 && $modname=array_search($providedPassword,$tinyib_moderators,true)) {
+		} elseif ($providedPassword != '' &&
+			count($tinyib_moderators) != 0 &&
+			$modname = array_search($providedPassword, $tinyib_moderators, true)
+		) {
 			$_SESSION['tinyib'] = $tinyib_moderators[$modname];
 			$_SESSION['tinyib_user'] = $modname;
-			modLog('Login','1','BlueViolet');
+			modLog('Login', '1', 'BlueViolet');
 		} else {
 			// uncomment if you want a lot of "failed login" records in modLog
-			// modLog('Failed login attempt','1','Orange');
+			// modLog('Failed login attempt', '1', 'Orange');
 		}
 	}
 	if (isset($_SESSION['tinyib'])) {
 		if ($_SESSION['tinyib'] === TINYIB_ADMINPASS) {
 			$loggedIn = true;
 			$isAdmin = true;
-		} elseif (count($tinyib_moderators) != 0 && array_search($_SESSION['tinyib'],$tinyib_moderators,true)) {
+		} elseif (count($tinyib_moderators) != 0 &&
+			array_search($_SESSION['tinyib'], $tinyib_moderators, true)
+		) {
 			$loggedIn = true;
 		}
 	}

@@ -522,10 +522,11 @@ function deleteBanByID($id) {
 		array($id));
 }
 
-function allModLogRecords($private = '0', $pereodEndDate = 0, $pereodStartDate = 0) {
+function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	$modLogs = array();
-	if($private === '1') { // If we need a modlog for the admin panel with all public+private records:
-		if($pereodEndDate === 0 || $pereodStartDate === 0) { // If the date range is not set
+	// If we need a modlog for the admin panel with all public+private records
+	if($private === '1') {
+		if($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
 			$results = pdoQuery(
 				"SELECT timestamp, username, action, color FROM " . TINYIB_DBMODLOG . "
 				WHERE boardname = ? ORDER BY timestamp DESC LIMIT 100",
@@ -533,20 +534,21 @@ function allModLogRecords($private = '0', $pereodEndDate = 0, $pereodStartDate =
 			while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 				$modLogs[] = $row;
 			}
-		} elseif ($pereodEndDate !== 0 && $pereodStartDate !== 0) { // If the date range is set
+		} elseif ($periodEndDate !== 0 && $periodStartDate !== 0) { // If the date range is set
 			$results = pdoQuery(
 				"SELECT timestamp, username, action, color FROM " . TINYIB_DBMODLOG . "
 				WHERE boardname = ? AND timestamp >= ? AND timestamp <= ? ORDER BY timestamp DESC",
-				array(TINYIB_BOARD, $pereodStartDate, $pereodEndDate));
+				array(TINYIB_BOARD, $periodStartDate, $periodEndDate));
 			while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 				$modLogs[] = $row;
 			}
 		}
-	} elseif ($private === '0'){ // If we need only public records
+	// If we need only public records
+	} elseif ($private === '0') {
 		$results = pdoQuery(
 			"SELECT timestamp, action FROM " . TINYIB_DBMODLOG . "
-			WHERE boardname = ? AND private = ? ORDER BY timestamp DESC LIMIT 100 ",
-			array(TINYIB_BOARD,'0'));
+			WHERE boardname = ? AND private = ? ORDER BY timestamp DESC LIMIT 100",
+			array(TINYIB_BOARD, '0'));
 		while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 			$modLogs[] = $row;
 		}
@@ -554,15 +556,14 @@ function allModLogRecords($private = '0', $pereodEndDate = 0, $pereodStartDate =
 	return $modLogs;
 }
 
-function modLog($action, $private='1', $color='Black') {
+function modLog($action, $private = '1', $color = 'Black') {
 	// modLog('Text to show in modlog', '[1, 0]', 'Color');
 	// '[1, 0]': 1 = Private record. 0 = Public record.
 	// 'Color': Choose what to put in style="color: " for this record
 	$userName = isset($_SESSION['tinyib_user']) ? $_SESSION['tinyib_user'] : 'UNKNOWN';
-	$now = time();
 	pdoQuery(
 		"INSERT INTO " . TINYIB_DBMODLOG . "
 		(timestamp, boardname, username, action, color, private)
 		VALUES (?, ?, ?, ?, ?, ?)",
-		array($now, TINYIB_BOARD, $userName, $action, $color, $private));
+		array(time(), TINYIB_BOARD, $userName, $action, $color, $private));
 }

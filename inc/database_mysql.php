@@ -32,6 +32,11 @@ if (mysql_num_rows(mysql_query("SHOW TABLES LIKE '" . TINYIB_DBLIKES . "'")) == 
 	mysql_query($likes_sql);
 }
 
+// Create the modlog table if it does not exist
+if (mysql_num_rows(mysql_query("SHOW TABLES LIKE '" . TINYIB_DBMODLOG . "'")) == 0) {
+	mysql_query($modlog_sql);
+}
+
 # Post Functions
 function uniquePosts() {
 	$row = mysql_fetch_row(mysql_query(
@@ -463,4 +468,65 @@ function deleteBanByID($id) {
 	mysql_query(
 		"DELETE FROM `" . TINYIB_DBBANS . "`
 		WHERE `id` = " . mysql_real_escape_string($id) . " LIMIT 1");
+}
+
+function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
+	$modLogs = array();
+	// If we need a modlog for the admin panel with all public+private records
+	if($private === '1') {
+		if($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
+			$result = mysql_query(
+				"SELECT `timestamp`, `username`, `action`, `color` FROM `" . TINYIB_DBMODLOG . "`
+				WHERE `boardname` = '" . TINYIB_BOARD . "'
+				ORDER BY `timestamp` DESC LIMIT 100");
+			if ($result) {
+				while ($row = mysql_fetch_assoc($result)) {
+					$modLogs[] = $row;
+				}
+			}
+		} elseif ($periodEndDate !== 0 && $periodStartDate !== 0) { // If the date range is set
+			$result = mysql_query(
+				"SELECT `timestamp`, `username`, `action`, `color` FROM `" . TINYIB_DBMODLOG . "`
+				WHERE `boardname` = '" . TINYIB_BOARD . "'
+					AND `timestamp` >= " . $periodStartDate . "
+					AND `timestamp` <= " . $periodEndDate . "
+				ORDER BY `timestamp` DESC");
+			if ($result) {
+				while ($row = mysql_fetch_assoc($result)) {
+					$modLogs[] = $row;
+				}
+			}
+		}
+	// If we need only public records
+	} elseif ($private === '0') {
+		$result = mysql_query(
+			"SELECT `timestamp`, `action` FROM `" . TINYIB_DBMODLOG . "`
+			WHERE `boardname` = '" . TINYIB_BOARD . "'
+				AND `private` = '0'
+			ORDER BY `timestamp` DESC LIMIT 100");
+		if ($result) {
+			while ($row = mysql_fetch_assoc($result)) {
+				$modLogs[] = $row;
+			}
+		}
+	}
+	return $modLogs;
+}
+
+function modLog($action, $private = '1', $color = 'Black') {
+	// modLog('Text to show in modlog', '[1, 0]', 'Color');
+	// '[1, 0]': 1 = Private record. 0 = Public record.
+	// 'Color': Choose what to put in style="color: " for this record
+	$userName = isset($_SESSION['tinyib_user']) ? $_SESSION['tinyib_user'] : 'UNKNOWN';
+	mysql_query(
+		"INSERT INTO `" . TINYIB_DBMODLOG . "`
+		(`timestamp`, `boardname`, `username`, `action`, `color`, `private`)
+		VALUES (
+			" . time() . ",
+			'" . TINYIB_BOARD . "',
+			'" . mysql_real_escape_string($userName) . "',
+			'" . mysql_real_escape_string($action) . "',
+			'" . $color . "',
+			'" . $private . "'
+		)");
 }

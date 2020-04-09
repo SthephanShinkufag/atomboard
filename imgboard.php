@@ -768,7 +768,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 						) {
 							$text .= '<p><b>Warning!</b></p>' .
 								'<p>Unable to update the <code>AUTO_INCREMENT</code> value for table <code>' .
-								TINYIB_DBPOSTS . '</code>,' . ' please set it to ' . ($maxId + 1) . '.</p>';
+								TINYIB_DBPOSTS . '</code>, please set it to ' . ($maxId + 1) . '.</p>';
 						}
 						$maxId = 0;
 						$bans = allBans();

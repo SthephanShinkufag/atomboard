@@ -386,7 +386,7 @@ function buildPost($post, $res, $isModPanel = false) {
 							'" class="thumb" id="thumbnail' . $id . $index. '"></video>
 						</a>' : '')) . '
 					</div>' . ($expandHtml == '' ? '' : '
-					<div id="expand' . $id . $index . '" style="display: none;">' . '
+					<div id="expand' . $id . $index . '" style="display: none;">
 						' . $expandHtml . '
 					</div>
 					<div id="file' . $id . $index . '" class="thumb" style="display: none;"></div>
@@ -422,7 +422,7 @@ function buildPost($post, $res, $isModPanel = false) {
 		return '<a href="/' . TINYIB_BOARD . '/res/' . $matches[1] . '.html#';
 	}, $message);
 	$message = preg_replace_callback('/&cent;&cent;([0-9]+)/', function($matches) {
-		return $matches[1] . '">' . ' &gt;&gt;' . $matches[1] . '</a>';
+		return $matches[1] . '"> &gt;&gt;' . $matches[1] . '</a>';
 	}, $message);
 	*/
 
@@ -609,10 +609,12 @@ function rebuildThread($id) {
 function adminBar() {
 	global $loggedIn, $isAdmin;
 	return !$loggedIn ? '' : '
-			[<a href="?manage">Status</a>]
-			[' . ($isAdmin ? '<a href="?manage&bans">Bans</a>]
-			[<a href="?manage&modlog">ModLog</a>]
-			[' : '') . '<a href="?manage&moderate">Moderate Post</a>]
+			[<a href="?manage">Status</a>]' .
+			($isAdmin ? '
+			[<a href="?manage&bans">Bans</a>]
+			[<a href="?manage&modlog">ModLog/all</a>]' : '') . '
+			[<a href="/' . TINYIB_BOARD . '/modlog.html">ModLog/admin</a>]
+			[<a href="?manage&moderate">Moderate Post</a>]
 			[<a href="?manage&rawpost">Raw Post</a>]
 			[' . ($isAdmin ? '<a href="?manage&rebuildall">Rebuild All</a>]
 			[' : '') . ($isAdmin && TINYIB_DBMIGRATE ?
@@ -1012,21 +1014,21 @@ function generateModLogForm() {
 			<span>From:</span>
 			<input name="from" type="date" value="' . date("Y-m-d", strtotime("-2 day")) . '">
 			<span>To: </span>
-			<input name="to" type="date" value="'  .date("Y-m-d") . '">&nbsp;
+			<input name="to" type="date" value="' . date("Y-m-d", strtotime("+1 day")) . '">&nbsp;
 			<input type="submit" value="Show records" class="managebutton">
 		</form><br><br>';
 }
 
 function generateModLogTable($private = '0', $fromtime = '0', $totime = '0') {
-	$pereodEndDate = '0';
-	$pereodStartDate = '0';
+	$periodEndDate = '0';
+	$periodStartDate = '0';
 	$private = $private === 'all' ? '1' : '0'; // 1 = all records; 0 = only for public modlog
 	if ($private === '1' && $fromtime !== '0' && $totime !== '0') {
-		$pereodEndDate = max($fromtime, $totime);
-		$pereodStartDate = min($fromtime, $totime);
+		$periodEndDate = max($fromtime, $totime);
+		$periodStartDate = min($fromtime, $totime);
 	}
 	$text = '';
-	$modLogs = allModLogRecords($private, $pereodEndDate, $pereodStartDate);
+	$modLogs = allModLogRecords($private, $periodEndDate, $periodStartDate);
 	$countOfLogs = count($modLogs);
 	if ($countOfLogs > 0) {
 		$text .= ($private == '1' ? 'Total Records: ' . $countOfLogs : '') . '

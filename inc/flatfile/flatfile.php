@@ -377,8 +377,6 @@ class Flatfile {
 		}
 		return null;
 	}
-
-
 }
 
 /////////////////////////// UTILITY FUNCTIONS ////////////////////////////////////
@@ -570,7 +568,6 @@ class LikeWhereClause extends WhereClause {
 	}
 }
 
-
 /**
  * {@link WhereClause WhereClause} class to match a value from a list of items
  * @package flatfile
@@ -713,7 +710,6 @@ class AndWhereClause extends CompositeWhereClause {
 		}
 	}
 }
-
 
 /////////////////////////// ORDER BY CLASSES ////////////////////////////////////
 
