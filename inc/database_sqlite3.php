@@ -547,6 +547,7 @@ function deleteBanByID($id) {
 		WHERE id = " . $db->escapeString($id));
 }
 
+// Modlog functions
 function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	global $db;
 	$modLogs = array();

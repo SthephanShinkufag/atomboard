@@ -470,6 +470,7 @@ function deleteBanByID($id) {
 		WHERE `id` = " . mysql_real_escape_string($id) . " LIMIT 1");
 }
 
+// Modlog functions
 function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	$modLogs = array();
 	// If we need a modlog for the admin panel with all public+private records

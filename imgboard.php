@@ -839,12 +839,13 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			if ($post) {
 				deletePostByID($post['id']);
 				rebuildIndexes();
-				if ($post['parent'] != TINYIB_NEWTHREAD) {
+				$isOP = $post['parent'] == TINYIB_NEWTHREAD;
+				if (!$isOP) {
 					rebuildThread($post['parent']);
-					modLog('Post No. ' . $post['id'] . ' in thread No. ' .
-						$post['parent'] . ' deleted.', '0', 'Black');
-				} elseif($post['parent'] == TINYIB_NEWTHREAD) {
-					modLog('Thread No.' . $post['id'] . ' deleted.', '0', 'Black');
+					modLog('Deleted post №' . $post['id'] . ' in thread №' .
+						$post['parent'] . '.', '0', 'Black');
+				} else {
+					modLog('Deleted thread №' . $post['id'] . '.', '0', 'Black');
 				}
 				$text .= manageInfo('Post No.' . $post['id'] . ' deleted.');
 			} else {
@@ -855,9 +856,13 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$post = postByID($_GET['delete-img']);
 				if ($post) {
 					deleteImagesByImageID($post, $_GET["delete-img-mod"]);
-					threadUpdated($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']);
+					$isOP = $post['parent'] == TINYIB_NEWTHREAD;
+					threadUpdated($isOP ? $post['id'] : $post['parent']);
 					$text .= manageInfo('Selected images from post No.' .
 						$post['id'] . ' are deleted.');
+					modLog('Deleted image(s) of ' .
+						($isOP ? 'op-post in thread №' . $post['id'] :
+							'post №' . $post['id'] . ' in thread №' . $post['parent']) . '.', '0', 'Black');
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 				}
@@ -865,9 +870,13 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$post = postByID($_GET['delete-img']);
 				if ($post) {
 					hideImagesByImageID($post, $_GET["delete-img-mod"]);
-					threadUpdated($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']);
+					$isOP = $post['parent'] == TINYIB_NEWTHREAD;
+					threadUpdated($isOP ? $post['id'] : $post['parent']);
 					$text .= manageInfo('Thumbnails for selected images from post No.' .
 						$post['id'] . ' are changed.');
+					modLog('Hidden thumbnail(s) of ' .
+						($isOP ? 'op-post in thread №' . $post['id'] :
+							'post №' . $post['id'] . ' in thread №' . $post['parent']) . '.', '0', 'Black');
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 				}
@@ -878,8 +887,12 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				(date('d.m.y D H:i:s', time())) . '</span>';
 			if ($post) {
 				editMessageInPostById($post['id'], $newMessage);
-				threadUpdated($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']);
+				$isOP = $post['parent'] == TINYIB_NEWTHREAD;
+				threadUpdated($isOP ? $post['id'] : $post['parent']);
 				$text .= manageInfo('Message in post No.' . $post['id'] . ' changed.');
+				modLog('Edited message of ' .
+					($isOP ? 'op-post in thread №' . $post['id'] :
+						'post №' . $post['id'] . ' in thread №' . $post['parent']) . '.', '0', 'Black');
 			} else {
 				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 			}
@@ -918,8 +931,9 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				if ($post && $post['parent'] == TINYIB_NEWTHREAD) {
 					lockThreadByID($post['id'], (intval($_GET['setlocked'])));
 					threadUpdated($post['id']);
-					$text .= manageInfo('Thread No.' . $post['id'] . ' ' .
-						($_GET['setlocked'] == 1 ? 'locked' : 'un-locked') . '.');
+					$isLocked = $_GET['setlocked'] == 1 ? 'locked' : 'un-locked';
+					$text .= manageInfo('Thread No.' . $post['id'] . ' ' . $isLocked . '.');
+					modLog(ucfirst($isLocked) . ' thread №' . $post['id'] . '.', '0', 'Black');
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
 				}
@@ -932,8 +946,9 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				if ($post && $post['parent'] == TINYIB_NEWTHREAD) {
 					stickyThreadByID($post['id'], (intval($_GET['setsticky'])));
 					threadUpdated($post['id']);
-					$text .= manageInfo('Thread No.' . $post['id'] . ' ' .
-						(intval($_GET['setsticky']) == 1 ? 'stickied' : 'un-stickied') . '.');
+					$isSticked = intval($_GET['setsticky']) == 1 ? 'stickied' : 'un-stickied';
+					$text .= manageInfo('Thread No.' . $post['id'] . ' ' . $isSticked . '.');
+					modLog(ucfirst($isSticked) . ' thread №' . $post['id'] . '.', '0', 'Black');
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
 				}

@@ -509,6 +509,7 @@ function deleteBanByID($id) {
 		WHERE `id` = " . mysqli_real_escape_string($link, $id) . " LIMIT 1");
 }
 
+// Modlog functions
 function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	global $link;
 	$modLogs = array();

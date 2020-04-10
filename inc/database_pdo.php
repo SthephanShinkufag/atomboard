@@ -522,6 +522,7 @@ function deleteBanByID($id) {
 		array($id));
 }
 
+// Modlog functions
 function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	$modLogs = array();
 	// If we need a modlog for the admin panel with all public+private records

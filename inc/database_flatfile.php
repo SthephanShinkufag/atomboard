@@ -553,7 +553,30 @@ function deleteBanByID($id) {
 	$GLOBALS['db']->deleteWhere(BANS_FILE, new SimpleWhereClause(BAN_ID, '=', $id, INTEGER_COMPARISON));
 }
 
+// Likes functions
+function allLikes() {
+	$rows = $GLOBALS['db']->selectWhere(
+		LIKES_FILE,
+		NULL,
+		-1,
+		new OrderBy(LIKES_ID, ASCENDING, INTEGER_COMPARISON));
+	return convertLikesToSQLStyle($rows);
+}
 
+function convertLikesToSQLStyle($likes) {
+	$newlikes = array();
+	foreach ($likes as $oldlike) {
+		$newlikes[] = array(
+			'id' => $oldlike[LIKES_ID],
+			'ip' => $oldlike[LIKES_IP],
+			'board' => $oldlike[LIKES_BOARD],
+			'postnum' => $oldlike[LIKES_POSTNUM],
+			'islike' => $oldlike[LIKES_ISLIKE]);
+	}
+	return $newlikes;
+}
+
+// Modlog functions
 function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	$modLogs = array();
 	$rows = array();
@@ -624,26 +647,4 @@ function modLog($action, $private = '1', $color = 'Black') {
 	$row[MODLOG_COLOR] = $color;
 	$row[MODLOG_PRIVATE] = $private;
 	return $GLOBALS['db']->insertWithAutoId(MODLOG_FILE, MODLOG_ID, $row);
-}
-
-function allLikes() {
-	$rows = $GLOBALS['db']->selectWhere(
-		LIKES_FILE,
-		NULL,
-		-1,
-		new OrderBy(LIKES_ID, ASCENDING, INTEGER_COMPARISON));
-	return convertLikesToSQLStyle($rows);
-}
-
-function convertLikesToSQLStyle($likes) {
-	$newlikes = array();
-	foreach ($likes as $oldlike) {
-		$newlikes[] = array(
-			'id' => $oldlike[LIKES_ID],
-			'ip' => $oldlike[LIKES_IP],
-			'board' => $oldlike[LIKES_BOARD],
-			'postnum' => $oldlike[LIKES_POSTNUM],
-			'islike' => $oldlike[LIKES_ISLIKE]);
-	}
-	return $newlikes;
 }

@@ -491,7 +491,7 @@ function manageCheckLogIn() {
 		$providedPassword = substr($_POST['managepassword'], 0, 256);
 		if ($providedPassword != '' && $providedPassword === TINYIB_ADMINPASS) {
 			$_SESSION['tinyib'] = TINYIB_ADMINPASS;
-			$_SESSION['tinyib_user'] = 'admin';
+			$_SESSION['tinyib_user'] = 'Admin';
 		} elseif ($providedPassword != '' &&
 			count($tinyib_moderators) != 0 &&
 			$modname = array_search($providedPassword, $tinyib_moderators, true)

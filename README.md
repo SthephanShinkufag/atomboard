@@ -32,7 +32,7 @@ This fork features:
    - Named links formatting, like on github: `[TinyIB](https://github.com/SthephanShinkufag/TinyIB/)`
  - Administration:
    - You can set list of Moderators.
-   - Moderation log in `modlog.html`.
+   - Moderation log.
    - Admins and Mods can edit message text in posts.
    - Admins and Mods can selectively delete attached files.
    - Admins and Mods can selectively replace thumbnails of attached files by `spoiler.png` file.
