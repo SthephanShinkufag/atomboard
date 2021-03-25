@@ -156,6 +156,7 @@ video.thumb {
 
 .image-container {
 	display: inline-block;
+	vertical-align: top;
 }
 
 .image-container > .filesize {
