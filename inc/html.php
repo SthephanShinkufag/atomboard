@@ -429,6 +429,8 @@ function buildPost($post, $res, $isModPanel = false) {
 	// Start post building
 	$omitted = $post['omitted'];
 	$likes = $post['likes'];
+	$replyBtn = ($isOp && $res == TINYIB_INDEXPAGE ? '<a class="gotothread" href="res/' .
+		$id . '.html">Reply</a>' : '');
 	return PHP_EOL . ($isOp ? '
 			<div class="oppost" id="op' . $id . '">' : '
 			<table border="0"><tbody><tr><td class="reply" id="reply' . $id . '">') . '
@@ -459,9 +461,7 @@ function buildPost($post, $res, $isModPanel = false) {
 						</span>
 						<span class="like-counter">' . ($likes ? $likes : '') . '</span>
 					</span>' : '') . '
-				</span>' .
-				($isOp && $res == TINYIB_INDEXPAGE ? '&nbsp;<a class="gotothread" href="res/' .
-					$id . '.html">Reply</a>' : '') . '
+				</span>&nbsp;' . $replyBtn . '
 				<br>' .
 				($isModPanel && $hasImages ? '
 				<form method="get" action="?">
@@ -491,7 +491,7 @@ function buildPost($post, $res, $isModPanel = false) {
 			(!$isOp ? '</td></tr></tbody></table>' : '</div>' .
 			($res == TINYIB_INDEXPAGE && $omitted > 0 ? '
 			<div class="omittedposts">' . $omitted . ' ' .
-				plural('post', $omitted) . ' omitted. Click Reply to view.
+				plural('post', $omitted) . ' omitted. Click ' . $replyBtn . ' to view.
 			</div>' : ''));
 }
 
