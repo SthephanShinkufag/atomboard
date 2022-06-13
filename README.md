@@ -13,7 +13,7 @@ Use [MySQL](https://mysql.com), [PostgreSQL](https://www.postgresql.org) or [SQL
 TinyIB settings is able to allow new threads without requiring an image, or even disallow sending of images entirely.
 
 [Original TinyIB](https://gitlab.com/tslocum/tinyib) features:
- - GIF, JPG, PNG, SWF and WebM upload.
+ - GIF, JPG, PNG, SWF, WebM and WebP upload.
  - YouTube, Vimeo and SoundCloud embedding.
  - CAPTCHA (A simple implementation is included, reCAPTCHA is also supported).
  - Reference links >>###

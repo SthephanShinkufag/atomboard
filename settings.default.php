@@ -132,6 +132,7 @@ $tinyib_uploads = array(
 	'image/pjpeg' => array('jpg'),
 	'image/png'   => array('png'),
 	'image/gif'   => array('gif'),
+	'image/webp'  => array('webp'),
 	'video/webm'  => array('webm'),
 	'audio/webm'  => array('webm'),
 	'video/mp4'   => array('mp4')

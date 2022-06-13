@@ -157,7 +157,8 @@ function buildPostForm($parent, $isRawPost = false) {
 	if (isset($tinyib_uploads['image/jpeg']) ||
 		isset($tinyib_uploads['image/pjpeg']) ||
 		isset($tinyib_uploads['image/png']) ||
-		isset($tinyib_uploads['image/gif'])
+		isset($tinyib_uploads['image/gif']) ||
+		isset($tinyib_uploads['image/webp'])
 	) {
 		$thumbnailsHtml = '<li>Images greater than ' . TINYIB_MAXWOP . 'x' . TINYIB_MAXHOP . (
 			TINYIB_MAXW == TINYIB_MAXWOP && TINYIB_MAXH == TINYIB_MAXHOP ? '' :
@@ -341,7 +342,9 @@ function buildPost($post, $res, $isModPanel = false) {
 				'style="position: static;' .
 				' pointer-events: inherit; display: inline; max-width: 100%; max-height: 100%;"' .
 				' controls autoplay loop><source src="' . $directLink . '"></source></video>');
-		} elseif (in_array(substr($fName, -4), array('.jpg', '.png', '.gif'))) {
+		} elseif (in_array(substr($fName, -4), array('.jpg', '.png', '.gif')) ||
+			substr($fName, -5) == '.webp'
+		) {
 			$expandHtml = rawurlencode('<a href="' . $directLink . '"' . $expandClick . '><img src="/' .
 				TINYIB_BOARD . '/src/' . $fName . '" width="' . $fWidth .
 				'" style="max-width: 100%; height: auto;"></a>');
@@ -349,7 +352,8 @@ function buildPost($post, $res, $isModPanel = false) {
 		$origName = $post['file' . $index . '_original'];
 		$hasOrigName = $origName != '';
 		$thumblink = '<a href="' . $directLink . '" target="_blank"' .
-			($isEmbed || in_array(substr($fName, -4), array('.jpg', '.png', '.gif', 'webm', '.mp4')) ?
+			($isEmbed || in_array(substr($fName, -4), array('.jpg', '.png', '.gif', '.mp4')) ||
+				in_array(substr($fName, -5), array('.webm', '.webp')) ?
 				$expandClick : '') .
 			($hasOrigName ? ' download="' . $origName . '" title="Click to expand/collapse">' : '>');
 		$filesize = '';

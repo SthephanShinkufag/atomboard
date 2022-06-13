@@ -68,6 +68,7 @@ if (!isset($tinyib_uploads)) {
 		$tinyib_uploads['image/pjpeg'] = array('jpg');
 		$tinyib_uploads['image/png'] = array('png');
 		$tinyib_uploads['image/gif'] = array('gif');
+		$tinyib_uploads['image/webp'] = array('webp');
 	}
 	if (defined('TINYIB_SWF') && TINYIB_SWF) {
 		$tinyib_uploads['application/x-shockwave-flash'] = array('swf', 'swf_thumbnail.png');

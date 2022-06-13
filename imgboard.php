@@ -252,10 +252,12 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		$post['image0_height'] = $fileInfo[1];
 		if ($fileMime == 'image/jpeg') {
 			$post['thumb0'] = $tempFile . '.jpg';
-		} elseif ($fileMime == 'image/gif') {
-			$post['thumb0'] = $tempFile . '.gif';
 		} elseif ($fileMime == 'image/png') {
 			$post['thumb0'] = $tempFile . '.png';
+		} elseif ($fileMime == 'image/gif') {
+			$post['thumb0'] = $tempFile . '.gif';
+		} elseif ($fileMime == 'image/webp') {
+			$post['thumb0'] = $tempFile . '.webp';
 		} else {
 			fancyDie('Error while processing audio/video.');
 		}
@@ -371,8 +373,13 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 						($post['file' . $index . '_original'] != '' ?
 							(', ' . $post['file' . $index . '_original']) : '');
 				}
-			} elseif (in_array($fileMime,
-				array('image/jpeg', 'image/pjpeg', 'image/png', 'image/gif', 'application/x-shockwave-flash'))
+			} elseif (in_array($fileMime, array(
+				'image/jpeg',
+				'image/pjpeg',
+				'image/png',
+				'image/gif',
+				'image/webp',
+				'application/x-shockwave-flash'))
 			) {
 				$fileInfo = getimagesize($fileLocation);
 				$post['image' . $index . '_width'] = $fileInfo[0];
@@ -388,7 +395,13 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				if ($fileMime == 'application/x-shockwave-flash') {
 					(TINYIB_VIDEO_OVERLAY)?addVideoOverlay('thumb/' . $post['thumb' . $index]):'';
 				}
-			} elseif (in_array($fileMime, array('image/jpeg', 'image/pjpeg', 'image/png', 'image/gif'))) {
+			} elseif (in_array($fileMime, array(
+				'image/jpeg',
+				'image/pjpeg',
+				'image/png',
+				'image/gif',
+				'image/webp'
+			))) {
 				$post['thumb' . $index] = $fileName . 's.' . $tinyib_uploads[$fileMime][0];
 				list($thumbMaxWidth, $thumbMaxHeight) = thumbnailDimensions($post, $index);
 				if (!createThumbnail(

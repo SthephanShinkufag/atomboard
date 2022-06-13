@@ -606,6 +606,8 @@ function createThumbnail($file_location, $thumb_location, $new_w, $new_h) {
 			$src_img = imagecreatefrompng($file_location);
 		} else if (preg_match("/gif/", $system[0])) {
 			$src_img = imagecreatefromgif ($file_location);
+		} else if (preg_match("/webp/", $system[0])) {
+			$src_img = imagecreatefromwebp ($file_location);
 		} else {
 			return false;
 		}
@@ -639,6 +641,10 @@ function createThumbnail($file_location, $thumb_location, $new_w, $new_h) {
 			}
 		} else if (preg_match("/gif/", $system[0])) {
 			if (!imagegif ($dst_img, $thumb_location)) {
+				return false;
+			}
+		} else if (preg_match("/webp/", $system[0])) {
+			if (!imagewebp($dst_img, $thumb_location, 70)) {
 				return false;
 			}
 		}
