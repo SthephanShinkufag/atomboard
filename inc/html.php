@@ -46,6 +46,8 @@ function pageWrapper($returnHref) {
 function pageFooter() {
 	return '
 		<div class="footer">
+			<div>We are not responsible for the content posted on this site. Any information posted here is the responsibility of the user who uploaded it.<br>The content on the site is intended for persons over 18 years of age.</div>
+			<br>
 			- <a href="https://github.com/tslocum/TinyIB" target="_top">TinyIB</a> - forked by <a href="https://github.com/SthephanShinkufag/TinyIB">SthephanShi</a> & <a href="https://github.com/nolifer1337/TinyIB" target="_top">nolifer</a> -
 		</div>
 	</div>
@@ -106,15 +108,13 @@ function buildPostForm($parent, $isRawPost = false) {
 	$isOnPage = $parent == TINYIB_NEWTHREAD;
 	$hideFields = $isOnPage ? $tinyib_hidefieldsop : $tinyib_hidefields;
 	$postformExtra = array('name' => '', 'email' => '', 'subject' => '', 'footer' => '');
-	$inputSubmit = '<input type="submit" value="Submit" accesskey="z">';
+	$inputSubmit = '<input type="submit" value="' . ($isOnPage ? 'New thread' : 'Reply') . '" accesskey="z">';
 	if ($isRawPost || !in_array('subject', $hideFields)) {
 		$postformExtra['subject'] = $inputSubmit;
 	} elseif (!in_array('email', $hideFields)) {
 		$postformExtra['email'] = $inputSubmit;
 	} elseif (!in_array('name', $hideFields)) {
 		$postformExtra['name'] = $inputSubmit;
-	} elseif (!in_array('email', $hideFields)) {
-		$postformExtra['email'] = $inputSubmit;
 	} else {
 		$postformExtra['footer'] = $inputSubmit;
 	}
@@ -200,8 +200,8 @@ function buildPostForm($parent, $isRawPost = false) {
 					$isRawPost || !in_array('name', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
-						<td>
-							<input type="text" class="postform-input" name="name" placeholder="Name" maxlength="75" accesskey="n"> ' .
+						<td style="display: flex">
+							<input type="text" class="postform-input" name="name" placeholder="Name" maxlength="75" accesskey="n" style="width: 100%"> ' .
 							$postformExtra['name'] . '
 						</td>
 					</tr>' : ''
@@ -209,8 +209,8 @@ function buildPostForm($parent, $isRawPost = false) {
 					$isRawPost || !in_array('email', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
-						<td>
-							<input type="text" class="postform-input" name="email" placeholder="Mail" maxlength="75" accesskey="e"> ' .
+						<td style="display: flex">
+							<input type="text" class="postform-input" name="email" placeholder="Mail" maxlength="75" accesskey="e" style="width: 100%"> ' .
 							$postformExtra['email'] . '
 						</td>
 					</tr>' : ''
@@ -218,8 +218,8 @@ function buildPostForm($parent, $isRawPost = false) {
 					$isRawPost || !in_array('subject', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
-						<td>
-							<input type="text" class="postform-input" name="subject" placeholder="Subject" maxlength="75" accesskey="s" autocomplete="off"> ' .
+						<td style="display: flex">
+							<input type="text" class="postform-input" name="subject" placeholder="Subject" maxlength="75" accesskey="s" style="width: 100%" autocomplete="off"> ' .
 							$postformExtra['subject'] . '
 						</td>
 					</tr>' : ''
@@ -351,7 +351,7 @@ function buildPost($post, $res, $isModPanel = false) {
 		$thumblink = '<a href="' . $directLink . '" target="_blank"' .
 			($isEmbed || in_array(substr($fName, -4), array('.jpg', '.png', '.gif', 'webm', '.mp4')) ?
 				$expandClick : '') .
-			($hasOrigName ? ' download="' . $origName . '">' : '>');
+			($hasOrigName ? ' download="' . $origName . '" title="Click to expand/collapse">' : '>');
 		$filesize = '';
 		if ($isEmbed) {
 			$filesize = '<a href="' . $directLink . '"' . $expandClick . '>' . $origName .
@@ -429,7 +429,7 @@ function buildPost($post, $res, $isModPanel = false) {
 	// Start post building
 	$omitted = $post['omitted'];
 	$likes = $post['likes'];
-	$replyBtn = ($isOp && $res == TINYIB_INDEXPAGE ? '<a class="gotothread" href="res/' .
+	$replyBtn = ($isOp && $res == TINYIB_INDEXPAGE ? '<a class="link-button" href="res/' .
 		$id . '.html">Reply</a>' : '');
 	return PHP_EOL . ($isOp ? '
 			<div class="oppost" id="op' . $id . '">' : '
@@ -442,11 +442,11 @@ function buildPost($post, $res, $isModPanel = false) {
 					' . $post['nameblock'] . '
 				</label>
 				<span class="reflink">' . ($res == TINYIB_RESPAGE ? '
-					<a href="' . $thrId . '.html#' . $id . '">No.</a>' .
-					'<a href="' . $thrId . '.html#q' . $id . '" onclick="quotePost(' . $id . ');">' .
+					<a href="' . $thrId . '.html#' . $id . '" title="Click to link to this post">No.</a>' .
+					'<a href="' . $thrId . '.html#q' . $id . '" onclick="quotePost(' . $id . ');" title="Click to reply to this post">' .
 						$id . '</a>' : '
-					<a href="/' . TINYIB_BOARD . '/res/' . $thrId . '.html#' . $id . '">No.</a>' .
-					'<a href="/' . TINYIB_BOARD . '/res/' . $thrId . '.html#q' . $id . '">' . $id . '</a>') .
+					<a href="/' . TINYIB_BOARD . '/res/' . $thrId . '.html#' . $id . '" title="Click to link to this post">No.</a>' .
+					'<a href="/' . TINYIB_BOARD . '/res/' . $thrId . '.html#q' . $id . '" title="Click to reply to this post">' . $id . '</a>') .
 					($post['stickied'] == 1 ? '
 					<img src="/' . TINYIB_BOARD .
 						'/sticky.png" title="Thread is sticked" width="16" height="16">' : '') .
@@ -528,13 +528,12 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 	return pageHeader() . '<body class="tinyib">' . pageWrapper(!$isOnPage) . '
 		<div class="logo">
 			' . TINYIB_LOGO . TINYIB_BOARDDESC . '
-		</div>
-		' . buildPostForm($parent) .
+		</div>' .
 		($isOnPage ? '
-		<br>
-		<div style="text-align: center;">
-			<a href="/' . TINYIB_BOARD . '/catalog.html">Catalog</a>
-		</div>' : ''). '
+		<div style="text-align: center; margin: 8px 0;">
+			<a class="link-button" href="/' . TINYIB_BOARD . '/catalog.html">Catalog</a>
+		</div>' : '') .
+		buildPostForm($parent) . '
 		<hr>
 		<form id="delform" action="/' . TINYIB_BOARD . '/imgboard.php?delete" method="post">
 			<input type="hidden" name="board" value="' . TINYIB_BOARD . '">' .
@@ -544,8 +543,8 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 					<tr>
 						<td>Delete Post <input type="password" name="password" id="deletepostpassword" size="8" placeholder="Password">&nbsp;<input name="deletepost" value="Delete" type="submit"></td>
 						<td>
-							<a href="/' . TINYIB_BOARD . '/' . basename($_SERVER['PHP_SELF']) .
-							'?manage" style="text-decoration: underline;">Manage</a>
+							<a class="link-button" href="/' . TINYIB_BOARD . '/' . basename($_SERVER['PHP_SELF']) .
+							'?manage">Manage</a>
 						</td>
 					</tr>
 				</tbody>

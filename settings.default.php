@@ -114,7 +114,7 @@ define('TINYIB_MAXREPLIES', 500);
 // Cookie in e-mail field that indicates what thread is locked for posting
 define('TINYIB_LOCKTHR_COOKIE', 'thread@is.locked');
 
-/* ==[ Reply form and posting ]============================================================================= */
+/* ==[ Reply form and posting ]============================================================================ */
 // Redirect to thread after posting
 define('TINYIB_ALWAYSNOKO', true);
 // Fields to hide when creating a new thread

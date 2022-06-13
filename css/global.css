@@ -58,6 +58,19 @@ hr {
 	text-align: center;
 }
 
+.link-button {
+	display: inline-block;
+	padding: 2px 6px;
+	background-image: linear-gradient(to bottom, #c8c8c8, #6c6c6c);
+	color: #fff !important;
+	border-radius: 3px;
+	font-weight: bold;
+}
+
+.link-button:hover {
+	background-image: linear-gradient(to top, #c8c8c8, #6c6c6c);
+}
+
 .login {
 	text-align: center;
 }
@@ -328,10 +341,6 @@ video.thumb {
 	border-spacing: 0 2px;
 	margin: 0 auto;
 	text-align: left;
-}
-
-.postform-table > tbody > tr > td > input[maxlength="75"]:not(:last-child) {
-	width: 230px;
 }
 
 .postform-input {
