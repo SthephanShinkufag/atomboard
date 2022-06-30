@@ -73,7 +73,7 @@ if (TINYIB_TIMEZONE != '') {
 }
 $redirect = true;
 
-// Check if the request is to make a post
+// Check if the request is to make a post or thread
 if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	isset($_POST['name']) ||
 	isset($_POST['email']) ||
@@ -478,7 +478,8 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 
 	if ($post['moderated'] == '1') {
 		if (TINYIB_ALWAYSNOKO || strtolower($post['email']) == 'noko') {
-			$redirect = 'res/' . ($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']) .
+			$redirect = '/' . TINYIB_BOARD . '/res/' .
+				($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']) .
 				'.html#' . $post['id'];
 		}
 		trimThreads();
@@ -1008,6 +1009,11 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 }
 
 if ($redirect) {
-	echo '<meta http-equiv="refresh" content="' . (isset($slowRedirect) ? '3' : '0') .
-		'; url=' . (is_string($redirect) ? $redirect : TINYIB_INDEX) . '">';
+	if(isset($slowRedirect)) {
+		echo '<meta http-equiv="refresh" content="3; url=' .
+			(is_string($redirect) ? $redirect : TINYIB_INDEX) . '">';
+	} else {
+		header('Location: ' . (is_string($redirect) ? $redirect : TINYIB_INDEX), true, 307);
+		exit();
+	}
 }
