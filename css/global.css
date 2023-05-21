@@ -219,6 +219,11 @@ video.thumb {
 	color: #228854;
 }
 
+.posteruid {
+	color: #448bc6;
+	font: 13px Verdana, Arial, sans-serif;
+}
+
 .reflink {
 	font-weight: bold;
 }
@@ -286,11 +291,6 @@ video.thumb {
 
 .underline {
 	text-decoration: underline;
-}
-
-.uniqid {
-	color: #448bc6;
-	font: 13px Verdana, Arial, sans-serif;
 }
 
 .unkfunc {

@@ -88,8 +88,10 @@ define('TINYIB_DBDSN', '');
 /* ==[ Posts and threads ]================================================================================= */
 // Default poster names
 define('TINYIB_POSTERNAME', 'Anonymous');
+// Unique ID's based on IP
+define('TINYIB_POSTERUID', false);
 // Tripcode seed - Must not change once set!
-// Enter some random text (used when generating secure tripcodes)
+// Enter some random text (used when generating secure tripcodes and poster id's)
 define('TINYIB_TRIPSEED', '');
 // Amount of threads shown per index page
 define('TINYIB_THREADSPERPAGE', 10);
