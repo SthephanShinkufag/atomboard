@@ -17,7 +17,7 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . TINYIB_BOARDDESC . '</title>
 	<link rel="shortcut icon" href="/' . TINYIB_BOARD . '/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . TINYIB_BOARD . '/css/global.css">
+	<link rel="stylesheet" type="text/css" href="/' . TINYIB_BOARD . '/css/global.css?2023052101">
 	<script src="/' . TINYIB_BOARD . '/js/tinyib.js"></script>' .
 	(TINYIB_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') .
@@ -228,13 +228,6 @@ function buildPostForm($parent, $isRawPost = false) {
 					$isRawPost || !in_array('message', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
-						<td>
-							<textarea id="message" name="message" placeholder="Message' .
-								($isOnPage ? '' : ' - reply in thread') . '" accesskey="m"></textarea>
-						</td>
-					</tr>
-					<tr>
-						<td class="postblock"></td>
 						<td id="markup-buttons">
 							<button class="markup-button" id="markup-bold" title="Bold">B</button>
 							<button class="markup-button" id="markup-italic" title="Italic">I</button>
@@ -243,6 +236,13 @@ function buildPostForm($parent, $isRawPost = false) {
 							<button class="markup-button" id="markup-spoiler" title="Spoiler">%</button>
 							<button class="markup-button" id="markup-code" title="Code">C</button>
 							<button class="markup-button" id="markup-quote" title="Select the text, then click to insert a quote">&gt;</button>
+						</td>
+					</tr>
+					<tr>
+						<td class="postblock"></td>
+						<td>
+							<textarea id="message" name="message" placeholder="Message' .
+								($isOnPage ? '' : ' - reply in thread') . '" accesskey="m"></textarea>
 						</td>
 					</tr>' : ''
 				) . (
@@ -384,7 +384,7 @@ function buildPost($post, $res, $isModPanel = false) {
 							'" width="' . $post['thumb' . $index . '_width'] .
 							'" height="' . $post['thumb' . $index . '_height'] . '">
 						</a>' :
-						($isVideo /* If a webm or mp4 file have no thumbnail */ ? '
+						($isVideo /* If a webm or mp4 file doesn't have a thumbnail */ ? '
 						' . $thumblink . '
 							<video src="' . $directLink . '" alt="' . $id . $index .
 							'" class="thumb" id="thumbnail' . $id . $index. '"></video>

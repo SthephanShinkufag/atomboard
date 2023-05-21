@@ -326,9 +326,10 @@ function nameAndTripcode($name) {
 	return array($name, "");
 }
 
-function nameBlock($name, $tripcode, $email, $timestamp, $rawposttext) {
+function nameBlock($name, $tripcode, $email, $ip, $timestamp, $rawposttext) {
 	list($loggedIn, $isAdmin) = manageCheckLogIn();
-	$output = '<span class="postername' . ($loggedIn && $name != '' ? ' postername-admin' : '') . '">';
+	$output = '<span class="uniqid">' . substr(md5($ip . 'd0LLCH@N'), 0, 8) . '</span> ' .
+		'<span class="postername' . ($loggedIn && $name != '' ? ' postername-admin' : '') . '">';
 	$output .= $name == '' && $tripcode == '' ? TINYIB_POSTERNAME : $name;
 	if ($tripcode != '') {
 		$output .= '</span><span class="postertrip">!' . $tripcode;

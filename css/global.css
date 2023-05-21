@@ -288,6 +288,11 @@ video.thumb {
 	text-decoration: underline;
 }
 
+.uniqid {
+	color: #448bc6;
+	font: 13px Verdana, Arial, sans-serif;
+}
+
 .unkfunc {
 	background: inherit;
 	color: #789922;
