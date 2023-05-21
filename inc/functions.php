@@ -328,8 +328,17 @@ function nameAndTripcode($name) {
 
 function nameBlock($name, $tripcode, $email, $ip, $timestamp, $rawposttext) {
 	list($loggedIn, $isAdmin) = manageCheckLogIn();
-	$posterUID = TINYIB_POSTERUID ?
-		' <span class="posteruid">' . substr(md5($ip . TINYIB_TRIPSEED), 0, 8) . '</span>' : '';
+	$posterUID = '';
+	if (TINYIB_POSTERUID) {
+		$hash = substr(md5($ip . TINYIB_TRIPSEED), 0, 8);
+		$hashint = hexdec('0x' . $hash);
+		$red = $hashint >> 24 & 255;
+		$green = $hashint >> 16 & 255;
+		$blue = $hashint >> 8 & 255;
+		$isBlack = 0.299 * $red + 0.587 * $green + 0.114 * $blue > 125;
+		$posterUID = ' <span class="posteruid" style="background-color: rgb(' . $red . ', ' . $green . ', ' .
+			$blue . '); color: ' . ($isBlack ? 'black' : 'white') . ';">' . $hash . '</span>';
+	}
 	$output = '<span class="postername' . ($loggedIn && $name != '' ? ' postername-admin' : '') . '">';
 	$output .= $name == '' && $tripcode == '' ? TINYIB_POSTERNAME : $name;
 	if ($tripcode != '') {

@@ -220,8 +220,8 @@ video.thumb {
 }
 
 .posteruid {
-	color: #448bc6;
-	font: 13px Verdana, Arial, sans-serif;
+	padding: 0 3px;
+	border-radius: 7px;
 }
 
 .reflink {

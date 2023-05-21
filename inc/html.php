@@ -17,7 +17,7 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . TINYIB_BOARDDESC . '</title>
 	<link rel="shortcut icon" href="/' . TINYIB_BOARD . '/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . TINYIB_BOARD . '/css/global.css?2023052200">
+	<link rel="stylesheet" type="text/css" href="/' . TINYIB_BOARD . '/css/global.css?2023052202">
 	<script src="/' . TINYIB_BOARD . '/js/tinyib.js"></script>' .
 	(TINYIB_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') .
