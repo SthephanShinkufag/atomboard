@@ -1,18 +1,11 @@
-TinyIB &mdash; a lightweight and efficient [imageboard](https://en.wikipedia.org/wiki/Imageboard) engine
+atomboard &mdash; a lightweight and efficient [imageboard](https://en.wikipedia.org/wiki/Imageboard) engine
 
 Features
 ------------
 
-**No database?  No problem.**
-Store posts as text files for a portable set-up capable of running on virtually any PHP host.
-
-**Got database? Get speed.**
-Use [MySQL](https://mysql.com), [PostgreSQL](https://www.postgresql.org) or [SQLite](https://sqlite.org) for an efficient set-up able to handle high amounts of traffic.
-
-**Not looking for an image board script?**
-TinyIB settings is able to allow new threads without requiring an image, or even disallow sending of images entirely.
-
-[Original TinyIB](https://gitlab.com/tslocum/tinyib) features:
+ - Store posts as text files for a portable set-up capable of running on virtually any PHP host.
+ - Use [MySQL](https://mysql.com), [PostgreSQL](https://www.postgresql.org) or [SQLite](https://sqlite.org) for an efficient set-up able to handle high amounts of traffic.
+ - Allow new threads without requiring an image, or even disallow sending of images entirely.
  - GIF, JPG, PNG, SWF, WebM and WebP upload.
  - YouTube, Vimeo and SoundCloud embedding.
  - CAPTCHA (A simple implementation is included, reCAPTCHA is also supported).
@@ -23,13 +16,11 @@ TinyIB settings is able to allow new threads without requiring an image, or even
    - Moderators are only able to sticky threads, delete posts, and approve posts when necessary. (See `TINYIB_REQMOD`)
    - Ban offensive/abusive posters across all boards.
    - Post using raw HTML.
-
-This fork features:
  - Text formatting:
    - Markup buttons under the text area in postform.
    - bbcode formatting (multiline text and nested tags), wakabamark.
    - "Quote text" button that inserts selected text into the textarea with `>` symbols.
-   - Named links formatting, like on github: `[TinyIB](https://github.com/SthephanShinkufag/TinyIB/)`
+   - Named links formatting, like on github: `[atomboard](https://github.com/SthephanShinkufag/atomboard/)`
  - Administration:
    - You can set list of Moderators.
    - Moderation log.
@@ -54,13 +45,13 @@ Installing
 ------------
 
  1. Verify the following are installed:
-    - [PHP 4.3+](https://php.net)
+    - [PHP 7.4+](https://php.net)
     - [GD Image Processing Library](https://php.net/gd)
       - This library is usually installed by default.
-      - If you plan on disabling image uploads to use TinyIB as a text board only, this library is not required.
- 2. CD to the directory you wish to install TinyIB.
+      - If you plan on disabling image uploads to use atomboard as a text board only, this library is not required.
+ 2. CD to the directory you wish to install atomboard.
  3. Run the command:
-    - `git clone https://github.com/SthephanShinkufag/TinyIB.git ./`
+    - `git clone https://github.com/SthephanShinkufag/atomboard.git ./`
  4. Copy `settings.default.php` to `settings.php`.
  5. Configure `settings.php`
     - When setting `TINYIB_DBMODE` to `flatfile`, note that all post and ban data are exposed as the database is composed of standard text files.  Access to `./inc/flatfile/` should be denied.
@@ -79,7 +70,7 @@ Installing
       - Set `TINYIB_THUMBNAIL` to `imagemagick`.
       - **Note:** GIF files will have animated thumbnails, which will often have large file sizes.
  6. [CHMOD](https://en.wikipedia.org/wiki/Chmod) write permissions to these directories:
-    - `./` (the directory containing TinyIB)
+    - `./` (the directory containing atomboard)
     - `./src/`
     - `./thumb/`
     - `./res/`
@@ -99,13 +90,13 @@ Updating
 ------------
 
  1. Obtain the latest release.
-    - If you installed via Git, run `git pull` in TinyIB's directory.
-    - Otherwise, [download](https://github.com/SthephanShinkufag/TinyIB/archive/master.zip) and extract a zipped archive.
+    - If you installed via Git, run `git pull` in atomboard's directory.
+    - Otherwise, [download](https://github.com/SthephanShinkufag/atomboard/archive/master.zip) and extract a zipped archive.
  2. Note which files were modified.
     - If `settings.default.php` was updated, migrate the changes to `settings.php`
       - Take care to not change the value of `TINYIB_TRIPSEED`, as it would result in different secure tripcodes.
     - If other files were updated, and you have made changes yourself:
-      - Visit [GitHub](https://github.com/SthephanShinkufag/TinyIB) and review the changes made in the update.
+      - Visit [GitHub](https://github.com/SthephanShinkufag/atomboard) and review the changes made in the update.
       - Ensure the update does not interfere with your changes.
 
 **Database structure was last modified on *04th Sep 2019*.**
@@ -113,7 +104,7 @@ Updating
 Migrating
 ------------
 
-TinyIB includes a database migration tool, which currently only supports migrating from flat file mode to MySQL.
+atomboard includes a database migration tool, which currently only supports migrating from flat file mode to MySQL.
 While the migration is in progress, visitors will not be able to create or delete posts.
 
  1. Edit `settings.php`:
@@ -137,13 +128,13 @@ Run the following query for one or both of the tables, dependant of the warnings
 Support
 ------------
 
- 1. Ensure you are running the latest version of TinyIB.
- 2. Review the [open issues](https://github.com/SthephanShinkufag/TinyIB/issues).
- 3. Open a [new issue](https://github.com/SthephanShinkufag/TinyIB/issues/new).
+ 1. Ensure you are running the latest version of atomboard.
+ 2. Review the [open issues](https://github.com/SthephanShinkufag/atomboard/issues).
+ 3. Open a [new issue](https://github.com/SthephanShinkufag/atomboard/issues/new).
 
 Contributing
 ------------
 
- 2. Fork TinyIB.
+ 2. Fork atomboard.
  3. Commit code changes to your forked repository.
  4. Submit a pull request describing your modifications.
