@@ -104,6 +104,14 @@ hr {
 	white-space: nowrap;
 }
 
+.vyshyvanka {
+	background: url("/test/icons/vyshyvanka_30x64.png"), #eee;
+	background-repeat: repeat-x;
+	background-size: auto 64px;
+	height: 64px;
+	opacity: .8;
+}
+
 .wrapper {
 	width: 70%;
 	width: calc(100% - 210px);
@@ -204,6 +212,11 @@ video.thumb {
 .oppost > .filesize {
 	margin-left: 20px;
 	display: block;
+}
+
+.poster-country {
+	height: 14px;
+	vertical-align: -2px;
 }
 
 .postername {

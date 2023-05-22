@@ -17,7 +17,7 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . TINYIB_BOARDDESC . '</title>
 	<link rel="shortcut icon" href="/' . TINYIB_BOARD . '/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . TINYIB_BOARD . '/css/global.css?2023052202">
+	<link rel="stylesheet" type="text/css" href="/' . TINYIB_BOARD . '/css/global.css?2023052206">
 	<script src="/' . TINYIB_BOARD . '/js/tinyib.js"></script>' .
 	(TINYIB_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') .
@@ -40,7 +40,8 @@ function pageWrapper($returnHref) {
 			</a>' : '') . '
 		</div>
 	</div>
-	<div class="wrapper">';
+	<div class="wrapper">
+		<div class="vyshyvanka"></div>';
 }
 
 function pageFooter() {
@@ -50,6 +51,7 @@ function pageFooter() {
 			<br>
 			- <a href="https://github.com/tslocum/TinyIB" target="_top">TinyIB</a> - forked by <a href="https://github.com/SthephanShinkufag/TinyIB">SthephanShi</a> & <a href="https://github.com/nolifer1337/TinyIB" target="_top">nolifer</a> -
 		</div>
+		<div class="vyshyvanka"></div>
 	</div>
 	<div class="aside aside-right">
 		<div class="aside-top">
@@ -435,6 +437,7 @@ function buildPost($post, $res, $isModPanel = false) {
 	$likes = $post['likes'];
 	$replyBtn = ($isOp && $res == TINYIB_INDEXPAGE ? '<a class="link-button" href="res/' .
 		$id . '.html">Reply</a>' : '');
+	$countryCode = geoip_country_code_by_name($post['ip']);
 	return PHP_EOL . ($isOp ? '
 			<div class="oppost" id="op' . $id . '">' : '
 			<table border="0"><tbody><tr><td class="reply" id="reply' . $id . '">') . '
@@ -443,14 +446,19 @@ function buildPost($post, $res, $isModPanel = false) {
 					<input type="checkbox" name="delete" value="' . $id . '">' .
 					($post['subject'] != '' ? '
 					<span class="filetitle">' . $post['subject'] . '</span>' : '') . '
-					' . $post['nameblock'] . '
+					<img class="poster-country" title="' . $countryCode . '" src="/' . TINYIB_BOARD .
+						'/icons/flag-icons/' . $countryCode . '.png"></span> ' .
+					$post['nameblock'] . '
 				</label>
 				<span class="reflink">' . ($res == TINYIB_RESPAGE ? '
 					<a href="' . $thrId . '.html#' . $id . '" title="Click to link to this post">No.</a>' .
-					'<a href="' . $thrId . '.html#q' . $id . '" onclick="quotePost(' . $id . ');" title="Click to reply to this post">' .
+					'<a href="' . $thrId . '.html#q' . $id . '" onclick="quotePost(' . $id .
+						');" title="Click to reply to this post">' .
 						$id . '</a>' : '
-					<a href="/' . TINYIB_BOARD . '/res/' . $thrId . '.html#' . $id . '" title="Click to link to this post">No.</a>' .
-					'<a href="/' . TINYIB_BOARD . '/res/' . $thrId . '.html#q' . $id . '" title="Click to reply to this post">' . $id . '</a>') .
+					<a href="/' . TINYIB_BOARD . '/res/' . $thrId . '.html#' . $id .
+						'" title="Click to link to this post">No.</a>' .
+					'<a href="/' . TINYIB_BOARD . '/res/' . $thrId . '.html#q' . $id .
+						'" title="Click to reply to this post">' . $id . '</a>') .
 					($post['stickied'] == 1 ? '
 					<img src="/' . TINYIB_BOARD .
 						'/sticky.png" title="Thread is sticked" width="16" height="16">' : '') .
@@ -741,7 +749,7 @@ function manageModeratePost($post) {
 	$banDisabled = !$ban && $isAdmin ? '' : ' disabled';
 	$banInfo = $ban ?
 		' A ban record already exists for ' . $ip :
-		$isAdmin ? 'IP address: ' . $ip : 'Only an administrator may ban an IP address.';
+		($isAdmin ? 'IP address: ' . $ip : 'Only an administrator may ban an IP address.');
 	$isOp = $post['parent'] == TINYIB_NEWTHREAD;
 	$deleteInfo = $isOp ? 'This will delete the entire thread below.' : 'This will delete the post below.';
 	$postOrThread = $isOp ? 'Thread' : 'Post';
