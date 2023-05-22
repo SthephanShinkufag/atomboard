@@ -48,6 +48,7 @@ This fork features:
    - Custom default posts names.
  - Catalog page `catalog.html`.
  - Convenient css support for mobile devices.
+ - Displaying unique hash ID's and country flags for posters
 
 Installing
 ------------
@@ -72,7 +73,7 @@ Installing
     - To allow WebM upload:
       - Ensure your web host is running Linux or FreeBSD.
       - Install [mediainfo](https://mediaarea.net/en/MediaInfo) and [ffmpegthumbnailer](https://code.google.com/p/ffmpegthumbnailer/). On Ubuntu, run `sudo apt-get install mediainfo ffmpegthumbnailer`. On FreeBSD run `pkg install mediainfo ffmpegthumbnailer`.
-    - To remove the play icon from .SWF and .WebM thumbnails, delete or rename `video_overlay.png` or set `TINYIB_VIDEO_OVERLAY` to false.
+    - To remove the play icon from .SWF and .WebM thumbnails, delete or rename `icons/video_overlay.png` or set `TINYIB_VIDEO_OVERLAY` to false.
     - To use ImageMagick instead of GD when creating thumbnails:
       - Install ImageMagick and ensure that the `convert` command is available.
       - Set `TINYIB_THUMBNAIL` to `imagemagick`.

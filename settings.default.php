@@ -102,7 +102,7 @@ define('TINYIB_TRUNC_LINES', 10);
 // Text size in bytes to truncate posts on index pages [0 to disable]
 define('TINYIB_TRUNC_SIZE', 1536);
 // Words longer than this many characters will be broken apart [0 to disable]
-define('TINYIB_WORDBREAK', 100);
+define('TINYIB_WORDBREAK', 0);
 // Post likes system
 define('TINYIB_LIKES', true);
 
@@ -138,15 +138,15 @@ $tinyib_uploads = array(
 	'video/webm'  => array('webm'),
 	'audio/webm'  => array('webm'),
 	'video/mp4'   => array('mp4')
-//	'application/x-shockwave-flash' => array('swf', 'swf_thumbnail.png')
+//	'application/x-shockwave-flash' => array('swf', 'icons/swf_thumbnail.png')
 );
 
 /* ==[ oEmbed APIs ]======================================================================================= */
 // Empty array to disable
 $tinyib_embeds = array(
-	'SoundCloud.com' => 'http://soundcloud.com/oembed?format=json&url=TINYIBEMBED',
-	'Vimeo.com'      => 'http://vimeo.com/api/oembed.json?url=TINYIBEMBED',
-	'YouTube.com'    => 'http://www.youtube.com/oembed?url=TINYIBEMBED&format=json'
+	'SoundCloud.com' => 'https://soundcloud.com/oembed?format=json&url=TINYIBEMBED',
+	'Vimeo.com'      => 'https://vimeo.com/api/oembed.json?url=TINYIBEMBED',
+	'YouTube.com'    => 'https://www.youtube.com/oembed?url=TINYIBEMBED&format=json'
 );
 
 /* ==[ File control ]====================================================================================== */

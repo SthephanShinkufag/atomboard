@@ -71,7 +71,7 @@ if (!isset($tinyib_uploads)) {
 		$tinyib_uploads['image/webp'] = array('webp');
 	}
 	if (defined('TINYIB_SWF') && TINYIB_SWF) {
-		$tinyib_uploads['application/x-shockwave-flash'] = array('swf', 'swf_thumbnail.png');
+		$tinyib_uploads['application/x-shockwave-flash'] = array('swf', 'icons/swf_thumbnail.png');
 	}
 	if (defined('TINYIB_WEBM') && TINYIB_WEBM) {
 		$tinyib_uploads['video/webm'] = array('webm');

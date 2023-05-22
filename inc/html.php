@@ -16,7 +16,7 @@ function pageHeader() {
 	<meta http-equiv="pragma" content="no-cache">
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . TINYIB_BOARDDESC . '</title>
-	<link rel="shortcut icon" href="/' . TINYIB_BOARD . '/favicon.png">
+	<link rel="shortcut icon" href="/' . TINYIB_BOARD . '/icons/favicon.png">
 	<link rel="stylesheet" type="text/css" href="/' . TINYIB_BOARD . '/css/global.css?2023052206">
 	<script src="/' . TINYIB_BOARD . '/js/tinyib.js"></script>' .
 	(TINYIB_CAPTCHA === 'recaptcha' ? '
@@ -461,10 +461,10 @@ function buildPost($post, $res, $isModPanel = false) {
 						'" title="Click to reply to this post">' . $id . '</a>') .
 					($post['stickied'] == 1 ? '
 					<img src="/' . TINYIB_BOARD .
-						'/sticky.png" title="Thread is sticked" width="16" height="16">' : '') .
+						'/icons/sticky.png" title="Thread is sticked" width="16" height="16">' : '') .
 					($post['email'] == TINYIB_LOCKTHR_COOKIE ? '
 					<img src="/' . TINYIB_BOARD .
-						'/locked.png" title="Thread is locked" width="11" height="16">' : '') .
+						'/icons/locked.png" title="Thread is locked" width="11" height="16">' : '') .
 					(TINYIB_LIKES ? '
 					<span class="like-container">
 						<span class="like-icon' . ($likes ? ' like-enabled' : ' like-disabled') .
@@ -950,7 +950,7 @@ function buildCatalogPage() {
 	$OPpostSubject = '';
 	$OPpostMessage = '';
 	$OPpostID = '';
-	$thumb = 'noimage.png';
+	$thumb = 'icons/noimage.png';
 	$thumb_width = TINYIB_MAXW;
 	$thumb_height = TINYIB_MAXH;
 	$OPposts = allThreads();
@@ -983,7 +983,7 @@ function buildCatalogPage() {
 			$thumb_width = $post['thumb0_width'];
 			$thumb_height = $post['thumb0_height'];
 		} else {
-			$thumb = 'noimage.png';
+			$thumb = 'icons/noimage.png';
 			$thumb_width = TINYIB_MAXW;
 			$thumb_height = TINYIB_MAXH;
 		}
