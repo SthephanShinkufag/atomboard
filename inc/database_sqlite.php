@@ -258,7 +258,7 @@ function insertPost($post) {
 
 function stickyThreadByID($id, $setsticky) {
 	sqlite_query($GLOBALS["db"],
-		"UPDATE " . TINYIB_DBPOSTS . " 
+		"UPDATE " . TINYIB_DBPOSTS . "
 		SET stickied = '" . sqlite_escape_string($setsticky) . "'
 		WHERE id = " . $id);
 }
@@ -526,8 +526,8 @@ function deleteBanByID($id) {
 function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	$modLogs = array();
 	// If we need a modlog for the admin panel with all public+private records
-	if($private === '1') {
-		if($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
+	if ($private === '1') {
+		if ($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
 			$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
 				"SELECT timestamp, username, action, color FROM " . TINYIB_DBMODLOG . "
 				WHERE boardname = '" . TINYIB_BOARD . "'

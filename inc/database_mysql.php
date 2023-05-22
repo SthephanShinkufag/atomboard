@@ -474,8 +474,8 @@ function deleteBanByID($id) {
 function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	$modLogs = array();
 	// If we need a modlog for the admin panel with all public+private records
-	if($private === '1') {
-		if($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
+	if ($private === '1') {
+		if ($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
 			$result = mysql_query(
 				"SELECT `timestamp`, `username`, `action`, `color` FROM `" . TINYIB_DBMODLOG . "`
 				WHERE `boardname` = '" . TINYIB_BOARD . "'

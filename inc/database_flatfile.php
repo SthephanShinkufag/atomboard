@@ -581,8 +581,8 @@ function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 	$modLogs = array();
 	$rows = array();
 	// If we need a modlog for the admin panel with all public+private records
-	if($private === '1') {
-		if($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
+	if ($private === '1') {
+		if ($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
 			$rows = $GLOBALS['db']->selectWhere(
 				MODLOG_FILE,
 				new SimpleWhereClause(MODLOG_BOARDNAME, '=', TINYIB_BOARD, STRING_COMPARISON),

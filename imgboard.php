@@ -116,6 +116,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	if ($rawPost || !in_array('subject', $hideFields)) {
 		$post['subject'] = cleanString(substr($_POST['subject'], 0, 75));
 	}
+	// $replyedTo = array();
 	if ($rawPost || !in_array('message', $hideFields)) {
 		$post['message'] = $_POST['message'];
 		if ($rawPost) {
@@ -164,11 +165,9 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				return '<code>' . $m . '</code>';
 			}, $msg);
 			// Post links
-			// $replyedTo = array();
 			$msg = preg_replace_callback('/&gt;&gt;([0-9]+)/', function($matches) {
 				$post = postByID($matches[1]);
 				if ($post) {
-					// global $replyedTo;
 					// $replyedTo[] = intval($matches[1]);
 					return '<a href="/' . TINYIB_BOARD . '/res/' .
 						($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']) .
@@ -466,10 +465,10 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	if (sizeof($replyedTo) != 0) {
 		$replyedTo = array_unique($replyedTo);
 		foreach ($replyedTo as $arrayIndex => $postID) {
-			$OriginalPost = array();
+			$originalPost = array();
+			$originalPost = postByID($postID);
 			$newMessage = '';
-			$OriginalPost = postByID($postID);
-			$newMessage = $OriginalPost['message'];
+			$newMessage = $originalPost['message'];
 			$newMessage .= ' &iexcl;&iexcl;' .
 				($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']) .
 				'&cent;&cent;' . $post['id'];
@@ -572,7 +571,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			} elseif (isset($_GET['modlog'])) {
 				$fromtime = 0;
 				$totime = 0;
-				if(isset($_POST['from']) && isset($_POST['to'])) {
+				if (isset($_POST['from']) && isset($_POST['to'])) {
 					if (($fromtime = strtotime($_POST['from'])) === false ||
 						($totime = strtotime($_POST['to'])) === false
 					) {
@@ -1011,7 +1010,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 }
 
 if ($redirect) {
-	if(isset($slowRedirect)) {
+	if (isset($slowRedirect)) {
 		echo '<meta http-equiv="refresh" content="3; url=' .
 			(is_string($redirect) ? $redirect : TINYIB_INDEX) . '">';
 	} else {
