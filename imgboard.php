@@ -223,7 +223,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	if ($rawPost || !in_array('password', $hideFields)) {
 		$post['password'] = $_POST['password'] != '' ? md5(md5($_POST['password'])) : '';
 	}
-	$post['nameblock'] = nameBlock($post['name'], $post['tripcode'], $post['email'], $post['ip'],
+	$post['nameblock'] = nameBlock($post['name'], $post['tripcode'], $post['email'], $post['ip'], $post['parent'],
 		time(), $rawPostText);
 
 	// Embed URL uploaded
