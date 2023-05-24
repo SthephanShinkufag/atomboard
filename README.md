@@ -1,4 +1,6 @@
-atomboard &mdash; a lightweight and efficient [imageboard](https://en.wikipedia.org/wiki/Imageboard) engine
+# atomboard &mdash; A lightweight and efficient PHP imageboard.
+
+This project is a further development of an old (now defunc'd) [TinyIB](https://github.com/tslocum/TinyIB) engine version.
 
 Features
 ------------
