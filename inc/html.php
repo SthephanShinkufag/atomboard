@@ -17,7 +17,7 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . TINYIB_BOARDDESC . '</title>
 	<link rel="shortcut icon" href="/' . TINYIB_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . TINYIB_BOARD . '/css/global.css?2023052400">
+	<link rel="stylesheet" type="text/css" href="/' . TINYIB_BOARD . '/css/atomboard.css?2023052400">
 	<script src="/' . TINYIB_BOARD . '/js/atomboard.js"></script>' .
 	(TINYIB_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') .
@@ -334,7 +334,8 @@ function buildPost($post, $res, $isModPanel = false) {
 		$fHeight = $post['image' . $index . '_height'];
 		$fName = $post['file' . $index];
 		$isEmbed = isEmbed($post['file' . $index . '_hex']);
-		$isVideo = !!(substr($fName, -5) == '.webm' || substr($fName, -4) == '.mp4');
+		$fExt = substr(strrchr($fName, '.'), 1);
+		$isVideo = !!($fExt == 'webm' || $fExt == 'mp4' || $fExt == 'mov');
 		$directLink = $isEmbed ? '#' : '/' . TINYIB_BOARD . '/src/' . $fName;
 		$expandClick = ' onclick="return expandFile(event, ' . $id . $index . ');"';
 		$expandHtml = '';
@@ -347,9 +348,7 @@ function buildPost($post, $res, $isModPanel = false) {
 				'style="position: static;' .
 				' pointer-events: inherit; display: inline; max-width: 100%; max-height: 100%;"' .
 				' controls autoplay loop><source src="' . $directLink . '"></source></video>');
-		} elseif (in_array(substr($fName, -4), array('.jpg', '.png', '.gif')) ||
-			substr($fName, -5) == '.webp'
-		) {
+		} elseif (in_array($fExt, array('jpg', 'png', 'gif', 'webp'))) {
 			$expandHtml = rawurlencode('<a href="' . $directLink . '"' . $expandClick . '><img src="/' .
 				TINYIB_BOARD . '/src/' . $fName . '" width="' . $fWidth .
 				'" style="max-width: 100%; height: auto;"></a>');
@@ -357,8 +356,7 @@ function buildPost($post, $res, $isModPanel = false) {
 		$origName = $post['file' . $index . '_original'];
 		$hasOrigName = $origName != '';
 		$thumblink = '<a href="' . $directLink . '" target="_blank"' .
-			($isEmbed || in_array(substr($fName, -4), array('.jpg', '.png', '.gif', '.mp4')) ||
-				in_array(substr($fName, -5), array('.webm', '.webp')) ?
+			($isEmbed || in_array($fExt, array('jpg', 'png', 'gif', 'webp', 'webm', 'mp4', 'mov')) ?
 				$expandClick : '') .
 			($hasOrigName ? ' download="' . $origName . '" title="Click to expand/collapse">' : '>');
 		$filesize = '';
@@ -389,7 +387,7 @@ function buildPost($post, $res, $isModPanel = false) {
 							'" width="' . $post['thumb' . $index . '_width'] .
 							'" height="' . $post['thumb' . $index . '_height'] . '">
 						</a>' :
-						($isVideo /* If a webm or mp4 file doesn't have a thumbnail */ ? '
+						($isVideo /* If a video file doesn't have a thumbnail */ ? '
 						' . $thumblink . '
 							<video src="' . $directLink . '" alt="' . $id . $index .
 							'" class="thumb" id="thumbnail' . $id . $index. '"></video>

@@ -128,14 +128,16 @@ $atomboard_hidefields = array();
 // Format: MIME type => (extension, optional thumbnail)
 // WebM upload requires mediainfo and ffmpegthumbnailer (see README for instructions)
 $atomboard_uploads = array(
-	'image/jpeg'  => array('jpg'),
+	'image/jpeg' => array('jpg'),
 	'image/pjpeg' => array('jpg'),
-	'image/png'   => array('png'),
-	'image/gif'   => array('gif'),
-	'image/webp'  => array('webp'),
-	'video/webm'  => array('webm'),
-	'audio/webm'  => array('webm'),
-	'video/mp4'   => array('mp4')
+	'image/png' => array('png'),
+	'image/gif' => array('gif'),
+	'image/webp' => array('webp'),
+	'video/webm' => array('webm'),
+	'audio/webm' => array('webm'),
+	'video/mp4' => array('mp4'),
+	'application/octet-stream' => array('mp4'),
+	'video/quicktime' => array('mov')
 );
 
 /* ==[ oEmbed APIs ]======================================================================================= */

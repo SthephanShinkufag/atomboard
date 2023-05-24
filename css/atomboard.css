@@ -106,7 +106,7 @@ hr {
 }
 
 .vyshyvanka {
-	background: url("/test/icons/vyshyvanka_30x64.png"), #eee;
+	background: url("../icons/vyshyvanka_30x64.png"), #eee;
 	background-repeat: repeat-x;
 	background-size: auto 64px;
 	height: 64px;
@@ -512,7 +512,7 @@ video.thumb {
 		display: inline-block;
 	}
 	.aside-right {
-		margin-top: 20px;
+		margin-top: 10px;
 	}
 	.aside-top {
 		margin-top: 0;

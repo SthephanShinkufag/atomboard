@@ -16,8 +16,8 @@ Features
    - Admin, moderators and janitors can replace thumbnails of attached files by `spoiler.png` file.
    - Admin, moderators and janitors can post with red name when logged in.
    - Admin, moderators and janitors can post using raw HTML
-   - You can set list of moderators and janitors.
-   - Moderation log.
+   - You can set up list of moderators and janitors.
+   - Moderation logs.
  - Text formatting:
    - Markup buttons under the text area in postform.
    - bbcode formatting (multiline text and nested tags), wakabamark.
@@ -27,14 +27,14 @@ Features
    - YouTube, Vimeo and SoundCloud embedding.
    - CAPTCHA (A simple implementation is included, reCAPTCHA is also supported).
  - Post files:
-   - Allow new threads without requiring an image, or even disallow sending of images entirely.
    - You can upload 4 files per post.
-   - GIF, JPG, PNG, MP4, WebM and WebP upload.
-   - Upload, view and expand WEBM and MP4 videos without instaled `mediainfo` and `ffmpegthumbnailer`. Videos are injected right in page without generated thumbnails.
+   - Supported GIF, JPG, PNG, MP4, MOV, WebM and WebP upload.
+   - Upload, view and expand WEBM, MP4 and MOV without instaled `mediainfo` and `ffmpegthumbnailer`. Videos are injected right in page without generated thumbnails.
+   - Allow new threads without requiring a file, or even disallow sending of files entirely.
  - Posts and threads:
    - Reference links >>12345
    - Post deletion via password.
-   - Added likes to posts.
+   - Likes (reactions to posts).
    - "Sage" indicator in posts.
    - Threads can be locked for posting.
    - Truncating of long posts by size in bytes and by number of lines.
@@ -66,7 +66,7 @@ Installing
     - To allow WebM upload:
       - Ensure your web host is running Linux or FreeBSD.
       - Install [mediainfo](https://mediaarea.net/en/MediaInfo) and [ffmpegthumbnailer](https://code.google.com/p/ffmpegthumbnailer/). On Ubuntu, run `sudo apt-get install mediainfo ffmpegthumbnailer`. On FreeBSD run `pkg install mediainfo ffmpegthumbnailer`.
-    - To remove the play icon from .WebM and .MP4 thumbnails, delete or rename `icons/video_overlay.png` or set `TINYIB_VIDEO_OVERLAY` to false.
+    - To remove the play icon from WebM/MP4/MOV thumbnails, delete or rename `icons/video_overlay.png` or set `TINYIB_VIDEO_OVERLAY` to false.
     - To use ImageMagick instead of GD when creating thumbnails:
       - Install ImageMagick and ensure that the `convert` command is available.
       - Set `TINYIB_THUMBNAIL` to `imagemagick`.

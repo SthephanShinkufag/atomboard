@@ -14,6 +14,7 @@ Header unset Vary
 
 <IfModule mod_expires.c>
 ExpiresActive On
+ExpiresByType application/octet-stream "access plus 2592000 seconds"
 ExpiresByType application/x-javascript "access plus 216000 seconds"
 ExpiresByType application/x-shockwave-flash "access plus 2592000 seconds"
 ExpiresByType audio/webm "access plus 2592000 seconds"
@@ -24,6 +25,7 @@ ExpiresByType image/webp "access plus 2592000 seconds"
 ExpiresByType image/x-icon "access plus 2592000 seconds"
 ExpiresByType text/css "access plus 604800 seconds"
 ExpiresByType text/javascript "access plus 216000 seconds"
+ExpiresByType video/quicktime "access plus 2592000 seconds"
 ExpiresByType video/webm "access plus 2592000 seconds"
 </IfModule>
 

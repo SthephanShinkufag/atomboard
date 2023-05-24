@@ -341,7 +341,11 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				@unlink($fileLocation);
 				fancyDie('File transfer failure.<br>Please go back and try again.');
 			}
-			if ($fileMime == 'audio/webm' || $fileMime == 'video/webm' || $fileMime == 'video/mp4') {
+			if ($fileMime == 'audio/webm' ||
+				$fileMime == 'video/webm' ||
+				$fileMime == 'video/mp4' ||
+				$fileMime == 'video/quicktime'
+			) {
 				$post['image' . $index . '_width'] = max(0, intval(shell_exec(
 					'mediainfo --Inform="Video;%Width%" ' . $fileLocation)));
 				$post['image' . $index . '_height'] = max(0, intval(shell_exec(
