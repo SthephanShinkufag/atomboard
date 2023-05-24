@@ -326,10 +326,10 @@ function nameAndTripcode($name) {
 	return array($name, "");
 }
 
-function nameBlock($name, $tripcode, $email, $ip, $timestamp, $rawposttext) {
+function nameBlock($name, $tripcode, $email, $ip, $parent, $timestamp, $rawposttext) {
 	$posterUID = '';
 	if (TINYIB_POSTERUID) {
-		$hash = substr(md5($ip . TINYIB_TRIPSEED), 0, 8);
+		$hash = substr(md5($ip . intval($parent) . TINYIB_TRIPSEED), 0, 8);
 		$hashint = hexdec('0x' . $hash);
 		$red = $hashint >> 24 & 255;
 		$green = $hashint >> 16 & 255;
