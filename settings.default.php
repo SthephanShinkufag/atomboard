@@ -1,6 +1,4 @@
 <?php
-# TinyIB, forked version by SthephanShi: https://github.com/SthephanShinkufag/TinyIB
-# Original repo: https://gitlab.com/tslocum/TinyIB
 # See README for instructions on configuring, moderating and upgrading your board.
 # Set TINYIB_DBMODE to a PDO-related mode if it's available.
 # By default it's set to 'flatfile', which can be very slow.
@@ -10,13 +8,13 @@
 define('TINYIB_BOARD', '');
 // Displayed at the top of every page
 define('TINYIB_BOARDDESC', '');
-// Logo HTML
+// Logo HTML - specify your code to be added at the top of the page
 define('TINYIB_LOGO', '');
-// Index-file name
+// Name of the index page
 define('TINYIB_INDEX', 'index.html');
 // Timezone (see https://secure.php.net/manual/en/timezones.php - e.g. 'America/Los_Angeles')
 define('TINYIB_TIMEZONE', 'UTC');
-// <Head> HTML - specify your code to be added to the end of the <HEAD>
+// <head> HTML - specify your code to be added to the end of the <head> element
 define('TINYIB_HTML_HEAD', '');
 // Sidebar HTML - specify your navigation buttons to be added at the left side of the page
 define('TINYIB_HTML_LEFTSIDE', '
@@ -27,21 +25,21 @@ define('TINYIB_HTML_LEFTSIDE', '
 					TINYIB_BOARDDESC . '">' . TINYIB_BOARD .'</a>');
 
 /* ==[ Administrator/moderator credentials ]=============================================================== */
-// Administrators have full access to the board
+// Administrator password. Administrator has full access to the board
 define('TINYIB_ADMINPASS', '');
-// Moderators only have access to delete (and moderate if TINYIB_REQMOD is set) posts
-// Moderators disabled by default. Uncomment array and set you own list of Mods.
-// 'ModeratorName' => 'Password'
-/*
+// Moderators have access to ban posters and delete posts
 $tinyib_moderators = array(
-	'Mod1'	=> '',
-	'Mod2'  => '',
-	'Mod3' => ''
+	// 'Mod1' => 'Password1',
+	// 'Mod2' => 'Password2',
+	// 'Mod3' => 'Password3'
 );
-*/
-$tinyib_moderators = array();
-// To generate public modlog.html
-define('TINYIB_MODLOG', false);
+// Janitors only have access to delete (and moderate if TINYIB_REQMOD is set) posts
+// If the array is not empty, the janitorlog.html will be generated.
+$tinyib_janitors = array(
+	// 'Janitor1' => 'Password1',
+	// 'Janitor2' => 'Password2',
+	// 'Janitor3' => 'Password3'
+);
 // Require moderation before displaying posts:
 // files / all (see README for instructions, only MySQL is supported)  ['' to disable]
 define('TINYIB_REQMOD', '');
@@ -50,7 +48,7 @@ define('TINYIB_REQMOD', '');
 // Recommended database modes from best to worst: 'pdo', 'mysqli', 'mysql', 'sqlite3', 'sqlite', 'flatfile'
 // 'flatfile' is only useful if you need portability or lack any kind of database
 // Mode
-define('TINYIB_DBMODE', 'pdo');
+define('TINYIB_DBMODE', 'flatfile');
 // Enable database migration tool (see README for instructions)
 define('TINYIB_DBMIGRATE', false);
 // Bans table name in database (use the same bans table across boards for global bans)
@@ -138,7 +136,6 @@ $tinyib_uploads = array(
 	'video/webm'  => array('webm'),
 	'audio/webm'  => array('webm'),
 	'video/mp4'   => array('mp4')
-//	'application/x-shockwave-flash' => array('swf', 'icons/swf_thumbnail.png')
 );
 
 /* ==[ oEmbed APIs ]======================================================================================= */

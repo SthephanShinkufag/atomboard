@@ -3,35 +3,35 @@ atomboard &mdash; a lightweight and efficient [imageboard](https://en.wikipedia.
 Features
 ------------
 
- - Store posts as text files for a portable set-up capable of running on virtually any PHP host.
+ - Can store posts as text files for a portable set-up capable of running on virtually any PHP host.
  - Use [MySQL](https://mysql.com), [PostgreSQL](https://www.postgresql.org) or [SQLite](https://sqlite.org) for an efficient set-up able to handle high amounts of traffic.
- - Allow new threads without requiring an image, or even disallow sending of images entirely.
- - GIF, JPG, PNG, SWF, WebM and WebP upload.
- - YouTube, Vimeo and SoundCloud embedding.
- - CAPTCHA (A simple implementation is included, reCAPTCHA is also supported).
- - Reference links >>###
- - Delete post via password.
  - Management panel:
-   - Administrators and moderators use separate passwords.
-   - Moderators are only able to sticky threads, delete posts, and approve posts when necessary. (See `TINYIB_REQMOD`)
-   - Ban offensive/abusive posters across all boards.
-   - Post using raw HTML.
+   - Admin and moderators can ban offensive/abusive posters across all boards.
+   - Admin and moderators can sticky threads, delete/approve posts and threads (see `TINYIB_REQMOD`).
+   - Janitors can delete/approve posts and threads.
+   - Admin, moderators and janitors can edit message text in posts.
+   - Admin, moderators and janitors can delete attached files.
+   - Admin, moderators and janitors can replace thumbnails of attached files by `spoiler.png` file.
+   - Admin, moderators and janitors can post with red name when logged in.
+   - Admin, moderators and janitors can post using raw HTML
+   - You can set list of moderators and janitors.
+   - Moderation log.
  - Text formatting:
    - Markup buttons under the text area in postform.
    - bbcode formatting (multiline text and nested tags), wakabamark.
    - "Quote text" button that inserts selected text into the textarea with `>` symbols.
    - Named links formatting, like on github: `[atomboard](https://github.com/SthephanShinkufag/atomboard/)`
- - Administration:
-   - You can set list of Moderators.
-   - Moderation log.
-   - Admins and Mods can edit message text in posts.
-   - Admins and Mods can selectively delete attached files.
-   - Admins and Mods can selectively replace thumbnails of attached files by `spoiler.png` file.
-   - Posting with red name if Admin is logged in.
+ - Posting:
+   - YouTube, Vimeo and SoundCloud embedding.
+   - CAPTCHA (A simple implementation is included, reCAPTCHA is also supported).
  - Post files:
+   - Allow new threads without requiring an image, or even disallow sending of images entirely.
    - You can upload 4 files per post.
+   - GIF, JPG, PNG, MP4, WebM and WebP upload.
    - Upload, view and expand WEBM and MP4 videos without instaled `mediainfo` and `ffmpegthumbnailer`. Videos are injected right in page without generated thumbnails.
  - Posts and threads:
+   - Reference links >>12345
+   - Post deletion via password.
    - Added likes to posts.
    - "Sage" indicator in posts.
    - Threads can be locked for posting.
@@ -64,7 +64,7 @@ Installing
     - To allow WebM upload:
       - Ensure your web host is running Linux or FreeBSD.
       - Install [mediainfo](https://mediaarea.net/en/MediaInfo) and [ffmpegthumbnailer](https://code.google.com/p/ffmpegthumbnailer/). On Ubuntu, run `sudo apt-get install mediainfo ffmpegthumbnailer`. On FreeBSD run `pkg install mediainfo ffmpegthumbnailer`.
-    - To remove the play icon from .SWF and .WebM thumbnails, delete or rename `icons/video_overlay.png` or set `TINYIB_VIDEO_OVERLAY` to false.
+    - To remove the play icon from .WebM and .MP4 thumbnails, delete or rename `icons/video_overlay.png` or set `TINYIB_VIDEO_OVERLAY` to false.
     - To use ImageMagick instead of GD when creating thumbnails:
       - Install ImageMagick and ensure that the `convert` command is available.
       - Set `TINYIB_THUMBNAIL` to `imagemagick`.

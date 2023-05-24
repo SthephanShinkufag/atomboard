@@ -471,8 +471,8 @@ function deleteBanByID($id) {
 }
 
 // Modlog functions
-function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
-	$modLogs = array();
+function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
+	$records = array();
 	// If we need a modlog for the admin panel with all public+private records
 	if ($private === '1') {
 		if ($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
@@ -482,7 +482,7 @@ function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 				ORDER BY `timestamp` DESC LIMIT 100");
 			if ($result) {
 				while ($row = mysql_fetch_assoc($result)) {
-					$modLogs[] = $row;
+					$records[] = $row;
 				}
 			}
 		} elseif ($periodEndDate !== 0 && $periodStartDate !== 0) { // If the date range is set
@@ -494,7 +494,7 @@ function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 				ORDER BY `timestamp` DESC");
 			if ($result) {
 				while ($row = mysql_fetch_assoc($result)) {
-					$modLogs[] = $row;
+					$records[] = $row;
 				}
 			}
 		}
@@ -507,11 +507,11 @@ function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 			ORDER BY `timestamp` DESC LIMIT 100");
 		if ($result) {
 			while ($row = mysql_fetch_assoc($result)) {
-				$modLogs[] = $row;
+				$records[] = $row;
 			}
 		}
 	}
-	return $modLogs;
+	return $records;
 }
 
 function modLog($action, $private = '1', $color = 'Black') {

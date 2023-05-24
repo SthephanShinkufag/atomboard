@@ -523,8 +523,8 @@ function deleteBanByID($id) {
 }
 
 // Modlog functions
-function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
-	$modLogs = array();
+function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
+	$records = array();
 	// If we need a modlog for the admin panel with all public+private records
 	if ($private === '1') {
 		if ($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
@@ -533,7 +533,7 @@ function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 				WHERE boardname = ? ORDER BY timestamp DESC LIMIT 100",
 				array(TINYIB_BOARD));
 			while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
-				$modLogs[] = $row;
+				$records[] = $row;
 			}
 		} elseif ($periodEndDate !== 0 && $periodStartDate !== 0) { // If the date range is set
 			$results = pdoQuery(
@@ -541,7 +541,7 @@ function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 				WHERE boardname = ? AND timestamp >= ? AND timestamp <= ? ORDER BY timestamp DESC",
 				array(TINYIB_BOARD, $periodStartDate, $periodEndDate));
 			while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
-				$modLogs[] = $row;
+				$records[] = $row;
 			}
 		}
 	// If we need only public records
@@ -551,10 +551,10 @@ function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 			WHERE boardname = ? AND private = ? ORDER BY timestamp DESC LIMIT 100",
 			array(TINYIB_BOARD, '0'));
 		while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
-			$modLogs[] = $row;
+			$records[] = $row;
 		}
 	}
-	return $modLogs;
+	return $records;
 }
 
 function modLog($action, $private = '1', $color = 'Black') {

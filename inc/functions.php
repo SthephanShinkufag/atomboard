@@ -327,7 +327,6 @@ function nameAndTripcode($name) {
 }
 
 function nameBlock($name, $tripcode, $email, $ip, $timestamp, $rawposttext) {
-	list($loggedIn, $isAdmin) = manageCheckLogIn();
 	$posterUID = '';
 	if (TINYIB_POSTERUID) {
 		$hash = substr(md5($ip . TINYIB_TRIPSEED), 0, 8);
@@ -339,7 +338,8 @@ function nameBlock($name, $tripcode, $email, $ip, $timestamp, $rawposttext) {
 		$posterUID = ' <span class="posteruid" style="background-color: rgb(' . $red . ', ' . $green . ', ' .
 			$blue . '); color: ' . ($isBlack ? 'black' : 'white') . ';">' . $hash . '</span>';
 	}
-	$output = '<span class="postername' . ($loggedIn && $name != '' ? ' postername-admin' : '') . '">';
+	$output = '<span class="postername' .
+		(checkAccess() != 'disabled' && $name != '' ? ' postername-admin' : '') . '">';
 	$output .= $name == '' && $tripcode == '' ? TINYIB_POSTERNAME : $name;
 	if ($tripcode != '') {
 		$output .= '</span><span class="postertrip">!' . $tripcode;
@@ -494,10 +494,8 @@ function checkMessageSize() {
 	}
 }
 
-function manageCheckLogIn() {
-	global $tinyib_moderators;
-	$loggedIn = false;
-	$isAdmin = false;
+function checkAccess() {
+	global $tinyib_moderators, $tinyib_janitors;
 	if (isset($_POST['managepassword'])) {
 		$providedPassword = substr($_POST['managepassword'], 0, 256);
 		if ($providedPassword != '' && $providedPassword === TINYIB_ADMINPASS) {
@@ -509,23 +507,34 @@ function manageCheckLogIn() {
 		) {
 			$_SESSION['tinyib'] = $tinyib_moderators[$modname];
 			$_SESSION['tinyib_user'] = $modname;
-			modLog('Login', '1', 'BlueViolet');
+			modLog('Moderator login', '1', 'BlueViolet');
+		} elseif ($providedPassword != '' &&
+			count($tinyib_janitors) != 0 &&
+			$modname = array_search($providedPassword, $tinyib_janitors, true)
+		) {
+			$_SESSION['tinyib'] = $tinyib_janitors[$modname];
+			$_SESSION['tinyib_user'] = $modname;
+			modLog('Janitor login', '1', 'BlueViolet');
 		} else {
 			// uncomment if you want a lot of "failed login" records in modLog
 			// modLog('Failed login attempt', '1', 'Orange');
 		}
 	}
+	$access = 'disabled';
 	if (isset($_SESSION['tinyib'])) {
 		if ($_SESSION['tinyib'] === TINYIB_ADMINPASS) {
-			$loggedIn = true;
-			$isAdmin = true;
+			$access = 'admin';
 		} elseif (count($tinyib_moderators) != 0 &&
 			array_search($_SESSION['tinyib'], $tinyib_moderators, true)
 		) {
-			$loggedIn = true;
+			$access = 'moderator';
+		} elseif (count($tinyib_janitors) != 0 &&
+			array_search($_SESSION['tinyib'], $tinyib_janitors, true)
+		) {
+			$access = 'janitor';
 		}
 	}
-	return array($loggedIn, $isAdmin);
+	return $access;
 }
 
 function setParent() {
@@ -541,13 +550,7 @@ function setParent() {
 }
 
 function isRawPost() {
-	if (isset($_POST['rawpost'])) {
-		list($loggedIn, $isAdmin) = manageCheckLogIn();
-		if ($loggedIn) {
-			return true;
-		}
-	}
-	return false;
+	return isset($_POST['rawpost']) && checkAccess() != 'disabled';
 }
 
 function validateFileUpload($error) {
