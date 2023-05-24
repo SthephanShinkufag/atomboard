@@ -561,7 +561,7 @@ function modLog($action, $private = '1', $color = 'Black') {
 	// modLog('Text to show in modlog', '[1, 0]', 'Color');
 	// '[1, 0]': 1 = Private record. 0 = Public record.
 	// 'Color': Choose what to put in style="color: " for this record
-	$userName = isset($_SESSION['tinyib_user']) ? $_SESSION['tinyib_user'] : 'UNKNOWN';
+	$userName = isset($_SESSION['atomboard_user']) ? $_SESSION['atomboard_user'] : 'UNKNOWN';
 	pdoQuery(
 		"INSERT INTO " . TINYIB_DBMODLOG . "
 		(timestamp, boardname, username, action, color, private)

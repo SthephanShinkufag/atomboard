@@ -76,6 +76,7 @@ hr {
 }
 
 .logo {
+	margin: 7px 0;
 	clear: both;
 	text-align: center;
 	font-size: 2em;
@@ -439,8 +440,12 @@ video.thumb {
 	margin-bottom: 40px;
 }
 
-#aside-btn-tobottom > svg {
+#aside-btn-tobottom > svg, #aside-btn-tobottom-mobile > svg {
 	transform: rotate(-90deg);
+}
+
+#aside-btn-tobottom-mobile {
+	display: none;
 }
 
 #aside-btn-totop > svg {
@@ -499,6 +504,12 @@ video.thumb {
 	}
 	.aside-btn-indent {
 		margin-bottom: 0;
+	}
+	#aside-btn-tobottom {
+		display: none;
+	}
+	#aside-btn-tobottom-mobile {
+		display: inline-block;
 	}
 	.aside-right {
 		margin-top: 20px;

@@ -149,11 +149,11 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 			var expiration = new Date();
 			expiration.setFullYear(expiration.getFullYear() + 7);
-			document.cookie = 'tinyib_password=' + encodeURIComponent(value) +
+			document.cookie = 'atomboard_password=' + encodeURIComponent(value) +
 				'; path=/; expires=' + expiration.toGMTString();
 		};
 	}
-	var password = getCookie('tinyib_password');
+	var password = getCookie('atomboard_password');
 	if (password) {
 		if (replyPassw) {
 			replyPassw.value = password;

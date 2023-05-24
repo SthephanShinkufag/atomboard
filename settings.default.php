@@ -28,14 +28,14 @@ define('TINYIB_HTML_LEFTSIDE', '
 // Administrator password. Administrator has full access to the board
 define('TINYIB_ADMINPASS', '');
 // Moderators have access to ban posters and delete posts
-$tinyib_moderators = array(
+$atomboard_moderators = array(
 	// 'Mod1' => 'Password1',
 	// 'Mod2' => 'Password2',
 	// 'Mod3' => 'Password3'
 );
 // Janitors only have access to delete (and moderate if TINYIB_REQMOD is set) posts
 // If the array is not empty, the janitorlog.html will be generated.
-$tinyib_janitors = array(
+$atomboard_janitors = array(
 	// 'Janitor1' => 'Password1',
 	// 'Janitor2' => 'Password2',
 	// 'Janitor3' => 'Password3'
@@ -119,15 +119,15 @@ define('TINYIB_LOCKTHR_COOKIE', 'thread@is.locked');
 define('TINYIB_ALWAYSNOKO', true);
 // Fields to hide when creating a new thread
 // e.g. array('name', 'email', 'subject', 'message', 'file', 'embed', 'password')
-$tinyib_hidefieldsop = array();
+$atomboard_hidefieldsop = array();
 // Fields to hide when replying
-$tinyib_hidefields = array();
+$atomboard_hidefields = array();
 
 /* ==[ Upload types ]====================================================================================== */
 // Empty array to disable
 // Format: MIME type => (extension, optional thumbnail)
 // WebM upload requires mediainfo and ffmpegthumbnailer (see README for instructions)
-$tinyib_uploads = array(
+$atomboard_uploads = array(
 	'image/jpeg'  => array('jpg'),
 	'image/pjpeg' => array('jpg'),
 	'image/png'   => array('png'),
@@ -140,7 +140,7 @@ $tinyib_uploads = array(
 
 /* ==[ oEmbed APIs ]======================================================================================= */
 // Empty array to disable
-$tinyib_embeds = array(
+$atomboard_embeds = array(
 	'SoundCloud.com' => 'https://soundcloud.com/oembed?format=json&url=TINYIBEMBED',
 	'Vimeo.com'      => 'https://vimeo.com/api/oembed.json?url=TINYIBEMBED',
 	'YouTube.com'    => 'https://www.youtube.com/oembed?url=TINYIBEMBED&format=json'

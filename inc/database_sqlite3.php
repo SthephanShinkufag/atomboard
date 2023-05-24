@@ -7,7 +7,7 @@ if (!extension_loaded('sqlite3')) {
 	fancyDie("SQLite3 extension is either not installed or loaded");
 }
 
-$db = new SQLite3('tinyib.db');
+$db = new SQLite3('atomboard.db');
 if (!$db) {
 	fancyDie("Could not connect to database: " . $db->lastErrorMsg());
 }
@@ -591,7 +591,7 @@ function modLog($action, $private = '1', $color = 'Black') {
 	// modLog('Text to show in modlog', '[1, 0]', 'Color');
 	// '[1, 0]': 1 = Private record. 0 = Public record.
 	// 'Color': Choose what to put in style="color: " for this record
-	$userName = isset($_SESSION['tinyib_user']) ? $_SESSION['tinyib_user'] : 'UNKNOWN';
+	$userName = isset($_SESSION['atomboard_user']) ? $_SESSION['atomboard_user'] : 'UNKNOWN';
 	$db->query(
 		"INSERT INTO " . TINYIB_DBMODLOG . "
 		(timestamp, boardname, username, action, color, private)

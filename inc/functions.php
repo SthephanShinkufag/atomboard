@@ -446,8 +446,8 @@ function checkCAPTCHA() {
 		}
 	} else if (TINYIB_CAPTCHA) { // Simple CAPTCHA
 		$captcha = isset($_POST['captcha']) ? strtolower(trim($_POST['captcha'])) : '';
-		$captcha_solution = isset($_SESSION['tinyibcaptcha']) ?
-			strtolower(trim($_SESSION['tinyibcaptcha'])) : '';
+		$captcha_solution = isset($_SESSION['atomboardcaptcha']) ?
+			strtolower(trim($_SESSION['atomboardcaptcha'])) : '';
 		if ($captcha == '') {
 			fancyDie('Please enter the CAPTCHA text.');
 		} else if ($captcha != $captcha_solution) {
@@ -495,25 +495,25 @@ function checkMessageSize() {
 }
 
 function checkAccess() {
-	global $tinyib_moderators, $tinyib_janitors;
+	global $atomboard_moderators, $atomboard_janitors;
 	if (isset($_POST['managepassword'])) {
 		$providedPassword = substr($_POST['managepassword'], 0, 256);
 		if ($providedPassword != '' && $providedPassword === TINYIB_ADMINPASS) {
-			$_SESSION['tinyib'] = TINYIB_ADMINPASS;
-			$_SESSION['tinyib_user'] = 'Admin';
+			$_SESSION['atomboard'] = TINYIB_ADMINPASS;
+			$_SESSION['atomboard_user'] = 'Admin';
 		} elseif ($providedPassword != '' &&
-			count($tinyib_moderators) != 0 &&
-			$modname = array_search($providedPassword, $tinyib_moderators, true)
+			count($atomboard_moderators) != 0 &&
+			$modname = array_search($providedPassword, $atomboard_moderators, true)
 		) {
-			$_SESSION['tinyib'] = $tinyib_moderators[$modname];
-			$_SESSION['tinyib_user'] = $modname;
+			$_SESSION['atomboard'] = $atomboard_moderators[$modname];
+			$_SESSION['atomboard_user'] = $modname;
 			modLog('Moderator login', '1', 'BlueViolet');
 		} elseif ($providedPassword != '' &&
-			count($tinyib_janitors) != 0 &&
-			$modname = array_search($providedPassword, $tinyib_janitors, true)
+			count($atomboard_janitors) != 0 &&
+			$modname = array_search($providedPassword, $atomboard_janitors, true)
 		) {
-			$_SESSION['tinyib'] = $tinyib_janitors[$modname];
-			$_SESSION['tinyib_user'] = $modname;
+			$_SESSION['atomboard'] = $atomboard_janitors[$modname];
+			$_SESSION['atomboard_user'] = $modname;
 			modLog('Janitor login', '1', 'BlueViolet');
 		} else {
 			// uncomment if you want a lot of "failed login" records in modLog
@@ -521,15 +521,15 @@ function checkAccess() {
 		}
 	}
 	$access = 'disabled';
-	if (isset($_SESSION['tinyib'])) {
-		if ($_SESSION['tinyib'] === TINYIB_ADMINPASS) {
+	if (isset($_SESSION['atomboard'])) {
+		if ($_SESSION['atomboard'] === TINYIB_ADMINPASS) {
 			$access = 'admin';
-		} elseif (count($tinyib_moderators) != 0 &&
-			array_search($_SESSION['tinyib'], $tinyib_moderators, true)
+		} elseif (count($atomboard_moderators) != 0 &&
+			array_search($_SESSION['atomboard'], $atomboard_moderators, true)
 		) {
 			$access = 'moderator';
-		} elseif (count($tinyib_janitors) != 0 &&
-			array_search($_SESSION['tinyib'], $tinyib_janitors, true)
+		} elseif (count($atomboard_janitors) != 0 &&
+			array_search($_SESSION['atomboard'], $atomboard_janitors, true)
 		) {
 			$access = 'janitor';
 		}
@@ -833,14 +833,14 @@ function url_get_contents($url) {
 }
 
 function isEmbed($file_hex) {
-	global $tinyib_embeds;
-	return in_array($file_hex, array_keys($tinyib_embeds));
+	global $atomboard_embeds;
+	return in_array($file_hex, array_keys($atomboard_embeds));
 }
 
 function getEmbed($url) {
-	global $tinyib_embeds;
-	if (sizeof($tinyib_embeds) != 0) {
-		foreach ($tinyib_embeds as $service => $service_url) {
+	global $atomboard_embeds;
+	if (sizeof($atomboard_embeds) != 0) {
+		foreach ($atomboard_embeds as $service => $service_url) {
 			if (strpos(strtolower($url), strtolower($service)) !== false) {
 				$service_url = str_ireplace("TINYIBEMBED", urlencode($url), $service_url);
 				$result = json_decode(url_get_contents($service_url), true);

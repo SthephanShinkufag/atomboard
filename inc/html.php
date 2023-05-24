@@ -17,8 +17,8 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . TINYIB_BOARDDESC . '</title>
 	<link rel="shortcut icon" href="/' . TINYIB_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . TINYIB_BOARD . '/css/global.css?2023052206">
-	<script src="/' . TINYIB_BOARD . '/js/tinyib.js"></script>' .
+	<link rel="stylesheet" type="text/css" href="/' . TINYIB_BOARD . '/css/global.css?2023052400">
+	<script src="/' . TINYIB_BOARD . '/js/atomboard.js"></script>' .
 	(TINYIB_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') .
 	TINYIB_HTML_HEAD . '
@@ -38,6 +38,10 @@ function pageWrapper($returnHref) {
 			<a class="aside-btn" id="aside-btn-return" href="/' . TINYIB_BOARD . '/" title="Return">
 				<svg><use xlink:href="#symbol-arrow-left"/></svg>
 			</a>' : '') . '
+			<a class="aside-btn" id="aside-btn-tobottom-mobile" href="#"' .
+				' title="To bottom" onclick="window.scroll(0, document.body.scrollHeight); return false;">
+				<svg><use xlink:href="#symbol-arrow-left"/></svg>
+			</a>
 		</div>
 	</div>
 	<div class="wrapper">
@@ -48,8 +52,7 @@ function pageFooter() {
 	return '
 		<div class="footer">
 			<div>We are not responsible for the content posted on this site. Any information posted here is the responsibility of the user who uploaded it.<br>The content on the site is intended for persons over 18 years of age.</div>
-			<br>
-			- <a href="https://github.com/tslocum/TinyIB" target="_top">TinyIB</a> - forked by <a href="https://github.com/SthephanShinkufag/TinyIB">SthephanShi</a> & <a href="https://github.com/nolifer1337/TinyIB" target="_top">nolifer</a> -
+			- <a href="https://github.com/SthephanShinkufag/atomboard">atomboard</a> -
 		</div>
 		<div class="vyshyvanka"></div>
 	</div>
@@ -95,20 +98,20 @@ function pageFooter() {
 }
 
 function supportedFileTypes() {
-	global $tinyib_uploads;
-	if (empty($tinyib_uploads)) {
+	global $atomboard_uploads;
+	if (empty($atomboard_uploads)) {
 		return '';
 	}
-	$typesAllowed = array_map('strtoupper', array_unique(array_column($tinyib_uploads, 0)));
+	$typesAllowed = array_map('strtoupper', array_unique(array_column($atomboard_uploads, 0)));
 	$typesLast = array_pop($typesAllowed);
 	$typesFormatted = $typesAllowed ? implode(', ', $typesAllowed) . ' and ' . $typesLast : $typesLast;
-	return 'Supported file type' . (count($tinyib_uploads) != 1 ? 's are ' : ' is ') . $typesFormatted . '.';
+	return 'Supported file type' . (count($atomboard_uploads) != 1 ? 's are ' : ' is ') . $typesFormatted . '.';
 }
 
 function buildPostForm($parent, $isRawPost = false) {
-	global $tinyib_hidefieldsop, $tinyib_hidefields, $tinyib_uploads, $tinyib_embeds;
+	global $atomboard_hidefieldsop, $atomboard_hidefields, $atomboard_uploads, $atomboard_embeds;
 	$isOnPage = $parent == TINYIB_NEWTHREAD;
-	$hideFields = $isOnPage ? $tinyib_hidefieldsop : $tinyib_hidefields;
+	$hideFields = $isOnPage ? $atomboard_hidefieldsop : $atomboard_hidefields;
 	$postformExtra = array('name' => '', 'email' => '', 'subject' => '', 'footer' => '');
 	$inputSubmit = '<input type="submit" value="' . ($isOnPage ? 'New thread' : 'Reply') . '" accesskey="z">';
 	if ($isRawPost || !in_array('subject', $hideFields)) {
@@ -127,7 +130,7 @@ function buildPostForm($parent, $isRawPost = false) {
 	$fileTypesHtml = '';
 	$fileInputHtml = '';
 	$embedInputHtml = '';
-	if (!empty($tinyib_uploads) && ($isRawPost || !in_array('file', $hideFields))) {
+	if (!empty($atomboard_uploads) && ($isRawPost || !in_array('file', $hideFields))) {
 		if (TINYIB_MAXKB > 0) {
 			$maxFileSizeInputHtml = '<input type="hidden" name="MAX_FILE_SIZE" value="' .
 				strval(TINYIB_MAXKB * 1024) . '">';
@@ -142,7 +145,7 @@ function buildPostForm($parent, $isRawPost = false) {
 						</td>
 					</tr>';
 	}
-	if (!empty($tinyib_embeds) && ($isRawPost || !in_array('embed', $hideFields))) {
+	if (!empty($atomboard_embeds) && ($isRawPost || !in_array('embed', $hideFields))) {
 		$embedInputHtml = '<tr>
 						<td class="postblock"></td>
 						<td>
@@ -156,11 +159,11 @@ function buildPostForm($parent, $isRawPost = false) {
 			' will be moderated before being shown.</li>';
 	}
 	$thumbnailsHtml = '';
-	if (isset($tinyib_uploads['image/jpeg']) ||
-		isset($tinyib_uploads['image/pjpeg']) ||
-		isset($tinyib_uploads['image/png']) ||
-		isset($tinyib_uploads['image/gif']) ||
-		isset($tinyib_uploads['image/webp'])
+	if (isset($atomboard_uploads['image/jpeg']) ||
+		isset($atomboard_uploads['image/pjpeg']) ||
+		isset($atomboard_uploads['image/png']) ||
+		isset($atomboard_uploads['image/gif']) ||
+		isset($atomboard_uploads['image/webp'])
 	) {
 		$thumbnailsHtml = '<li>Images greater than ' . TINYIB_MAXWOP . 'x' . TINYIB_MAXHOP . (
 			TINYIB_MAXW == TINYIB_MAXWOP && TINYIB_MAXH == TINYIB_MAXHOP ? '' :
@@ -537,7 +540,7 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 					</td>');
 	}
 	// Build page's body
-	return pageHeader() . '<body class="tinyib">' . pageWrapper(!$isOnPage) . '
+	return pageHeader() . '<body class="tinyib atomboard">' . pageWrapper(!$isOnPage) . '
 		<div class="logo">
 			' . TINYIB_LOGO . TINYIB_BOARDDESC . '
 		</div>' .
@@ -574,7 +577,7 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 }
 
 function rebuildIndexes() {
-	global $tinyib_janitors;
+	global $atomboard_janitors;
 	$page = 0;
 	$i = 0;
 	$htmlPosts = '';
@@ -606,7 +609,7 @@ function rebuildIndexes() {
 	// Create catalog
 	writePage('catalog.html', buildCatalogPage());
 	// Create janitor log
-	if (count($tinyib_janitors) != 0) {
+	if (count($atomboard_janitors) != 0) {
 		writePage('janitorlog.html', buildModLogPage());
 	}
 }
@@ -623,13 +626,13 @@ function rebuildThread($id) {
 }
 
 function adminBar() {
-	global $access, $tinyib_janitors;
+	global $access, $atomboard_janitors;
 	return $access == 'disabled' ? '' : '
 			[<a href="?manage">Status</a>]' .
 			($access == 'admin' || $access == 'moderator' ? '
 			[<a href="?manage&bans">Bans</a>]
 			[<a href="?manage&modlog">ModLog</a>]' : '') .
-			(count($tinyib_janitors) != 0 && $access == 'janitor' ? '
+			(count($atomboard_janitors) != 0 && $access == 'janitor' ? '
 			[<a href="/' . TINYIB_BOARD . '/janitorlog.html">JanitorLog</a>]' : '') . '
 			[<a href="?manage&moderate">Moderate Post</a>]
 			[<a href="?manage&rawpost">Raw Post</a>]
@@ -655,15 +658,15 @@ function managePage($text, $onload = '') {
 
 function manageOnLoad($page) {
 	switch ($page) {
-	case 'login':    return ' onload="document.tinyib.managepassword.focus();"';
-	case 'moderate': return ' onload="document.tinyib.moderate.focus();"';
+	case 'login':    return ' onload="document.atomboard.managepassword.focus();"';
+	case 'moderate': return ' onload="document.atomboard.moderate.focus();"';
 	case 'rawpost':  return ' onload="document.postform.parent.focus();"';
-	case 'bans':     return ' onload="document.tinyib.ip.focus();"';
+	case 'bans':     return ' onload="document.atomboard.ip.focus();"';
 	}
 }
 
 function manageLogInForm() {
-	return '<form id="tinyib" name="tinyib" method="post" action="?manage">
+	return '<form id="atomboard" name="atomboard" method="post" action="?manage">
 			<fieldset>
 				<legend align="center">Enter an administrator or moderator password</legend>
 				<div class="login">
@@ -676,7 +679,7 @@ function manageLogInForm() {
 }
 
 function manageBanForm() {
-	return '<form id="tinyib" name="tinyib" method="post" action="?manage&bans">
+	return '<form id="atomboard" name="atomboard" method="post" action="?manage&bans">
 		<fieldset>
 			<legend>Ban an IP-address</legend>
 			<label for="ip">IP-address:</label>
@@ -686,13 +689,13 @@ function manageBanForm() {
 			<label for="expire">Expire (sec):</label>
 			<input type="text" name="expire" id="expire" value="0">&nbsp;&nbsp;
 			<small>[
-				<a href="#" onclick="document.tinyib.expire.value=\'3600\'; return false;">1hr</a> |
-				<a href="#" onclick="document.tinyib.expire.value=\'86400\'; return false;">1d</a> |
-				<a href="#" onclick="document.tinyib.expire.value=\'172800\'; return false;">2d</a> |
-				<a href="#" onclick="document.tinyib.expire.value=\'604800\'; return false;">1w</a> |
-				<a href="#" onclick="document.tinyib.expire.value=\'1209600\'; return false;">2w</a> |
-				<a href="#" onclick="document.tinyib.expire.value=\'2592000\'; return false;">30d</a> |
-				<a href="#" onclick="document.tinyib.expire.value=\'0\'; return false;">never</a>
+				<a href="#" onclick="document.atomboard.expire.value=\'3600\'; return false;">1hr</a> |
+				<a href="#" onclick="document.atomboard.expire.value=\'86400\'; return false;">1d</a> |
+				<a href="#" onclick="document.atomboard.expire.value=\'172800\'; return false;">2d</a> |
+				<a href="#" onclick="document.atomboard.expire.value=\'604800\'; return false;">1w</a> |
+				<a href="#" onclick="document.atomboard.expire.value=\'1209600\'; return false;">2w</a> |
+				<a href="#" onclick="document.atomboard.expire.value=\'2592000\'; return false;">30d</a> |
+				<a href="#" onclick="document.atomboard.expire.value=\'0\'; return false;">never</a>
 			]</small><br>
 			<label for="reason">Reason:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
 			<input type="text" name="reason" id="reason">&nbsp;&nbsp;<small>optional</small>
@@ -730,7 +733,7 @@ function manageBansTable() {
 }
 
 function manageModeratePostForm() {
-	return '<form id="tinyib" name="tinyib" method="get" action="?">
+	return '<form id="atomboard" name="atomboard" method="get" action="?">
 			<input type="hidden" name="manage" value="">
 			<fieldset>
 				<legend>Moderate a post</legend>
@@ -927,7 +930,7 @@ function manageStatus() {
 						<form method="get" action="?">
 							<input type="hidden" name="manage">
 							<input type="hidden" name="update">
-							<input type="submit" value="Update TinyIB" class="managebutton">
+							<input type="submit" value="Update atomboard" class="managebutton">
 						</form>
 					</td>' : '') . '
 				</tr></tbody></table>

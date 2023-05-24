@@ -7,7 +7,7 @@ if (!function_exists('sqlite_open')) {
 	fancyDie("SQLite library is not installed");
 }
 
-if (!$db = sqlite_open('tinyib.db', 0666, $error)) {
+if (!$db = sqlite_open('atomboard.db', 0666, $error)) {
 	fancyDie("Could not connect to database: " . $error);
 }
 
@@ -564,7 +564,7 @@ function modLog($action, $private = '1', $color = 'Black') {
 	// modLog('Text to show in modlog', '[1, 0]', 'Color');
 	// '[1, 0]': 1 = Private record. 0 = Public record.
 	// 'Color': Choose what to put in style="color: " for this record
-	$userName = isset($_SESSION['tinyib_user']) ? $_SESSION['tinyib_user'] : 'UNKNOWN';
+	$userName = isset($_SESSION['atomboard_user']) ? $_SESSION['atomboard_user'] : 'UNKNOWN';
 	sqlite_fetch_all(sqlite_query($GLOBALS["db"],
 		"INSERT INTO " . TINYIB_DBMODLOG . "
 		(timestamp, boardname, username, action, color, private)

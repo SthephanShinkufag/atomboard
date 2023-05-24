@@ -104,7 +104,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			fancyDie('Posting in this thread is currently disabled.<br>Thread is locked.');
 		}
 	}
-	$hideFields = $post['parent'] == TINYIB_NEWTHREAD ? $tinyib_hidefieldsop : $tinyib_hidefields;
+	$hideFields = $post['parent'] == TINYIB_NEWTHREAD ? $atomboard_hidefieldsop : $atomboard_hidefields;
 	$post['ip'] = $_SERVER['REMOTE_ADDR'];
 	if ($rawPost || !in_array('name', $hideFields)) {
 		list($post['name'], $post['tripcode']) = nameAndTripcode($_POST['name']);
@@ -242,7 +242,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			!isset($embed['thumbnail_url'])
 		) {
 			fancyDie('Invalid embed URL.<br>Only ' .
-				(implode('/', array_keys($tinyib_embeds))) . ' URLs are supported.');
+				(implode('/', array_keys($atomboard_embeds))) . ' URLs are supported.');
 		}
 		$post['file0_hex'] = $service;
 		$tempFile = time() . substr(microtime(), 2, 3) . '-0';
@@ -328,11 +328,11 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$fileInfo = getimagesize($_FILES['file']['tmp_name'][$index]);
 				$fileMime = mime_content_type($_FILES['file']['tmp_name'][$index]);
 			}
-			if (empty($fileMime) || !isset($tinyib_uploads[$fileMime])) {
+			if (empty($fileMime) || !isset($atomboard_uploads[$fileMime])) {
 				fancyDie(supportedFileTypes());
 			}
 			$fileName = time() . substr(microtime(), 2, 3) . '-' . $index;
-			$post['file' . $index] = $fileName . '.' . $tinyib_uploads[$fileMime][0];
+			$post['file' . $index] = $fileName . '.' . $atomboard_uploads[$fileMime][0];
 			$fileLocation = 'src/' . $post['file' . $index];
 			if (!move_uploaded_file($_FILES['file']['tmp_name'][$index], $fileLocation)) {
 				fancyDie('Could not copy uploaded file.');
@@ -387,10 +387,10 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$post['image' . $index . '_width'] = $fileInfo[0];
 				$post['image' . $index . '_height'] = $fileInfo[1];
 			}
-			if (isset($tinyib_uploads[$fileMime][1])) {
-				$thumbFileSplit = explode('.', $tinyib_uploads[$fileMime][1]);
+			if (isset($atomboard_uploads[$fileMime][1])) {
+				$thumbFileSplit = explode('.', $atomboard_uploads[$fileMime][1]);
 				$post['thumb' . $index] = $fileName . 's.' . array_pop($thumbFileSplit);
-				if (!copy($tinyib_uploads[$fileMime][1], 'thumb/' . $post['thumb' . $index])) {
+				if (!copy($atomboard_uploads[$fileMime][1], 'thumb/' . $post['thumb' . $index])) {
 					@unlink($fileLocation);
 					fancyDie('Could not create thumbnail.');
 				}
@@ -404,7 +404,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				'image/gif',
 				'image/webp'
 			))) {
-				$post['thumb' . $index] = $fileName . 's.' . $tinyib_uploads[$fileMime][0];
+				$post['thumb' . $index] = $fileName . 's.' . $atomboard_uploads[$fileMime][0];
 				list($thumbMaxWidth, $thumbMaxHeight) = thumbnailDimensions($post, $index);
 				if (!createThumbnail(
 					$fileLocation,
@@ -428,10 +428,10 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	// No file uploaded
 	if ($post['file0'] == '') {
 		$allowed = '';
-		if (!empty($tinyib_uploads) && ($rawPost || !in_array('file', $hideFields))) {
+		if (!empty($atomboard_uploads) && ($rawPost || !in_array('file', $hideFields))) {
 			$allowed = 'file';
 		}
-		if (!empty($tinyib_embeds) && ($rawPost || !in_array('embed', $hideFields))) {
+		if (!empty($atomboard_embeds) && ($rawPost || !in_array('embed', $hideFields))) {
 			if ($allowed != '') {
 				$allowed .= ' or ';
 			}
@@ -550,18 +550,18 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		'<blockquote class="reply" style="padding: 7px;font-size: 1.25em;">
 			<pre style="margin: 0;padding: 0;">Attempting update...' . "\n\n" . $git_output . '</pre>
 		</blockquote>
-		<p><b>Note:</b> If TinyIB updates and you have made custom modifications,
-			<a href="https://github.com/SthephanShinkufag/TinyIB/commits/master" target="_blank">
+		<p><b>Note:</b> If atomboard updates and you have made custom modifications,
+			<a href="https://github.com/SthephanShinkufag/atomboard/commits/master" target="_blank">
 				review the changes</a> which have been merged into your installation.<br>
 			Ensure that your modifications do not interfere with any new/modified files.<br>
-			See the <a href="https://github.com/SthephanShinkufag/TinyIB#readme">README</a>
+			See the <a href="https://github.com/SthephanShinkufag/atomboard#readme">README</a>
 			for more information.
 		</p>';
 				} else {
 					$text .=
-		'<p><b>TinyIB was not installed via Git!</b></p>
-		<p>If you installed TinyIB without Git, you must
-			<a href="https://github.com/SthephanShinkufag/TinyIB/#updating">update manually</a><br>
+		'<p><b>atomboard was not installed via Git!</b></p>
+		<p>If you installed atomboard without Git, you must
+			<a href="https://github.com/SthephanShinkufag/atomboard/#updating">update manually</a><br>
 			If you did install with Git, ensure the script has read and write access to the
 			<b>.git</b> folder.
 		</p>';
@@ -576,7 +576,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			This tool currently only supports migration from a flat file database to MySQL.<br>
 			Your original database will not be deleted.<br>
 			If the migration fails, disable the tool and your board will be unaffected.<br>
-			See the <a href="https://github.com/SthephanShinkufag/TinyIB#migrating" target="_blank">README</a>
+			See the <a href="https://github.com/SthephanShinkufag/atomboard#migrating" target="_blank">README</a>
 			<small>(<a href="README.md" target="_blank">alternate link</a>)</small> for instructions.<br><br>
 			<a href="?manage&dbmigrate&go"><b>Start the migration</b></a>
 		</p>';
@@ -999,10 +999,10 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 
 		// Log out
 		} elseif (isset($_GET['logout'])) {
-			$_SESSION['tinyib'] = '';
+			$_SESSION['atomboard'] = '';
 			session_destroy();
 			if ($access != 'admin') {
-				modLog(ucfirst($access) . ' logout', '1', 'BlueViolet');
+				modLog('Logout', '1', 'BlueViolet');
 			};
 			die('<meta http-equiv="refresh" content="0;url=' . basename($_SERVER['PHP_SELF']) . '?manage">');
 		}
@@ -1048,4 +1048,3 @@ if ($redirect) {
 		exit();
 	}
 }
-;

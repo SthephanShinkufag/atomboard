@@ -642,7 +642,7 @@ function modLog($action, $private = '1', $color = 'Black') {
 	$row[MODLOG_ID] = '0';
 	$row[MODLOG_TIMESTAMP] = time();
 	$row[MODLOG_BOARDNAME] = TINYIB_BOARD;
-	$row[MODLOG_USERNAME] = isset($_SESSION['tinyib_user']) ? $_SESSION['tinyib_user'] : 'UNKNOWN';
+	$row[MODLOG_USERNAME] = isset($_SESSION['atomboard_user']) ? $_SESSION['atomboard_user'] : 'UNKNOWN';
 	$row[MODLOG_ACTION] = $action;
 	$row[MODLOG_COLOR] = $color;
 	$row[MODLOG_PRIVATE] = $private;
