@@ -574,6 +574,7 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 }
 
 function rebuildIndexes() {
+	global $tinyib_janitors;
 	$page = 0;
 	$i = 0;
 	$htmlPosts = '';
@@ -602,8 +603,12 @@ function rebuildIndexes() {
 		$file = $page == 0 ? TINYIB_INDEX : $page . '.html';
 		writePage($file, buildPage($htmlPosts, 0, $pages, $page));
 	}
-	createCatalog();
-	createModLog();
+	// Create catalog
+	writePage('catalog.html', buildCatalogPage());
+	// Create janitor log
+	if (count($tinyib_janitors) != 0) {
+		writePage('janitorlog.html', buildModLogPage());
+	}
 }
 
 function rebuildThread($id) {
@@ -618,17 +623,18 @@ function rebuildThread($id) {
 }
 
 function adminBar() {
-	global $loggedIn, $isAdmin;
-	return !$loggedIn ? '' : '
+	global $access, $tinyib_janitors;
+	return $access == 'disabled' ? '' : '
 			[<a href="?manage">Status</a>]' .
-			($isAdmin ? '
+			($access == 'admin' || $access == 'moderator' ? '
 			[<a href="?manage&bans">Bans</a>]
-			[<a href="?manage&modlog">ModLog/all</a>]' : '') . '
-			[<a href="/' . TINYIB_BOARD . '/modlog.html">ModLog/admin</a>]
+			[<a href="?manage&modlog">ModLog</a>]' : '') .
+			(count($tinyib_janitors) != 0 && $access == 'janitor' ? '
+			[<a href="/' . TINYIB_BOARD . '/janitorlog.html">JanitorLog</a>]' : '') . '
 			[<a href="?manage&moderate">Moderate Post</a>]
 			[<a href="?manage&rawpost">Raw Post</a>]
-			[' . ($isAdmin ? '<a href="?manage&rebuildall">Rebuild All</a>]
-			[' : '') . ($isAdmin && TINYIB_DBMIGRATE ?
+			[' . ($access == 'admin' ? '<a href="?manage&rebuildall">Rebuild All</a>]
+			[' : '') . ($access == 'admin' && TINYIB_DBMIGRATE ?
 				'<a href="?manage&dbmigrate"><b>Migrate Database</b></a>] [' : '') .
 				'<a href="?manage&logout">Log Out</a>]
 		';
@@ -743,13 +749,13 @@ function manageModeratePostForm() {
 }
 
 function manageModeratePost($post) {
-	global $isAdmin;
+	global $access;
 	$ip = $post['ip'];
 	$ban = banByIP($ip);
-	$banDisabled = !$ban && $isAdmin ? '' : ' disabled';
-	$banInfo = $ban ?
-		' A ban record already exists for ' . $ip :
-		($isAdmin ? 'IP address: ' . $ip : 'Only an administrator may ban an IP address.');
+	$banDisabled = !$ban && ($access == 'admin' || $access == 'moderator') ? '' : ' disabled';
+	$banInfo = $ban ? ' A ban record already exists for ' . $ip :
+		($access == 'admin' || $access == 'moderator' ?
+			'IP address: ' . $ip : 'Only an administrator may ban an IP address.');
 	$isOp = $post['parent'] == TINYIB_NEWTHREAD;
 	$deleteInfo = $isOp ? 'This will delete the entire thread below.' : 'This will delete the post below.';
 	$postOrThread = $isOp ? 'Thread' : 'Post';
@@ -840,7 +846,7 @@ function manageModeratePost($post) {
 }
 
 function manageStatus() {
-	global $isAdmin;
+	global $access;
 	$threads = countThreads();
 	$bans = count(allBans());
 	if (TINYIB_REQMOD == 'files' || TINYIB_REQMOD == 'all') {
@@ -902,7 +908,7 @@ function manageStatus() {
 						</td>
 					</tr>';
 	}
-	return ($isAdmin && TINYIB_DBMODE == 'mysql' && function_exists('mysqli_connect') ?
+	return ($access == 'admin' && TINYIB_DBMODE == 'mysql' && function_exists('mysqli_connect') ?
 		'<fieldset>
 			<legend>Notice</legend>
 			<p><b>TINYIB_DBMODE</b> is currently <b>mysql</b> in <b>settings.php</b>, but
@@ -916,7 +922,7 @@ function manageStatus() {
 				<table border="0" cellspacing="0" cellpadding="0" width="100%"><tbody><tr>
 					<td>' . $threads . ' ' . plural('thread', $threads) . ', ' .
 							$bans . ' ' . plural('ban', $bans) . '</td>' .
-					($isAdmin ? '
+					($access == 'admin' ? '
 					<td valign="top" align="right">
 						<form method="get" action="?">
 							<input type="hidden" name="manage">
@@ -1016,10 +1022,6 @@ function buildCatalogPage() {
 		pageFooter();
 }
 
-function createCatalog() {
-	writePage('catalog.html', buildCatalogPage());
-}
-
 function generateModLogForm() {
 	$periodStartDate = isset($_POST['from']) ? $_POST['from'] : date("Y-m-d", strtotime("-2 day"));
 	$periodEndDate = isset($_POST['to']) ? $_POST['to'] : date("Y-m-d", strtotime("+1 day"));
@@ -1032,33 +1034,32 @@ function generateModLogForm() {
 		</form><br><br>';
 }
 
-function generateModLogTable($private = '0', $fromtime = '0', $totime = '0') {
+function generateModLogTable($isModerators = false, $fromtime = '0', $totime = '0') {
 	$periodEndDate = '0';
 	$periodStartDate = '0';
-	$private = $private === 'all' ? '1' : '0'; // 1 = all records; 0 = only for public modlog
-	if ($private === '1' && $fromtime !== '0' && $totime !== '0') {
+	if ($isModerators && $fromtime !== '0' && $totime !== '0') {
 		$periodEndDate = max($fromtime, $totime);
 		$periodStartDate = min($fromtime, $totime);
 	}
 	$text = '';
-	$modLogs = allModLogRecords($private, $periodEndDate, $periodStartDate);
-	$countOfLogs = count($modLogs);
-	if ($countOfLogs > 0) {
-		$text .= ($private == '1' ? 'Total Records: ' . $countOfLogs : '') . '
+	$records = getModLogRecords($isModerators ? '1' : '0', $periodEndDate, $periodStartDate);
+	$recordsCount = count($records);
+	if ($recordsCount > 0) {
+		$text .= ($isModerators ? 'Total Records: ' . $recordsCount : '') . '
 		<table id="ban-table"><tbody>
 			<tr>
 				<th>Date / Time:</th>' .
-				($private == '1' ? '
+				($isModerators ? '
 				<th>User:</th>' : '') . '
 				<th>Action:</th>
 			</tr>';
-		foreach ($modLogs as $log) {
-			$action = $log['action'];
-			$text .= '<tr' . ($private == '1' ? ' style="color: ' . $log['color'] . '"' : '') . '>
-				<td>' . date('d.m.y D H:i:s', $log['timestamp']) . '</td>' .
-				($private == '1' ? '
-				<td>' . $log['username'] . '</td>' : '') . '
-				<td>' . $log['action'] . '</td>
+		foreach ($records as $record) {
+			$action = $record['action'];
+			$text .= '<tr' . ($isModerators ? ' style="color: ' . $record['color'] . '"' : '') . '>
+				<td>' . date('d.m.y D H:i:s', $record['timestamp']) . '</td>' .
+				($isModerators ? '
+				<td>' . $record['username'] . '</td>' : '') . '
+				<td>' . $record['action'] . '</td>
 			</tr>';
 		}
 		$text .= '
@@ -1078,10 +1079,4 @@ function buildModLogPage() {
 			' . generateModLogTable() . '
 		</center>' .
 		pageFooter();
-}
-
-function createModLog() {
-	if (TINYIB_MODLOG) {
-		writePage('modlog.html', buildModLogPage());
-	}
 }

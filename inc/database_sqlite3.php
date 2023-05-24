@@ -548,9 +548,9 @@ function deleteBanByID($id) {
 }
 
 // Modlog functions
-function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
+function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	global $db;
-	$modLogs = array();
+	$records = array();
 	// If we need a modlog for the admin panel with all public+private records
 	if ($private === '1') {
 		if ($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
@@ -559,7 +559,7 @@ function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 				WHERE boardname = '" . TINYIB_BOARD . "'
 				ORDER BY timestamp DESC LIMIT 100");
 			while ($row = $result->fetchArray()) {
-				$modLogs[] = $row;
+				$records[] = $row;
 			}
 		} elseif ($periodEndDate !== 0 && $periodStartDate !== 0) { // If the date range is set
 			$result = $db->query(
@@ -569,7 +569,7 @@ function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 					AND timestamp <= " . $periodEndDate . "
 				ORDER BY timestamp DESC");
 			while ($row = $result->fetchArray()) {
-				$modLogs[] = $row;
+				$records[] = $row;
 			}
 		}
 	// If we need only public records
@@ -580,10 +580,10 @@ function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 				AND private = '0'
 			ORDER BY timestamp DESC LIMIT 100");
 		while ($row = $result->fetchArray()) {
-			$modLogs[] = $row;
+			$records[] = $row;
 		}
 	}
-	return $modLogs;
+	return $records;
 }
 
 function modLog($action, $private = '1', $color = 'Black') {

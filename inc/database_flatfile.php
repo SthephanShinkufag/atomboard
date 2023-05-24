@@ -577,8 +577,8 @@ function convertLikesToSQLStyle($likes) {
 }
 
 // Modlog functions
-function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
-	$modLogs = array();
+function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
+	$records = array();
 	$rows = array();
 	// If we need a modlog for the admin panel with all public+private records
 	if ($private === '1') {
@@ -589,7 +589,7 @@ function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 				100,
 				new OrderBy(MODLOG_TIMESTAMP, DESCENDING, INTEGER_COMPARISON));
 			foreach ($rows as $row) {
-				$modLogs[] = array(
+				$records[] = array(
 					'timestamp' => $row[MODLOG_TIMESTAMP],
 					'username' => $row[MODLOG_USERNAME],
 					'action' => $row[MODLOG_ACTION],
@@ -608,7 +608,7 @@ function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 				-1,
 				new OrderBy(MODLOG_TIMESTAMP, DESCENDING, INTEGER_COMPARISON));
 			foreach ($rows as $row) {
-				$modLogs[] = array(
+				$records[] = array(
 					'timestamp' => $row[MODLOG_TIMESTAMP],
 					'username' => $row[MODLOG_USERNAME],
 					'action' => $row[MODLOG_ACTION],
@@ -626,12 +626,12 @@ function allModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 			100,
 			new OrderBy(MODLOG_TIMESTAMP, DESCENDING, INTEGER_COMPARISON));
 		foreach ($rows as $row) {
-			$modLogs[] = array(
+			$records[] = array(
 				'timestamp' => $row[MODLOG_TIMESTAMP],
 				'action' => $row[MODLOG_ACTION]);
 		}
 	}
-	return $modLogs;
+	return $records;
 }
 
 function modLog($action, $private = '1', $color = 'Black') {

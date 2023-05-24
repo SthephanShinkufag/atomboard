@@ -87,17 +87,18 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	if (TINYIB_DBMIGRATE) {
 		fancyDie('Posting is currently disabled.<br>Please try again in a few moments.');
 	}
-	list($loggedIn, $isAdmin) = manageCheckLogIn();
+	$access = checkAccess();
+	$noAccess = $access == 'disabled';
 	$rawPost = isRawPost();
 	$rawPostText = '';
-	if (!$loggedIn) {
+	if ($noAccess) {
 		checkCAPTCHA();
 		checkBanned();
 		checkMessageSize();
 		checkFlood();
 	}
 	$post = newPost(setParent());
-	if ($post['parent'] != TINYIB_NEWTHREAD && !$loggedIn) {
+	if ($post['parent'] != TINYIB_NEWTHREAD && $noAccess) {
 		$parentPost = postByID($post['parent']);
 		if ($parentPost['email'] == TINYIB_LOCKTHR_COOKIE) {
 			fancyDie('Posting in this thread is currently disabled.<br>Thread is locked.');
@@ -121,7 +122,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		$post['message'] = $_POST['message'];
 		if ($rawPost) {
 			// Treat message as raw HTML
-			$rawPostText = $isAdmin ? ' <span style="color: red;">## Admin</span>' :
+			$rawPostText = $access == 'admin' ? ' <span style="color: red;">## Admin</span>' :
 				' <span style="color: purple;">## Mod</span>';
 		} else {
 			$msg = cleanString(rtrim($post['message']));
@@ -451,7 +452,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		}
 	}
 
-	if (!$loggedIn && (($post['file0'] != '' && TINYIB_REQMOD == 'files') || TINYIB_REQMOD == 'all')) {
+	if ($noAccess && (($post['file0'] != '' && TINYIB_REQMOD == 'files') || TINYIB_REQMOD == 'all')) {
 		$post['moderated'] = '0';
 		echo 'Your ' . ($post['parent'] == TINYIB_NEWTHREAD ? 'thread' : 'post') .
 			' will be shown <b>once it has been approved</b>.<br>';
@@ -507,8 +508,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	}
 	$post = postByID($_POST['delete']);
 	if ($post) {
-		list($loggedIn, $isAdmin) = manageCheckLogIn();
-		if ($loggedIn && $_POST['password'] == '') {
+		if (checkAccess() != 'disabled' && $_POST['password'] == '') {
 			// Redirect to post moderation page
 			echo '<meta http-equiv="refresh" content="0;url=' . basename($_SERVER['PHP_SELF']) .
 				'?manage&moderate=' . $_POST['delete'] . '">';
@@ -529,14 +529,11 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 } elseif (isset($_GET['manage'])) {
 	$text = '';
 	$onload = '';
-	$navbar = '&nbsp;';
 	$redirect = false;
-	$loggedIn = false;
-	$isAdmin = false;
-	$returnlink = basename($_SERVER['PHP_SELF']);
-	list($loggedIn, $isAdmin) = manageCheckLogIn();
-	if ($loggedIn) {
-		if ($isAdmin) {
+	$access = checkAccess();
+	if ($access != 'disabled') {
+		if ($access == 'admin') {
+			// Rebuild all posts
 			if (isset($_GET['rebuildall'])) {
 				$allthreads = allThreads();
 				foreach ($allthreads as $thread) {
@@ -544,43 +541,8 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				}
 				rebuildIndexes();
 				$text .= manageInfo('Rebuilt board.');
-			} elseif (isset($_GET['bans'])) {
-				clearExpiredBans();
-				if (isset($_POST['ip'])) {
-					if ($_POST['ip'] != '') {
-						$banexists = banByIP($_POST['ip']);
-						if ($banexists) {
-							fancyDie('Sorry, there is already a ban on record for that IP address.');
-						}
-						$ban = array();
-						$ban['ip'] = $_POST['ip'];
-						$ban['expire'] = $_POST['expire'] > 0 ? time() + $_POST['expire'] : 0;
-						$ban['reason'] = $_POST['reason'];
-						insertBan($ban);
-						$text .= manageInfo('Ban record added for ' . $ban['ip']);
-					}
-				} elseif (isset($_GET['lift'])) {
-					$ban = banByID($_GET['lift']);
-					if ($ban) {
-						deleteBanByID($_GET['lift']);
-						$text .= manageInfo('Ban record lifted for ' . $ban['ip']);
-					}
-				}
-				$onload = manageOnLoad('bans');
-				$text .= manageBanForm() . manageBansTable();
-			} elseif (isset($_GET['modlog'])) {
-				$fromtime = 0;
-				$totime = 0;
-				if (isset($_POST['from']) && isset($_POST['to'])) {
-					if (($fromtime = strtotime($_POST['from'])) === false ||
-						($totime = strtotime($_POST['to'])) === false
-					) {
-						fancyDie('Wrong time format. Use yyyy-mm-dd format.');
-					}
-					$fromtime = intval(strtotime($_POST['from']));
-					$totime = intval(strtotime($_POST['to']));
-				}
-				$text .= generateModLogForm() . generateModLogTable('all', $fromtime, $totime);
+
+			// Update board
 			} elseif (isset($_GET['update'])) {
 				if (is_dir('.git')) {
 					$gitOutput = shell_exec('git pull 2>&1');
@@ -604,6 +566,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			<b>.git</b> folder.
 		</p>';
 				}
+
 			// Flatfile to MySQLi migration
 			} elseif (isset($_GET['dbmigrate'])) {
 				if (!TINYIB_DBMIGRATE) {
@@ -849,6 +812,52 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				}
 			}
 		}
+
+		if($access != 'janitor') {
+			// Show ban form and list of bans
+			if (isset($_GET['bans'])) {
+				clearExpiredBans();
+				if (isset($_POST['ip'])) {
+					if ($_POST['ip'] != '') {
+						$banexists = banByIP($_POST['ip']);
+						if ($banexists) {
+							fancyDie('Sorry, there is already a ban on record for that IP address.');
+						}
+						$ban = array();
+						$ban['ip'] = $_POST['ip'];
+						$ban['expire'] = $_POST['expire'] > 0 ? time() + $_POST['expire'] : 0;
+						$ban['reason'] = $_POST['reason'];
+						insertBan($ban);
+						$text .= manageInfo('Ban record added for ' . $ban['ip']);
+					}
+				} elseif (isset($_GET['lift'])) {
+					$ban = banByID($_GET['lift']);
+					if ($ban) {
+						deleteBanByID($_GET['lift']);
+						$text .= manageInfo('Ban record lifted for ' . $ban['ip']);
+					}
+				}
+				$onload = manageOnLoad('bans');
+				$text .= manageBanForm() . manageBansTable();
+
+			// Show moderation log
+			} elseif (isset($_GET['modlog'])) {
+				$fromtime = 0;
+				$totime = 0;
+				if (isset($_POST['from']) && isset($_POST['to'])) {
+					if (($fromtime = strtotime($_POST['from'])) === false ||
+						($totime = strtotime($_POST['to'])) === false
+					) {
+						fancyDie('Wrong time format. Use yyyy-mm-dd format.');
+					}
+					$fromtime = intval(strtotime($_POST['from']));
+					$totime = intval(strtotime($_POST['to']));
+				}
+				$text .= generateModLogForm() . generateModLogTable(true, $fromtime, $totime);
+			}
+		}
+
+		// Delete posts or threads
 		if (isset($_GET['delete'])) {
 			$post = postByID($_GET['delete']);
 			if ($post) {
@@ -866,6 +875,8 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			} else {
 				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 			}
+
+		// Delete or hide images
 		} elseif (isset($_GET['delete-img']) && isset($_GET["delete-img-mod"]) && isset($_GET["action"])) {
 			if ($_GET["action"] == 'delete') {
 				$post = postByID($_GET['delete-img']);
@@ -896,6 +907,8 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 					fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 				}
 			}
+
+		// Edit messages in posts
 		} elseif (isset($_GET['editpost']) && isset($_POST['message'])) {
 			$post = postByID($_GET['editpost']);
 			$newMessage = $_POST['message'] . '<br><br><span style="color: purple;">Message edited: ' .
@@ -911,6 +924,8 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			} else {
 				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 			}
+
+		// Approve posts if premoderation enabled (see TINYIB_REQMOD)
 		} elseif (isset($_GET['approve'])) {
 			if ($_GET['approve'] > 0) {
 				$post = postByID($_GET['approve']);
@@ -928,6 +943,8 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 					fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 				}
 			}
+
+		// Show post moderation form
 		} elseif (isset($_GET['moderate'])) {
 			if ($_GET['moderate'] > 0) {
 				$post = postByID($_GET['moderate']);
@@ -940,6 +957,8 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$onload = manageOnLoad('moderate');
 				$text .= manageModeratePostForm();
 			}
+
+		// Lock threads
 		} elseif (isset($_GET['locked']) && isset($_GET['setlocked'])) {
 			if ($_GET['locked'] > 0) {
 				$post = postByID($_GET['locked']);
@@ -955,6 +974,8 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			} else {
 				fancyDie('Form data was lost. Please go back and try again.');
 			}
+
+		// Sticky threads
 		} elseif (isset($_GET['sticky']) && isset($_GET['setsticky'])) {
 			if ($_GET['sticky'] > 0) {
 				$post = postByID($_GET['sticky']);
@@ -970,26 +991,35 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			} else {
 				fancyDie('Form data was lost. Please go back and try again.');
 			}
+
+		// Raw post sending
 		} elseif (isset($_GET['rawpost'])) {
 			$onload = manageOnLoad('rawpost');
 			$text .= buildPostForm(0, true);
+
+		// Log out
 		} elseif (isset($_GET['logout'])) {
 			$_SESSION['tinyib'] = '';
 			session_destroy();
-			if (!$isAdmin) {
-				modLog('Logout', '1', 'BlueViolet');
+			if ($access != 'admin') {
+				modLog(ucfirst($access) . ' logout', '1', 'BlueViolet');
 			};
-			die('<meta http-equiv="refresh" content="0;url=' . $returnlink . '?manage">');
+			die('<meta http-equiv="refresh" content="0;url=' . basename($_SERVER['PHP_SELF']) . '?manage">');
 		}
+
+		// Show status for posts
 		if ($text == '') {
 			$text = manageStatus();
 		}
+
+	// Show login form
 	} else {
 		$onload = manageOnLoad('login');
 		$text .= manageLogInForm();
 	}
 	echo managePage($text, $onload);
 
+// Set or unset like for post
 } elseif (isset($_GET['like'])) {
 	$postNum = $_GET['like'];
 	$result = likePostByID($postNum, $_SERVER['REMOTE_ADDR']);
