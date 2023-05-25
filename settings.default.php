@@ -1,133 +1,135 @@
 <?php
 # See README for instructions on configuring, moderating and upgrading your board.
-# Set TINYIB_DBMODE to a PDO-related mode if it's available.
+# Set ATOM_DBMODE to a PDO-related mode if it's available.
 # By default it's set to 'flatfile', which can be very slow.
 
 /* ==[ Board description and customization ]=============================================================== */
 // Unique identifier for this board using only letters and numbers
-define('TINYIB_BOARD', '');
+define('ATOM_BOARD', '');
 // Displayed at the top of every page
-define('TINYIB_BOARDDESC', '');
+define('ATOM_BOARDDESC', '');
 // Logo HTML - specify your code to be added at the top of the page
-define('TINYIB_LOGO', '');
+define('ATOM_LOGO', '');
 // Name of the index page
-define('TINYIB_INDEX', 'index.html');
+define('ATOM_INDEX', 'index.html');
 // Timezone (see https://secure.php.net/manual/en/timezones.php - e.g. 'America/Los_Angeles')
-define('TINYIB_TIMEZONE', 'UTC');
+define('ATOM_TIMEZONE', 'UTC');
 // <head> HTML - specify your code to be added to the end of the <head> element
-define('TINYIB_HTML_HEAD', '');
+define('ATOM_HTML_HEAD', '');
 // Sidebar HTML - specify your navigation buttons to be added at the left side of the page
-define('TINYIB_HTML_LEFTSIDE', '
+define('ATOM_HTML_LEFTSIDE', '
 				<a class="aside-btn" id="aside-btn-home" href="/" title="Home">
 					<svg><use xlink:href="#symbol-home"/></svg>
 				</a>
-				<a class="aside-btn aside-btn-board" href="/' . TINYIB_BOARD . '/" title="' .
-					TINYIB_BOARDDESC . '">' . TINYIB_BOARD .'</a>');
+				<a class="aside-btn aside-btn-board" href="/' . ATOM_BOARD . '/" title="' .
+					ATOM_BOARDDESC . '">' . ATOM_BOARD .'</a>');
 
-/* ==[ Administrator/moderator credentials ]=============================================================== */
+/* ==[ Administration staff ]============================================================================== */
 // Administrator password. Administrator has full access to the board
-define('TINYIB_ADMINPASS', '');
+define('ATOM_ADMINPASS', '');
 // Moderators have access to ban posters and delete posts
-$atomboard_moderators = array(
+$atom_moderators = array(
 	// 'Mod1' => 'Password1',
 	// 'Mod2' => 'Password2',
 	// 'Mod3' => 'Password3'
 );
-// Janitors only have access to delete (and moderate if TINYIB_REQMOD is set) posts
+// Janitors only have access to delete (and moderate if ATOM_REQMOD is set) posts
 // If the array is not empty, the janitorlog.html will be generated.
-$atomboard_janitors = array(
+$atom_janitors = array(
 	// 'Janitor1' => 'Password1',
 	// 'Janitor2' => 'Password2',
 	// 'Janitor3' => 'Password3'
 );
 // Require moderation before displaying posts:
 // files / all (see README for instructions, only MySQL is supported)  ['' to disable]
-define('TINYIB_REQMOD', '');
+define('ATOM_REQMOD', '');
 
 /* ==[ Database ]========================================================================================== */
 // Recommended database modes from best to worst: 'pdo', 'mysqli', 'mysql', 'sqlite3', 'sqlite', 'flatfile'
 // 'flatfile' is only useful if you need portability or lack any kind of database
-// Mode
-define('TINYIB_DBMODE', 'flatfile');
-// Enable database migration tool (see README for instructions)
-define('TINYIB_DBMIGRATE', false);
-// Bans table name in database (use the same bans table across boards for global bans)
-define('TINYIB_DBBANS', 'bans');
-// Likes table name in database (use the same likes table across boards for global likes)
-define('TINYIB_DBLIKES', 'likes');
-// Modlog table name in database (use the same modlog table across boards for global modlog)
-// define('TINYIB_DBMODLOG', 'modlog');
-define('TINYIB_DBMODLOG', TINYIB_BOARD . '_modlog');
+define('ATOM_DBMODE', 'flatfile');
 // Posts table name in database
-define('TINYIB_DBPOSTS', TINYIB_BOARD . '_posts');
+define('ATOM_DBPOSTS', ATOM_BOARD . '_posts');
+// Modlog table name in database (use the same modlog table across boards for global modlog)
+// define('ATOM_DBMODLOG', 'modlog');
+define('ATOM_DBMODLOG', ATOM_BOARD . '_modlog');
+// Bans table name in database (use the same bans table across boards for global bans)
+define('ATOM_DBBANS', 'bans');
+// Likes table name in database (use the same likes table across boards for global likes)
+define('ATOM_DBLIKES', 'likes');
+// Enable database migration tool (see README for instructions)
+define('ATOM_DBMIGRATE', false);
 
 /* ==[ Database configuration - MySQL / pgSQL ]============================================================ */
-// The following only apply when TINYIB_DBMODE is set to mysql,
-// mysqli or pdo with default (blank) TINYIB_DBDSN
+// The following only apply when ATOM_DBMODE is set to mysql,
+// mysqli or pdo with default (blank) ATOM_DBDSN
 // Hostname
-define('TINYIB_DBHOST', 'localhost');
+define('ATOM_DBHOST', 'localhost');
 // Port (set to 0 if you are using a UNIX socket as the host)
-define('TINYIB_DBPORT', 3306);
+define('ATOM_DBPORT', 3306);
 // Username
-define('TINYIB_DBUSERNAME', '');
+define('ATOM_DBUSERNAME', '');
 // Password
-define('TINYIB_DBPASSWORD', '');
-// Database
-define('TINYIB_DBNAME', '');
-// Database configuration - PDO
-// The following only apply when TINYIB_DBMODE is set to 'pdo' (see README for instructions)
+define('ATOM_DBPASSWORD', '');
+// Database name
+define('ATOM_DBNAME', '');
+
+/* ==[ Database configuration - PDO ]====================================================================== */
+// The following only apply when ATOM_DBMODE is set to 'pdo' (see README for instructions)
 // PDO driver to use: 'mysql', 'pgsql', 'sqlite'
-define('TINYIB_DBDRIVER', 'mysql');
+define('ATOM_DBDRIVER', 'mysql');
 // Enter a custom DSN to override all of the connection/driver settings above  (see README for instructions)
-// When changing this, you should still set TINYIB_DBDRIVER appropriately.
+// When changing this, you should still set ATOM_DBDRIVER appropriately.
 // If you're using PDO with a MySQL or pgSQL database, you should leave this blank.
-define('TINYIB_DBDSN', '');
+define('ATOM_DBDSN', '');
 
-/* ==[ Posts and threads ]================================================================================= */
+/* ==[ Posts ]============================================================================================= */
 // Default poster names
-define('TINYIB_POSTERNAME', 'Anonymous');
+define('ATOM_POSTERNAME', 'Anonymous');
 // Unique ID's based on IP
-define('TINYIB_POSTERUID', false);
+define('ATOM_POSTERUID', false);
 // Tripcode seed - Must not change once set!
-// Enter some random text (used when generating secure tripcodes and poster id's)
-define('TINYIB_TRIPSEED', '');
-// Amount of threads shown per index page
-define('TINYIB_THREADSPERPAGE', 10);
-// Amount of replies previewed on index pages
-define('TINYIB_PREVIEWREPLIES', 5);
-// Amount of text lines to truncate posts on index pages [0 to disable]
-define('TINYIB_TRUNC_LINES', 10);
-// Text size in bytes to truncate posts on index pages [0 to disable]
-define('TINYIB_TRUNC_SIZE', 1536);
+// Enter some random text (salt used when generating secure tripcodes and poster id's)
+define('ATOM_TRIPSEED', '');
+// Likes (reactions to posts)
+define('ATOM_LIKES', true);
+// Display reflinks to replies that reference a post
+define('ATOM_BACKLINKS', true);
 // Words longer than this many characters will be broken apart [0 to disable]
-define('TINYIB_WORDBREAK', 0);
-// Post likes system
-define('TINYIB_LIKES', true);
+define('ATOM_WORDBREAK', 0);
 
-/* ==[ Post control ]====================================================================================== */
-// Delay (in seconds) between posts from the same IP address to help control flooding [0 to disable]
-define('TINYIB_DELAY', 20);
+/* ==[ Index page and threads ]============================================================================ */
+// Amount of threads shown per index page
+define('ATOM_THREADSPERPAGE', 10);
+// Amount of replies previewed on index pages
+define('ATOM_PREVIEWREPLIES', 5);
+// Amount of text lines to truncate posts on index pages [0 to disable]
+define('ATOM_TRUNC_LINES', 10);
+// Text size in bytes to truncate posts on index pages [0 to disable]
+define('ATOM_TRUNC_SIZE', 1536);
 // Oldest threads are discarded when the thread count passes this limit [0 to disable]
-define('TINYIB_MAXTHREADS', 100);
-// Maximum replies before a thread stops bumping [0 to disable]
-define('TINYIB_MAXREPLIES', 500);
+define('ATOM_MAXTHREADS', 100);
+// Bump limit - maximum replies before a thread stops bumping [0 to disable]
+define('ATOM_BUMPLIMIT', 500);
 // Cookie in e-mail field that indicates what thread is locked for posting
-define('TINYIB_LOCKTHR_COOKIE', 'thread@is.locked');
+define('ATOM_LOCKTHR_COOKIE', 'thread@is.locked');
 
 /* ==[ Reply form and posting ]============================================================================ */
+// Delay (in seconds) between posts from the same IP address to help control flooding [0 to disable]
+define('ATOM_POSTING_DELAY', 20);
 // Redirect to thread after posting
-define('TINYIB_ALWAYSNOKO', true);
+define('ATOM_ALWAYSNOKO', true);
 // Fields to hide when creating a new thread
 // e.g. array('name', 'email', 'subject', 'message', 'file', 'embed', 'password')
-$atomboard_hidefieldsop = array();
+$atom_hidefieldsop = array();
 // Fields to hide when replying
-$atomboard_hidefields = array();
+$atom_hidefields = array();
 
-/* ==[ Upload types ]====================================================================================== */
+/* ==[ Upload mime types ]================================================================================= */
 // Empty array to disable
 // Format: MIME type => (extension, optional thumbnail)
 // WebM upload requires mediainfo and ffmpegthumbnailer (see README for instructions)
-$atomboard_uploads = array(
+$atom_uploads = array(
 	'image/jpeg' => array('jpg'),
 	'image/pjpeg' => array('jpg'),
 	'image/png' => array('png'),
@@ -140,44 +142,43 @@ $atomboard_uploads = array(
 	'video/quicktime' => array('mov')
 );
 
-/* ==[ oEmbed APIs ]======================================================================================= */
+/* ==[ Embed APIs ]======================================================================================== */
 // Empty array to disable
-$atomboard_embeds = array(
-	'SoundCloud.com' => 'https://soundcloud.com/oembed?format=json&url=TINYIBEMBED',
-	'Vimeo.com'      => 'https://vimeo.com/api/oembed.json?url=TINYIBEMBED',
-	'YouTube.com'    => 'https://www.youtube.com/oembed?url=TINYIBEMBED&format=json'
+$atom_embeds = array(
+	'SoundCloud.com' => 'https://soundcloud.com/oembed?format=json&url=ATOM_EMBED',
+	'Vimeo.com'      => 'https://vimeo.com/api/oembed.json?url=ATOM_EMBED',
+	'YouTube.com'    => 'https://www.youtube.com/oembed?url=ATOM_EMBED&format=json'
 );
 
 /* ==[ File control ]====================================================================================== */
 // Maximum file size in kilobytes [0 to disable]
-define('TINYIB_MAXKB', 20480);
+define('ATOM_FILE_MAXKB', 20480);
 // Human-readable representation of the maximum file size
-define('TINYIB_MAXKBDESC', '20 MB');
+define('ATOM_FILE_MAXKBDESC', '20 MB');
 // Maximum number of uploaded files (up to 4)
-define('TINYIB_MAXIMUM_FILES', 4);
+define('ATOM_FILES_COUNT', 4);
 // Add overlay image over video and embedded files
-define('TINYIB_VIDEO_OVERLAY', false);
+define('ATOM_VIDEO_OVERLAY', false);
 // Thumbnail method to use: 'gd', 'imagemagick' (see README for instructions)
-define('TINYIB_THUMBNAIL', 'gd');
+define('ATOM_FILE_THUMBDRIVER', 'gd');
 // Allow the creation of new threads without uploading a file
-define('TINYIB_NOFILEOK', false);
+define('ATOM_NOFILEOK', false);
 // Allow duplicate files
-define('TINYIB_FILE_ALLOW_DUPLICATE', false);
-// Animate gif thumbnails
-// The following only apply when TINYIB_THUMBNAIL is set to 'imagemagick'
-define('TINYIB_FILE_ANIM_GIF_THUMB', false);
+define('ATOM_FILE_DUPLICATE', false);
+// Animate gif thumbnails. Apply when ATOM_FILE_THUMBDRIVER is set to 'imagemagick'
+define('ATOM_FILE_ANIM_GIF', false);
 // Thumbnail size - new thread
-define('TINYIB_MAXWOP', 230); // Width
-define('TINYIB_MAXHOP', 230); // Height
+define('ATOM_FILE_MAXWOP', 230); // Width
+define('ATOM_FILE_MAXHOP', 230); // Height
 // Thumbnail size - reply
-define('TINYIB_MAXW', 230); // Width
-define('TINYIB_MAXH', 230); // Height
+define('ATOM_FILE_MAXW', 230); // Width
+define('ATOM_FILE_MAXH', 230); // Height
 
 /* ==[ Captcha ]=========================================================================================== */
 // Reduce spam by requiring users to pass a CAPTCHA when posting: 'simple', 'recaptcha'
 // (click Rebuild All in the management panel after enabling) ['' to disable]
-define('TINYIB_CAPTCHA', 'simple');
-// The following only apply when TINYIB_CAPTCHA is set to recaptcha
+define('ATOM_CAPTCHA', 'simple');
+// The following only apply when ATOM_CAPTCHA is set to recaptcha
 // For API keys visit https://www.google.com/recaptcha
-define('TINYIB_RECAPTCHA_SITE', '');   // Site key
-define('TINYIB_RECAPTCHA_SECRET', ''); // Secret key
+define('ATOM_RECAPTCHA_SITE', '');   // Site key
+define('ATOM_RECAPTCHA_SECRET', ''); // Secret key

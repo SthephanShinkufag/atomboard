@@ -28,7 +28,7 @@ function manageInfo($text) {
 
 function fancyDie($message) {
 	die('<head>
-	<link rel="stylesheet" type="text/css" href="/' . TINYIB_BOARD . '/css/global.css">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/global.css">
 </head>
 <body align="center">
 	<br>
@@ -42,16 +42,16 @@ if (!file_exists('settings.php')) {
 	fancyDie('Please copy the file settings.default.php to settings.php');
 }
 require 'settings.php';
-if (TINYIB_TRIPSEED == '' || TINYIB_ADMINPASS == '') {
-	fancyDie('settings.php: TINYIB_TRIPSEED and TINYIB_ADMINPASS must be configured.');
+if (ATOM_TRIPSEED == '' || ATOM_ADMINPASS == '') {
+	fancyDie('settings.php: ATOM_TRIPSEED and ATOM_ADMINPASS must be configured.');
 }
-if (TINYIB_CAPTCHA === 'recaptcha' && (TINYIB_RECAPTCHA_SITE == '' || TINYIB_RECAPTCHA_SECRET == '')) {
-	fancyDie('settings.php: TINYIB_RECAPTCHA_SITE and TINYIB_RECAPTCHA_SECRET must be configured.');
+if (ATOM_CAPTCHA === 'recaptcha' && (ATOM_RECAPTCHA_SITE == '' || ATOM_RECAPTCHA_SECRET == '')) {
+	fancyDie('settings.php: ATOM_RECAPTCHA_SITE and ATOM_RECAPTCHA_SECRET must be configured.');
 }
 
 // Check directories are writable by the script
 $writedirs = array('res', 'src', 'thumb');
-if (TINYIB_DBMODE == 'flatfile') {
+if (ATOM_DBMODE == 'flatfile') {
 	$writedirs[] = 'inc/flatfile';
 }
 foreach ($writedirs as $dir) {
@@ -61,16 +61,16 @@ foreach ($writedirs as $dir) {
 }
 
 $includes = array('inc/defines.php', 'inc/functions.php', 'inc/html.php');
-if (in_array(TINYIB_DBMODE, array('flatfile', 'mysql', 'mysqli', 'sqlite', 'sqlite3', 'pdo'))) {
-	$includes[] = 'inc/database_' . TINYIB_DBMODE . '.php';
+if (in_array(ATOM_DBMODE, array('flatfile', 'mysql', 'mysqli', 'sqlite', 'sqlite3', 'pdo'))) {
+	$includes[] = 'inc/database_' . ATOM_DBMODE . '.php';
 } else {
-	fancyDie('settings.php: Unknown database mode in TINYIB_DBMODE specified.');
+	fancyDie('settings.php: Unknown database mode in ATOM_DBMODE specified.');
 }
 foreach ($includes as $include) {
 	include $include;
 }
-if (TINYIB_TIMEZONE != '') {
-	date_default_timezone_set(TINYIB_TIMEZONE);
+if (ATOM_TIMEZONE != '') {
+	date_default_timezone_set(ATOM_TIMEZONE);
 }
 $redirect = true;
 
@@ -84,7 +84,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	isset($_POST['embed']) ||
 	isset($_POST['password']))
 ) {
-	if (TINYIB_DBMIGRATE) {
+	if (ATOM_DBMIGRATE) {
 		fancyDie('Posting is currently disabled.<br>Please try again in a few moments.');
 	}
 	$access = checkAccess();
@@ -98,13 +98,13 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		checkFlood();
 	}
 	$post = newPost(setParent());
-	if ($post['parent'] != TINYIB_NEWTHREAD && $noAccess) {
+	if ($post['parent'] != ATOM_NEWTHREAD && $noAccess) {
 		$parentPost = postByID($post['parent']);
-		if ($parentPost['email'] == TINYIB_LOCKTHR_COOKIE) {
+		if ($parentPost['email'] == ATOM_LOCKTHR_COOKIE) {
 			fancyDie('Posting in this thread is currently disabled.<br>Thread is locked.');
 		}
 	}
-	$hideFields = $post['parent'] == TINYIB_NEWTHREAD ? $atomboard_hidefieldsop : $atomboard_hidefields;
+	$hideFields = $post['parent'] == ATOM_NEWTHREAD ? $atom_hidefieldsop : $atom_hidefields;
 	$post['ip'] = $_SERVER['REMOTE_ADDR'];
 	if ($rawPost || !in_array('name', $hideFields)) {
 		list($post['name'], $post['tripcode']) = nameAndTripcode($_POST['name']);
@@ -112,7 +112,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	}
 	if ($rawPost || !in_array('email', $hideFields)) {
 		$providedEmail = cleanString(str_replace('"', '&quot;', substr($_POST['email'], 0, 75)));
-		$post['email'] = $providedEmail == TINYIB_LOCKTHR_COOKIE ? '' : $providedEmail;
+		$post['email'] = $providedEmail == ATOM_LOCKTHR_COOKIE ? '' : $providedEmail;
 	}
 	if ($rawPost || !in_array('subject', $hideFields)) {
 		$post['subject'] = cleanString(substr($_POST['subject'], 0, 75));
@@ -126,10 +126,10 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				' <span style="color: purple;">## Mod</span>';
 		} else {
 			$msg = cleanString(rtrim($post['message']));
-			if (TINYIB_WORDBREAK > 0) {
+			if (ATOM_WORDBREAK > 0) {
 				$msg = preg_replace(
-					'/([^\s]{' . TINYIB_WORDBREAK . '})(?=[^\s])/',
-					'$1' . TINYIB_WORDBREAK_IDENTIFIER,
+					'/([^\s]{' . ATOM_WORDBREAK . '})(?=[^\s])/',
+					'$1' . ATOM_WORDBREAK_IDENTIFIER,
 					$msg);
 			}
 			// MARKUP
@@ -138,12 +138,12 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				function($matches)
 			{
 				$m = $matches[1];
-				$m = str_replace("\r\n", '@!@TINYIB_LINE_END@!@', $m);
-				$m = str_replace("\r", '@!@TINYIB_LINE_END@!@', $m);
-				$m = str_replace("\n", '@!@TINYIB_LINE_END@!@', $m);
+				$m = str_replace("\r\n", '@!@ATOM_LINE_END@!@', $m);
+				$m = str_replace("\r", '@!@ATOM_LINE_END@!@', $m);
+				$m = str_replace("\n", '@!@ATOM_LINE_END@!@', $m);
 				$m = str_replace('`', '&#96;', $m);
 				$m = str_replace('<', '&lt;', $m);
-				$m = preg_replace('/>|&gt;/', '@!@TINYIB_GT@!@', $m);
+				$m = preg_replace('/>|&gt;/', '@!@ATOM_GT@!@', $m);
 				$m = str_replace('[', '&#91;', $m);
 				$m = str_replace(']', '&#93;', $m);
 				$m = str_replace('*', '&#42;', $m);
@@ -156,7 +156,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			$msg = preg_replace_callback('/`([^\`\r\n]+)`/', function($matches) {
 				$m = $matches[1];
 				$m = str_replace('<', '&lt;', $m);
-				$m = preg_replace('/>|&gt;/', '@!@TINYIB_GT@!@', $m);
+				$m = preg_replace('/>|&gt;/', '@!@ATOM_GT@!@', $m);
 				$m = str_replace('[', '&#91;', $m);
 				$m = str_replace(']', '&#93;', $m);
 				$m = str_replace('*', '&#42;', $m);
@@ -170,8 +170,8 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$post = postByID($matches[1]);
 				if ($post) {
 					// $replyedTo[] = intval($matches[1]);
-					return '<a href="/' . TINYIB_BOARD . '/res/' .
-						($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']) .
+					return '<a href="/' . ATOM_BOARD . '/res/' .
+						($post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent']) .
 						'.html#' . $matches[1] . '">' . $matches[0] . '</a>';
 				}
 				return $matches[0];
@@ -212,9 +212,9 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			$msg = str_replace("\r", '<br>', $msg);
 			$msg = str_replace("\n", '<br>', $msg);
 			$msg = str_replace('<br>', "<br>\r\n", $msg);
-			$msg = str_replace('@!@TINYIB_GT@!@', '&gt;', $msg);
-			$msg = str_replace('@!@TINYIB_LINE_END@!@', "\r\n", $msg);
-			if (TINYIB_WORDBREAK > 0) {
+			$msg = str_replace('@!@ATOM_GT@!@', '&gt;', $msg);
+			$msg = str_replace('@!@ATOM_LINE_END@!@', "\r\n", $msg);
+			if (ATOM_WORDBREAK > 0) {
 				$msg = finishWordBreak($msg);
 			}
 			$post['message'] = $msg;
@@ -242,7 +242,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			!isset($embed['thumbnail_url'])
 		) {
 			fancyDie('Invalid embed URL.<br>Only ' .
-				(implode('/', array_keys($atomboard_embeds))) . ' URLs are supported.');
+				(implode('/', array_keys($atom_embeds))) . ' URLs are supported.');
 		}
 		$post['file0_hex'] = $service;
 		$tempFile = time() . substr(microtime(), 2, 3) . '-0';
@@ -271,7 +271,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		} else {
 			@unlink($fileLocation);
 		}
-		if (TINYIB_VIDEO_OVERLAY) {
+		if (ATOM_VIDEO_OVERLAY) {
 			addVideoOverlay($thumbLocation);
 		}
 		$thumbInfo = getimagesize($thumbLocation);
@@ -289,7 +289,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		$sizeOfCurrentFileInBytes = 0;
 		$sizeOfAllFilesInBytes = 0;
 		foreach ($_FILES["file"]["error"] as $index => $error) {
-			if (!$_FILES['file']['tmp_name'][$index] || $filesCount >= TINYIB_MAXIMUM_FILES) {
+			if (!$_FILES['file']['tmp_name'][$index] || $filesCount >= ATOM_FILES_COUNT) {
 				continue;
 			}
 			validateFileUpload($error);
@@ -300,13 +300,13 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			}
 			$sizeOfCurrentFileInBytes = filesize($_FILES['file']['tmp_name'][$index]);
 			$sizeOfAllFilesInBytes += $sizeOfCurrentFileInBytes;
-			if ((TINYIB_MAXKB > 0) && ($sizeOfCurrentFileInBytes > (TINYIB_MAXKB * 1024))) {
-				fancyDie('That file is larger than ' . TINYIB_MAXKBDESC . '.');
+			if ((ATOM_FILE_MAXKB > 0) && ($sizeOfCurrentFileInBytes > (ATOM_FILE_MAXKB * 1024))) {
+				fancyDie('That file is larger than ' . ATOM_FILE_MAXKBDESC . '.');
 			}
-			if ((TINYIB_MAXKB > 0) && ($sizeOfAllFilesInBytes > (TINYIB_MAXKB * 1024))) {
-				// silently drop all remained files if comulative size is getting more than TINYIB_MAXKB.
+			if ((ATOM_FILE_MAXKB > 0) && ($sizeOfAllFilesInBytes > (ATOM_FILE_MAXKB * 1024))) {
+				// silently drop all remained files if comulative size is getting more than ATOM_FILE_MAXKB.
 				// or uncomment fancyDie to get error message and lost post.
-				// fancyDie('Size of all files is larger than ' . TINYIB_MAXKBDESC . '.');
+				// fancyDie('Size of all files is larger than ' . ATOM_FILE_MAXKBDESC . '.');
 				continue;
 			}
 			$post['file' . $index . '_original'] = trim(
@@ -314,7 +314,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			$post['file' . $index . '_hex'] = md5_file($_FILES['file']['tmp_name'][$index]);
 			$post['file' . $index . '_size'] = $_FILES['file']['size'][$index];
 			$post['file' . $index . '_size_formatted'] = convertBytes($post['file' . $index . '_size']);
-			if (TINYIB_FILE_ALLOW_DUPLICATE === false) {
+			if (ATOM_FILE_DUPLICATE === false) {
 				checkDuplicateFile($post['file' . $index . '_hex']);
 			}
 			$fileMimeSplit = explode(' ', trim(mime_content_type($_FILES['file']['tmp_name'][$index])));
@@ -328,11 +328,11 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$fileInfo = getimagesize($_FILES['file']['tmp_name'][$index]);
 				$fileMime = mime_content_type($_FILES['file']['tmp_name'][$index]);
 			}
-			if (empty($fileMime) || !isset($atomboard_uploads[$fileMime])) {
+			if (empty($fileMime) || !isset($atom_uploads[$fileMime])) {
 				fancyDie(supportedFileTypes());
 			}
 			$fileName = time() . substr(microtime(), 2, 3) . '-' . $index;
-			$post['file' . $index] = $fileName . '.' . $atomboard_uploads[$fileMime][0];
+			$post['file' . $index] = $fileName . '.' . $atom_uploads[$fileMime][0];
 			$fileLocation = 'src/' . $post['file' . $index];
 			if (!move_uploaded_file($_FILES['file']['tmp_name'][$index], $fileLocation)) {
 				fancyDie('Could not copy uploaded file.');
@@ -367,7 +367,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 						@unlink('thumb/' . $post['thumb' . $index]);
 						fancyDie('Sorry, your video appears to be corrupt.');
 					}
-					if (TINYIB_VIDEO_OVERLAY) {
+					if (ATOM_VIDEO_OVERLAY) {
 						addVideoOverlay('thumb/' . $post['thumb' . $index]);
 					}
 				}
@@ -391,15 +391,15 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$post['image' . $index . '_width'] = $fileInfo[0];
 				$post['image' . $index . '_height'] = $fileInfo[1];
 			}
-			if (isset($atomboard_uploads[$fileMime][1])) {
-				$thumbFileSplit = explode('.', $atomboard_uploads[$fileMime][1]);
+			if (isset($atom_uploads[$fileMime][1])) {
+				$thumbFileSplit = explode('.', $atom_uploads[$fileMime][1]);
 				$post['thumb' . $index] = $fileName . 's.' . array_pop($thumbFileSplit);
-				if (!copy($atomboard_uploads[$fileMime][1], 'thumb/' . $post['thumb' . $index])) {
+				if (!copy($atom_uploads[$fileMime][1], 'thumb/' . $post['thumb' . $index])) {
 					@unlink($fileLocation);
 					fancyDie('Could not create thumbnail.');
 				}
 				if ($fileMime == 'application/x-shockwave-flash') {
-					(TINYIB_VIDEO_OVERLAY)?addVideoOverlay('thumb/' . $post['thumb' . $index]):'';
+					(ATOM_VIDEO_OVERLAY)?addVideoOverlay('thumb/' . $post['thumb' . $index]):'';
 				}
 			} elseif (in_array($fileMime, array(
 				'image/jpeg',
@@ -408,7 +408,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				'image/gif',
 				'image/webp'
 			))) {
-				$post['thumb' . $index] = $fileName . 's.' . $atomboard_uploads[$fileMime][0];
+				$post['thumb' . $index] = $fileName . 's.' . $atom_uploads[$fileMime][0];
 				list($thumbMaxWidth, $thumbMaxHeight) = thumbnailDimensions($post, $index);
 				if (!createThumbnail(
 					$fileLocation,
@@ -432,16 +432,16 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	// No file uploaded
 	if ($post['file0'] == '') {
 		$allowed = '';
-		if (!empty($atomboard_uploads) && ($rawPost || !in_array('file', $hideFields))) {
+		if (!empty($atom_uploads) && ($rawPost || !in_array('file', $hideFields))) {
 			$allowed = 'file';
 		}
-		if (!empty($atomboard_embeds) && ($rawPost || !in_array('embed', $hideFields))) {
+		if (!empty($atom_embeds) && ($rawPost || !in_array('embed', $hideFields))) {
 			if ($allowed != '') {
 				$allowed .= ' or ';
 			}
 			$allowed .= 'embed URL';
 		}
-		if ($post['parent'] == TINYIB_NEWTHREAD && $allowed != '' && !TINYIB_NOFILEOK) {
+		if ($post['parent'] == ATOM_NEWTHREAD && $allowed != '' && !ATOM_NOFILEOK) {
 			fancyDie('A ' . $allowed . ' is required to start a thread.');
 		}
 		if (!$rawPost && str_replace('<br>', '', $post['message']) == '') {
@@ -456,9 +456,9 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		}
 	}
 
-	if ($noAccess && (($post['file0'] != '' && TINYIB_REQMOD == 'files') || TINYIB_REQMOD == 'all')) {
+	if ($noAccess && (($post['file0'] != '' && ATOM_REQMOD == 'files') || ATOM_REQMOD == 'all')) {
 		$post['moderated'] = '0';
-		echo 'Your ' . ($post['parent'] == TINYIB_NEWTHREAD ? 'thread' : 'post') .
+		echo 'Your ' . ($post['parent'] == ATOM_NEWTHREAD ? 'thread' : 'post') .
 			' will be shown <b>once it has been approved</b>.<br>';
 		$slowRedirect = true;
 	}
@@ -475,7 +475,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			$newMessage = '';
 			$newMessage = $originalPost['message'];
 			$newMessage .= ' &iexcl;&iexcl;' .
-				($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']) .
+				($post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent']) .
 				'&cent;&cent;' . $post['id'];
 			editMessageInPostById($postID, $newMessage);
 		}
@@ -483,16 +483,16 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	*/
 
 	if ($post['moderated'] == '1') {
-		if (TINYIB_ALWAYSNOKO || strtolower($post['email']) == 'noko') {
-			$redirect = '/' . TINYIB_BOARD . '/res/' .
-				($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']) .
+		if (ATOM_ALWAYSNOKO || strtolower($post['email']) == 'noko') {
+			$redirect = '/' . ATOM_BOARD . '/res/' .
+				($post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent']) .
 				'.html#' . $post['id'];
 		}
 		trimThreads();
-		if ($post['parent'] != TINYIB_NEWTHREAD) {
+		if ($post['parent'] != ATOM_NEWTHREAD) {
 			rebuildThread($post['parent']);
 			if (strtolower($post['email']) != 'sage') {
-				if (TINYIB_MAXREPLIES == 0 || numRepliesToThreadByID($post['parent']) <= TINYIB_MAXREPLIES) {
+				if (ATOM_BUMPLIMIT == 0 || numRepliesToThreadByID($post['parent']) <= ATOM_BUMPLIMIT) {
 					bumpThreadByID($post['parent']);
 				}
 			}
@@ -507,7 +507,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	if (!isset($_POST['delete'])) {
 		fancyDie('Tick the box next to a post and click "Delete" to delete it.');
 	}
-	if (TINYIB_DBMIGRATE) {
+	if (ATOM_DBMIGRATE) {
 		fancyDie('Post deletion is currently disabled.<br>Please try again in a few moments.');
 	}
 	$post = postByID($_POST['delete']);
@@ -518,7 +518,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				'?manage&moderate=' . $_POST['delete'] . '">';
 		} elseif ($post['password'] != '' && md5(md5($_POST['password'])) == $post['password']) {
 			deletePostByID($post['id']);
-			threadUpdated($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']);
+			threadUpdated($post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent']);
 			fancyDie('Post deleted.');
 		} else {
 			fancyDie('Invalid password.');
@@ -573,8 +573,8 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 
 			// Flatfile to MySQLi migration
 			} elseif (isset($_GET['dbmigrate'])) {
-				if (!TINYIB_DBMIGRATE) {
-					fancyDie('settings.php: Set TINYIB_DBMIGRATE to true to use this feature.');
+				if (!ATOM_DBMIGRATE) {
+					fancyDie('settings.php: Set ATOM_DBMIGRATE to true to use this feature.');
 				} elseif (!isset($_GET['go'])) {
 					$text .= '<p>
 			This tool currently only supports migration from a flat file database to MySQL.<br>
@@ -584,21 +584,21 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			<small>(<a href="README.md" target="_blank">alternate link</a>)</small> for instructions.<br><br>
 			<a href="?manage&dbmigrate&go"><b>Start the migration</b></a>
 		</p>';
-				} elseif (TINYIB_DBMODE != 'flatfile') {
-					fancyDie('settings.php: Set TINYIB_DBMODE to "flatfile" and enter your MySQL' .
+				} elseif (ATOM_DBMODE != 'flatfile') {
+					fancyDie('settings.php: Set ATOM_DBMODE to "flatfile" and enter your MySQL' .
 						' settings before migrating.');
 				} elseif (!function_exists('mysqli_connect')) {
 					fancyDie('Please install the <a href="http://php.net/manual/en/book.mysqli.php">' .
 						'MySQLi extension</a> and try again.');
 				} else {
-					$link = @mysqli_connect(TINYIB_DBHOST, TINYIB_DBUSERNAME, TINYIB_DBPASSWORD);
+					$link = @mysqli_connect(ATOM_DBHOST, ATOM_DBUSERNAME, ATOM_DBPASSWORD);
 					if (!$link) {
 						fancyDie('Could not connect to database: ' . (
 							is_object($link) ? mysqli_error($link) :
 							(($link_error = mysqli_connect_error()) ? $link_error : '(unknown error)')
 						));
 					}
-					$dbSelected = @mysqli_query($link, 'USE ' . constant('TINYIB_DBNAME'));
+					$dbSelected = @mysqli_query($link, 'USE ' . constant('ATOM_DBNAME'));
 					if (!$dbSelected) {
 						fancyDie('Could not select database: ' . (
 							is_object($link) ? mysqli_error($link) :
@@ -607,19 +607,19 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 					}
 					mysqli_set_charset($link, 'utf8');
 					if (mysqli_num_rows(mysqli_query($link,
-						"SHOW TABLES LIKE '" . TINYIB_DBPOSTS . "'")) != 0
+						"SHOW TABLES LIKE '" . ATOM_DBPOSTS . "'")) != 0
 					) {
-						fancyDie('Posts table (' . TINYIB_DBPOSTS . ') already exists!<br>' .
+						fancyDie('Posts table (' . ATOM_DBPOSTS . ') already exists!<br>' .
 							'Please DROP this table and try again.');
 					} elseif (mysqli_num_rows(mysqli_query($link,
-						"SHOW TABLES LIKE '" . TINYIB_DBBANS . "'")) != 0
+						"SHOW TABLES LIKE '" . ATOM_DBBANS . "'")) != 0
 					) {
-						fancyDie('Bans table (' . TINYIB_DBBANS . ') already exists!<br>' .
+						fancyDie('Bans table (' . ATOM_DBBANS . ') already exists!<br>' .
 							'Please DROP this table and try again.');
 					} elseif (mysqli_num_rows(mysqli_query($link,
-						"SHOW TABLES LIKE '" . TINYIB_DBLIKES . "'")) != 0
+						"SHOW TABLES LIKE '" . ATOM_DBLIKES . "'")) != 0
 					) {
-						fancyDie('Likes table (' . TINYIB_DBLIKES . ') already exists!<br>' .
+						fancyDie('Likes table (' . ATOM_DBLIKES . ') already exists!<br>' .
 							'Please DROP this table and try again.');
 					} else {
 						mysqli_query($link, $posts_sql);
@@ -631,7 +631,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 							$posts = postsInThreadByID($thread['id']);
 							foreach ($posts as $post) {
 								mysqli_query($link,
-									'INSERT INTO `' . TINYIB_DBPOSTS . '` (
+									'INSERT INTO `' . ATOM_DBPOSTS . '` (
 										`id`,
 										`parent`,
 										`timestamp`,
@@ -746,19 +746,19 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 							}
 						}
 						if ($maxId > 0 && !mysqli_query($link,
-							'ALTER TABLE `' . TINYIB_DBPOSTS .
+							'ALTER TABLE `' . ATOM_DBPOSTS .
 							'` AUTO_INCREMENT = ' . ($maxId + 1))
 						) {
 							$text .= '<p><b>Warning!</b></p>' .
 								'<p>Unable to update the <code>AUTO_INCREMENT</code> value for table <code>' .
-								TINYIB_DBPOSTS . '</code>, please set it to ' . ($maxId + 1) . '.</p>';
+								ATOM_DBPOSTS . '</code>, please set it to ' . ($maxId + 1) . '.</p>';
 						}
 						$maxId = 0;
 						$bans = allBans();
 						foreach ($bans as $ban) {
 							$maxId = max($maxId, $ban['id']);
 							mysqli_query($link,
-								'INSERT INTO `' . TINYIB_DBBANS . "` (
+								'INSERT INTO `' . ATOM_DBBANS . "` (
 									`id`,
 									`ip`,
 									`timestamp`,
@@ -772,12 +772,12 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 									mysqli_real_escape_string($link, $ban['reason']) . "')");
 						}
 						if ($maxId > 0 && !mysqli_query($link,
-							'ALTER TABLE `' . TINYIB_DBBANS .
+							'ALTER TABLE `' . ATOM_DBBANS .
 							'` AUTO_INCREMENT = ' . ($maxId + 1))
 						) {
 							$text .= '<p><b>Warning!</b></p>' .
 								'<p>Unable to update the <code>AUTO_INCREMENT</code>' .
-								' value for table <code>' . TINYIB_DBBANS . '</code>,' .
+								' value for table <code>' . ATOM_DBBANS . '</code>,' .
 								' please set it to ' . ($maxId + 1) . '.</p>';
 						}
 						$maxId = 0;
@@ -785,7 +785,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 						foreach ($likes as $like) {
 							$maxId = max($maxId, $like['id']);
 							mysqli_query($link,
-								'INSERT INTO `' . TINYIB_DBLIKES . "` (
+								'INSERT INTO `' . ATOM_DBLIKES . "` (
 									`id`,
 									`ip`,
 									`board`,
@@ -799,17 +799,17 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 									mysqli_real_escape_string($link, $like['islike']) . "')");
 						}
 						if ($maxId > 0 && !mysqli_query($link,
-							'ALTER TABLE `' . TINYIB_DBLIKES .
+							'ALTER TABLE `' . ATOM_DBLIKES .
 							'` AUTO_INCREMENT = ' . ($maxId + 1))
 						) {
 							$text .= '<p><b>Warning!</b></p>' .
 								'<p>Unable to update the <code>AUTO_INCREMENT</code>' .
-								' value for table <code>' . TINYIB_DBLIKES . '</code>,' .
+								' value for table <code>' . ATOM_DBLIKES . '</code>,' .
 								' please set it to ' . ($maxId + 1) . '.</p>';
 						}
 						$text .= '<p><b>Database migration complete!</b></p>' .
-							'<p>Set <code>TINYIB_DBMODE</code> to <code>mysqli</code> and' .
-							' <code>TINYIB_DBMIGRATE</code> to <code>false</code> in your' .
+							'<p>Set <code>ATOM_DBMODE</code> to <code>mysqli</code> and' .
+							' <code>ATOM_DBMIGRATE</code> to <code>false</code> in your' .
 							' settings.php file,<br>Then click <b>[Rebuild All]</b> above' .
 							' and ensure everything looks the way it should.</p>';
 					}
@@ -867,7 +867,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			if ($post) {
 				deletePostByID($post['id']);
 				rebuildIndexes();
-				$isOP = $post['parent'] == TINYIB_NEWTHREAD;
+				$isOP = $post['parent'] == ATOM_NEWTHREAD;
 				if (!$isOP) {
 					rebuildThread($post['parent']);
 					modLog('Deleted post №' . $post['id'] . ' in thread №' .
@@ -886,7 +886,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$post = postByID($_GET['delete-img']);
 				if ($post) {
 					deleteImagesByImageID($post, $_GET["delete-img-mod"]);
-					$isOP = $post['parent'] == TINYIB_NEWTHREAD;
+					$isOP = $post['parent'] == ATOM_NEWTHREAD;
 					threadUpdated($isOP ? $post['id'] : $post['parent']);
 					$text .= manageInfo('Selected images from post No.' .
 						$post['id'] . ' are deleted.');
@@ -900,7 +900,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$post = postByID($_GET['delete-img']);
 				if ($post) {
 					hideImagesByImageID($post, $_GET["delete-img-mod"]);
-					$isOP = $post['parent'] == TINYIB_NEWTHREAD;
+					$isOP = $post['parent'] == ATOM_NEWTHREAD;
 					threadUpdated($isOP ? $post['id'] : $post['parent']);
 					$text .= manageInfo('Thumbnails for selected images from post No.' .
 						$post['id'] . ' are changed.');
@@ -919,7 +919,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				(date('d.m.y D H:i:s', time())) . '</span>';
 			if ($post) {
 				editMessageInPostById($post['id'], $newMessage);
-				$isOP = $post['parent'] == TINYIB_NEWTHREAD;
+				$isOP = $post['parent'] == ATOM_NEWTHREAD;
 				threadUpdated($isOP ? $post['id'] : $post['parent']);
 				$text .= manageInfo('Message in post No.' . $post['id'] . ' changed.');
 				modLog('Edited message of ' .
@@ -929,15 +929,15 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 			}
 
-		// Approve posts if premoderation enabled (see TINYIB_REQMOD)
+		// Approve posts if premoderation enabled (see ATOM_REQMOD)
 		} elseif (isset($_GET['approve'])) {
 			if ($_GET['approve'] > 0) {
 				$post = postByID($_GET['approve']);
 				if ($post) {
 					approvePostByID($post['id']);
-					$threadId = $post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent'];
+					$threadId = $post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent'];
 					if (strtolower($post['email']) != 'sage' &&
-						(TINYIB_MAXREPLIES == 0 || numRepliesToThreadByID($threadId) <= TINYIB_MAXREPLIES)
+						(ATOM_BUMPLIMIT == 0 || numRepliesToThreadByID($threadId) <= ATOM_BUMPLIMIT)
 					) {
 						bumpThreadByID($threadId);
 					}
@@ -966,7 +966,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		} elseif (isset($_GET['locked']) && isset($_GET['setlocked'])) {
 			if ($_GET['locked'] > 0) {
 				$post = postByID($_GET['locked']);
-				if ($post && $post['parent'] == TINYIB_NEWTHREAD) {
+				if ($post && $post['parent'] == ATOM_NEWTHREAD) {
 					lockThreadByID($post['id'], (intval($_GET['setlocked'])));
 					threadUpdated($post['id']);
 					$isLocked = $_GET['setlocked'] == 1 ? 'locked' : 'un-locked';
@@ -983,7 +983,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		} elseif (isset($_GET['sticky']) && isset($_GET['setsticky'])) {
 			if ($_GET['sticky'] > 0) {
 				$post = postByID($_GET['sticky']);
-				if ($post && $post['parent'] == TINYIB_NEWTHREAD) {
+				if ($post && $post['parent'] == ATOM_NEWTHREAD) {
 					stickyThreadByID($post['id'], (intval($_GET['setsticky'])));
 					threadUpdated($post['id']);
 					$isSticked = intval($_GET['setsticky']) == 1 ? 'stickied' : 'un-stickied';
@@ -1029,7 +1029,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	$result = likePostByID($postNum, $_SERVER['REMOTE_ADDR']);
 	$post = postByID($postNum);
 	$post['likes'] = $result;
-	threadUpdated($post['parent'] == TINYIB_NEWTHREAD ? $post['id'] : $post['parent']);
+	threadUpdated($post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent']);
 	echo '{
 		"status": "ok",
 		"message": "' . (
@@ -1039,16 +1039,16 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		"likes": ' . $result[1] . ' }';
 	$redirect = false;
 
-} elseif (!file_exists(TINYIB_INDEX) || countThreads() == 0) {
+} elseif (!file_exists(ATOM_INDEX) || countThreads() == 0) {
 	rebuildIndexes();
 }
 
 if ($redirect) {
 	if (isset($slowRedirect)) {
 		echo '<meta http-equiv="refresh" content="3; url=' .
-			(is_string($redirect) ? $redirect : TINYIB_INDEX) . '">';
+			(is_string($redirect) ? $redirect : ATOM_INDEX) . '">';
 	} else {
-		header('Location: ' . (is_string($redirect) ? $redirect : TINYIB_INDEX), true, 307);
+		header('Location: ' . (is_string($redirect) ? $redirect : ATOM_INDEX), true, 307);
 		exit();
 	}
 }

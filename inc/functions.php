@@ -1,13 +1,13 @@
 <?php
-if (!defined('TINYIB_BOARD')) {
+if (!defined('ATOM_BOARD')) {
 	die('');
 }
 
 // if you wannt to add more file_* entities you also have to change:
 // postsByHex()
 // insertPost()
-if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
-	$posts_sql = 'CREATE TABLE "' . TINYIB_DBPOSTS . '" (
+if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
+	$posts_sql = 'CREATE TABLE "' . ATOM_DBPOSTS . '" (
 		"id" bigserial NOT NULL,
 		"parent" integer NOT NULL,
 		"timestamp" integer NOT NULL,
@@ -65,12 +65,12 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		"likes" smallint NOT NULL default \'0\',
 		PRIMARY KEY ("id")
 	);
-	CREATE INDEX ON "' . TINYIB_DBPOSTS . '"("parent");
-	CREATE INDEX ON "' . TINYIB_DBPOSTS . '"("bumped");
-	CREATE INDEX ON "' . TINYIB_DBPOSTS . '"("stickied");
-	CREATE INDEX ON "' . TINYIB_DBPOSTS . '"("moderated");';
+	CREATE INDEX ON "' . ATOM_DBPOSTS . '"("parent");
+	CREATE INDEX ON "' . ATOM_DBPOSTS . '"("bumped");
+	CREATE INDEX ON "' . ATOM_DBPOSTS . '"("stickied");
+	CREATE INDEX ON "' . ATOM_DBPOSTS . '"("moderated");';
 
-	$bans_sql = 'CREATE TABLE "' . TINYIB_DBBANS . '" (
+	$bans_sql = 'CREATE TABLE "' . ATOM_DBBANS . '" (
 		"id" bigserial NOT NULL,
 		"ip" varchar(39) NOT NULL,
 		"timestamp" integer NOT NULL,
@@ -78,9 +78,9 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		"reason" text NOT NULL,
 		PRIMARY KEY ("id")
 	);
-	CREATE INDEX ON "' . TINYIB_DBBANS . '"("ip");';
+	CREATE INDEX ON "' . ATOM_DBBANS . '"("ip");';
 
-	$likes_sql = 'CREATE TABLE "' . TINYIB_DBLIKES . '" (
+	$likes_sql = 'CREATE TABLE "' . ATOM_DBLIKES . '" (
 		"id" bigserial NOT NULL,
 		"ip" varchar(39) NOT NULL,
 		"board" varchar(16) NOT NULL,
@@ -88,9 +88,9 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		"islike" smallint NOT NULL default \'1\',
 		PRIMARY KEY ("id")
 	);
-	CREATE INDEX ON "' . TINYIB_DBLIKES . '"("ip");';
+	CREATE INDEX ON "' . ATOM_DBLIKES . '"("ip");';
 
-	$modlog_sql = 'CREATE TABLE "' . TINYIB_DBMODLOG . '" (
+	$modlog_sql = 'CREATE TABLE "' . ATOM_DBMODLOG . '" (
 		"id" bigserial NOT NULL,
 		"timestamp" integer NOT NULL,
 		"boardname" varchar(255) NOT NULL,
@@ -99,10 +99,10 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		"color" varchar(75) NOT NULL,
 		"private" smallint NOT NULL default \'1\',
 	);
-	CREATE INDEX ON "' . TINYIB_DBMODLOG . '"("boardname");';
+	CREATE INDEX ON "' . ATOM_DBMODLOG . '"("boardname");';
 
 } else {
-	$posts_sql = "CREATE TABLE `" . TINYIB_DBPOSTS . "` (
+	$posts_sql = "CREATE TABLE `" . ATOM_DBPOSTS . "` (
 		`id` mediumint(7) unsigned NOT NULL auto_increment,
 		`parent` mediumint(7) unsigned NOT NULL,
 		`timestamp` int(20) NOT NULL,
@@ -165,7 +165,7 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		KEY `moderated` (`moderated`)
 	)";
 
-	$bans_sql = "CREATE TABLE `" . TINYIB_DBBANS . "` (
+	$bans_sql = "CREATE TABLE `" . ATOM_DBBANS . "` (
 		`id` mediumint(7) unsigned NOT NULL auto_increment,
 		`ip` varchar(39) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 		`timestamp` int(20) NOT NULL,
@@ -175,7 +175,7 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		KEY `ip` (`ip`)
 	)";
 
-	$likes_sql = "CREATE TABLE `" . TINYIB_DBLIKES . "` (
+	$likes_sql = "CREATE TABLE `" . ATOM_DBLIKES . "` (
 		`id` mediumint(7) unsigned NOT NULL auto_increment,
 		`ip` varchar(39) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 		`board` varchar(16) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
@@ -184,7 +184,7 @@ if (TINYIB_DBMODE == 'pdo' && TINYIB_DBDRIVER == 'pgsql') {
 		PRIMARY KEY (`id`)
 	)";
 
-	$modlog_sql = "CREATE TABLE `" . TINYIB_DBMODLOG . "` (
+	$modlog_sql = "CREATE TABLE `" . ATOM_DBMODLOG . "` (
 		`id` mediumint(7) unsigned NOT NULL auto_increment,
 		`timestamp` int(20) NOT NULL,
 		`boardname` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
@@ -214,7 +214,7 @@ function threadUpdated($id) {
 	rebuildIndexes();
 }
 
-function newPost($parent = TINYIB_NEWTHREAD) {
+function newPost($parent = ATOM_NEWTHREAD) {
 	return array('parent' => $parent,
 		'timestamp' => '0',
 		'bumped' => '0',
@@ -319,7 +319,7 @@ function nameAndTripcode($name) {
 			if ($cap != "") {
 				$tripcode .= "!";
 			}
-			$tripcode .= "!" . substr(md5($cap_secure . TINYIB_TRIPSEED), 2, 10);
+			$tripcode .= "!" . substr(md5($cap_secure . ATOM_TRIPSEED), 2, 10);
 		}
 		return array(preg_replace("/(" . $cap_delimiter . ")(.*)/", "", $name), $tripcode);
 	}
@@ -328,8 +328,8 @@ function nameAndTripcode($name) {
 
 function nameBlock($name, $tripcode, $email, $ip, $parent, $timestamp, $rawposttext) {
 	$posterUID = '';
-	if (TINYIB_POSTERUID) {
-		$hash = substr(md5($ip . intval($parent) . TINYIB_TRIPSEED), 0, 8);
+	if (ATOM_POSTERUID) {
+		$hash = substr(md5($ip . intval($parent) . ATOM_TRIPSEED), 0, 8);
 		$hashint = hexdec('0x' . $hash);
 		$red = $hashint >> 24 & 255;
 		$green = $hashint >> 16 & 255;
@@ -340,7 +340,7 @@ function nameBlock($name, $tripcode, $email, $ip, $parent, $timestamp, $rawpostt
 	}
 	$output = '<span class="postername' .
 		(checkAccess() != 'disabled' && $name != '' ? ' postername-admin' : '') . '">';
-	$output .= $name == '' && $tripcode == '' ? TINYIB_POSTERNAME : $name;
+	$output .= $name == '' && $tripcode == '' ? ATOM_POSTERNAME : $name;
 	if ($tripcode != '') {
 		$output .= '</span><span class="postertrip">!' . $tripcode;
 	}
@@ -354,7 +354,7 @@ function nameBlock($name, $tripcode, $email, $ip, $parent, $timestamp, $rawpostt
 }
 
 function writePage($filename, $contents) {
-	$tempfile = tempnam('res/', TINYIB_BOARD . 'tmp'); /* Create the temporary file */
+	$tempfile = tempnam('res/', ATOM_BOARD . 'tmp'); /* Create the temporary file */
 	$fp = fopen($tempfile, 'w');
 	fwrite($fp, $contents);
 	fclose($fp);
@@ -367,20 +367,20 @@ function writePage($filename, $contents) {
 }
 
 function _finishWordBreak($matches) {
-	return '<a' . $matches[1] . 'href="' . str_replace(TINYIB_WORDBREAK_IDENTIFIER, '', $matches[2]) . '"' .
-		$matches[3] . '>' . str_replace(TINYIB_WORDBREAK_IDENTIFIER, '<br>', $matches[4]) . '</a>';
+	return '<a' . $matches[1] . 'href="' . str_replace(ATOM_WORDBREAK_IDENTIFIER, '', $matches[2]) . '"' .
+		$matches[3] . '>' . str_replace(ATOM_WORDBREAK_IDENTIFIER, '<br>', $matches[4]) . '</a>';
 }
 
 function finishWordBreak($message) {
 	return str_replace(
-		TINYIB_WORDBREAK_IDENTIFIER,
+		ATOM_WORDBREAK_IDENTIFIER,
 		'<br>',
 		preg_replace_callback('/<a(.*?)href="([^"]*?)"(.*?)>(.*?)<\/a>/', '_finishWordBreak', $message)
 	);
 }
 
 function deletePostImages($post, $imgList = array()) {
-	if (($imgList) && (count($imgList) <= TINYIB_MAXIMUM_FILES)) {
+	if (($imgList) && (count($imgList) <= ATOM_FILES_COUNT)) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
 			if (!isEmbed($post['file' . $index . '_hex']) && $post['file' . $index] != '') {
@@ -392,7 +392,7 @@ function deletePostImages($post, $imgList = array()) {
 			}
 		}
 	} else {
-		for ($index = 0; $index < TINYIB_MAXIMUM_FILES; $index++) {
+		for ($index = 0; $index < ATOM_FILES_COUNT; $index++) {
 			if (!isEmbed($post['file' . $index . '_hex']) && $post['file' . $index] != '') {
 				@unlink('src/' . $post['file' . $index]);
 			}
@@ -405,7 +405,7 @@ function deletePostImages($post, $imgList = array()) {
 }
 
 function deletePostImagesThumb($post, $imgList) {
-	if ($imgList && (count($imgList) <= TINYIB_MAXIMUM_FILES)) {
+	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT)) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
 			$thumbName = $post['thumb' . $index];
@@ -417,11 +417,11 @@ function deletePostImagesThumb($post, $imgList) {
 }
 
 function checkCAPTCHA() {
-	if (TINYIB_CAPTCHA === 'recaptcha') {
+	if (ATOM_CAPTCHA === 'recaptcha') {
 		require_once 'inc/recaptcha/autoload.php';
 		$captcha = isset($_POST['g-recaptcha-response']) ? $_POST['g-recaptcha-response'] : '';
 		$failed_captcha = true;
-		$recaptcha = new \ReCaptcha\ReCaptcha(TINYIB_RECAPTCHA_SECRET);
+		$recaptcha = new \ReCaptcha\ReCaptcha(ATOM_RECAPTCHA_SECRET);
 		$resp = $recaptcha->verify($captcha, $_SERVER['REMOTE_ADDR']);
 		if ($resp->isSuccess()) {
 			$failed_captcha = false;
@@ -444,10 +444,10 @@ function checkCAPTCHA() {
 			}
 			fancyDie($captcha_error);
 		}
-	} else if (TINYIB_CAPTCHA) { // Simple CAPTCHA
+	} else if (ATOM_CAPTCHA) { // Simple CAPTCHA
 		$captcha = isset($_POST['captcha']) ? strtolower(trim($_POST['captcha'])) : '';
-		$captcha_solution = isset($_SESSION['atomboardcaptcha']) ?
-			strtolower(trim($_SESSION['atomboardcaptcha'])) : '';
+		$captcha_solution = isset($_SESSION['atom_captcha']) ?
+			strtolower(trim($_SESSION['atom_captcha'])) : '';
 		if ($captcha == '') {
 			fancyDie('Please enter the CAPTCHA text.');
 		} else if ($captcha != $captcha_solution) {
@@ -474,14 +474,14 @@ function checkBanned() {
 }
 
 function checkFlood() {
-	if (TINYIB_DELAY > 0) {
+	if (ATOM_POSTING_DELAY > 0) {
 		$lastpost = lastPostByIP();
 		if ($lastpost) {
-			if ((time() - $lastpost['timestamp']) < TINYIB_DELAY) {
+			if ((time() - $lastpost['timestamp']) < ATOM_POSTING_DELAY) {
 				fancyDie('Please wait a moment before posting again.<br>' .
 					'You will be able to make another post in ' .
-					(TINYIB_DELAY - (time() - $lastpost['timestamp'])) .
-					' ' . plural("second", (TINYIB_DELAY - (time() - $lastpost['timestamp']))) . '.');
+					(ATOM_POSTING_DELAY - (time() - $lastpost['timestamp'])) .
+					' ' . plural("second", (ATOM_POSTING_DELAY - (time() - $lastpost['timestamp']))) . '.');
 			}
 		}
 	}
@@ -495,25 +495,25 @@ function checkMessageSize() {
 }
 
 function checkAccess() {
-	global $atomboard_moderators, $atomboard_janitors;
+	global $atom_moderators, $atom_janitors;
 	if (isset($_POST['managepassword'])) {
 		$providedPassword = substr($_POST['managepassword'], 0, 256);
-		if ($providedPassword != '' && $providedPassword === TINYIB_ADMINPASS) {
-			$_SESSION['atomboard'] = TINYIB_ADMINPASS;
-			$_SESSION['atomboard_user'] = 'Admin';
+		if ($providedPassword != '' && $providedPassword === ATOM_ADMINPASS) {
+			$_SESSION['atomboard'] = ATOM_ADMINPASS;
+			$_SESSION['atom_user'] = 'Admin';
 		} elseif ($providedPassword != '' &&
-			count($atomboard_moderators) != 0 &&
-			$modname = array_search($providedPassword, $atomboard_moderators, true)
+			count($atom_moderators) != 0 &&
+			$modname = array_search($providedPassword, $atom_moderators, true)
 		) {
-			$_SESSION['atomboard'] = $atomboard_moderators[$modname];
-			$_SESSION['atomboard_user'] = $modname;
+			$_SESSION['atomboard'] = $atom_moderators[$modname];
+			$_SESSION['atom_user'] = $modname;
 			modLog('Moderator login', '1', 'BlueViolet');
 		} elseif ($providedPassword != '' &&
-			count($atomboard_janitors) != 0 &&
-			$modname = array_search($providedPassword, $atomboard_janitors, true)
+			count($atom_janitors) != 0 &&
+			$modname = array_search($providedPassword, $atom_janitors, true)
 		) {
-			$_SESSION['atomboard'] = $atomboard_janitors[$modname];
-			$_SESSION['atomboard_user'] = $modname;
+			$_SESSION['atomboard'] = $atom_janitors[$modname];
+			$_SESSION['atom_user'] = $modname;
 			modLog('Janitor login', '1', 'BlueViolet');
 		} else {
 			// uncomment if you want a lot of "failed login" records in modLog
@@ -522,14 +522,14 @@ function checkAccess() {
 	}
 	$access = 'disabled';
 	if (isset($_SESSION['atomboard'])) {
-		if ($_SESSION['atomboard'] === TINYIB_ADMINPASS) {
+		if ($_SESSION['atomboard'] === ATOM_ADMINPASS) {
 			$access = 'admin';
-		} elseif (count($atomboard_moderators) != 0 &&
-			array_search($_SESSION['atomboard'], $atomboard_moderators, true)
+		} elseif (count($atom_moderators) != 0 &&
+			array_search($_SESSION['atomboard'], $atom_moderators, true)
 		) {
 			$access = 'moderator';
-		} elseif (count($atomboard_janitors) != 0 &&
-			array_search($_SESSION['atomboard'], $atomboard_janitors, true)
+		} elseif (count($atom_janitors) != 0 &&
+			array_search($_SESSION['atomboard'], $atom_janitors, true)
 		) {
 			$access = 'janitor';
 		}
@@ -539,14 +539,14 @@ function checkAccess() {
 
 function setParent() {
 	if (isset($_POST["parent"])) {
-		if ($_POST["parent"] != TINYIB_NEWTHREAD) {
+		if ($_POST["parent"] != ATOM_NEWTHREAD) {
 			if (!threadExistsByID($_POST['parent'])) {
 				fancyDie("Invalid parent thread ID supplied, unable to create post.");
 			}
 			return $_POST["parent"];
 		}
 	}
-	return TINYIB_NEWTHREAD;
+	return ATOM_NEWTHREAD;
 }
 
 function isRawPost() {
@@ -558,7 +558,7 @@ function validateFileUpload($error) {
 	case UPLOAD_ERR_OK:
 		break;
 	case UPLOAD_ERR_FORM_SIZE:
-		fancyDie("That file is larger than " . TINYIB_MAXKBDESC . ".");
+		fancyDie("That file is larger than " . ATOM_FILE_MAXKBDESC . ".");
 		break;
 	case UPLOAD_ERR_INI_SIZE:
 		fancyDie("The uploaded file exceeds the upload_max_filesize directive (" .
@@ -589,19 +589,19 @@ function checkDuplicateFile($hex) {
 	if (count($hexmatches) > 0) {
 		foreach ($hexmatches as $hexmatch) {
 			fancyDie("Duplicate file uploaded.<br>That file has already been posted <a href=\"res/" .
-				($hexmatch["parent"] == TINYIB_NEWTHREAD ? $hexmatch["id"] : $hexmatch["parent"]) .
+				($hexmatch["parent"] == ATOM_NEWTHREAD ? $hexmatch["id"] : $hexmatch["parent"]) .
 				".html#" . $hexmatch["id"] . "\">here</a>.");
 		}
 	}
 }
 
 function thumbnailDimensions($post, $imgIndex = 0) {
-	if ($post['parent'] == TINYIB_NEWTHREAD) {
-		$max_width = TINYIB_MAXWOP;
-		$max_height = TINYIB_MAXHOP;
+	if ($post['parent'] == ATOM_NEWTHREAD) {
+		$max_width = ATOM_FILE_MAXWOP;
+		$max_height = ATOM_FILE_MAXHOP;
 	} else {
-		$max_width = TINYIB_MAXW;
-		$max_height = TINYIB_MAXH;
+		$max_width = ATOM_FILE_MAXW;
+		$max_height = ATOM_FILE_MAXH;
 	}
 	return (
 		$post['image' . $imgIndex . '_width'] > $max_width ||
@@ -611,7 +611,7 @@ function thumbnailDimensions($post, $imgIndex = 0) {
 }
 
 function createThumbnail($file_location, $thumb_location, $new_w, $new_h) {
-	if (TINYIB_THUMBNAIL == 'gd') {
+	if (ATOM_FILE_THUMBDRIVER == 'gd') {
 		$system = explode(".", $thumb_location);
 		$system = array_reverse($system);
 		if (preg_match("/jpg|jpeg/", $system[0])) {
@@ -669,7 +669,7 @@ function createThumbnail($file_location, $thumb_location, $new_w, $new_h) {
 		$exit_status = 1;
 		$extension = pathinfo($thumb_location, PATHINFO_EXTENSION);
 		if ($extension === 'gif') {
-			if (TINYIB_FILE_ANIM_GIF_THUMB) {
+			if (ATOM_FILE_ANIM_GIF) {
 				exec("convert $file_location -auto-orient -thumbnail '" . $new_w . "x" . $new_h .
 					"' -coalesce -layers OptimizeFrame -depth 4 $thumb_location", $discard, $exit_status);
 			} else {
@@ -759,7 +759,7 @@ function addVideoOverlay($thumb_location) {
 	if (!file_exists('icons/video_overlay.png')) {
 		return;
 	}
-	if (TINYIB_THUMBNAIL == 'gd') {
+	if (ATOM_FILE_THUMBDRIVER == 'gd') {
 		if (substr($thumb_location, -4) == ".jpg") {
 			$thumbnail = imagecreatefromjpeg($thumb_location);
 		} else {
@@ -833,16 +833,16 @@ function url_get_contents($url) {
 }
 
 function isEmbed($file_hex) {
-	global $atomboard_embeds;
-	return in_array($file_hex, array_keys($atomboard_embeds));
+	global $atom_embeds;
+	return in_array($file_hex, array_keys($atom_embeds));
 }
 
 function getEmbed($url) {
-	global $atomboard_embeds;
-	if (sizeof($atomboard_embeds) != 0) {
-		foreach ($atomboard_embeds as $service => $service_url) {
+	global $atom_embeds;
+	if (sizeof($atom_embeds) != 0) {
+		foreach ($atom_embeds as $service => $service_url) {
 			if (strpos(strtolower($url), strtolower($service)) !== false) {
-				$service_url = str_ireplace("TINYIBEMBED", urlencode($url), $service_url);
+				$service_url = str_ireplace("ATOM_EMBED", urlencode($url), $service_url);
 				$result = json_decode(url_get_contents($service_url), true);
 				if (!empty($result)) {
 					return array($service, $result);

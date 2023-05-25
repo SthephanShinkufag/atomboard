@@ -1,5 +1,5 @@
 <?php
-if (!defined('TINYIB_BOARD')) {
+if (!defined('ATOM_BOARD')) {
 	die('');
 }
 
@@ -185,7 +185,7 @@ function stickyThreadByID($id, $setsticky) {
 
 function lockThreadByID($id, $setlocked) {
 	if ($setlocked == 1) {
-		$setlocked = TINYIB_LOCKTHR_COOKIE;
+		$setlocked = ATOM_LOCKTHR_COOKIE;
 	} elseif ($setlocked == 0) {
 		$setlocked = '';
 	}
@@ -280,7 +280,7 @@ function convertPostsToSQLStyle($posts, $singlepost = false) {
 		$post['stickied']             = isset($oldpost[POST_STICKIED]) ? $oldpost[POST_STICKIED] : 0;
 		$post['likes']                = $oldpost[POST_LIKES];
 		if ($post['parent'] == '') {
-			$post['parent'] = TINYIB_NEWTHREAD;
+			$post['parent'] = ATOM_NEWTHREAD;
 		}
 		if ($singlepost) {
 			return $post;
@@ -367,7 +367,7 @@ function deletePostByID($id) {
 
 function deleteImagesByImageID($post, $imgList) {
 	deletePostImages($post, $imgList);
-	if ($imgList && count($imgList) <= TINYIB_MAXIMUM_FILES) {
+	if ($imgList && count($imgList) <= ATOM_FILES_COUNT) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$idx10 = intval(trim(basename($index))) * 10;
 			$rows = $GLOBALS['db']->selectWhere(
@@ -396,7 +396,7 @@ function deleteImagesByImageID($post, $imgList) {
 
 function hideImagesByImageID($post, $imgList) {
 	deletePostImagesThumb($post, $imgList);
-	if ($imgList && (count($imgList) <= TINYIB_MAXIMUM_FILES) ) {
+	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT) ) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$idx10 = intval(trim(basename($index))) * 10;
 			$rows = $GLOBALS['db']->selectWhere(
@@ -408,8 +408,8 @@ function hideImagesByImageID($post, $imgList) {
 			}
 			foreach ($rows as $post_) {
 				$post_[POST_THUMB0 + $idx10] = 'spoiler.png';
-				$post_[POST_THUMB0_WIDTH + $idx10] = TINYIB_MAXW;
-				$post_[POST_THUMB0_HEIGHT + $idx10] = TINYIB_MAXW;
+				$post_[POST_THUMB0_WIDTH + $idx10] = ATOM_FILE_MAXW;
+				$post_[POST_THUMB0_HEIGHT + $idx10] = ATOM_FILE_MAXW;
 				$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post_);
 			}
 		}
@@ -430,11 +430,11 @@ function editMessageInPostById($id, $newMessage) {
 }
 
 function trimThreads() {
-	if (TINYIB_MAXTHREADS > 0) {
+	if (ATOM_MAXTHREADS > 0) {
 		$numthreads = countThreads();
-		if ($numthreads > TINYIB_MAXTHREADS) {
+		if ($numthreads > ATOM_MAXTHREADS) {
 			$allthreads = allThreads();
-			for ($i = TINYIB_MAXTHREADS; $i < $numthreads; $i++) {
+			for ($i = ATOM_MAXTHREADS; $i < $numthreads; $i++) {
 				deletePostByID($allthreads[$i]['id']);
 			}
 		}
@@ -453,7 +453,7 @@ function lastPostByIP() {
 function likePostByID($id, $ip) {
 	$compClause = new AndWhereClause();
 	$compClause->add(new SimpleWhereClause(LIKES_IP, '=', $ip, STRING_COMPARISON));
-	$compClause->add(new SimpleWhereClause(LIKES_BOARD, '=', TINYIB_BOARD, STRING_COMPARISON));
+	$compClause->add(new SimpleWhereClause(LIKES_BOARD, '=', ATOM_BOARD, STRING_COMPARISON));
 	$compClause->add(new SimpleWhereClause(LIKES_POSTNUM, '=', $id, INTEGER_COMPARISON));
 	$rows = $GLOBALS['db']->selectWhere(LIKES_FILE, $compClause);
 	$isAlreadyLiked = count($rows);
@@ -463,13 +463,13 @@ function likePostByID($id, $ip) {
 		$like = array();
 		$like[LIKES_ID] = '0';
 		$like[LIKES_IP] = $ip;
-		$like[LIKES_BOARD] = TINYIB_BOARD;
+		$like[LIKES_BOARD] = ATOM_BOARD;
 		$like[LIKES_POSTNUM] = $id;
 		$like[LIKES_ISLIKE] = '1';
 		$GLOBALS['db']->insertWithAutoId(LIKES_FILE, LIKES_ID, $like);
 	}
 	$compClause = new AndWhereClause();
-	$compClause->add(new SimpleWhereClause(LIKES_BOARD, '=', TINYIB_BOARD, STRING_COMPARISON));
+	$compClause->add(new SimpleWhereClause(LIKES_BOARD, '=', ATOM_BOARD, STRING_COMPARISON));
 	$compClause->add(new SimpleWhereClause(LIKES_POSTNUM, '=', $id, INTEGER_COMPARISON));
 	$rows = $GLOBALS['db']->selectWhere(LIKES_FILE, $compClause);
 	$countOfPostLikes = count($rows);
@@ -585,7 +585,7 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 		if ($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
 			$rows = $GLOBALS['db']->selectWhere(
 				MODLOG_FILE,
-				new SimpleWhereClause(MODLOG_BOARDNAME, '=', TINYIB_BOARD, STRING_COMPARISON),
+				new SimpleWhereClause(MODLOG_BOARDNAME, '=', ATOM_BOARD, STRING_COMPARISON),
 				100,
 				new OrderBy(MODLOG_TIMESTAMP, DESCENDING, INTEGER_COMPARISON));
 			foreach ($rows as $row) {
@@ -597,7 +597,7 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 			}
 		} elseif ($periodEndDate !== 0 && $periodStartDate !== 0) { // If the date range is set
 			$compClause = new AndWhereClause();
-			$compClause->add(new SimpleWhereClause(MODLOG_BOARDNAME, '=', TINYIB_BOARD, STRING_COMPARISON));
+			$compClause->add(new SimpleWhereClause(MODLOG_BOARDNAME, '=', ATOM_BOARD, STRING_COMPARISON));
 			$compClause->add(new SimpleWhereClause(MODLOG_TIMESTAMP, '>=', $periodStartDate,
 				INTEGER_COMPARISON));
 			$compClause->add(new SimpleWhereClause(MODLOG_TIMESTAMP, '<=', $periodEndDate,
@@ -618,7 +618,7 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 	// If we need only public records
 	} elseif ($private === '0') {
 		$compClause = new AndWhereClause();
-		$compClause->add(new SimpleWhereClause(MODLOG_BOARDNAME, '=', TINYIB_BOARD, STRING_COMPARISON));
+		$compClause->add(new SimpleWhereClause(MODLOG_BOARDNAME, '=', ATOM_BOARD, STRING_COMPARISON));
 		$compClause->add(new SimpleWhereClause(MODLOG_PRIVATE, '=', '0', INTEGER_COMPARISON));
 		$rows = $GLOBALS['db']->selectWhere(
 			MODLOG_FILE,
@@ -641,8 +641,8 @@ function modLog($action, $private = '1', $color = 'Black') {
 	$row = array();
 	$row[MODLOG_ID] = '0';
 	$row[MODLOG_TIMESTAMP] = time();
-	$row[MODLOG_BOARDNAME] = TINYIB_BOARD;
-	$row[MODLOG_USERNAME] = isset($_SESSION['atomboard_user']) ? $_SESSION['atomboard_user'] : 'UNKNOWN';
+	$row[MODLOG_BOARDNAME] = ATOM_BOARD;
+	$row[MODLOG_USERNAME] = isset($_SESSION['atom_user']) ? $_SESSION['atom_user'] : 'UNKNOWN';
 	$row[MODLOG_ACTION] = $action;
 	$row[MODLOG_COLOR] = $color;
 	$row[MODLOG_PRIVATE] = $private;

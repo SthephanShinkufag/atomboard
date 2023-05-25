@@ -1,17 +1,17 @@
 <?php
-if (!defined('TINYIB_BOARD')) {
+if (!defined('ATOM_BOARD')) {
 	die('');
 }
-if (TINYIB_DBDSN == '') { // Build a default (likely MySQL) DSN
-	$dsn = TINYIB_DBDRIVER . ":host=" . TINYIB_DBHOST;
-	if (TINYIB_DBPORT > 0) {
-		$dsn .= ";port=" . TINYIB_DBPORT;
+if (ATOM_DBDSN == '') { // Build a default (likely MySQL) DSN
+	$dsn = ATOM_DBDRIVER . ":host=" . ATOM_DBHOST;
+	if (ATOM_DBPORT > 0) {
+		$dsn .= ";port=" . ATOM_DBPORT;
 	}
-	$dsn .= ";dbname=" . TINYIB_DBNAME;
+	$dsn .= ";dbname=" . ATOM_DBNAME;
 } else { // Use a custom DSN
-	$dsn = TINYIB_DBDSN;
+	$dsn = ATOM_DBDSN;
 }
-if (TINYIB_DBDRIVER === 'pgsql') {
+if (ATOM_DBDRIVER === 'pgsql') {
 	$options = array(PDO::ATTR_PERSISTENT => true,
 		PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION);
 } else {
@@ -20,17 +20,17 @@ if (TINYIB_DBDRIVER === 'pgsql') {
 		PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8');
 }
 try {
-	$dbh = new PDO($dsn, TINYIB_DBUSERNAME, TINYIB_DBPASSWORD, $options);
+	$dbh = new PDO($dsn, ATOM_DBUSERNAME, ATOM_DBPASSWORD, $options);
 } catch (PDOException $e) {
 	fancyDie("Failed to connect to the database: " . $e->getMessage());
 }
 
 // Create the posts table if it does not exist
-if (TINYIB_DBDRIVER === 'pgsql') {
-	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(TINYIB_DBPOSTS);
+if (ATOM_DBDRIVER === 'pgsql') {
+	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(ATOM_DBPOSTS);
 	$posts_exists = $dbh->query($query)->fetchColumn() != 0;
 } else {
-	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(TINYIB_DBPOSTS));
+	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBPOSTS));
 	$posts_exists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
 }
 
@@ -39,11 +39,11 @@ if (!$posts_exists) {
 }
 
 // Create the bans table if it does not exist
-if (TINYIB_DBDRIVER === 'pgsql') {
-	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(TINYIB_DBBANS);
+if (ATOM_DBDRIVER === 'pgsql') {
+	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(ATOM_DBBANS);
 	$bans_exists = $dbh->query($query)->fetchColumn() != 0;
 } else {
-	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(TINYIB_DBBANS));
+	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBBANS));
 	$bans_exists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
 }
 if (!$bans_exists) {
@@ -51,11 +51,11 @@ if (!$bans_exists) {
 }
 
 // Create the likes table if it does not exist
-if (TINYIB_DBDRIVER === 'pgsql') {
-	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(TINYIB_DBLIKES);
+if (ATOM_DBDRIVER === 'pgsql') {
+	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(ATOM_DBLIKES);
 	$likes_exists = $dbh->query($query)->fetchColumn() != 0;
 } else {
-	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(TINYIB_DBLIKES));
+	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBLIKES));
 	$likes_exists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
 }
 if (!$likes_exists) {
@@ -63,11 +63,11 @@ if (!$likes_exists) {
 }
 
 // Create the modlog table if it does not exist
-if (TINYIB_DBDRIVER === 'pgsql') {
-	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(TINYIB_DBMODLOG);
+if (ATOM_DBDRIVER === 'pgsql') {
+	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(ATOM_DBMODLOG);
 	$modlog_exists = $dbh->query($query)->fetchColumn() != 0;
 } else {
-	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(TINYIB_DBMODLOG));
+	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBMODLOG));
 	$modlog_exists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
 }
 
@@ -92,13 +92,13 @@ function pdoQuery($sql, $params = false) {
 # Post Functions
 function uniquePosts() {
 	$result = pdoQuery(
-		"SELECT COUNT(DISTINCT(ip)) FROM " . TINYIB_DBPOSTS);
+		"SELECT COUNT(DISTINCT(ip)) FROM " . ATOM_DBPOSTS);
 	return (int)$result->fetchColumn();
 }
 
 function postByID($id) {
 	$result = pdoQuery(
-		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE id = ?",
 		array($id));
 	if ($result) {
@@ -108,7 +108,7 @@ function postByID($id) {
 
 function threadExistsByID($id) {
 	$result = pdoQuery(
-		"SELECT COUNT(*) FROM " . TINYIB_DBPOSTS . "
+		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
 		WHERE id = ? AND parent = 0 AND moderated = 1",
 		array($id));
 	return $result->fetchColumn() != 0;
@@ -119,7 +119,7 @@ function insertPost($post) {
 	global $dbh;
 	$now = time();
 	$stm = $dbh->prepare(
-		"INSERT INTO " . TINYIB_DBPOSTS . " (
+		"INSERT INTO " . ATOM_DBPOSTS . " (
 			parent,
 			timestamp,
 			bumped,
@@ -234,7 +234,7 @@ function insertPost($post) {
 
 function approvePostByID($id) {
 	pdoQuery(
-		"UPDATE " . TINYIB_DBPOSTS . "
+		"UPDATE " . ATOM_DBPOSTS . "
 		SET moderated = ?
 		WHERE id = ?",
 		array('1', $id));
@@ -242,7 +242,7 @@ function approvePostByID($id) {
 
 function stickyThreadByID($id, $setsticky) {
 	pdoQuery(
-		"UPDATE " . TINYIB_DBPOSTS . "
+		"UPDATE " . ATOM_DBPOSTS . "
 		SET stickied = ?
 		WHERE id = ?",
 		array($setsticky, $id));
@@ -250,12 +250,12 @@ function stickyThreadByID($id, $setsticky) {
 
 function lockThreadByID($id, $setlocked) {
 	if ($setlocked == 1) {
-		$setlocked = TINYIB_LOCKTHR_COOKIE;
+		$setlocked = ATOM_LOCKTHR_COOKIE;
 	} elseif ($setlocked == 0) {
 		$setlocked = '';
 	}
 	pdoQuery(
-		"UPDATE " . TINYIB_DBPOSTS . "
+		"UPDATE " . ATOM_DBPOSTS . "
 		SET email = ?
 		WHERE id = ?",
 		array($setlocked, $id));
@@ -264,7 +264,7 @@ function lockThreadByID($id, $setlocked) {
 function bumpThreadByID($id) {
 	$now = time();
 	pdoQuery(
-		"UPDATE " . TINYIB_DBPOSTS . "
+		"UPDATE " . ATOM_DBPOSTS . "
 		SET bumped = ?
 		WHERE id = ?",
 		array($now, $id));
@@ -272,7 +272,7 @@ function bumpThreadByID($id) {
 
 function countThreads() {
 	$result = pdoQuery(
-		"SELECT COUNT(*) FROM " . TINYIB_DBPOSTS . "
+		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
 		WHERE parent = 0 AND moderated = 1");
 	return (int)$result->fetchColumn();
 }
@@ -280,7 +280,7 @@ function countThreads() {
 function allThreads() {
 	$threads = array();
 	$results = pdoQuery(
-		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE parent = 0 AND moderated = 1
 		ORDER BY stickied DESC, bumped DESC");
 	while ($row = $results->fetch()) {
@@ -291,7 +291,7 @@ function allThreads() {
 
 function numRepliesToThreadByID($id) {
 	$result = pdoQuery(
-		"SELECT COUNT(*) FROM " . TINYIB_DBPOSTS . "
+		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
 		WHERE parent = ? AND moderated = 1",
 		array($id));
 	return (int)$result->fetchColumn();
@@ -300,7 +300,7 @@ function numRepliesToThreadByID($id) {
 function postsInThreadByID($id, $moderated_only = true) {
 	$posts = array();
 	$results = pdoQuery(
-		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE (id = ? OR parent = ?)" .
 		($moderated_only ? " AND moderated = 1" : "") .
 		" ORDER BY id ASC",
@@ -315,7 +315,7 @@ function postsInThreadByID($id, $moderated_only = true) {
 function postsByHex($hex) {
 	$posts = array();
 	$results = pdoQuery(
-		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE (file0_hex = ? OR file1_hex = ? OR file2_hex = ? OR file3_hex = ?)
 			AND moderated = 1 LIMIT 1",
 		array($hex, $hex, $hex, $hex));
@@ -328,7 +328,7 @@ function postsByHex($hex) {
 function latestPosts($moderated = true) {
 	$posts = array();
 	$results = pdoQuery(
-		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE moderated = ?
 		ORDER BY timestamp DESC LIMIT 10",
 		array($moderated ? '1' : '0'));
@@ -344,7 +344,7 @@ function deletePostByID($id) {
 		if ($post['id'] != $id) {
 			deletePostImages($post);
 			pdoQuery(
-				"DELETE FROM " . TINYIB_DBPOSTS . "
+				"DELETE FROM " . ATOM_DBPOSTS . "
 				WHERE id = ?",
 				array($post['id']));
 		} else {
@@ -352,12 +352,12 @@ function deletePostByID($id) {
 		}
 	}
 	if (isset($thispost)) {
-		if ($thispost['parent'] == TINYIB_NEWTHREAD) {
+		if ($thispost['parent'] == ATOM_NEWTHREAD) {
 			@unlink('res/' . $thispost['id'] . '.html');
 		}
 		deletePostImages($thispost);
 		pdoQuery(
-			"DELETE FROM " . TINYIB_DBPOSTS . "
+			"DELETE FROM " . ATOM_DBPOSTS . "
 			WHERE id = ?",
 			array($thispost['id']));
 	}
@@ -365,11 +365,11 @@ function deletePostByID($id) {
 
 function deleteImagesByImageID($post, $imgList) {
 	deletePostImages($post, $imgList);
-	if ($imgList && count($imgList) <= TINYIB_MAXIMUM_FILES) {
+	if ($imgList && count($imgList) <= ATOM_FILES_COUNT) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
 			pdoQuery(
-				"UPDATE " . TINYIB_DBPOSTS . "
+				"UPDATE " . ATOM_DBPOSTS . "
 				SET file" . $index . " = ?,
 					file" . $index . "_hex = ?,
 					file" . $index . "_original = ?,
@@ -388,33 +388,33 @@ function deleteImagesByImageID($post, $imgList) {
 
 function hideImagesByImageID($post, $imgList) {
 	deletePostImagesThumb($post, $imgList);
-	if ($imgList && (count($imgList) <= TINYIB_MAXIMUM_FILES) ) {
+	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT) ) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
 			pdoQuery(
-				"UPDATE " . TINYIB_DBPOSTS . "
+				"UPDATE " . ATOM_DBPOSTS . "
 				SET thumb" . $index . " = ?,
 					thumb" . $index . "_width = ?,
 					thumb" . $index . "_height = ?
 				WHERE id = ?",
-				array('spoiler.png', TINYIB_MAXW, TINYIB_MAXW, $post['id']));
+				array('spoiler.png', ATOM_FILE_MAXW, ATOM_FILE_MAXW, $post['id']));
 		}
 	}
 }
 
 function editMessageInPostById($id, $newMessage) {
 	pdoQuery(
-		"UPDATE " . TINYIB_DBPOSTS . "
+		"UPDATE " . ATOM_DBPOSTS . "
 		SET message = ?
 		WHERE id = ?",
 		array($newMessage, $id));
 }
 
 function trimThreads() {
-	$limit = (int)TINYIB_MAXTHREADS;
+	$limit = (int)ATOM_MAXTHREADS;
 	if ($limit > 0) {
 		$results = pdoQuery(
-			"SELECT id FROM " . TINYIB_DBPOSTS . "
+			"SELECT id FROM " . ATOM_DBPOSTS . "
 			WHERE parent = 0 AND moderated = 1
 			ORDER BY stickied DESC, bumped DESC LIMIT 100 OFFSET " . $limit);
 		# old mysql, sqlite3: SELECT id FROM $table ORDER BY bumped LIMIT $limit,100
@@ -430,7 +430,7 @@ function trimThreads() {
 
 function lastPostByIP() {
 	$result = pdoQuery(
-		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE ip = ?
 		ORDER BY id DESC LIMIT 1",
 		array($_SERVER['REMOTE_ADDR']));
@@ -439,29 +439,29 @@ function lastPostByIP() {
 
 function likePostByID($id, $ip) {
 	$result = pdoQuery(
-		"SELECT COUNT(*) FROM " . TINYIB_DBLIKES . "
+		"SELECT COUNT(*) FROM " . ATOM_DBLIKES . "
 		WHERE ip = ? AND board = ? AND postnum = ?",
-		array($ip, TINYIB_BOARD, $id));
+		array($ip, ATOM_BOARD, $id));
 	$isAlreadyLiked = (int)$result->fetchColumn();
 	if ($isAlreadyLiked) {
 		pdoQuery(
-			"DELETE FROM " . TINYIB_DBLIKES . "
+			"DELETE FROM " . ATOM_DBLIKES . "
 			WHERE ip = ? AND board = ? AND postnum = ?",
-			array($ip, TINYIB_BOARD, $id));
+			array($ip, ATOM_BOARD, $id));
 	} else {
 		pdoQuery(
-			"INSERT INTO " . TINYIB_DBLIKES . "
+			"INSERT INTO " . ATOM_DBLIKES . "
 			(ip, board, postnum)
 			VALUES (?, ?, ?)",
-			array($ip, TINYIB_BOARD, $id));
+			array($ip, ATOM_BOARD, $id));
 	}
 	$result = pdoQuery(
-		"SELECT COUNT(*) FROM " . TINYIB_DBLIKES . "
+		"SELECT COUNT(*) FROM " . ATOM_DBLIKES . "
 		WHERE board = ? AND postnum = ?",
-		array(TINYIB_BOARD, $id));
+		array(ATOM_BOARD, $id));
 	$countOfPostLikes = (int)$result->fetchColumn();
 	pdoQuery(
-		"UPDATE " . TINYIB_DBPOSTS . "
+		"UPDATE " . ATOM_DBPOSTS . "
 		SET likes = ?
 		WHERE id = ?",
 		array($countOfPostLikes, $id));
@@ -471,7 +471,7 @@ function likePostByID($id, $ip) {
 # Ban Functions
 function banByID($id) {
 	$result = pdoQuery(
-		"SELECT * FROM " . TINYIB_DBBANS . "
+		"SELECT * FROM " . ATOM_DBBANS . "
 		WHERE id = ?",
 		array($id));
 	return $result->fetch(PDO::FETCH_ASSOC);
@@ -479,7 +479,7 @@ function banByID($id) {
 
 function banByIP($ip) {
 	$result = pdoQuery(
-		"SELECT * FROM " . TINYIB_DBBANS . "
+		"SELECT * FROM " . ATOM_DBBANS . "
 		WHERE ip = ? LIMIT 1",
 		array($ip));
 	return $result->fetch(PDO::FETCH_ASSOC);
@@ -488,7 +488,7 @@ function banByIP($ip) {
 function allBans() {
 	$bans = array();
 	$results = pdoQuery(
-		"SELECT * FROM " . TINYIB_DBBANS . "
+		"SELECT * FROM " . ATOM_DBBANS . "
 		ORDER BY timestamp DESC");
 	while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 		$bans[] = $row;
@@ -500,7 +500,7 @@ function insertBan($ban) {
 	global $dbh;
 	$now = time();
 	$stm = $dbh->prepare(
-		"INSERT INTO " . TINYIB_DBBANS . "
+		"INSERT INTO " . ATOM_DBBANS . "
 		(ip, timestamp, expire, reason)
 		VALUES (?, ?, ?, ?)");
 	$stm->execute(array($ban['ip'], $now, $ban['expire'], $ban['reason']));
@@ -510,14 +510,14 @@ function insertBan($ban) {
 function clearExpiredBans() {
 	$now = time();
 	pdoQuery(
-		"DELETE FROM " . TINYIB_DBBANS . "
+		"DELETE FROM " . ATOM_DBBANS . "
 		WHERE expire > 0 AND expire <= ?",
 		array($now));
 }
 
 function deleteBanByID($id) {
 	pdoQuery(
-		"DELETE FROM " . TINYIB_DBBANS . "
+		"DELETE FROM " . ATOM_DBBANS . "
 		WHERE id = ?",
 		array($id));
 }
@@ -529,17 +529,17 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 	if ($private === '1') {
 		if ($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
 			$results = pdoQuery(
-				"SELECT timestamp, username, action, color FROM " . TINYIB_DBMODLOG . "
+				"SELECT timestamp, username, action, color FROM " . ATOM_DBMODLOG . "
 				WHERE boardname = ? ORDER BY timestamp DESC LIMIT 100",
-				array(TINYIB_BOARD));
+				array(ATOM_BOARD));
 			while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 				$records[] = $row;
 			}
 		} elseif ($periodEndDate !== 0 && $periodStartDate !== 0) { // If the date range is set
 			$results = pdoQuery(
-				"SELECT timestamp, username, action, color FROM " . TINYIB_DBMODLOG . "
+				"SELECT timestamp, username, action, color FROM " . ATOM_DBMODLOG . "
 				WHERE boardname = ? AND timestamp >= ? AND timestamp <= ? ORDER BY timestamp DESC",
-				array(TINYIB_BOARD, $periodStartDate, $periodEndDate));
+				array(ATOM_BOARD, $periodStartDate, $periodEndDate));
 			while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 				$records[] = $row;
 			}
@@ -547,9 +547,9 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 	// If we need only public records
 	} elseif ($private === '0') {
 		$results = pdoQuery(
-			"SELECT timestamp, action FROM " . TINYIB_DBMODLOG . "
+			"SELECT timestamp, action FROM " . ATOM_DBMODLOG . "
 			WHERE boardname = ? AND private = ? ORDER BY timestamp DESC LIMIT 100",
-			array(TINYIB_BOARD, '0'));
+			array(ATOM_BOARD, '0'));
 		while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 			$records[] = $row;
 		}
@@ -561,10 +561,10 @@ function modLog($action, $private = '1', $color = 'Black') {
 	// modLog('Text to show in modlog', '[1, 0]', 'Color');
 	// '[1, 0]': 1 = Private record. 0 = Public record.
 	// 'Color': Choose what to put in style="color: " for this record
-	$userName = isset($_SESSION['atomboard_user']) ? $_SESSION['atomboard_user'] : 'UNKNOWN';
+	$userName = isset($_SESSION['atom_user']) ? $_SESSION['atom_user'] : 'UNKNOWN';
 	pdoQuery(
-		"INSERT INTO " . TINYIB_DBMODLOG . "
+		"INSERT INTO " . ATOM_DBMODLOG . "
 		(timestamp, boardname, username, action, color, private)
 		VALUES (?, ?, ?, ?, ?, ?)",
-		array(time(), TINYIB_BOARD, $userName, $action, $color, $private));
+		array(time(), ATOM_BOARD, $userName, $action, $color, $private));
 }

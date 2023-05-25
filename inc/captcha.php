@@ -49,7 +49,7 @@ class SimpleCaptcha {
 	public $maxWordLength = 6;
 
 	/** Sessionname to store the original text */
-	public $session_var = 'atomboardcaptcha';
+	public $session_var = 'atom_captcha';
 
 	/** Background color in RGB-array */
 	public $backgroundColor = array(254, 254, 254);

@@ -1,5 +1,5 @@
 <?php
-if (!defined('TINYIB_BOARD')) {
+if (!defined('ATOM_BOARD')) {
 	die('');
 }
 
@@ -7,13 +7,13 @@ if (!function_exists('mysqli_connect')) {
 	fancyDie("MySQL library is not installed");
 }
 
-$link = @mysqli_connect(TINYIB_DBHOST, TINYIB_DBUSERNAME, TINYIB_DBPASSWORD);
+$link = @mysqli_connect(ATOM_DBHOST, ATOM_DBUSERNAME, ATOM_DBPASSWORD);
 if (!$link) {
 	fancyDie("Could not connect to database: " .
 		((is_object($link)) ? mysqli_error($link) :
 			(($link_error = mysqli_connect_error()) ? $link_error : '(unknown error)')));
 }
-$db_selected = @mysqli_query($link, "USE " . constant('TINYIB_DBNAME'));
+$db_selected = @mysqli_query($link, "USE " . constant('ATOM_DBNAME'));
 if (!$db_selected) {
 	fancyDie("Could not select database: " .
 		((is_object($link)) ? mysqli_error($link) :
@@ -22,22 +22,22 @@ if (!$db_selected) {
 mysqli_query($link, "SET NAMES 'utf8'");
 
 // Create the posts table if it does not exist
-if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . TINYIB_DBPOSTS . "'")) == 0) {
+if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBPOSTS . "'")) == 0) {
 	mysqli_query($link, $posts_sql);
 }
 
 // Create the bans table if it does not exist
-if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . TINYIB_DBBANS . "'")) == 0) {
+if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBBANS . "'")) == 0) {
 	mysqli_query($link, $bans_sql);
 }
 
 // Create the likes table if it does not exist
-if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . TINYIB_DBLIKES . "'")) == 0) {
+if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBLIKES . "'")) == 0) {
 	mysqli_query($link, $likes_sql);
 }
 
 // Create the modlog table if it does not exist
-if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . TINYIB_DBMODLOG . "'")) == 0) {
+if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBMODLOG . "'")) == 0) {
 	mysqli_query($link, $modlog_sql);
 }
 
@@ -52,14 +52,14 @@ function mysqli_result($res, $row, $field = 0) {
 function uniquePosts() {
 	global $link;
 	$row = mysqli_fetch_row(mysqli_query($link,
-		"SELECT COUNT(DISTINCT(`ip`)) FROM " . TINYIB_DBPOSTS));
+		"SELECT COUNT(DISTINCT(`ip`)) FROM " . ATOM_DBPOSTS));
 	return $row[0];
 }
 
 function postByID($id) {
 	global $link;
 	$result = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBPOSTS . "`
+		"SELECT * FROM `" . ATOM_DBPOSTS . "`
 		WHERE `id` = '" . mysqli_real_escape_string($link, $id) . "' LIMIT 1");
 	if ($result) {
 		while ($post = mysqli_fetch_assoc($result)) {
@@ -71,7 +71,7 @@ function postByID($id) {
 function threadExistsByID($id) {
 	global $link;
 	return mysqli_result(mysqli_query($link,
-		"SELECT COUNT(*) FROM `" . TINYIB_DBPOSTS . "`
+		"SELECT COUNT(*) FROM `" . ATOM_DBPOSTS . "`
 		WHERE `id` = '" . mysqli_real_escape_string($link, $id) . "'
 			AND `parent` = 0 AND `moderated` = 1 LIMIT 1"), 0, 0) > 0;
 }
@@ -79,7 +79,7 @@ function threadExistsByID($id) {
 function insertPost($post) {
 	global $link;
 	mysqli_query($link,
-		"INSERT INTO `" . TINYIB_DBPOSTS . "` (
+		"INSERT INTO `" . ATOM_DBPOSTS . "` (
 			`parent`,
 			`timestamp`,
 			`bumped`,
@@ -194,7 +194,7 @@ function insertPost($post) {
 function approvePostByID($id) {
 	global $link;
 	mysqli_query($link,
-		"UPDATE `" . TINYIB_DBPOSTS . "`
+		"UPDATE `" . ATOM_DBPOSTS . "`
 		SET `moderated` = 1
 		WHERE `id` = " . $id . " LIMIT 1");
 }
@@ -202,7 +202,7 @@ function approvePostByID($id) {
 function stickyThreadByID($id, $setsticky) {
 	global $link;
 	mysqli_query($link,
-		"UPDATE `" . TINYIB_DBPOSTS . "`
+		"UPDATE `" . ATOM_DBPOSTS . "`
 		SET `stickied` = '" . mysqli_real_escape_string($link, $setsticky) . "'
 		WHERE `id` = " . $id . " LIMIT 1");
 }
@@ -210,12 +210,12 @@ function stickyThreadByID($id, $setsticky) {
 function lockThreadByID($id, $setlocked) {
 	global $link;
 	if ($setlocked == 1) {
-		$setlocked = TINYIB_LOCKTHR_COOKIE;
+		$setlocked = ATOM_LOCKTHR_COOKIE;
 	} elseif ($setlocked == 0) {
 		$setlocked = '';
 	}
 	mysqli_query($link,
-		"UPDATE `" . TINYIB_DBPOSTS . "`
+		"UPDATE `" . ATOM_DBPOSTS . "`
 		SET `email` = '" . mysqli_real_escape_string($link, $setlocked) . "'
 		WHERE `id` = " . $id . " LIMIT 1");
 }
@@ -223,7 +223,7 @@ function lockThreadByID($id, $setlocked) {
 function bumpThreadByID($id) {
 	global $link;
 	mysqli_query($link,
-		"UPDATE `" . TINYIB_DBPOSTS . "`
+		"UPDATE `" . ATOM_DBPOSTS . "`
 		SET `bumped` = " . time() . "
 		WHERE `id` = " . $id . " LIMIT 1");
 }
@@ -231,7 +231,7 @@ function bumpThreadByID($id) {
 function countThreads() {
 	global $link;
 	return mysqli_result(mysqli_query($link,
-		"SELECT COUNT(*) FROM `" . TINYIB_DBPOSTS . "`
+		"SELECT COUNT(*) FROM `" . ATOM_DBPOSTS . "`
 		WHERE `parent` = 0 AND `moderated` = 1"), 0, 0);
 }
 
@@ -239,7 +239,7 @@ function allThreads() {
 	global $link;
 	$threads = array();
 	$result = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBPOSTS . "`
+		"SELECT * FROM `" . ATOM_DBPOSTS . "`
 		WHERE `parent` = 0 AND `moderated` = 1
 		ORDER BY `stickied` DESC, `bumped` DESC");
 	if ($result) {
@@ -253,7 +253,7 @@ function allThreads() {
 function numRepliesToThreadByID($id) {
 	global $link;
 	return mysqli_result(mysqli_query($link,
-		"SELECT COUNT(*) FROM `" . TINYIB_DBPOSTS . "`
+		"SELECT COUNT(*) FROM `" . ATOM_DBPOSTS . "`
 		WHERE `parent` = " . $id . " AND `moderated` = 1"), 0, 0);
 }
 
@@ -261,7 +261,7 @@ function postsInThreadByID($id, $moderated_only = true) {
 	global $link;
 	$posts = array();
 	$result = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBPOSTS . "`
+		"SELECT * FROM `" . ATOM_DBPOSTS . "`
 		WHERE (`id` = " . $id . " OR `parent` = " . $id . ")" .
 		($moderated_only ? " AND `moderated` = 1" : "") .
 		" ORDER BY `id` ASC");
@@ -277,7 +277,7 @@ function postsByHex($hex) {
 	global $link;
 	$posts = array();
 	$result = mysqli_query($link,
-		"SELECT `id`, `parent` FROM `" . TINYIB_DBPOSTS . "`
+		"SELECT `id`, `parent` FROM `" . ATOM_DBPOSTS . "`
 		WHERE (
 			`file0_hex` = '" . mysqli_real_escape_string($link, $hex) . "'
 			OR `file1_hex` = '" . mysqli_real_escape_string($link, $hex) . "'
@@ -296,7 +296,7 @@ function latestPosts($moderated = true) {
 	global $link;
 	$posts = array();
 	$result = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBPOSTS . "`
+		"SELECT * FROM `" . ATOM_DBPOSTS . "`
 		WHERE `moderated` = " . ($moderated ? '1' : '0') . "
 		ORDER BY `timestamp` DESC LIMIT 10");
 	if ($result) {
@@ -314,19 +314,19 @@ function deletePostByID($id) {
 		if ($post['id'] != $id) {
 			deletePostImages($post);
 			mysqli_query($link,
-				"DELETE FROM `" . TINYIB_DBPOSTS . "`
+				"DELETE FROM `" . ATOM_DBPOSTS . "`
 				WHERE `id` = " . $post['id'] . " LIMIT 1");
 		} else {
 			$thispost = $post;
 		}
 	}
 	if (isset($thispost)) {
-		if ($thispost['parent'] == TINYIB_NEWTHREAD) {
+		if ($thispost['parent'] == ATOM_NEWTHREAD) {
 			@unlink('res/' . $thispost['id'] . '.html');
 		}
 		deletePostImages($thispost);
 		mysqli_query($link,
-			"DELETE FROM `" . TINYIB_DBPOSTS . "`
+			"DELETE FROM `" . ATOM_DBPOSTS . "`
 			WHERE `id` = " . $thispost['id'] . " LIMIT 1");
 	}
 }
@@ -334,11 +334,11 @@ function deletePostByID($id) {
 function deleteImagesByImageID($post, $imgList) {
 	global $link;
 	deletePostImages($post, $imgList);
-	if ($imgList && count($imgList) <= TINYIB_MAXIMUM_FILES) {
+	if ($imgList && count($imgList) <= ATOM_FILES_COUNT) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
 			mysqli_query($link,
-				"UPDATE `" . TINYIB_DBPOSTS . "`
+				"UPDATE `" . ATOM_DBPOSTS . "`
 				SET `file" . $index . "` = '',
 					`file" . $index . "_hex` = '',
 					`file" . $index . "_original` = '',
@@ -357,14 +357,14 @@ function deleteImagesByImageID($post, $imgList) {
 function hideImagesByImageID($post, $imgList) {
 	global $link;
 	deletePostImagesThumb($post, $imgList);
-	if ($imgList && (count($imgList) <= TINYIB_MAXIMUM_FILES) ) {
+	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT) ) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
 			mysqli_query($link,
-				"UPDATE `" . TINYIB_DBPOSTS . "`
+				"UPDATE `" . ATOM_DBPOSTS . "`
 				SET `thumb" . $index . "` = 'spoiler.png',
-					`thumb" . $index . "_width` = " . TINYIB_MAXW . ",
-					`thumb" . $index . "_height` = " . TINYIB_MAXW . "
+					`thumb" . $index . "_width` = " . ATOM_FILE_MAXW . ",
+					`thumb" . $index . "_height` = " . ATOM_FILE_MAXW . "
 				WHERE `id` = " . $post['id']);
 		}
 	}
@@ -373,18 +373,18 @@ function hideImagesByImageID($post, $imgList) {
 function editMessageInPostById($id, $newMessage) {
 	global $link;
 	mysqli_query($link,
-		"UPDATE `" . TINYIB_DBPOSTS . "`
+		"UPDATE `" . ATOM_DBPOSTS . "`
 		SET `message` = '" . $newMessage . "'
 		WHERE `id` = " . $id . " LIMIT 1");
 }
 
 function trimThreads() {
 	global $link;
-	if (TINYIB_MAXTHREADS > 0) {
+	if (ATOM_MAXTHREADS > 0) {
 		$result = mysqli_query($link,
-			"SELECT `id` FROM `" . TINYIB_DBPOSTS . "`
+			"SELECT `id` FROM `" . ATOM_DBPOSTS . "`
 			WHERE `parent` = 0 AND `moderated` = 1
-			ORDER BY `stickied` DESC, `bumped` DESC LIMIT " . TINYIB_MAXTHREADS . ", 10");
+			ORDER BY `stickied` DESC, `bumped` DESC LIMIT " . ATOM_MAXTHREADS . ", 10");
 		if ($result) {
 			while ($post = mysqli_fetch_assoc($result)) {
 				deletePostByID($post['id']);
@@ -396,7 +396,7 @@ function trimThreads() {
 function lastPostByIP() {
 	global $link;
 	$replies = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBPOSTS . "`
+		"SELECT * FROM `" . ATOM_DBPOSTS . "`
 		WHERE `ip` = '" . $_SERVER['REMOTE_ADDR'] . "'
 		ORDER BY `id` DESC LIMIT 1");
 	if ($replies) {
@@ -409,27 +409,27 @@ function lastPostByIP() {
 function likePostByID($id, $ip) {
 	global $link;
 	$isAlreadyLiked = mysqli_result(mysqli_query($link,
-		"SELECT COUNT(*) FROM `" . TINYIB_DBLIKES . "`
+		"SELECT COUNT(*) FROM `" . ATOM_DBLIKES . "`
 		WHERE `ip` = '" . $ip . "'
-			AND `board` = '" . TINYIB_BOARD . "'
+			AND `board` = '" . ATOM_BOARD . "'
 			AND `postnum` = " . $id), 0, 0);
 	if ($isAlreadyLiked) {
 		mysqli_query($link,
-			"DELETE FROM `" . TINYIB_DBLIKES . "`
+			"DELETE FROM `" . ATOM_DBLIKES . "`
 			WHERE `ip` = '" . $ip . "'
-				AND `board` = '" . TINYIB_BOARD . "'
+				AND `board` = '" . ATOM_BOARD . "'
 				AND postnum = " . $id);
 	} else {
 		mysqli_query($link,
-			"INSERT INTO `" . TINYIB_DBLIKES . "`
+			"INSERT INTO `" . ATOM_DBLIKES . "`
 			(`ip`, `board`, `postnum`)
-			VALUES ('" . $ip . "', '" . TINYIB_BOARD . "', " . $id . ")");
+			VALUES ('" . $ip . "', '" . ATOM_BOARD . "', " . $id . ")");
 	}
 	$countOfPostLikes = mysqli_result(mysqli_query($link,
-		"SELECT COUNT(*) FROM `" . TINYIB_DBLIKES . "`
-		WHERE `board` = '" . TINYIB_BOARD . "' AND `postnum` = " . $id), 0, 0);
+		"SELECT COUNT(*) FROM `" . ATOM_DBLIKES . "`
+		WHERE `board` = '" . ATOM_BOARD . "' AND `postnum` = " . $id), 0, 0);
 	mysqli_query($link,
-		"UPDATE `" . TINYIB_DBPOSTS . "`
+		"UPDATE `" . ATOM_DBPOSTS . "`
 		SET `likes` = " . $countOfPostLikes . "
 		WHERE `id` = " . $id);
 	return array(!$isAlreadyLiked, $countOfPostLikes);
@@ -439,7 +439,7 @@ function likePostByID($id, $ip) {
 function banByID($id) {
 	global $link;
 	$result = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBBANS . "`
+		"SELECT * FROM `" . ATOM_DBBANS . "`
 		WHERE `id` = '" . mysqli_real_escape_string($link, $id) . "' LIMIT 1");
 	if ($result) {
 		while ($ban = mysqli_fetch_assoc($result)) {
@@ -451,7 +451,7 @@ function banByID($id) {
 function banByIP($ip) {
 	global $link;
 	$result = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBBANS . "`
+		"SELECT * FROM `" . ATOM_DBBANS . "`
 		WHERE `ip` = '" . mysqli_real_escape_string($link, $ip) . "' LIMIT 1");
 	if ($result) {
 		while ($ban = mysqli_fetch_assoc($result)) {
@@ -464,7 +464,7 @@ function allBans() {
 	global $link;
 	$bans = array();
 	$result = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBBANS . "`
+		"SELECT * FROM `" . ATOM_DBBANS . "`
 		ORDER BY `timestamp` DESC");
 	if ($result) {
 		while ($ban = mysqli_fetch_assoc($result)) {
@@ -477,7 +477,7 @@ function allBans() {
 function insertBan($ban) {
 	global $link;
 	mysqli_query($link,
-		"INSERT INTO `" . TINYIB_DBBANS . "`
+		"INSERT INTO `" . ATOM_DBBANS . "`
 		(`ip`, `timestamp`, `expire`, `reason`)
 		VALUES (
 			'" . mysqli_real_escape_string($link, $ban['ip']) . "',
@@ -491,12 +491,12 @@ function insertBan($ban) {
 function clearExpiredBans() {
 	global $link;
 	$result = mysqli_query($link,
-		"SELECT * FROM `" . TINYIB_DBBANS . "`
+		"SELECT * FROM `" . ATOM_DBBANS . "`
 		WHERE `expire` > 0 AND `expire` <= " . time());
 	if ($result) {
 		while ($ban = mysqli_fetch_assoc($result)) {
 			mysqli_query($link,
-				"DELETE FROM `" . TINYIB_DBBANS . "`
+				"DELETE FROM `" . ATOM_DBBANS . "`
 				WHERE `id` = " . $ban['id'] . " LIMIT 1");
 		}
 	}
@@ -505,7 +505,7 @@ function clearExpiredBans() {
 function deleteBanByID($id) {
 	global $link;
 	mysqli_query($link,
-		"DELETE FROM `" . TINYIB_DBBANS . "`
+		"DELETE FROM `" . ATOM_DBBANS . "`
 		WHERE `id` = " . mysqli_real_escape_string($link, $id) . " LIMIT 1");
 }
 
@@ -517,8 +517,8 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 	if ($private === '1') {
 		if ($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
 			$result = mysqli_query($link,
-				"SELECT `timestamp`, `username`, `action`, `color` FROM `" . TINYIB_DBMODLOG . "`
-				WHERE `boardname` = '" . TINYIB_BOARD . "'
+				"SELECT `timestamp`, `username`, `action`, `color` FROM `" . ATOM_DBMODLOG . "`
+				WHERE `boardname` = '" . ATOM_BOARD . "'
 				ORDER BY `timestamp` DESC LIMIT 100");
 			if ($result) {
 				while ($row = mysqli_fetch_assoc($result)) {
@@ -527,8 +527,8 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 			}
 		} elseif ($periodEndDate !== 0 && $periodStartDate !== 0) { // If the date range is set
 			$result = mysqli_query($link,
-				"SELECT `timestamp`, `username`, `action`, `color` FROM `" . TINYIB_DBMODLOG . "`
-				WHERE `boardname` = '" . TINYIB_BOARD . "'
+				"SELECT `timestamp`, `username`, `action`, `color` FROM `" . ATOM_DBMODLOG . "`
+				WHERE `boardname` = '" . ATOM_BOARD . "'
 					AND `timestamp` >= " . $periodStartDate . "
 					AND `timestamp` <= " . $periodEndDate . "
 				ORDER BY `timestamp` DESC");
@@ -541,8 +541,8 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 	// If we need only public records
 	} elseif ($private === '0') {
 		$result = mysqli_query($link,
-			"SELECT `timestamp`, `action` FROM `" . TINYIB_DBMODLOG . "`
-			WHERE `boardname` = '" . TINYIB_BOARD . "'
+			"SELECT `timestamp`, `action` FROM `" . ATOM_DBMODLOG . "`
+			WHERE `boardname` = '" . ATOM_BOARD . "'
 				AND `private` = '0'
 			ORDER BY `timestamp` DESC LIMIT 100");
 		if ($result) {
@@ -559,13 +559,13 @@ function modLog($action, $private = '1', $color = 'Black') {
 	// modLog('Text to show in modlog', '[1, 0]', 'Color');
 	// '[1, 0]': 1 = Private record. 0 = Public record.
 	// 'Color': Choose what to put in style="color: " for this record
-	$userName = isset($_SESSION['atomboard_user']) ? $_SESSION['atomboard_user'] : 'UNKNOWN';
+	$userName = isset($_SESSION['atom_user']) ? $_SESSION['atom_user'] : 'UNKNOWN';
 	mysqli_query($link,
-		"INSERT INTO `" . TINYIB_DBMODLOG . "`
+		"INSERT INTO `" . ATOM_DBMODLOG . "`
 		(`timestamp`, `boardname`, `username`, `action`, `color`, `private`)
 		VALUES (
 			" . time() . ",
-			'" . TINYIB_BOARD . "',
+			'" . ATOM_BOARD . "',
 			'" . mysqli_real_escape_string($link, $userName) . "',
 			'" . mysqli_real_escape_string($link, $action) . "',
 			'" . $color . "',

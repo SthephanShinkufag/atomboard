@@ -1,15 +1,15 @@
 <?php
-if (!defined('TINYIB_BOARD')) {
+if (!defined('ATOM_BOARD')) {
 	die('');
 }
 
-define('TINYIB_NEWTHREAD', '0');
-define('TINYIB_INDEXPAGE', false);
-define('TINYIB_RESPAGE', true);
-define('TINYIB_WORDBREAK_IDENTIFIER', '@!@TINYIB_WORDBREAK@!@');
-if (!defined('TINYIB_MAXWOP')) {
-	define('TINYIB_MAXWOP', TINYIB_MAXW);
+define('ATOM_NEWTHREAD', '0');
+define('ATOM_INDEXPAGE', false);
+define('ATOM_RESPAGE', true);
+define('ATOM_WORDBREAK_IDENTIFIER', '@!@ATOM_WORDBREAK@!@');
+if (!defined('ATOM_FILE_MAXWOP')) {
+	define('ATOM_FILE_MAXWOP', ATOM_FILE_MAXW);
 }
-if (!defined('TINYIB_MAXHOP')) {
-	define('TINYIB_MAXHOP', TINYIB_MAXH);
+if (!defined('ATOM_FILE_MAXHOP')) {
+	define('ATOM_FILE_MAXHOP', ATOM_FILE_MAXH);
 }

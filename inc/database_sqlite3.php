@@ -1,5 +1,5 @@
 <?php
-if (!defined('TINYIB_BOARD')) {
+if (!defined('ATOM_BOARD')) {
 	die('');
 }
 
@@ -15,9 +15,9 @@ if (!$db) {
 // Create the posts table if it does not exist
 $result = $db->query(
 	"SELECT name FROM sqlite_master" .
-	" WHERE type='table' AND name='" . TINYIB_DBPOSTS . "'");
+	" WHERE type='table' AND name='" . ATOM_DBPOSTS . "'");
 if (!$result->fetchArray()) {
-	$db->exec("CREATE TABLE " . TINYIB_DBPOSTS . " (
+	$db->exec("CREATE TABLE " . ATOM_DBPOSTS . " (
 		id INTEGER PRIMARY KEY,
 		parent INTEGER NOT NULL,
 		timestamp TIMESTAMP NOT NULL,
@@ -78,9 +78,9 @@ if (!$result->fetchArray()) {
 // Create the bans table if it does not exist
 $result = $db->query(
 	"SELECT name FROM sqlite_master" .
-	" WHERE type='table' AND name='" . TINYIB_DBBANS . "'");
+	" WHERE type='table' AND name='" . ATOM_DBBANS . "'");
 if (!$result->fetchArray()) {
-	$db->exec("CREATE TABLE " . TINYIB_DBBANS . " (
+	$db->exec("CREATE TABLE " . ATOM_DBBANS . " (
 		id INTEGER PRIMARY KEY,
 		ip TEXT NOT NULL,
 		timestamp TIMESTAMP NOT NULL,
@@ -92,9 +92,9 @@ if (!$result->fetchArray()) {
 // Create the likes table if it does not exist
 $result = $db->query(
 	"SELECT name FROM sqlite_master" .
-	" WHERE type='table' AND name='" . TINYIB_DBLIKES . "'");
+	" WHERE type='table' AND name='" . ATOM_DBLIKES . "'");
 if (!$result->fetchArray()) {
-	$db->exec("CREATE TABLE " . TINYIB_DBLIKES . " (
+	$db->exec("CREATE TABLE " . ATOM_DBLIKES . " (
 		id INTEGER PRIMARY KEY,
 		ip TEXT NOT NULL,
 		board TEXT NOT NULL,
@@ -106,9 +106,9 @@ if (!$result->fetchArray()) {
 // Create the modlog table if it does not exist
 $result = $db->query(
 	"SELECT name FROM sqlite_master" .
-	" WHERE type='table' AND name='" . TINYIB_DBMODLOG . "'");
+	" WHERE type='table' AND name='" . ATOM_DBMODLOG . "'");
 if (!$result->fetchArray()) {
-	$db->exec("CREATE TABLE " . TINYIB_DBMODLOG . " (
+	$db->exec("CREATE TABLE " . ATOM_DBMODLOG . " (
 		id INTEGER PRIMARY KEY,
 		timestamp TIMESTAMP NOT NULL,
 		boardname TEXT NOT NULL,
@@ -121,19 +121,19 @@ if (!$result->fetchArray()) {
 
 // Add stickied column if it isn't present
 @$db->exec(
-	"ALTER TABLE " . TINYIB_DBPOSTS . "
+	"ALTER TABLE " . ATOM_DBPOSTS . "
 	ADD COLUMN stickied INTEGER NOT NULL DEFAULT '0'");
 
 # Post Functions
 function uniquePosts() {
 	global $db;
-	return $db->querySingle("SELECT COUNT(ip) FROM (SELECT DISTINCT ip FROM " . TINYIB_DBPOSTS . ")");
+	return $db->querySingle("SELECT COUNT(ip) FROM (SELECT DISTINCT ip FROM " . ATOM_DBPOSTS . ")");
 }
 
 function postByID($id) {
 	global $db;
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE id = '" . $db->escapeString($id) . "' LIMIT 1");
 	while ($post = $result->fetchArray()) {
 		return $post;
@@ -143,14 +143,14 @@ function postByID($id) {
 function threadExistsByID($id) {
 	global $db;
 	return $db->querySingle(
-		"SELECT COUNT(*) FROM " . TINYIB_DBPOSTS . "
+		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
 		WHERE id = '" . $db->escapeString($id) . "' AND parent = 0 LIMIT 1") > 0;
 }
 
 function insertPost($post) {
 	global $db;
 	$db->exec(
-		"INSERT INTO " . TINYIB_DBPOSTS . " (
+		"INSERT INTO " . ATOM_DBPOSTS . " (
 			parent,
 			timestamp,
 			bumped,
@@ -263,7 +263,7 @@ function insertPost($post) {
 function stickyThreadByID($id, $setsticky) {
 	global $db;
 	$db->exec(
-		"UPDATE " . TINYIB_DBPOSTS . "
+		"UPDATE " . ATOM_DBPOSTS . "
 		SET stickied = '" . $db->escapeString($setsticky) . "'
 		WHERE id = " . $id);
 }
@@ -271,12 +271,12 @@ function stickyThreadByID($id, $setsticky) {
 function lockThreadByID($id, $setlocked) {
 	global $db;
 	if ($setlocked == 1) {
-		$setlocked = TINYIB_LOCKTHR_COOKIE;
+		$setlocked = ATOM_LOCKTHR_COOKIE;
 	} elseif ($setlocked == 0) {
 		$setlocked = '';
 	}
 	$db->exec(
-		"UPDATE " . TINYIB_DBPOSTS . "
+		"UPDATE " . ATOM_DBPOSTS . "
 		SET email = '" . $db->escapeString($setlocked) . "'
 		WHERE id = " . $id);
 }
@@ -284,7 +284,7 @@ function lockThreadByID($id, $setlocked) {
 function bumpThreadByID($id) {
 	global $db;
 	$db->exec(
-		"UPDATE " . TINYIB_DBPOSTS . "
+		"UPDATE " . ATOM_DBPOSTS . "
 		SET bumped = " . time() . "
 		WHERE id = " . $id);
 }
@@ -292,7 +292,7 @@ function bumpThreadByID($id) {
 function countThreads() {
 	global $db;
 	return $db->querySingle(
-		"SELECT COUNT(*) FROM " . TINYIB_DBPOSTS . "
+		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
 		WHERE parent = 0");
 }
 
@@ -300,7 +300,7 @@ function allThreads() {
 	global $db;
 	$threads = array();
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE parent = 0
 		ORDER BY stickied DESC, bumped DESC");
 	while ($thread = $result->fetchArray()) {
@@ -312,7 +312,7 @@ function allThreads() {
 function numRepliesToThreadByID($id) {
 	global $db;
 	return $db->querySingle(
-		"SELECT COUNT(*) FROM " . TINYIB_DBPOSTS . "
+		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
 		WHERE parent = " . $id);
 }
 
@@ -320,7 +320,7 @@ function postsInThreadByID($id, $moderated_only = true) {
 	global $db;
 	$posts = array();
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE id = " . $id . " OR parent = " . $id . "
 		ORDER BY id ASC");
 	while ($post = $result->fetchArray()) {
@@ -333,7 +333,7 @@ function postsByHex($hex) {
 	global $db;
 	$posts = array();
 	$result = $db->query(
-		"SELECT id, parent FROM " . TINYIB_DBPOSTS . "
+		"SELECT id, parent FROM " . ATOM_DBPOSTS . "
 		WHERE (
 			file0_hex = '" . $db->escapeString($hex) . "'
 			OR file1_hex = '" . $db->escapeString($hex) . "'
@@ -349,7 +349,7 @@ function latestPosts($moderated = true) {
 	global $db;
 	$posts = array();
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		"SELECT * FROM " . ATOM_DBPOSTS . "
 		ORDER BY timestamp DESC LIMIT 10");
 	while ($post = $result->fetchArray()) {
 		$posts[] = $post;
@@ -364,19 +364,19 @@ function deletePostByID($id) {
 		if ($post['id'] != $id) {
 			deletePostImages($post);
 			$db->exec(
-				"DELETE FROM " . TINYIB_DBPOSTS . "
+				"DELETE FROM " . ATOM_DBPOSTS . "
 				WHERE id = " . $post['id']);
 		} else {
 			$thispost = $post;
 		}
 	}
 	if (isset($thispost)) {
-		if ($thispost['parent'] == TINYIB_NEWTHREAD) {
+		if ($thispost['parent'] == ATOM_NEWTHREAD) {
 			@unlink('res/' . $thispost['id'] . '.html');
 		}
 		deletePostImages($thispost);
 		$db->exec(
-			"DELETE FROM " . TINYIB_DBPOSTS . "
+			"DELETE FROM " . ATOM_DBPOSTS . "
 			WHERE id = " . $thispost['id']);
 	}
 }
@@ -384,11 +384,11 @@ function deletePostByID($id) {
 function deleteImagesByImageID($post, $imgList) {
 	global $db;
 	deletePostImages($post, $imgList);
-	if ($imgList && count($imgList) <= TINYIB_MAXIMUM_FILES) {
+	if ($imgList && count($imgList) <= ATOM_FILES_COUNT) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
 			$db->exec(
-				"UPDATE " . TINYIB_DBPOSTS . "
+				"UPDATE " . ATOM_DBPOSTS . "
 				SET file" . $index . " = '',
 					file" . $index . "_hex = '',
 					file" . $index . "_original = '',
@@ -407,14 +407,14 @@ function deleteImagesByImageID($post, $imgList) {
 function hideImagesByImageID($post, $imgList) {
 	global $db;
 	deletePostImagesThumb($post, $imgList);
-	if ($imgList && (count($imgList) <= TINYIB_MAXIMUM_FILES) ) {
+	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT) ) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
 			$db->exec(
-				"UPDATE " . TINYIB_DBPOSTS . "
+				"UPDATE " . ATOM_DBPOSTS . "
 				SET thumb" . $index . " = 'spoiler.png',
-					thumb" . $index . "_width = " . TINYIB_MAXW . ",
-					thumb" . $index . "_height = " . TINYIB_MAXW . "
+					thumb" . $index . "_width = " . ATOM_FILE_MAXW . ",
+					thumb" . $index . "_height = " . ATOM_FILE_MAXW . "
 				WHERE id = " . $post['id']);
 		}
 	}
@@ -423,18 +423,18 @@ function hideImagesByImageID($post, $imgList) {
 function editMessageInPostById($id, $newMessage) {
 	global $db;
 	$db->exec(
-		"UPDATE " . TINYIB_DBPOSTS . "
+		"UPDATE " . ATOM_DBPOSTS . "
 		SET message = '" . $newMessage . "'
 		WHERE id = " . $id);
 }
 
 function trimThreads() {
 	global $db;
-	if (TINYIB_MAXTHREADS > 0) {
+	if (ATOM_MAXTHREADS > 0) {
 		$result = $db->query(
-			"SELECT id FROM " . TINYIB_DBPOSTS . "
+			"SELECT id FROM " . ATOM_DBPOSTS . "
 			WHERE parent = 0" . "
-			ORDER BY stickied DESC, bumped DESC LIMIT " . TINYIB_MAXTHREADS . ", 10");
+			ORDER BY stickied DESC, bumped DESC LIMIT " . ATOM_MAXTHREADS . ", 10");
 		while ($post = $result->fetchArray()) {
 			deletePostByID($post['id']);
 		}
@@ -444,7 +444,7 @@ function trimThreads() {
 function lastPostByIP() {
 	global $db;
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE ip = '" . $_SERVER['REMOTE_ADDR'] . "'
 		ORDER BY id DESC LIMIT 1");
 	while ($post = $result->fetchArray()) {
@@ -455,27 +455,27 @@ function lastPostByIP() {
 function likePostByID($id, $ip) {
 	global $db;
 	$isAlreadyLiked = $db->querySingle(
-		"SELECT COUNT(*) FROM " . TINYIB_DBLIKES . "
+		"SELECT COUNT(*) FROM " . ATOM_DBLIKES . "
 		WHERE ip = '" . $ip . "'
-			AND board = '" . TINYIB_BOARD . "'
+			AND board = '" . ATOM_BOARD . "'
 			AND postnum = " . $id);
 	if ($isAlreadyLiked) {
 		$db->exec(
-			"DELETE FROM " . TINYIB_DBLIKES . "
+			"DELETE FROM " . ATOM_DBLIKES . "
 			WHERE ip = '" . $ip . "'
-				AND board = '" . TINYIB_BOARD . "'
+				AND board = '" . ATOM_BOARD . "'
 				AND postnum = " . $id);
 	} else {
 		$db->exec(
-			"INSERT INTO " . TINYIB_DBLIKES . "
+			"INSERT INTO " . ATOM_DBLIKES . "
 			(ip, board, postnum)
-			VALUES ('" . $ip . "', '" . TINYIB_BOARD . "', " . $id . ")");
+			VALUES ('" . $ip . "', '" . ATOM_BOARD . "', " . $id . ")");
 	}
 	$countOfPostLikes = $db->querySingle(
-		"SELECT COUNT(*) FROM " . TINYIB_DBLIKES . "
-		WHERE board = '" . TINYIB_BOARD . "' AND postnum = " . $id);
+		"SELECT COUNT(*) FROM " . ATOM_DBLIKES . "
+		WHERE board = '" . ATOM_BOARD . "' AND postnum = " . $id);
 	$db->exec(
-		"UPDATE " . TINYIB_DBPOSTS . "
+		"UPDATE " . ATOM_DBPOSTS . "
 		SET likes = " . $countOfPostLikes . "
 		WHERE id = " . $id);
 	return array(!$isAlreadyLiked, $countOfPostLikes);
@@ -485,7 +485,7 @@ function likePostByID($id, $ip) {
 function banByID($id) {
 	global $db;
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBBANS . "
+		"SELECT * FROM " . ATOM_DBBANS . "
 		WHERE id = '" . $db->escapeString($id) . "' LIMIT 1");
 	while ($ban = $result->fetchArray()) {
 		return $ban;
@@ -495,7 +495,7 @@ function banByID($id) {
 function banByIP($ip) {
 	global $db;
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBBANS . "
+		"SELECT * FROM " . ATOM_DBBANS . "
 		WHERE ip = '" . $db->escapeString($ip) . "' LIMIT 1");
 	while ($ban = $result->fetchArray()) {
 		return $ban;
@@ -506,7 +506,7 @@ function allBans() {
 	global $db;
 	$bans = array();
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBBANS . "
+		"SELECT * FROM " . ATOM_DBBANS . "
 		ORDER BY timestamp DESC");
 	while ($ban = $result->fetchArray()) {
 		$bans[] = $ban;
@@ -517,7 +517,7 @@ function allBans() {
 function insertBan($ban) {
 	global $db;
 	$db->exec(
-		"INSERT INTO " . TINYIB_DBBANS . "
+		"INSERT INTO " . ATOM_DBBANS . "
 		(ip, timestamp, expire, reason)
 		VALUES (
 			'" . $db->escapeString($ban['ip']) . "',
@@ -531,11 +531,11 @@ function insertBan($ban) {
 function clearExpiredBans() {
 	global $db;
 	$result = $db->query(
-		"SELECT * FROM " . TINYIB_DBBANS . "
+		"SELECT * FROM " . ATOM_DBBANS . "
 		WHERE expire > 0 AND expire <= " . time());
 	while ($ban = $result->fetchArray()) {
 		$db->exec(
-			"DELETE FROM " . TINYIB_DBBANS . "
+			"DELETE FROM " . ATOM_DBBANS . "
 			WHERE id = " . $ban['id']);
 	}
 }
@@ -543,7 +543,7 @@ function clearExpiredBans() {
 function deleteBanByID($id) {
 	global $db;
 	$db->exec(
-		"DELETE FROM " . TINYIB_DBBANS . "
+		"DELETE FROM " . ATOM_DBBANS . "
 		WHERE id = " . $db->escapeString($id));
 }
 
@@ -555,16 +555,16 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 	if ($private === '1') {
 		if ($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
 			$result = $db->query(
-				"SELECT timestamp, username, action, color FROM " . TINYIB_DBMODLOG . "
-				WHERE boardname = '" . TINYIB_BOARD . "'
+				"SELECT timestamp, username, action, color FROM " . ATOM_DBMODLOG . "
+				WHERE boardname = '" . ATOM_BOARD . "'
 				ORDER BY timestamp DESC LIMIT 100");
 			while ($row = $result->fetchArray()) {
 				$records[] = $row;
 			}
 		} elseif ($periodEndDate !== 0 && $periodStartDate !== 0) { // If the date range is set
 			$result = $db->query(
-				"SELECT timestamp, username, action, color FROM " . TINYIB_DBMODLOG . "
-				WHERE boardname = '" . TINYIB_BOARD . "'
+				"SELECT timestamp, username, action, color FROM " . ATOM_DBMODLOG . "
+				WHERE boardname = '" . ATOM_BOARD . "'
 					AND timestamp >= " . $periodStartDate . "
 					AND timestamp <= " . $periodEndDate . "
 				ORDER BY timestamp DESC");
@@ -575,8 +575,8 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 	// If we need only public records
 	} elseif ($private === '0') {
 		$result = $db->query(
-			"SELECT timestamp, action FROM `" . TINYIB_DBMODLOG . "`
-			WHERE boardname = '" . TINYIB_BOARD . "'
+			"SELECT timestamp, action FROM `" . ATOM_DBMODLOG . "`
+			WHERE boardname = '" . ATOM_BOARD . "'
 				AND private = '0'
 			ORDER BY timestamp DESC LIMIT 100");
 		while ($row = $result->fetchArray()) {
@@ -591,13 +591,13 @@ function modLog($action, $private = '1', $color = 'Black') {
 	// modLog('Text to show in modlog', '[1, 0]', 'Color');
 	// '[1, 0]': 1 = Private record. 0 = Public record.
 	// 'Color': Choose what to put in style="color: " for this record
-	$userName = isset($_SESSION['atomboard_user']) ? $_SESSION['atomboard_user'] : 'UNKNOWN';
+	$userName = isset($_SESSION['atom_user']) ? $_SESSION['atom_user'] : 'UNKNOWN';
 	$db->query(
-		"INSERT INTO " . TINYIB_DBMODLOG . "
+		"INSERT INTO " . ATOM_DBMODLOG . "
 		(timestamp, boardname, username, action, color, private)
 		VALUES (
 			" . time() . ",
-			'" . TINYIB_BOARD . "',
+			'" . ATOM_BOARD . "',
 			'" . $db->escapeString($userName) . "',
 			'" . $db->escapeString($action) . "',
 			'" . $color . "',

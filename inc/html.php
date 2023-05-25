@@ -1,5 +1,5 @@
 <?php
-if (!defined('TINYIB_BOARD')) {
+if (!defined('ATOM_BOARD')) {
 	die('');
 }
 
@@ -15,13 +15,13 @@ function pageHeader() {
 	<meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT">
 	<meta http-equiv="pragma" content="no-cache">
 	<meta name="viewport" content="width=device-width,initial-scale=1">
-	<title>' . TINYIB_BOARDDESC . '</title>
-	<link rel="shortcut icon" href="/' . TINYIB_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . TINYIB_BOARD . '/css/atomboard.css?2023052400">
-	<script src="/' . TINYIB_BOARD . '/js/atomboard.js"></script>' .
-	(TINYIB_CAPTCHA === 'recaptcha' ? '
+	<title>' . ATOM_BOARDDESC . '</title>
+	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023052400">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js"></script>' .
+	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') .
-	TINYIB_HTML_HEAD . '
+	ATOM_HTML_HEAD . '
 </head>
 ';
 }
@@ -31,11 +31,11 @@ function pageWrapper($returnHref) {
 	<div class="aside aside-left">
 		<div class="aside-top">
 			<nav>' .
-				TINYIB_HTML_LEFTSIDE . '
+				ATOM_HTML_LEFTSIDE . '
 			</nav>
 		</div>
 		<div class="aside-bottom">' . ($returnHref ? '
-			<a class="aside-btn" id="aside-btn-return" href="/' . TINYIB_BOARD . '/" title="Return">
+			<a class="aside-btn" id="aside-btn-return" href="/' . ATOM_BOARD . '/" title="Return">
 				<svg><use xlink:href="#symbol-arrow-left"/></svg>
 			</a>' : '') . '
 			<a class="aside-btn" id="aside-btn-tobottom-mobile" href="#"' .
@@ -98,20 +98,20 @@ function pageFooter() {
 }
 
 function supportedFileTypes() {
-	global $atomboard_uploads;
-	if (empty($atomboard_uploads)) {
+	global $atom_uploads;
+	if (empty($atom_uploads)) {
 		return '';
 	}
-	$typesAllowed = array_map('strtoupper', array_unique(array_column($atomboard_uploads, 0)));
+	$typesAllowed = array_map('strtoupper', array_unique(array_column($atom_uploads, 0)));
 	$typesLast = array_pop($typesAllowed);
 	$typesFormatted = $typesAllowed ? implode(', ', $typesAllowed) . ' and ' . $typesLast : $typesLast;
-	return 'Supported file type' . (count($atomboard_uploads) != 1 ? 's are ' : ' is ') . $typesFormatted . '.';
+	return 'Supported file type' . (count($atom_uploads) != 1 ? 's are ' : ' is ') . $typesFormatted . '.';
 }
 
 function buildPostForm($parent, $isRawPost = false) {
-	global $atomboard_hidefieldsop, $atomboard_hidefields, $atomboard_uploads, $atomboard_embeds;
-	$isOnPage = $parent == TINYIB_NEWTHREAD;
-	$hideFields = $isOnPage ? $atomboard_hidefieldsop : $atomboard_hidefields;
+	global $atom_hidefieldsop, $atom_hidefields, $atom_uploads, $atom_embeds;
+	$isOnPage = $parent == ATOM_NEWTHREAD;
+	$hideFields = $isOnPage ? $atom_hidefieldsop : $atom_hidefields;
 	$postformExtra = array('name' => '', 'email' => '', 'subject' => '', 'footer' => '');
 	$inputSubmit = '<input type="submit" value="' . ($isOnPage ? 'New thread' : 'Reply') . '" accesskey="z">';
 	if ($isRawPost || !in_array('subject', $hideFields)) {
@@ -130,12 +130,12 @@ function buildPostForm($parent, $isRawPost = false) {
 	$fileTypesHtml = '';
 	$fileInputHtml = '';
 	$embedInputHtml = '';
-	if (!empty($atomboard_uploads) && ($isRawPost || !in_array('file', $hideFields))) {
-		if (TINYIB_MAXKB > 0) {
+	if (!empty($atom_uploads) && ($isRawPost || !in_array('file', $hideFields))) {
+		if (ATOM_FILE_MAXKB > 0) {
 			$maxFileSizeInputHtml = '<input type="hidden" name="MAX_FILE_SIZE" value="' .
-				strval(TINYIB_MAXKB * 1024) . '">';
-			$maxFileSizeRulesHtml = '<li>Maximum number of files is ' . TINYIB_MAXIMUM_FILES . ', ' .
-				TINYIB_MAXKBDESC . ' total.</li>';
+				strval(ATOM_FILE_MAXKB * 1024) . '">';
+			$maxFileSizeRulesHtml = '<li>Maximum number of files is ' . ATOM_FILES_COUNT . ', ' .
+				ATOM_FILE_MAXKBDESC . ' total.</li>';
 		}
 		$fileTypesHtml = '<li>' . supportedFileTypes() . '</li>';
 		$fileInputHtml = '<tr>
@@ -145,7 +145,7 @@ function buildPostForm($parent, $isRawPost = false) {
 						</td>
 					</tr>';
 	}
-	if (!empty($atomboard_embeds) && ($isRawPost || !in_array('embed', $hideFields))) {
+	if (!empty($atom_embeds) && ($isRawPost || !in_array('embed', $hideFields))) {
 		$embedInputHtml = '<tr>
 						<td class="postblock"></td>
 						<td>
@@ -154,20 +154,20 @@ function buildPostForm($parent, $isRawPost = false) {
 					</tr>';
 	}
 	$reqModHtml = '';
-	if (TINYIB_REQMOD == 'files' || TINYIB_REQMOD == 'all') {
-		$reqModHtml = '<li>All posts' . (TINYIB_REQMOD == 'files' ? ' with a file attached' : '') .
+	if (ATOM_REQMOD == 'files' || ATOM_REQMOD == 'all') {
+		$reqModHtml = '<li>All posts' . (ATOM_REQMOD == 'files' ? ' with a file attached' : '') .
 			' will be moderated before being shown.</li>';
 	}
 	$thumbnailsHtml = '';
-	if (isset($atomboard_uploads['image/jpeg']) ||
-		isset($atomboard_uploads['image/pjpeg']) ||
-		isset($atomboard_uploads['image/png']) ||
-		isset($atomboard_uploads['image/gif']) ||
-		isset($atomboard_uploads['image/webp'])
+	if (isset($atom_uploads['image/jpeg']) ||
+		isset($atom_uploads['image/pjpeg']) ||
+		isset($atom_uploads['image/png']) ||
+		isset($atom_uploads['image/gif']) ||
+		isset($atom_uploads['image/webp'])
 	) {
-		$thumbnailsHtml = '<li>Images greater than ' . TINYIB_MAXWOP . 'x' . TINYIB_MAXHOP . (
-			TINYIB_MAXW == TINYIB_MAXWOP && TINYIB_MAXH == TINYIB_MAXHOP ? '' :
-				' (new thread) or ' . TINYIB_MAXW . 'x' . TINYIB_MAXH . ' (reply)'
+		$thumbnailsHtml = '<li>Images greater than ' . ATOM_FILE_MAXWOP . 'x' . ATOM_FILE_MAXHOP . (
+			ATOM_FILE_MAXW == ATOM_FILE_MAXWOP && ATOM_FILE_MAXH == ATOM_FILE_MAXHOP ? '' :
+				' (new thread) or ' . ATOM_FILE_MAXW . 'x' . ATOM_FILE_MAXH . ' (reply)'
 			) . ' will be thumbnailed.</li>';
 	}
 	$uniquePostsHtml = '';
@@ -178,7 +178,7 @@ function buildPostForm($parent, $isRawPost = false) {
 
 	// Build postform
 	return '<div class="postarea">
-			<form name="postform" id="postform" action="/' . TINYIB_BOARD .
+			<form name="postform" id="postform" action="/' . ATOM_BOARD .
 				'/imgboard.php" method="post" enctype="multipart/form-data">
 			' . $maxFileSizeInputHtml .
 			(!$isRawPost ? '
@@ -251,17 +251,17 @@ function buildPostForm($parent, $isRawPost = false) {
 						</td>
 					</tr>' : ''
 				) . (
-					TINYIB_CAPTCHA ? '
+					ATOM_CAPTCHA ? '
 					<tr>
 						<td class="postblock"></td>
-						<td>' . (TINYIB_CAPTCHA === 'recaptcha' ? '
+						<td>' . (ATOM_CAPTCHA === 'recaptcha' ? '
 							<div style="min-height: 80px;">
-								<div id="g-recaptcha" class="g-recaptcha" data-sitekey="' . TINYIB_RECAPTCHA_SITE . '"></div>
+								<div id="g-recaptcha" class="g-recaptcha" data-sitekey="' . ATOM_RECAPTCHA_SITE . '"></div>
 								<noscript>
 									<div>
 										<div style="width: 302px; height: 422px; position: relative;">
 											<div style="width: 302px; height: 422px; position: absolute;">
-												<iframe src="https://www.google.com/recaptcha/api/fallback?k=' . TINYIB_RECAPTCHA_SITE . '" frameborder="0" scrolling="no" style="width: 302px; height:422px; border-style: none;"></iframe>
+												<iframe src="https://www.google.com/recaptcha/api/fallback?k=' . ATOM_RECAPTCHA_SITE . '" frameborder="0" scrolling="no" style="width: 302px; height:422px; border-style: none;"></iframe>
 											</div>
 										</div>
 										<div style="width: 300px; height: 60px; border-style: none;bottom: 12px; left: 25px; margin: 0px; padding: 0px; right: 25px;background: #f9f9f9; border: 1px solid #c1c1c1; border-radius: 3px;">
@@ -272,7 +272,7 @@ function buildPostForm($parent, $isRawPost = false) {
 							</div>
 						' : '
 							<input type="text" class="postform-input" name="captcha" id="captcha" placeholder="Captcha" accesskey="c" autocomplete="off">
-							<img id="captchaimage" src="/' . TINYIB_BOARD . '/inc/captcha.php" width="175" height="55" alt="CAPTCHA" onclick="reloadCaptcha();">
+							<img id="captchaimage" src="/' . ATOM_BOARD . '/inc/captcha.php" width="175" height="55" alt="CAPTCHA" onclick="reloadCaptcha();">
 						') . '</td>
 					</tr>' : ''
 				) . '
@@ -315,7 +315,7 @@ function buildPostForm($parent, $isRawPost = false) {
 }
 
 function buildPost($post, $res, $isModPanel = false) {
-	$isOp = $post['parent'] == TINYIB_NEWTHREAD;
+	$isOp = $post['parent'] == ATOM_NEWTHREAD;
 	$id = $post['id'];
 	$thrId = $isOp ? $id : $post['parent'];
 	if (!isset($post['omitted'])) {
@@ -325,7 +325,7 @@ function buildPost($post, $res, $isModPanel = false) {
 	// Build post file
 	$filehtml = '';
 	$hasImages = false;
-	for ($index = 0; $index < TINYIB_MAXIMUM_FILES; $index++) {
+	for ($index = 0; $index < ATOM_FILES_COUNT; $index++) {
 		if (!$post['file' . $index . '_hex']) {
 			continue;
 		}
@@ -336,7 +336,7 @@ function buildPost($post, $res, $isModPanel = false) {
 		$isEmbed = isEmbed($post['file' . $index . '_hex']);
 		$fExt = substr(strrchr($fName, '.'), 1);
 		$isVideo = !!($fExt == 'webm' || $fExt == 'mp4' || $fExt == 'mov');
-		$directLink = $isEmbed ? '#' : '/' . TINYIB_BOARD . '/src/' . $fName;
+		$directLink = $isEmbed ? '#' : '/' . ATOM_BOARD . '/src/' . $fName;
 		$expandClick = ' onclick="return expandFile(event, ' . $id . $index . ');"';
 		$expandHtml = '';
 		if ($isEmbed) {
@@ -350,7 +350,7 @@ function buildPost($post, $res, $isModPanel = false) {
 				' controls autoplay loop><source src="' . $directLink . '"></source></video>');
 		} elseif (in_array($fExt, array('jpg', 'png', 'gif', 'webp'))) {
 			$expandHtml = rawurlencode('<a href="' . $directLink . '"' . $expandClick . '><img src="/' .
-				TINYIB_BOARD . '/src/' . $fName . '" width="' . $fWidth .
+				ATOM_BOARD . '/src/' . $fName . '" width="' . $fWidth .
 				'" style="max-width: 100%; height: auto;"></a>');
 		}
 		$origName = $post['file' . $index . '_original'];
@@ -381,7 +381,7 @@ function buildPost($post, $res, $isModPanel = false) {
 					<div id="thumbfile' . $id . $index . '">' .
 						($post['thumb' . $index] != '' /* If a file have a thumbnail */ ? '
 						' . $thumblink . '
-							<img src="/' . TINYIB_BOARD . '/thumb/' . $post['thumb' . $index] . '"' .
+							<img src="/' . ATOM_BOARD . '/thumb/' . $post['thumb' . $index] . '"' .
 							($isVideo ? ' style="border: 1px dashed #5d5d5d;" ' : '') .
 							' alt="' . $id . $index . '" class="thumb" id="thumbnail' . $id . $index.
 							'" width="' . $post['thumb' . $index . '_width'] .
@@ -404,11 +404,11 @@ function buildPost($post, $res, $isModPanel = false) {
 	$message = $post['message'];
 	if (!$res && !$isModPanel) {
 		$truncLen = 0;
-		if (TINYIB_TRUNC_LINES > 0 && substr_count($message, '<br>') > TINYIB_TRUNC_LINES) {
+		if (ATOM_TRUNC_LINES > 0 && substr_count($message, '<br>') > ATOM_TRUNC_LINES) {
 			$brOffsets = strallpos($message, '<br>');
-			$truncLen = $brOffsets[TINYIB_TRUNC_LINES - 1];
-		} elseif (TINYIB_TRUNC_SIZE > 0 && strlen($message) > TINYIB_TRUNC_SIZE) {
-			$truncLen = TINYIB_TRUNC_SIZE;
+			$truncLen = $brOffsets[ATOM_TRUNC_LINES - 1];
+		} elseif (ATOM_TRUNC_SIZE > 0 && strlen($message) > ATOM_TRUNC_SIZE) {
+			$truncLen = ATOM_TRUNC_SIZE;
 		}
 		if ($truncLen) {
 			$message = tidy_repair_string(
@@ -417,7 +417,7 @@ function buildPost($post, $res, $isModPanel = false) {
 				'utf8'
 			) . '
 					<div class="abbrev">
-						Post too long. <a href="/' . TINYIB_BOARD . '/res/' . $thrId . '.html#' . $id .
+						Post too long. <a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $id .
 						'">Click to view</a>.
 					</div>';
 		}
@@ -426,7 +426,7 @@ function buildPost($post, $res, $isModPanel = false) {
 	// Make >>backlinks for replies to posts
 	/*
 	$message = preg_replace_callback('/&iexcl;&iexcl;([0-9]+)/', function($matches) {
-		return '<a href="/' . TINYIB_BOARD . '/res/' . $matches[1] . '.html#';
+		return '<a href="/' . ATOM_BOARD . '/res/' . $matches[1] . '.html#';
 	}, $message);
 	$message = preg_replace_callback('/&cent;&cent;([0-9]+)/', function($matches) {
 		return $matches[1] . '"> &gt;&gt;' . $matches[1] . '</a>';
@@ -436,7 +436,7 @@ function buildPost($post, $res, $isModPanel = false) {
 	// Start post building
 	$omitted = $post['omitted'];
 	$likes = $post['likes'];
-	$replyBtn = ($isOp && $res == TINYIB_INDEXPAGE ? '<a class="link-button" href="res/' .
+	$replyBtn = ($isOp && $res == ATOM_INDEXPAGE ? '<a class="link-button" href="res/' .
 		$id . '.html">Reply</a>' : '');
 	$countryCode = geoip_country_code_by_name($post['ip']);
 	return PHP_EOL . ($isOp ? '
@@ -447,26 +447,26 @@ function buildPost($post, $res, $isModPanel = false) {
 					<input type="checkbox" name="delete" value="' . $id . '">' .
 					($post['subject'] != '' ? '
 					<span class="filetitle">' . $post['subject'] . '</span>' : '') . '
-					<img class="poster-country" title="' . $countryCode . '" src="/' . TINYIB_BOARD .
+					<img class="poster-country" title="' . $countryCode . '" src="/' . ATOM_BOARD .
 						'/icons/flag-icons/' . $countryCode . '.png"></span> ' .
 					$post['nameblock'] . '
 				</label>
-				<span class="reflink">' . ($res == TINYIB_RESPAGE ? '
+				<span class="reflink">' . ($res == ATOM_RESPAGE ? '
 					<a href="' . $thrId . '.html#' . $id . '" title="Click to link to this post">No.</a>' .
 					'<a href="' . $thrId . '.html#q' . $id . '" onclick="quotePost(' . $id .
 						');" title="Click to reply to this post">' .
 						$id . '</a>' : '
-					<a href="/' . TINYIB_BOARD . '/res/' . $thrId . '.html#' . $id .
+					<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $id .
 						'" title="Click to link to this post">No.</a>' .
-					'<a href="/' . TINYIB_BOARD . '/res/' . $thrId . '.html#q' . $id .
+					'<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#q' . $id .
 						'" title="Click to reply to this post">' . $id . '</a>') .
 					($post['stickied'] == 1 ? '
-					<img src="/' . TINYIB_BOARD .
+					<img src="/' . ATOM_BOARD .
 						'/icons/sticky.png" title="Thread is sticked" width="16" height="16">' : '') .
-					($post['email'] == TINYIB_LOCKTHR_COOKIE ? '
-					<img src="/' . TINYIB_BOARD .
+					($post['email'] == ATOM_LOCKTHR_COOKIE ? '
+					<img src="/' . ATOM_BOARD .
 						'/icons/locked.png" title="Thread is locked" width="11" height="16">' : '') .
-					(TINYIB_LIKES ? '
+					(ATOM_LIKES ? '
 					<span class="like-container">
 						<span class="like-icon' . ($likes ? ' like-enabled' : ' like-disabled') .
 							'" onclick="sendLike(this, ' . $id . ');">
@@ -502,7 +502,7 @@ function buildPost($post, $res, $isModPanel = false) {
 				</div>
 			' .
 			(!$isOp ? '</td></tr></tbody></table>' : '</div>' .
-			($res == TINYIB_INDEXPAGE && $omitted > 0 ? '
+			($res == ATOM_INDEXPAGE && $omitted > 0 ? '
 			<div class="omittedposts">' . $omitted . ' ' .
 				plural('post', $omitted) . ' omitted. Click ' . $replyBtn . ' to view.
 			</div>' : ''));
@@ -510,7 +510,7 @@ function buildPost($post, $res, $isModPanel = false) {
 
 function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 	// Build page links: [Previous] [0] [1] [2] [Next]
-	$isOnPage = $parent == TINYIB_NEWTHREAD;
+	$isOnPage = $parent == ATOM_NEWTHREAD;
 	$pagelinks = '';
 	if ($isOnPage) {
 		$pages = max($pages, 0);
@@ -540,23 +540,23 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 	// Build page's body
 	return pageHeader() . '<body class="tinyib atomboard">' . pageWrapper(!$isOnPage) . '
 		<div class="logo">
-			' . TINYIB_LOGO . TINYIB_BOARDDESC . '
+			' . ATOM_LOGO . ATOM_BOARDDESC . '
 		</div>' .
 		($isOnPage ? '
 		<div style="text-align: center; margin: 8px 0;">
-			<a class="link-button" href="/' . TINYIB_BOARD . '/catalog.html">Catalog</a>
+			<a class="link-button" href="/' . ATOM_BOARD . '/catalog.html">Catalog</a>
 		</div>' : '') .
 		buildPostForm($parent) . '
 		<hr>
-		<form id="delform" action="/' . TINYIB_BOARD . '/imgboard.php?delete" method="post">
-			<input type="hidden" name="board" value="' . TINYIB_BOARD . '">' .
+		<form id="delform" action="/' . ATOM_BOARD . '/imgboard.php?delete" method="post">
+			<input type="hidden" name="board" value="' . ATOM_BOARD . '">' .
 			$htmlPosts . '
 			<table class="userdelete">
 				<tbody>
 					<tr>
 						<td>Delete Post <input type="password" name="password" id="deletepostpassword" size="8" placeholder="Password">&nbsp;<input name="deletepost" value="Delete" type="submit"></td>
 						<td>
-							<a class="link-button" href="/' . TINYIB_BOARD . '/' . basename($_SERVER['PHP_SELF']) .
+							<a class="link-button" href="/' . ATOM_BOARD . '/' . basename($_SERVER['PHP_SELF']) .
 							'?manage">Manage</a>
 						</td>
 					</tr>
@@ -575,25 +575,25 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 }
 
 function rebuildIndexes() {
-	global $atomboard_janitors;
+	global $atom_janitors;
 	$page = 0;
 	$i = 0;
 	$htmlPosts = '';
 	$threads = allThreads();
-	$pages = ceil(count($threads) / TINYIB_THREADSPERPAGE) - 1;
+	$pages = ceil(count($threads) / ATOM_THREADSPERPAGE) - 1;
 	foreach ($threads as $thread) {
 		$replies = postsInThreadByID($thread['id']);
-		$thread['omitted'] = max(0, count($replies) - TINYIB_PREVIEWREPLIES - 1);
+		$thread['omitted'] = max(0, count($replies) - ATOM_PREVIEWREPLIES - 1);
 		// Build replies for preview
 		$htmlReplies = array();
 		for ($j = count($replies) - 1; $j > $thread['omitted']; $j--) {
-			$htmlReplies[] = buildPost($replies[$j], TINYIB_INDEXPAGE);
+			$htmlReplies[] = buildPost($replies[$j], ATOM_INDEXPAGE);
 		}
-		$htmlPosts .= buildPost($thread, TINYIB_INDEXPAGE) . implode('', array_reverse($htmlReplies)) .
+		$htmlPosts .= buildPost($thread, ATOM_INDEXPAGE) . implode('', array_reverse($htmlReplies)) .
 			PHP_EOL . '
 			<hr>';
-		if (++$i >= TINYIB_THREADSPERPAGE) {
-			$file = $page == 0 ? TINYIB_INDEX : $page . '.html';
+		if (++$i >= ATOM_THREADSPERPAGE) {
+			$file = $page == 0 ? ATOM_INDEX : $page . '.html';
 			writePage($file, buildPage($htmlPosts, 0, $pages, $page));
 			$page++;
 			$i = 0;
@@ -601,13 +601,13 @@ function rebuildIndexes() {
 		}
 	}
 	if ($page == 0 || $htmlPosts != '') {
-		$file = $page == 0 ? TINYIB_INDEX : $page . '.html';
+		$file = $page == 0 ? ATOM_INDEX : $page . '.html';
 		writePage($file, buildPage($htmlPosts, 0, $pages, $page));
 	}
 	// Create catalog
 	writePage('catalog.html', buildCatalogPage());
 	// Create janitor log
-	if (count($atomboard_janitors) != 0) {
+	if (count($atom_janitors) != 0) {
 		writePage('janitorlog.html', buildModLogPage());
 	}
 }
@@ -616,7 +616,7 @@ function rebuildThread($id) {
 	$htmlPosts = '';
 	$posts = postsInThreadByID($id);
 	foreach ($posts as $post) {
-		$htmlPosts .= buildPost($post, TINYIB_RESPAGE);
+		$htmlPosts .= buildPost($post, ATOM_RESPAGE);
 	}
 	$htmlPosts .= '
 			<hr>';
@@ -624,18 +624,18 @@ function rebuildThread($id) {
 }
 
 function adminBar() {
-	global $access, $atomboard_janitors;
+	global $access, $atom_janitors;
 	return $access == 'disabled' ? '' : '
 			[<a href="?manage">Status</a>]' .
 			($access == 'admin' || $access == 'moderator' ? '
 			[<a href="?manage&bans">Bans</a>]
 			[<a href="?manage&modlog">ModLog</a>]' : '') .
-			(count($atomboard_janitors) != 0 && $access == 'janitor' ? '
-			[<a href="/' . TINYIB_BOARD . '/janitorlog.html">JanitorLog</a>]' : '') . '
+			(count($atom_janitors) != 0 && $access == 'janitor' ? '
+			[<a href="/' . ATOM_BOARD . '/janitorlog.html">JanitorLog</a>]' : '') . '
 			[<a href="?manage&moderate">Moderate Post</a>]
 			[<a href="?manage&rawpost">Raw Post</a>]
 			[' . ($access == 'admin' ? '<a href="?manage&rebuildall">Rebuild All</a>]
-			[' : '') . ($access == 'admin' && TINYIB_DBMIGRATE ?
+			[' : '') . ($access == 'admin' && ATOM_DBMIGRATE ?
 				'<a href="?manage&dbmigrate"><b>Migrate Database</b></a>] [' : '') .
 				'<a href="?manage&logout">Log Out</a>]
 		';
@@ -646,7 +646,7 @@ function managePage($text, $onload = '') {
 	return pageHeader() . '<body' . $onload . '>' . pageWrapper($returnlink) . '
 		<div class="adminbar">' . adminBar() . '</div>
 		<div class="logo">
-			' . TINYIB_LOGO . TINYIB_BOARDDESC . '
+			' . ATOM_LOGO . ATOM_BOARDDESC . '
 		</div>
 		<hr width="90%">
 		' . $text . '
@@ -757,7 +757,7 @@ function manageModeratePost($post) {
 	$banInfo = $ban ? ' A ban record already exists for ' . $ip :
 		($access == 'admin' || $access == 'moderator' ?
 			'IP address: ' . $ip : 'Only an administrator may ban an IP address.');
-	$isOp = $post['parent'] == TINYIB_NEWTHREAD;
+	$isOp = $post['parent'] == ATOM_NEWTHREAD;
 	$deleteInfo = $isOp ? 'This will delete the entire thread below.' : 'This will delete the post below.';
 	$postOrThread = $isOp ? 'Thread' : 'Post';
 	$stickyHtml = '';
@@ -781,9 +781,9 @@ function manageModeratePost($post) {
 						</td>
 						<td><small>' . $stickyUnstickyHelp . '</small></td>
 					</tr>';
-		$lockedSet = $post['email'] == TINYIB_LOCKTHR_COOKIE ? '0' : '1';
-		$lockUnlock = $post['email'] == TINYIB_LOCKTHR_COOKIE ? 'Un-lock' : 'Lock';
-		$lockedUnlockedHelp = $post['email'] == TINYIB_LOCKTHR_COOKIE ? 'Unlock this thread.' :
+		$lockedSet = $post['email'] == ATOM_LOCKTHR_COOKIE ? '0' : '1';
+		$lockUnlock = $post['email'] == ATOM_LOCKTHR_COOKIE ? 'Un-lock' : 'Lock';
+		$lockedUnlockedHelp = $post['email'] == ATOM_LOCKTHR_COOKIE ? 'Unlock this thread.' :
 			'Lock this thread.';
 		$lockedHtml = '
 					<tr><td colspan="2">&nbsp;</td></tr>
@@ -802,10 +802,10 @@ function manageModeratePost($post) {
 		$postHtml = '';
 		$posts = postsInThreadByID($post['id']);
 		foreach ($posts as $postTemp) {
-			$postHtml .= buildPost($postTemp, TINYIB_INDEXPAGE, true);
+			$postHtml .= buildPost($postTemp, ATOM_INDEXPAGE, true);
 		}
 	} else {
-		$postHtml = buildPost($post, TINYIB_INDEXPAGE, true);
+		$postHtml = buildPost($post, ATOM_INDEXPAGE, true);
 	}
 	return '<fieldset>
 			<legend>Moderating No.' . $post['id'] . '</legend>
@@ -850,7 +850,7 @@ function manageStatus() {
 	global $access;
 	$threads = countThreads();
 	$bans = count(allBans());
-	if (TINYIB_REQMOD == 'files' || TINYIB_REQMOD == 'all') {
+	if (ATOM_REQMOD == 'files' || ATOM_REQMOD == 'all') {
 		$reqModPostHtml = '';
 		$reqModPosts = latestPosts(false);
 		foreach ($reqModPosts as $post) {
@@ -858,7 +858,7 @@ function manageStatus() {
 			$reqModPostHtml .= ($reqModPostHtml != '' ? '
 				<tr><td colspan="2"><hr></td></tr>' : '') . '
 				<tr>
-					<td>' . buildPost($post, TINYIB_INDEXPAGE) . PHP_EOL . '
+					<td>' . buildPost($post, ATOM_INDEXPAGE) . PHP_EOL . '
 					</td>
 					<td valign="top" align="right">
 						<table border="0">
@@ -898,7 +898,7 @@ function manageStatus() {
 		$postHtml .= ($postHtml != '' ? '
 					<tr><td colspan="2"><hr></td></tr>' : '') . '
 					<tr>
-						<td>' . buildPost($post, TINYIB_INDEXPAGE) . PHP_EOL . '
+						<td>' . buildPost($post, ATOM_INDEXPAGE) . PHP_EOL . '
 						</td>
 						<td valign="top" align="right">
 							<form method="get" action="?">
@@ -909,10 +909,10 @@ function manageStatus() {
 						</td>
 					</tr>';
 	}
-	return ($access == 'admin' && TINYIB_DBMODE == 'mysql' && function_exists('mysqli_connect') ?
+	return ($access == 'admin' && ATOM_DBMODE == 'mysql' && function_exists('mysqli_connect') ?
 		'<fieldset>
 			<legend>Notice</legend>
-			<p><b>TINYIB_DBMODE</b> is currently <b>mysql</b> in <b>settings.php</b>, but
+			<p><b>ATOM_DBMODE</b> is currently <b>mysql</b> in <b>settings.php</b>, but
 				<a href="http://www.php.net/manual/en/book.mysqli.php">MySQLi</a> is installed.
 				Please change it to <b>mysqli</b>. This will not affect your data.</p>
 		</fieldset>' : '') .
@@ -933,7 +933,7 @@ function manageStatus() {
 					</td>' : '') . '
 				</tr></tbody></table>
 			</fieldset>' .
-			((TINYIB_REQMOD == 'files' || TINYIB_REQMOD == 'all') &&  $reqModPostHtml != '' ? '
+			((ATOM_REQMOD == 'files' || ATOM_REQMOD == 'all') &&  $reqModPostHtml != '' ? '
 			<fieldset>
 				<legend>Pending posts</legend>
 				<table border="0" cellspacing="0" cellpadding="0" width="100%">
@@ -958,8 +958,8 @@ function buildCatalogPage() {
 	$OPpostMessage = '';
 	$OPpostID = '';
 	$thumb = 'icons/noimage.png';
-	$thumb_width = TINYIB_MAXW;
-	$thumb_height = TINYIB_MAXH;
+	$thumb_width = ATOM_FILE_MAXW;
+	$thumb_height = ATOM_FILE_MAXH;
 	$OPposts = allThreads();
 	foreach ($OPposts as $post) {
 		$numOfReplies = numRepliesToThreadByID($post['id']);
@@ -983,7 +983,7 @@ function buildCatalogPage() {
 				'utf8');
 		}
 		$OPpostSubject = $post['subject'];
-		$OPuserName = $post['name'] != '' ? $post['name'] : TINYIB_POSTERNAME;
+		$OPuserName = $post['name'] != '' ? $post['name'] : ATOM_POSTERNAME;
 		$OPpostID = $post['id'];
 		if ($post['thumb0'] != '' && $post['thumb0_width'] > 0 && $post['thumb0_height'] > 0) {
 			$thumb = 'thumb/' . $post['thumb0'];
@@ -991,8 +991,8 @@ function buildCatalogPage() {
 			$thumb_height = $post['thumb0_height'];
 		} else {
 			$thumb = 'icons/noimage.png';
-			$thumb_width = TINYIB_MAXW;
-			$thumb_height = TINYIB_MAXH;
+			$thumb_width = ATOM_FILE_MAXW;
+			$thumb_height = ATOM_FILE_MAXH;
 		}
 		$catalogHTML .= '
 			<div class="catalog-block">
@@ -1013,7 +1013,7 @@ function buildCatalogPage() {
 	}
 	return pageHeader() . '<body>' . pageWrapper('back') . '
 		<div class="logo">
-			' . TINYIB_LOGO . TINYIB_BOARDDESC . ' / Catalog
+			' . ATOM_LOGO . ATOM_BOARDDESC . ' / Catalog
 		</div>
 		<hr>
 		<br>
@@ -1072,7 +1072,7 @@ function generateModLogTable($isModerators = false, $fromtime = '0', $totime = '
 function buildModLogPage() {
 	return pageHeader() . '<body>' . pageWrapper('back') . '
 		<div class="logo">
-			' . TINYIB_LOGO . TINYIB_BOARDDESC . ' / Modlog
+			' . ATOM_LOGO . ATOM_BOARDDESC . ' / Modlog
 		</div>
 		<hr>
 		<br>

@@ -149,11 +149,11 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 			var expiration = new Date();
 			expiration.setFullYear(expiration.getFullYear() + 7);
-			document.cookie = 'atomboard_password=' + encodeURIComponent(value) +
+			document.cookie = 'atom_password=' + encodeURIComponent(value) +
 				'; path=/; expires=' + expiration.toGMTString();
 		};
 	}
-	var password = getCookie('atomboard_password');
+	var password = getCookie('atom_password');
 	if (password) {
 		if (replyPassw) {
 			replyPassw.value = password;

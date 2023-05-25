@@ -1,5 +1,5 @@
 <?php
-if (!defined('TINYIB_BOARD')) {
+if (!defined('ATOM_BOARD')) {
 	die('');
 }
 
@@ -14,9 +14,9 @@ if (!$db = sqlite_open('atomboard.db', 0666, $error)) {
 // Create the posts table if it does not exist
 $result = sqlite_query($db,
 	"SELECT name FROM sqlite_master" .
-	" WHERE type='table' AND name='" . TINYIB_DBPOSTS . "'");
+	" WHERE type='table' AND name='" . ATOM_DBPOSTS . "'");
 if (sqlite_num_rows($result) == 0) {
-	sqlite_query($db, "CREATE TABLE " . TINYIB_DBPOSTS . " (
+	sqlite_query($db, "CREATE TABLE " . ATOM_DBPOSTS . " (
 		id INTEGER PRIMARY KEY,
 		parent INTEGER NOT NULL,
 		timestamp TIMESTAMP NOT NULL,
@@ -77,9 +77,9 @@ if (sqlite_num_rows($result) == 0) {
 // Create the bans table if it does not exist
 $result = sqlite_query($db,
 	"SELECT name FROM sqlite_master" .
-	" WHERE type='table' AND name='" . TINYIB_DBBANS . "'");
+	" WHERE type='table' AND name='" . ATOM_DBBANS . "'");
 if (sqlite_num_rows($result) == 0) {
-	sqlite_query($db, "CREATE TABLE " . TINYIB_DBBANS . " (
+	sqlite_query($db, "CREATE TABLE " . ATOM_DBBANS . " (
 		id INTEGER PRIMARY KEY,
 		ip TEXT NOT NULL,
 		timestamp TIMESTAMP NOT NULL,
@@ -91,9 +91,9 @@ if (sqlite_num_rows($result) == 0) {
 // Create the likes table if it does not exist
 $result = sqlite_query($db,
 	"SELECT name FROM sqlite_master" .
-	" WHERE type='table' AND name='" . TINYIB_DBLIKES . "'");
+	" WHERE type='table' AND name='" . ATOM_DBLIKES . "'");
 if (sqlite_num_rows($result) == 0) {
-	sqlite_query($db, "CREATE TABLE " . TINYIB_DBLIKES . " (
+	sqlite_query($db, "CREATE TABLE " . ATOM_DBLIKES . " (
 		id INTEGER PRIMARY KEY,
 		ip TEXT NOT NULL,
 		board TEXT NOT NULL,
@@ -105,9 +105,9 @@ if (sqlite_num_rows($result) == 0) {
 // Create the modlog table if it does not exist
 $result = sqlite_query($db,
 	"SELECT name FROM sqlite_master" .
-	" WHERE type='table' AND name='" . TINYIB_DBMODLOG . "'");
+	" WHERE type='table' AND name='" . ATOM_DBMODLOG . "'");
 if (sqlite_num_rows($result) == 0) {
-	sqlite_query($db, "CREATE TABLE " . TINYIB_DBMODLOG . " (
+	sqlite_query($db, "CREATE TABLE " . ATOM_DBMODLOG . " (
 		id INTEGER PRIMARY KEY,
 		timestamp TIMESTAMP NOT NULL,
 		boardname TEXT NOT NULL,
@@ -120,18 +120,18 @@ if (sqlite_num_rows($result) == 0) {
 
 // Add stickied column if it isn't present
 sqlite_query($db,
-	"ALTER TABLE " . TINYIB_DBPOSTS . "
+	"ALTER TABLE " . ATOM_DBPOSTS . "
 	ADD COLUMN stickied INTEGER NOT NULL DEFAULT '0'");
 
 # Post Functions
 function uniquePosts() {
 	return sqlite_fetch_single(sqlite_query($GLOBALS["db"],
-		"SELECT COUNT(ip) FROM (SELECT DISTINCT ip FROM " . TINYIB_DBPOSTS . ")"));
+		"SELECT COUNT(ip) FROM (SELECT DISTINCT ip FROM " . ATOM_DBPOSTS . ")"));
 }
 
 function postByID($id) {
 	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
-		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE id = '" . sqlite_escape_string($id) . "' LIMIT 1"), SQLITE_ASSOC);
 	foreach ($result as $post) {
 		return $post;
@@ -140,13 +140,13 @@ function postByID($id) {
 
 function threadExistsByID($id) {
 	return sqlite_fetch_single(sqlite_query($GLOBALS["db"],
-		"SELECT COUNT(*) FROM " . TINYIB_DBPOSTS . "
+		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
 		WHERE id = '" . sqlite_escape_string($id) . "' AND parent = 0 LIMIT 1")) > 0;
 }
 
 function insertPost($post) {
 	sqlite_query($GLOBALS["db"],
-		"INSERT INTO " . TINYIB_DBPOSTS . " (
+		"INSERT INTO " . ATOM_DBPOSTS . " (
 			parent,
 			timestamp,
 			bumped,
@@ -258,40 +258,40 @@ function insertPost($post) {
 
 function stickyThreadByID($id, $setsticky) {
 	sqlite_query($GLOBALS["db"],
-		"UPDATE " . TINYIB_DBPOSTS . "
+		"UPDATE " . ATOM_DBPOSTS . "
 		SET stickied = '" . sqlite_escape_string($setsticky) . "'
 		WHERE id = " . $id);
 }
 
 function lockThreadByID($id, $setlocked) {
 	if ($setlocked == 1) {
-		$setlocked = TINYIB_LOCKTHR_COOKIE;
+		$setlocked = ATOM_LOCKTHR_COOKIE;
 	} elseif ($setlocked == 0) {
 		$setlocked = '';
 	}
 	sqlite_query($GLOBALS["db"],
-		"UPDATE " . TINYIB_DBPOSTS . "
+		"UPDATE " . ATOM_DBPOSTS . "
 		SET email = '" . sqlite_escape_string($setlocked) . "'
 		WHERE id = " . $id);
 }
 
 function bumpThreadByID($id) {
 	sqlite_query($GLOBALS["db"],
-		"UPDATE " . TINYIB_DBPOSTS . "
+		"UPDATE " . ATOM_DBPOSTS . "
 		SET bumped = " . time() . "
 		WHERE id = " . $id);
 }
 
 function countThreads() {
 	return sqlite_fetch_single(sqlite_query($GLOBALS["db"],
-		"SELECT COUNT(*) FROM " . TINYIB_DBPOSTS . "
+		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
 		WHERE parent = 0"));
 }
 
 function allThreads() {
 	$threads = array();
 	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
-		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE parent = 0
 		ORDER BY stickied DESC, bumped DESC"), SQLITE_ASSOC);
 	foreach ($result as $thread) {
@@ -302,14 +302,14 @@ function allThreads() {
 
 function numRepliesToThreadByID($id) {
 	return sqlite_fetch_single(sqlite_query($GLOBALS["db"],
-		"SELECT COUNT(*) FROM " . TINYIB_DBPOSTS . "
+		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
 		WHERE parent = " . $id));
 }
 
 function postsInThreadByID($id, $moderated_only = true) {
 	$posts = array();
 	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
-		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE id = " . $id . " OR parent = " . $id . "
 		ORDER BY id ASC"), SQLITE_ASSOC);
 	foreach ($result as $post) {
@@ -321,7 +321,7 @@ function postsInThreadByID($id, $moderated_only = true) {
 function postsByHex($hex) {
 	$posts = array();
 	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
-		"SELECT id, parent FROM " . TINYIB_DBPOSTS . "
+		"SELECT id, parent FROM " . ATOM_DBPOSTS . "
 		WHERE (
 			file0_hex = '" . sqlite_escape_string($hex) . "'
 			OR file1_hex = '" . sqlite_escape_string($hex) . "'
@@ -337,7 +337,7 @@ function postsByHex($hex) {
 function latestPosts($moderated = true) {
 	$posts = array();
 	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
-		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		"SELECT * FROM " . ATOM_DBPOSTS . "
 		ORDER BY timestamp DESC LIMIT 10"), SQLITE_ASSOC);
 	foreach ($result as $post) {
 		$posts[] = $post;
@@ -351,30 +351,30 @@ function deletePostByID($id) {
 		if ($post['id'] != $id) {
 			deletePostImages($post);
 			sqlite_query($GLOBALS["db"],
-				"DELETE FROM " . TINYIB_DBPOSTS . "
+				"DELETE FROM " . ATOM_DBPOSTS . "
 				WHERE id = " . $post['id']);
 		} else {
 			$thispost = $post;
 		}
 	}
 	if (isset($thispost)) {
-		if ($thispost['parent'] == TINYIB_NEWTHREAD) {
+		if ($thispost['parent'] == ATOM_NEWTHREAD) {
 			@unlink('res/' . $thispost['id'] . '.html');
 		}
 		deletePostImages($thispost);
 		sqlite_query($GLOBALS["db"],
-			"DELETE FROM " . TINYIB_DBPOSTS . "
+			"DELETE FROM " . ATOM_DBPOSTS . "
 			WHERE id = " . $thispost['id']);
 	}
 }
 
 function deleteImagesByImageID($post, $imgList) {
 	deletePostImages($post, $imgList);
-	if ($imgList && count($imgList) <= TINYIB_MAXIMUM_FILES) {
+	if ($imgList && count($imgList) <= ATOM_FILES_COUNT) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
 			sqlite_query($GLOBALS["db"],
-				"UPDATE " . TINYIB_DBPOSTS . "
+				"UPDATE " . ATOM_DBPOSTS . "
 				SET file" . $index . " = '',
 					file" . $index . "_hex = '',
 					file" . $index . "_original = '',
@@ -392,14 +392,14 @@ function deleteImagesByImageID($post, $imgList) {
 
 function hideImagesByImageID($post, $imgList) {
 	deletePostImagesThumb($post, $imgList);
-	if ($imgList && (count($imgList) <= TINYIB_MAXIMUM_FILES) ) {
+	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT) ) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
 			sqlite_query($GLOBALS["db"],
-				"UPDATE " . TINYIB_DBPOSTS . "
+				"UPDATE " . ATOM_DBPOSTS . "
 				SET thumb" . $index . " = 'spoiler.png',
-					thumb" . $index . "_width = " . TINYIB_MAXW . ",
-					thumb" . $index . "_height = " . TINYIB_MAXW . "
+					thumb" . $index . "_width = " . ATOM_FILE_MAXW . ",
+					thumb" . $index . "_height = " . ATOM_FILE_MAXW . "
 				WHERE id = " . $post['id']);
 		}
 	}
@@ -407,17 +407,17 @@ function hideImagesByImageID($post, $imgList) {
 
 function editMessageInPostById($id, $newMessage) {
 	sqlite_query($GLOBALS["db"],
-		"UPDATE " . TINYIB_DBPOSTS . "
+		"UPDATE " . ATOM_DBPOSTS . "
 		SET message = '" . $newMessage . "'
 		WHERE id = " . $id);
 }
 
 function trimThreads() {
-	if (TINYIB_MAXTHREADS > 0) {
+	if (ATOM_MAXTHREADS > 0) {
 		$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
-			"SELECT id FROM " . TINYIB_DBPOSTS . "
+			"SELECT id FROM " . ATOM_DBPOSTS . "
 			WHERE parent = 0
-			ORDER BY stickied DESC, bumped DESC LIMIT " . TINYIB_MAXTHREADS . ", 10"), SQLITE_ASSOC);
+			ORDER BY stickied DESC, bumped DESC LIMIT " . ATOM_MAXTHREADS . ", 10"), SQLITE_ASSOC);
 		foreach ($result as $post) {
 			deletePostByID($post['id']);
 		}
@@ -426,7 +426,7 @@ function trimThreads() {
 
 function lastPostByIP() {
 	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
-		"SELECT * FROM " . TINYIB_DBPOSTS . "
+		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE ip = '" . $_SERVER['REMOTE_ADDR'] . "'
 		ORDER BY id DESC LIMIT 1"), SQLITE_ASSOC);
 	foreach ($result as $post) {
@@ -436,27 +436,27 @@ function lastPostByIP() {
 
 function likePostByID($id, $ip) {
 	$isAlreadyLiked = sqlite_fetch_single(sqlite_query($GLOBALS["db"],
-		"SELECT COUNT(*) FROM " . TINYIB_DBLIKES . "
+		"SELECT COUNT(*) FROM " . ATOM_DBLIKES . "
 		WHERE ip = '" . $ip . "'
-			AND board = '" . TINYIB_BOARD . "'
+			AND board = '" . ATOM_BOARD . "'
 			AND postnum = " . $id));
 	if ($isAlreadyLiked) {
 		sqlite_query($GLOBALS["db"],
-			"DELETE FROM " . TINYIB_DBLIKES . "
+			"DELETE FROM " . ATOM_DBLIKES . "
 			WHERE ip = '" . $ip . "'
-				AND board = '" . TINYIB_BOARD . "'
+				AND board = '" . ATOM_BOARD . "'
 				AND postnum = " . $id);
 	} else {
 		sqlite_query($GLOBALS["db"],
-			"INSERT INTO " . TINYIB_DBLIKES . "
+			"INSERT INTO " . ATOM_DBLIKES . "
 			(ip, board, postnum)
-			VALUES ('" . $ip . "', '" . TINYIB_BOARD . "', " . $id . ")");
+			VALUES ('" . $ip . "', '" . ATOM_BOARD . "', " . $id . ")");
 	}
 	$countOfPostLikes = sqlite_fetch_single(sqlite_query($GLOBALS["db"],
-		"SELECT COUNT(*) FROM " . TINYIB_DBLIKES . "
-		WHERE board = '" . TINYIB_BOARD . "' AND postnum = " . $id));
+		"SELECT COUNT(*) FROM " . ATOM_DBLIKES . "
+		WHERE board = '" . ATOM_BOARD . "' AND postnum = " . $id));
 	sqlite_query($GLOBALS["db"],
-		"UPDATE " . TINYIB_DBPOSTS . "
+		"UPDATE " . ATOM_DBPOSTS . "
 		SET likes = " . $countOfPostLikes . "
 		WHERE id = " . $id);
 	return array(!$isAlreadyLiked, $countOfPostLikes);
@@ -465,7 +465,7 @@ function likePostByID($id, $ip) {
 # Ban Functions
 function banByID($id) {
 	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
-		"SELECT * FROM " . TINYIB_DBBANS . "
+		"SELECT * FROM " . ATOM_DBBANS . "
 		WHERE id = '" . sqlite_escape_string($id) . "' LIMIT 1"), SQLITE_ASSOC);
 	foreach ($result as $ban) {
 		return $ban;
@@ -474,7 +474,7 @@ function banByID($id) {
 
 function banByIP($ip) {
 	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
-		"SELECT * FROM " . TINYIB_DBBANS . "
+		"SELECT * FROM " . ATOM_DBBANS . "
 		WHERE ip = '" . sqlite_escape_string($ip) . "' LIMIT 1"), SQLITE_ASSOC);
 	foreach ($result as $ban) {
 		return $ban;
@@ -484,7 +484,7 @@ function banByIP($ip) {
 function allBans() {
 	$bans = array();
 	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
-		"SELECT * FROM " . TINYIB_DBBANS . "
+		"SELECT * FROM " . ATOM_DBBANS . "
 		ORDER BY timestamp DESC"), SQLITE_ASSOC);
 	foreach ($result as $ban) {
 		$bans[] = $ban;
@@ -494,7 +494,7 @@ function allBans() {
 
 function insertBan($ban) {
 	sqlite_query($GLOBALS["db"],
-		"INSERT INTO " . TINYIB_DBBANS . "
+		"INSERT INTO " . ATOM_DBBANS . "
 		(ip, timestamp, expire, reason)
 		VALUES (
 			'" . sqlite_escape_string($ban['ip']) . "',
@@ -507,18 +507,18 @@ function insertBan($ban) {
 
 function clearExpiredBans() {
 	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
-		"SELECT * FROM " . TINYIB_DBBANS . "
+		"SELECT * FROM " . ATOM_DBBANS . "
 		WHERE expire > 0 AND expire <= " . time()), SQLITE_ASSOC);
 	foreach ($result as $ban) {
 		sqlite_query($GLOBALS["db"],
-			"DELETE FROM " . TINYIB_DBBANS . "
+			"DELETE FROM " . ATOM_DBBANS . "
 			WHERE id = " . $ban['id']);
 	}
 }
 
 function deleteBanByID($id) {
 	sqlite_query($GLOBALS["db"],
-		"DELETE FROM " . TINYIB_DBBANS . "
+		"DELETE FROM " . ATOM_DBBANS . "
 		WHERE id = " . sqlite_escape_string($id));
 }
 
@@ -529,16 +529,16 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 	if ($private === '1') {
 		if ($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
 			$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
-				"SELECT timestamp, username, action, color FROM " . TINYIB_DBMODLOG . "
-				WHERE boardname = '" . TINYIB_BOARD . "'
+				"SELECT timestamp, username, action, color FROM " . ATOM_DBMODLOG . "
+				WHERE boardname = '" . ATOM_BOARD . "'
 				ORDER BY timestamp DESC LIMIT 100"));
 			foreach ($result as $row) {
 				$records[] = $row;
 			}
 		} elseif ($periodEndDate !== 0 && $periodStartDate !== 0) { // If the date range is set
 			$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
-				"SELECT timestamp, username, action, color FROM " . TINYIB_DBMODLOG . "
-				WHERE boardname = '" . TINYIB_BOARD . "'
+				"SELECT timestamp, username, action, color FROM " . ATOM_DBMODLOG . "
+				WHERE boardname = '" . ATOM_BOARD . "'
 					AND timestamp >= " . $periodStartDate . "
 					AND timestamp <= " . $periodEndDate . "
 				ORDER BY timestamp DESC"));
@@ -549,8 +549,8 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 	// If we need only public records
 	} elseif ($private === '0') {
 		$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
-			"SELECT timestamp, action FROM `" . TINYIB_DBMODLOG . "`
-			WHERE boardname = '" . TINYIB_BOARD . "'
+			"SELECT timestamp, action FROM `" . ATOM_DBMODLOG . "`
+			WHERE boardname = '" . ATOM_BOARD . "'
 				AND private = '0'
 			ORDER BY timestamp DESC LIMIT 100"));
 		foreach ($result as $row) {
@@ -564,13 +564,13 @@ function modLog($action, $private = '1', $color = 'Black') {
 	// modLog('Text to show in modlog', '[1, 0]', 'Color');
 	// '[1, 0]': 1 = Private record. 0 = Public record.
 	// 'Color': Choose what to put in style="color: " for this record
-	$userName = isset($_SESSION['atomboard_user']) ? $_SESSION['atomboard_user'] : 'UNKNOWN';
+	$userName = isset($_SESSION['atom_user']) ? $_SESSION['atom_user'] : 'UNKNOWN';
 	sqlite_fetch_all(sqlite_query($GLOBALS["db"],
-		"INSERT INTO " . TINYIB_DBMODLOG . "
+		"INSERT INTO " . ATOM_DBMODLOG . "
 		(timestamp, boardname, username, action, color, private)
 		VALUES (
 			" . time() . ",
-			'" . TINYIB_BOARD . "',
+			'" . ATOM_BOARD . "',
 			'" . sqlite_escape_string($userName) . "',
 			'" . sqlite_escape_string($action) . "',
 			'" . $color . "',

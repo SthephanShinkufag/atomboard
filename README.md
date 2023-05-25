@@ -9,7 +9,7 @@ Features
  - Use [MySQL](https://mysql.com), [PostgreSQL](https://www.postgresql.org) or [SQLite](https://sqlite.org) for an efficient set-up able to handle high amounts of traffic.
  - Management panel:
    - Admin and moderators can ban offensive/abusive posters across all boards.
-   - Admin and moderators can sticky threads, delete/approve posts and threads (see `TINYIB_REQMOD`).
+   - Admin and moderators can sticky threads, delete/approve posts and threads (see `ATOM_REQMOD`).
    - Janitors can delete/approve posts and threads.
    - Admin, moderators and janitors can edit message text in posts.
    - Admin, moderators and janitors can delete attached files.
@@ -56,20 +56,20 @@ Installing
     - `git clone https://github.com/SthephanShinkufag/atomboard.git ./`
  4. Copy `settings.default.php` to `settings.php`.
  5. Configure `settings.php`
-    - When setting `TINYIB_DBMODE` to `flatfile`, note that all post and ban data are exposed as the database is composed of standard text files.  Access to `./inc/flatfile/` should be denied.
-    - When setting `TINYIB_DBMODE` to `pdo`, note that only the MySQL and PostgreSQL databases drivers have been tested. Theoretically it will work with any applicable driver, but this is not guaranteed.  If you use an alternative driver, please report back.
+    - When setting `ATOM_DBMODE` to `flatfile`, note that all post and ban data are exposed as the database is composed of standard text files.  Access to `./inc/flatfile/` should be denied.
+    - When setting `ATOM_DBMODE` to `pdo`, note that only the MySQL and PostgreSQL databases drivers have been tested. Theoretically it will work with any applicable driver, but this is not guaranteed.  If you use an alternative driver, please report back.
     - To require moderation before displaying posts:
-      - Ensure your `TINYIB_DBMODE` is set to `mysql`, `mysqli`, or `pdo`.
-      - Set `TINYIB_REQMOD` to `files` to require moderation for posts with files attached.
-      - Set `TINYIB_REQMOD` to `all` to require moderation for all posts.
+      - Ensure your `ATOM_DBMODE` is set to `mysql`, `mysqli`, or `pdo`.
+      - Set `ATOM_REQMOD` to `files` to require moderation for posts with files attached.
+      - Set `ATOM_REQMOD` to `all` to require moderation for all posts.
       - Moderate posts by visiting the management panel.
     - To allow WebM upload:
       - Ensure your web host is running Linux or FreeBSD.
       - Install [mediainfo](https://mediaarea.net/en/MediaInfo) and [ffmpegthumbnailer](https://code.google.com/p/ffmpegthumbnailer/). On Ubuntu, run `sudo apt-get install mediainfo ffmpegthumbnailer`. On FreeBSD run `pkg install mediainfo ffmpegthumbnailer`.
-    - To remove the play icon from WebM/MP4/MOV thumbnails, delete or rename `icons/video_overlay.png` or set `TINYIB_VIDEO_OVERLAY` to false.
+    - To remove the play icon from WebM/MP4/MOV thumbnails, delete or rename `icons/video_overlay.png` or set `ATOM_VIDEO_OVERLAY` to false.
     - To use ImageMagick instead of GD when creating thumbnails:
       - Install ImageMagick and ensure that the `convert` command is available.
-      - Set `TINYIB_THUMBNAIL` to `imagemagick`.
+      - Set `ATOM_FILE_THUMBDRIVER` to `imagemagick`.
       - **Note:** GIF files will have animated thumbnails, which will often have large file sizes.
  6. [CHMOD](https://en.wikipedia.org/wiki/Chmod) write permissions to these directories:
     - `./` (the directory containing atomboard)
@@ -80,7 +80,7 @@ Installing
  7. Navigate your browser to `imgboard.php` and the following will take place:
     - The database structure will be created.
     - Directories will be verified to be writable.
-    - The board index will be written to `TINYIB_INDEX`.
+    - The board index will be written to `ATOM_INDEX`.
 
 Moderating
 ------------
@@ -96,7 +96,7 @@ Updating
     - Otherwise, [download](https://github.com/SthephanShinkufag/atomboard/archive/master.zip) and extract a zipped archive.
  2. Note which files were modified.
     - If `settings.default.php` was updated, migrate the changes to `settings.php`
-      - Take care to not change the value of `TINYIB_TRIPSEED`, as it would result in different secure tripcodes.
+      - Take care to not change the value of `ATOM_TRIPSEED`, as it would result in different secure tripcodes.
     - If other files were updated, and you have made changes yourself:
       - Visit [GitHub](https://github.com/SthephanShinkufag/atomboard) and review the changes made in the update.
       - Ensure the update does not interfere with your changes.
@@ -110,16 +110,16 @@ atomboard includes a database migration tool, which currently only supports migr
 While the migration is in progress, visitors will not be able to create or delete posts.
 
  1. Edit `settings.php`:
-    - Ensure `TINYIB_DBMODE` is still set to `flatfile`.
-    - Set `TINYIB_DBMIGRATE` to `true`.
+    - Ensure `ATOM_DBMODE` is still set to `flatfile`.
+    - Set `ATOM_DBMIGRATE` to `true`.
     - Configure all MySQL-related settings.
  2. Open the management panel.
  3. Click `Migrate Database`.
  4. Click `Start the migration`.
  5. If the migration was successful:
     - Edit `settings.php`
-      - Set `TINYIB_DBMODE` to `mysqli`.
-      - Set `TINYIB_DBMIGRATE` to `false`.
+      - Set `ATOM_DBMODE` to `mysqli`.
+      - Set `ATOM_DBMIGRATE` to `false`.
     - Click `Rebuild All` and ensure the board still looks the way it should.
 
 If there was a warning about AUTO_INCREMENT not being updated, you'll need to update it manually via a more privileged MySQL user.
