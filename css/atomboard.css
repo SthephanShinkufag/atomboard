@@ -122,6 +122,11 @@ hr {
 
 /* ==[ Posts ]============================================================================================= */
 
+.backlinks {
+	font-size: 75%;
+	font-style: italic;
+}
+
 code {
 	color: #000;
 	padding: 0.2em 0.4em;
@@ -206,8 +211,12 @@ video.thumb {
 }
 
 .message {
-	margin: 1em 20px;
+	margin: 1em 20px 5px 20px;
 	line-height: 19px;
+}
+
+.oppost > .backlinks {
+	margin: 10px 0 4px 20px;
 }
 
 .oppost > .filesize {
@@ -259,12 +268,17 @@ video.thumb {
 	border-radius: 8px;
 }
 
+.reply > .backlinks {
+	margin-top: 10px;
+	padding: 4px 8px 0 8px;
+	border-top: 1px solid #80808052;
+}
+
 .reply > .filesize {
 	margin-left: 20px;
 }
 
 .reply > .message {
-	margin-bottom: 5px;
 	min-width: 325px;
 }
 

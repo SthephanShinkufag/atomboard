@@ -466,22 +466,6 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	$post['likes'] = 0;
 	$post['id'] = insertPost($post);
 
-	/*
-	if (sizeof($replyedTo) != 0) {
-		$replyedTo = array_unique($replyedTo);
-		foreach ($replyedTo as $arrayIndex => $postID) {
-			$originalPost = array();
-			$originalPost = postByID($postID);
-			$newMessage = '';
-			$newMessage = $originalPost['message'];
-			$newMessage .= ' &iexcl;&iexcl;' .
-				($post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent']) .
-				'&cent;&cent;' . $post['id'];
-			editMessageInPostById($postID, $newMessage);
-		}
-	}
-	*/
-
 	if ($post['moderated'] == '1') {
 		if (ATOM_ALWAYSNOKO || strtolower($post['email']) == 'noko') {
 			$redirect = '/' . ATOM_BOARD . '/res/' .

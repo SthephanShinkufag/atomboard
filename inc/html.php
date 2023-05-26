@@ -17,7 +17,7 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARDDESC . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023052400">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023052602">
 	<script src="/' . ATOM_BOARD . '/js/atomboard.js"></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') .
@@ -314,6 +314,26 @@ function buildPostForm($parent, $isRawPost = false) {
 		</div>';
 }
 
+function buildPostBacklinks($id, $thrId) {
+	if (!ATOM_BACKLINKS) {
+		return '';
+	}
+	$str = '';
+	$link = '&gt;&gt;' . $id . '<';
+	$posts = postsInThreadByID($thrId);
+	foreach ($posts as $reply) {
+		if (strpos($reply['message'], $link) === false) {
+			continue;
+		}
+		$post = postByID($reply['id']);
+		$str .= ($str != '' ? ', ' : '') . (!$post ? '&gt;&gt;' . $reply['id'] :
+			'<a href="/' . ATOM_BOARD . '/res/' .
+				($post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent']) .
+				'.html#' . $reply['id'] . '">&gt;&gt;' . $reply['id'] . '</a>');
+	}
+	return $str != '' ? '<div class="backlinks">' . $str . '</div>' : '';
+}
+
 function buildPost($post, $res, $isModPanel = false) {
 	$isOp = $post['parent'] == ATOM_NEWTHREAD;
 	$id = $post['id'];
@@ -325,11 +345,13 @@ function buildPost($post, $res, $isModPanel = false) {
 	// Build post file
 	$filehtml = '';
 	$hasImages = false;
+	$imagesCount = 0;
 	for ($index = 0; $index < ATOM_FILES_COUNT; $index++) {
 		if (!$post['file' . $index . '_hex']) {
 			continue;
 		}
 		$hasImages = true;
+		$imagesCount++;
 		$fWidth = $post['image' . $index . '_width'];
 		$fHeight = $post['image' . $index . '_height'];
 		$fName = $post['file' . $index];
@@ -423,16 +445,6 @@ function buildPost($post, $res, $isModPanel = false) {
 		}
 	}
 
-	// Make >>backlinks for replies to posts
-	/*
-	$message = preg_replace_callback('/&iexcl;&iexcl;([0-9]+)/', function($matches) {
-		return '<a href="/' . ATOM_BOARD . '/res/' . $matches[1] . '.html#';
-	}, $message);
-	$message = preg_replace_callback('/&cent;&cent;([0-9]+)/', function($matches) {
-		return $matches[1] . '"> &gt;&gt;' . $matches[1] . '</a>';
-	}, $message);
-	*/
-
 	// Start post building
 	$omitted = $post['omitted'];
 	$likes = $post['likes'];
@@ -486,7 +498,7 @@ function buildPost($post, $res, $isModPanel = false) {
 						<option value="hide">Hide Thumbnail</option>
 					</select>
 					<br>' : '') .
-					$filehtml .
+					($imagesCount > 1 ? '<div class="images-container">' . $filehtml . '</div>' : $filehtml) .
 					($isModPanel && $hasImages ? '
 				</form>' : '') . '
 				<div class="message">' .
@@ -500,6 +512,7 @@ function buildPost($post, $res, $isModPanel = false) {
 						<input type="submit" value="Edit" class="managebutton">
 					</form>' : '') . '
 				</div>
+				' . buildPostBacklinks($id, $thrId) . '
 			' .
 			(!$isOp ? '</td></tr></tbody></table>' : '</div>' .
 			($res == ATOM_INDEXPAGE && $omitted > 0 ? '
@@ -963,14 +976,6 @@ function buildCatalogPage() {
 	$OPposts = allThreads();
 	foreach ($OPposts as $post) {
 		$numOfReplies = numRepliesToThreadByID($post['id']);
-		/*
-		$post['message'] = preg_replace_callback('/&iexcl;&iexcl;([0-9]+)/', function($matches) {
-			return '';
-		}, $post['message']);
-		$post['message'] = preg_replace_callback('/&cent;&cent;([0-9]+)/', function($matches) {
-			return '';
-		}, $post['message']);
-		*/
 		if (function_exists('mb_substr') && extension_loaded('mbstring')) {
 			$OPpostMessage = tidy_repair_string(
 				mb_substr($post['message'], 0, 160, 'UTF-8'),
