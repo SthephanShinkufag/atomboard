@@ -503,14 +503,11 @@ function buildPost($post, $res, $isModPanel = false) {
 				</form>' : '') . '
 				<div class="message">' .
 					($isModPanel ? '
-					<form method="post" action="?manage&editpost=' .
-						$id . '" enctype="multipart/form-data">
-						<textarea id="message" name="message">' : '') .
-							$message . ($isModPanel ? '
-						</textarea>
+					<form method="post" action="?manage&editpost=' . $id . '" enctype="multipart/form-data">
+						<textarea id="message" name="message">' . htmlspecialchars($message) . '</textarea>
 						<br>
 						<input type="submit" value="Edit" class="managebutton">
-					</form>' : '') . '
+					</form>' : $message) . '
 				</div>
 				' . buildPostBacklinks($id, $thrId) . '
 			' .

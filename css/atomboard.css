@@ -302,6 +302,11 @@ video.thumb {
 	color: #333;
 }
 
+textarea#message {
+	width: 100%;
+	height: 250px;
+}
+
 .thumb {
 	border: none;
 	float: left;
