@@ -1,5 +1,11 @@
-function $q(path, root) {
-	return (root || document.body).querySelector(path);
+var highlightedUID = null;
+
+function $q(path, rootEl) {
+	return (rootEl || document.body).querySelector(path);
+}
+
+function $Q(path, rootEl) {
+	return (rootEl || document.body).querySelectorAll(path);
 }
 
 function $id(id) {
@@ -9,6 +15,22 @@ function $id(id) {
 function getCookie(name) {
 	var parts = ('; ' + document.cookie).split('; ' + name + '=');
 	return parts.length === 2 ? parts.pop().split(";").shift() : null;
+}
+
+function unhighlightPosts() {
+	var els = $Q('.highlighted');
+	for(var i = 0, len = els.length; i < len; ++i) {
+		els[i].classList.remove('highlighted');
+	}
+}
+
+function highlightPost(num) {
+	unhighlightPosts();
+	var post = $id('reply' + num) || $id('op' + num);
+	if (post) {
+		post.classList.add('highlighted');
+	}
+	return false;
 }
 
 function quotePost(num) {
@@ -163,14 +185,47 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 	}
 	var hash = window.location.hash;
-	if (hash && (hash = hash.match(/^#q([0-9]+)$/i)) && hash[1]) {
-		quotePost(hash[1]);
+	if(hash) {
+		var hashMatch = hash.match(/^#q([0-9]+)$/i);
+		if (hashMatch && hashMatch[1]) {
+			quotePost(hashMatch[1]);
+		} else if((hashMatch = hash.match(/^#([0-9]+)$/i)) && hashMatch[1]) {
+			highlightPost(hashMatch[1]);
+		}
 	}
 	var markupBtns = $id('markup-buttons');
 	if (markupBtns) {
 		markupBtns.addEventListener('click', markupEvents);
 		$id('markup-quote').addEventListener('mouseover', markupEvents);
 	}
+	var handleEvent = function(e) {
+		var targetEl = e.target;
+		if(targetEl.classList.contains('posteruid')) {
+			if(e.type === 'click') {
+				unhighlightPosts();
+				var uid = targetEl.textContent;
+				if(highlightedUID === uid) {
+					highlightedUID = null;
+					e.preventDefault();
+					return;
+				}
+				highlightedUID = uid;
+				var matchedEls = $Q('.posteruid[data-uid="' + uid + '"]');
+				for(var i = 0, len = matchedEls.length; i < len; ++i) {
+					var post = matchedEls[i];
+					while(!post.classList.contains('reply') && !post.classList.contains('oppost')) {
+						post = post.parentNode;
+					}
+					post.classList.add('highlighted');
+				}
+				e.preventDefault();
+			} else if(e.type === 'mouseover') {
+				targetEl.title = 'Click to highlight posts by (' + targetEl.textContent + ')';
+			}
+		}
+	};
+	document.body.addEventListener('click', handleEvent, true);
+	document.body.addEventListener('mouseover', handleEvent, true);
 });
 
 window.addEventListener('load', function() {

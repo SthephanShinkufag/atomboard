@@ -16,7 +16,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		"name" varchar(75) NOT NULL,
 		"tripcode" varchar(10) NOT NULL,
 		"email" varchar(75) NOT NULL,
-		"nameblock" varchar(255) NOT NULL,
+		"nameblock" text NOT NULL,
 		"subject" varchar(75) NOT NULL,
 		"message" text NOT NULL,
 		"password" varchar(255) NOT NULL,
@@ -111,7 +111,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		`name` varchar(75) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 		`tripcode` varchar(10) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 		`email` varchar(75) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
-		`nameblock` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+		`nameblock` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 		`subject` varchar(75) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 		`message` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 		`password` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
@@ -335,8 +335,9 @@ function nameBlock($name, $tripcode, $email, $ip, $parent, $timestamp, $rawpostt
 		$green = $hashint >> 16 & 255;
 		$blue = $hashint >> 8 & 255;
 		$isBlack = 0.299 * $red + 0.587 * $green + 0.114 * $blue > 125;
-		$posterUID = ' <span class="posteruid" style="background-color: rgb(' . $red . ', ' . $green . ', ' .
-			$blue . '); color: ' . ($isBlack ? 'black' : 'white') . ';">' . $hash . '</span>';
+		$posterUID = ' <span class="posteruid" data-uid="' . $hash . '" style="background-color: rgb(' .
+			$red . ', ' . $green . ', ' . $blue . '); color: ' .
+			($isBlack ? 'black' : 'white') . ';">' . $hash . '</span>';
 	}
 	$output = '<span class="postername' .
 		(checkAccess() != 'disabled' && $name != '' ? ' postername-admin' : '') . '">';

@@ -17,8 +17,8 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARDDESC . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023052602">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js"></script>' .
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023060900">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023060900"></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') .
 	ATOM_HTML_HEAD . '
@@ -319,17 +319,18 @@ function buildPostBacklinks($id, $thrId) {
 		return '';
 	}
 	$str = '';
-	$link = '&gt;&gt;' . $id . '<';
+	$match = '&gt;&gt;' . $id . '<';
 	$posts = postsInThreadByID($thrId);
 	foreach ($posts as $reply) {
-		if (strpos($reply['message'], $link) === false) {
+		if (strpos($reply['message'], $match) === false) {
 			continue;
 		}
 		$post = postByID($reply['id']);
+		$isOp = $post['parent'] == ATOM_NEWTHREAD;
 		$str .= ($str != '' ? ', ' : '') . (!$post ? '&gt;&gt;' . $reply['id'] :
-			'<a href="/' . ATOM_BOARD . '/res/' .
-				($post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent']) .
-				'.html#' . $reply['id'] . '">&gt;&gt;' . $reply['id'] . '</a>');
+			'<a class="' . ($isOp ? 'refop' : 'refreply') . '" href="/' . ATOM_BOARD . '/res/' .
+				($isOp ? $post['id'] : $post['parent']) . '.html#' . $reply['id'] . '">&gt;&gt;' .
+				$reply['id'] . '</a>');
 	}
 	return $str != '' ? '<div class="backlinks">' . $str . '</div>' : '';
 }
@@ -464,7 +465,8 @@ function buildPost($post, $res, $isModPanel = false) {
 					$post['nameblock'] . '
 				</label>
 				<span class="reflink">' . ($res == ATOM_RESPAGE ? '
-					<a href="' . $thrId . '.html#' . $id . '" title="Click to link to this post">No.</a>' .
+					<a href="' . $thrId . '.html#' . $id . '" onclick="highlightPost(' . $id .
+						');" title="Click to link to this post">No.</a>' .
 					'<a href="' . $thrId . '.html#q' . $id . '" onclick="quotePost(' . $id .
 						');" title="Click to reply to this post">' .
 						$id . '</a>' : '

@@ -117,7 +117,6 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	if ($rawPost || !in_array('subject', $hideFields)) {
 		$post['subject'] = cleanString(substr($_POST['subject'], 0, 75));
 	}
-	// $replyedTo = array();
 	if ($rawPost || !in_array('message', $hideFields)) {
 		$post['message'] = $_POST['message'];
 		if ($rawPost) {
@@ -169,10 +168,11 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			$msg = preg_replace_callback('/&gt;&gt;([0-9]+)/', function($matches) {
 				$post = postByID($matches[1]);
 				if ($post) {
-					// $replyedTo[] = intval($matches[1]);
-					return '<a href="/' . ATOM_BOARD . '/res/' .
-						($post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent']) .
-						'.html#' . $matches[1] . '">' . $matches[0] . '</a>';
+					$isOp = $post['parent'] == ATOM_NEWTHREAD;
+					return '<a class="' .
+						($isOp ? 'refop' : 'refreply') . '" href="/' . ATOM_BOARD . '/res/' .
+						($isOp ? $post['id'] : $post['parent']) . '.html#' . $matches[1] . '">' .
+						$matches[0] . '</a>';
 				}
 				return $matches[0];
 			}, $msg);
@@ -224,8 +224,14 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	if ($rawPost || !in_array('password', $hideFields)) {
 		$post['password'] = $_POST['password'] != '' ? md5(md5($_POST['password'])) : '';
 	}
-	$post['nameblock'] = nameBlock($post['name'], $post['tripcode'], $post['email'], $post['ip'], $post['parent'],
-		time(), $rawPostText);
+	$post['nameblock'] = nameBlock(
+		$post['name'],
+		$post['tripcode'],
+		$post['email'],
+		$post['ip'],
+		$post['parent'],
+		time(),
+		$rawPostText);
 
 	// Embed URL uploaded
 	if (isset($_POST['embed']) &&

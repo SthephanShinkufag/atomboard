@@ -7,25 +7,6 @@ a:hover {
 	color: #dd0000;
 }
 
-body {
-	text-align: center;
-}
-
-body, html {
-	background: #eee;
-	color: #34343f;
-	font: 14px Helvetica, Arial, sans-serif;
-}
-
-hr {
-	margin: 10px;
-	clear: both;
-	border-top: 1px dashed #888;
-	border-bottom: none;
-	border-left: none;
-	border-right: none;
-}
-
 .abbrev, .omittedposts {
 	color: #707070;
 	margin-top: 6px;
@@ -50,6 +31,25 @@ hr {
 	padding: 3px;
 	background: #b0e0e6;
 	border: 1px solid black;
+}
+
+body {
+	text-align: center;
+}
+
+body, html {
+	background: #eee;
+	color: #34343f;
+	font: 14px Helvetica, Arial, sans-serif;
+}
+
+hr {
+	margin: 10px;
+	clear: both;
+	border-top: 1px dashed #888;
+	border-bottom: none;
+	border-left: none;
+	border-right: none;
 }
 
 .footer {
@@ -127,6 +127,25 @@ hr {
 	font-style: italic;
 }
 
+.catalog-block {
+	overflow: hidden;
+	vertical-align: top;
+	display: inline-block;
+	max-width: 236px;
+	width: 236px;
+	max-height: 350px;
+	height: 350px;
+	text-align: center;
+	margin: 3px;
+	padding-top: 6px;
+	background: #ddd;
+	color: #34343f;
+	border: 1px solid #ccc;
+	padding-left: 3px;
+	padding-right: 3px;
+	border-radius: 8px;
+}
+
 code {
 	color: #000;
 	padding: 0.2em 0.4em;
@@ -139,31 +158,6 @@ code {
 del {
 	-moz-text-decoration-color: red;
 	text-decoration-color: red;
-}
-
-pre {
-	padding: 5px 5px 4px 5px;
-	margin: 3px 0;
-	overflow-x: auto;
-	max-width: 1150px;
-	border: 1px dotted grey;
-	border-radius: 4px;
-	background: rgba(255,255,255,0.4);
-	font-size: 85%;
-	line-height: 1.45;
-	clear: both;
-}
-
-pre + br {
-	display: none;
-}
-
-video.thumb {
-	border-left: 5px dashed #555;
-	border-right: 5px dashed #555;
-	background-color: inherit;
-	max-width: 230px;
-	max-height: 230px;
 }
 
 #delform > table {
@@ -189,25 +183,6 @@ video.thumb {
 .image-container > .filesize {
 	margin-left: 20px;
 	display: block;
-}
-
-.catalog-block {
-	overflow: hidden;
-	vertical-align: top;
-	display: inline-block;
-	max-width: 236px;
-	width: 236px;
-	max-height: 350px;
-	height: 350px;
-	text-align: center;
-	margin: 3px;
-	padding-top: 6px;
-	background: #ddd;
-	color: #34343f;
-	border: 1px solid #ccc;
-	padding-left: 3px;
-	padding-right: 3px;
-	border-radius: 8px;
 }
 
 .message {
@@ -245,6 +220,24 @@ video.thumb {
 .posteruid {
 	padding: 0 3px;
 	border-radius: 7px;
+	cursor: pointer;
+}
+
+pre {
+	padding: 5px 5px 4px 5px;
+	margin: 3px 0;
+	overflow-x: auto;
+	max-width: 1150px;
+	border: 1px dotted grey;
+	border-radius: 4px;
+	background: rgba(255,255,255,0.4);
+	font-size: 85%;
+	line-height: 1.45;
+	clear: both;
+}
+
+pre + br {
+	display: none;
 }
 
 .reflink {
@@ -266,6 +259,11 @@ video.thumb {
 	max-width: calc(100vw - 255px);
 	padding: 3px;
 	border-radius: 8px;
+}
+
+.highlighted { /* important to be after .reply */
+	border: 1px solid #00f;
+	background-color: #dde0ec;
 }
 
 .reply > .backlinks {
@@ -329,6 +327,14 @@ textarea#message {
 .unkfunc {
 	background: inherit;
 	color: #789922;
+}
+
+video.thumb {
+	border-left: 5px dashed #555;
+	border-right: 5px dashed #555;
+	background-color: inherit;
+	max-width: 230px;
+	max-height: 230px;
 }
 
 /* ==[ Postform ]========================================================================================== */
@@ -504,9 +510,6 @@ textarea#message {
 /* ==[ Mobile devices ]==================================================================================== */
 
 @media only screen and (max-width: 770px) {
-	div[id^="thumbfile"] > a {
-		display: inline-block;
-	}
 	.aside, .wrapper {
 		width: auto;
 		margin: 0;
@@ -535,6 +538,9 @@ textarea#message {
 	}
 	.aside-top {
 		margin-top: 0;
+	}
+	div[id^="thumbfile"] > a {
+		display: inline-block;
 	}
 	.message {
 		min-width: auto !important;
