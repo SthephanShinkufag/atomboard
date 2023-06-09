@@ -476,8 +476,8 @@ function buildPost($post, $res, $isModPanel = false) {
 						'" title="Click to reply to this post">' . $id . '</a>') .
 					($post['stickied'] == 1 ? '
 					<img src="/' . ATOM_BOARD .
-						'/icons/sticky.png" title="Thread is sticked" width="16" height="16">' : '') .
-					($post['email'] == ATOM_LOCKTHR_COOKIE ? '
+						'/icons/sticky.png" title="Thread is stickied" width="16" height="16">' : '') .
+					($post['locked'] == 1 ? '
 					<img src="/' . ATOM_BOARD .
 						'/icons/locked.png" title="Thread is locked" width="11" height="16">' : '') .
 					(ATOM_LIKES ? '
@@ -775,41 +775,35 @@ function manageModeratePost($post) {
 	$stickyHtml = '';
 	$lockedHtml = '';
 	if ($isOp) {
-		$stickySet = $post['stickied'] == 1 ? '0' : '1';
-		$stickyUnsticky = $post['stickied'] == 1 ? 'Un-sticky' : 'Sticky';
-		$stickyUnstickyHelp = $post['stickied'] == 1 ? 'Return this thread to a normal state.' :
-			'Keep this thread at the top of the board.';
+		$isStickied = $post['stickied'] == 1;
 		$stickyHtml = '
-					<tr><td colspan="2">&nbsp;</td></tr>
 					<tr>
 						<td align="right" width="50%;">
 							<form method="get" action="?">
 								<input type="hidden" name="manage" value="">
 								<input type="hidden" name="sticky" value="' . $post['id'] . '">
-								<input type="hidden" name="setsticky" value="' . $stickySet . '">
-								<input type="submit" value="' . $stickyUnsticky .
+								<input type="hidden" name="setsticky" value="' . ($isStickied ? 0 : 1) . '">
+								<input type="submit" value="' . ($isStickied ? 'Un-sticky' : 'Sticky') .
 									' Thread" class="managebutton" style="width: 50%;">
 							</form>
 						</td>
-						<td><small>' . $stickyUnstickyHelp . '</small></td>
+						<td><small>' . ($isStickied ? 'Return this thread to a normal state.' :
+							'Keep this thread at the top of the board.') . '</small></td>
 					</tr>';
-		$lockedSet = $post['email'] == ATOM_LOCKTHR_COOKIE ? '0' : '1';
-		$lockUnlock = $post['email'] == ATOM_LOCKTHR_COOKIE ? 'Un-lock' : 'Lock';
-		$lockedUnlockedHelp = $post['email'] == ATOM_LOCKTHR_COOKIE ? 'Unlock this thread.' :
-			'Lock this thread.';
+		$isLocked = $post['locked'] == 1;
 		$lockedHtml = '
-					<tr><td colspan="2">&nbsp;</td></tr>
 					<tr>
 						<td align="right" width="50%;">
 							<form method="get" action="?">
 								<input type="hidden" name="manage" value="">
 								<input type="hidden" name="locked" value="' . $post['id'] . '">
-								<input type="hidden" name="setlocked" value="' . $lockedSet . '">
-								<input type="submit" value="' . $lockUnlock .
+								<input type="hidden" name="setlocked" value="' . ($isLocked ? 0 : 1) . '">
+								<input type="submit" value="' . ($isLocked ? 'Un-lock' : 'Lock') .
 									' Thread" class="managebutton" style="width: 50%;">
 							</form>
 						</td>
-						<td><small>' . $lockedUnlockedHelp . '</small></td>
+						<td><small>' . ($isLocked ? 'Unlock this thread.' : 'Lock this thread.') .
+							'</small></td>
 					</tr>';
 		$postHtml = '';
 		$posts = postsInThreadByID($post['id']);
@@ -834,7 +828,9 @@ function manageModeratePost($post) {
 							</form>
 						</td>
 						<td><small>' . $deleteInfo . '</small></td>
-					</tr>
+					</tr>' .
+					$stickyHtml .
+					$lockedHtml . '
 					<tr>
 						<td align="right" width="50%;">
 							<form method="get" action="?">
@@ -845,9 +841,7 @@ function manageModeratePost($post) {
 							</form>
 						</td>
 						<td><small>' . $banInfo . '</small></td>
-					</tr>' .
-					$stickyHtml .
-					$lockedHtml . '
+					</tr>
 				</table>
 			</fieldset>
 			<fieldset>

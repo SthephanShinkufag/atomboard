@@ -100,7 +100,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	$post = newPost(setParent());
 	if ($post['parent'] != ATOM_NEWTHREAD && $noAccess) {
 		$parentPost = postByID($post['parent']);
-		if ($parentPost['email'] == ATOM_LOCKTHR_COOKIE) {
+		if ($parentPost['locked']) {
 			fancyDie('Posting in this thread is currently disabled.<br>Thread is locked.');
 		}
 	}
@@ -111,8 +111,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		$post['name'] = cleanString(substr($post['name'], 0, 75));
 	}
 	if ($rawPost || !in_array('email', $hideFields)) {
-		$providedEmail = cleanString(str_replace('"', '&quot;', substr($_POST['email'], 0, 75)));
-		$post['email'] = $providedEmail == ATOM_LOCKTHR_COOKIE ? '' : $providedEmail;
+		$post['email'] = cleanString(str_replace('"', '&quot;', substr($_POST['email'], 0, 75)));
 	}
 	if ($rawPost || !in_array('subject', $hideFields)) {
 		$post['subject'] = cleanString(substr($_POST['subject'], 0, 75));
@@ -952,16 +951,17 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$text .= manageModeratePostForm();
 			}
 
-		// Lock threads
-		} elseif (isset($_GET['locked']) && isset($_GET['setlocked'])) {
-			if ($_GET['locked'] > 0) {
-				$post = postByID($_GET['locked']);
+		// Sticky threads
+		} elseif (isset($_GET['sticky']) && isset($_GET['setsticky'])) {
+			if ($_GET['sticky'] > 0) {
+				$post = postByID($_GET['sticky']);
 				if ($post && $post['parent'] == ATOM_NEWTHREAD) {
-					lockThreadByID($post['id'], (intval($_GET['setlocked'])));
+					$isStickied = intval($_GET['setsticky']);
+					stickyThreadByID($post['id'], $isStickied);
 					threadUpdated($post['id']);
-					$isLocked = $_GET['setlocked'] == 1 ? 'locked' : 'un-locked';
-					$text .= manageInfo('Thread No.' . $post['id'] . ' ' . $isLocked . '.');
-					modLog(ucfirst($isLocked) . ' thread №' . $post['id'] . '.', '0', 'Black');
+					$stickiedText = $isStickied == 1 ? 'stickied' : 'un-stickied';
+					$text .= manageInfo('Thread No.' . $post['id'] . ' ' . $stickiedText . '.');
+					modLog(ucfirst($stickiedText) . ' thread №' . $post['id'] . '.', '0', 'Black');
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
 				}
@@ -969,16 +969,17 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				fancyDie('Form data was lost. Please go back and try again.');
 			}
 
-		// Sticky threads
-		} elseif (isset($_GET['sticky']) && isset($_GET['setsticky'])) {
-			if ($_GET['sticky'] > 0) {
-				$post = postByID($_GET['sticky']);
+		// Lock threads
+		} elseif (isset($_GET['locked']) && isset($_GET['setlocked'])) {
+			if ($_GET['locked'] > 0) {
+				$post = postByID($_GET['locked']);
 				if ($post && $post['parent'] == ATOM_NEWTHREAD) {
-					stickyThreadByID($post['id'], (intval($_GET['setsticky'])));
+					$isLocked = intval($_GET['setlocked']);
+					lockThreadByID($post['id'], $isLocked);
 					threadUpdated($post['id']);
-					$isSticked = intval($_GET['setsticky']) == 1 ? 'stickied' : 'un-stickied';
-					$text .= manageInfo('Thread No.' . $post['id'] . ' ' . $isSticked . '.');
-					modLog(ucfirst($isSticked) . ' thread №' . $post['id'] . '.', '0', 'Black');
+					$lockedText = $isLocked == 1 ? 'locked' : 'un-locked';
+					$text .= manageInfo('Thread No.' . $post['id'] . ' ' . $lockedText . '.');
+					modLog(ucfirst($lockedText) . ' thread №' . $post['id'] . '.', '0', 'Black');
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
 				}

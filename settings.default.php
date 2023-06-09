@@ -111,8 +111,6 @@ define('ATOM_TRUNC_SIZE', 1536);
 define('ATOM_MAXTHREADS', 100);
 // Bump limit - maximum replies before a thread stops bumping [0 to disable]
 define('ATOM_BUMPLIMIT', 500);
-// Cookie in e-mail field that indicates what thread is locked for posting
-define('ATOM_LOCKTHR_COOKIE', 'thread@is.locked');
 
 /* ==[ Reply form and posting ]============================================================================ */
 // Delay (in seconds) between posts from the same IP address to help control flooding [0 to disable]

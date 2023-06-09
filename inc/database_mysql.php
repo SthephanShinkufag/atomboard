@@ -116,8 +116,10 @@ function insertPost($post) {
 			`thumb3`,
 			`thumb3_width`,
 			`thumb3_height`,
+			`likes`,
 			`moderated`,
-			`likes`
+			`stickied`,
+			`locked`
 		) VALUES (
 			" . $post['parent'] . ",
 			" . time() . ",
@@ -170,8 +172,10 @@ function insertPost($post) {
 			'" . $post['thumb3'] . "',
 			" . $post['thumb3_width'] . ",
 			" . $post['thumb3_height'] . ",
+			" . $post['likes'] . ",
 			" . $post['moderated'] . ",
-			" . $post['likes'] . "
+			" . $post['stickied'] . ",
+			" . $post['locked'] . "
 		)");
 	return mysql_insert_id();
 }
@@ -183,22 +187,17 @@ function approvePostByID($id) {
 		WHERE `id` = " . $id . " LIMIT 1");
 }
 
-function stickyThreadByID($id, $setsticky) {
+function stickyThreadByID($id, $isStickied) {
 	mysql_query(
 		"UPDATE `" . ATOM_DBPOSTS . "`
-		SET `stickied` = '" . mysql_real_escape_string($setsticky) . "'
+		SET `stickied` = '" . $isStickied . "'
 		WHERE `id` = " . $id . " LIMIT 1");
 }
 
-function lockThreadByID($id, $setlocked) {
-	if ($setlocked == 1) {
-		$setlocked = ATOM_LOCKTHR_COOKIE;
-	} elseif ($setlocked == 0) {
-		$setlocked = '';
-	}
+function lockThreadByID($id, $isLocked) {
 	mysql_query(
 		"UPDATE `" . ATOM_DBPOSTS . "`
-		SET `email` = '" . mysql_real_escape_string($setlocked) . "'
+		SET `locked` = '" . $isLocked . "'
 		WHERE `id` = " . $id . " LIMIT 1");
 }
 

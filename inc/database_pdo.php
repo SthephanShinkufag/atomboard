@@ -78,14 +78,12 @@ if (!$modlog_exists) {
 # Utililty
 function pdoQuery($sql, $params = false) {
 	global $dbh;
-
 	if ($params) {
 		$statement = $dbh->prepare($sql);
 		$statement->execute($params);
 	} else {
 		$statement = $dbh->query($sql);
 	}
-
 	return $statement;
 }
 
@@ -171,9 +169,11 @@ function insertPost($post) {
 			thumb3,
 			thumb3_width,
 			thumb3_height,
+			likes,
 			moderated,
-			likes
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			stickied,
+			locked
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 	$stm->execute(array(
 		$post['parent'],
 		$now,
@@ -226,8 +226,10 @@ function insertPost($post) {
 		$post['thumb3'],
 		$post['thumb3_width'],
 		$post['thumb3_height'],
+		$post['likes'],
 		$post['moderated'],
-		$post['likes']
+		$post['stickied'],
+		$post['locked']
 	));
 	return $dbh->lastInsertId();
 }
@@ -240,25 +242,20 @@ function approvePostByID($id) {
 		array('1', $id));
 }
 
-function stickyThreadByID($id, $setsticky) {
+function stickyThreadByID($id, $isStickied) {
 	pdoQuery(
 		"UPDATE " . ATOM_DBPOSTS . "
 		SET stickied = ?
 		WHERE id = ?",
-		array($setsticky, $id));
+		array($isStickied, $id));
 }
 
-function lockThreadByID($id, $setlocked) {
-	if ($setlocked == 1) {
-		$setlocked = ATOM_LOCKTHR_COOKIE;
-	} elseif ($setlocked == 0) {
-		$setlocked = '';
-	}
+function lockThreadByID($id, $isLocked) {
 	pdoQuery(
 		"UPDATE " . ATOM_DBPOSTS . "
-		SET email = ?
+		SET locked = ?
 		WHERE id = ?",
-		array($setlocked, $id));
+		array($isLocked, $id));
 }
 
 function bumpThreadByID($id) {

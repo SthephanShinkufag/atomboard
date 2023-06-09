@@ -60,9 +60,10 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		"thumb3" varchar(255) NOT NULL,
 		"thumb3_width" smallint NOT NULL default \'0\',
 		"thumb3_height" smallint NOT NULL default \'0\',
-		"stickied" smallint NOT NULL default \'0\',
-		"moderated" smallint NOT NULL default \'1\',
 		"likes" smallint NOT NULL default \'0\',
+		"moderated" smallint NOT NULL default \'1\',
+		"stickied" smallint NOT NULL default \'0\',
+		"locked" smallint NOT NULL default \'0\',
 		PRIMARY KEY ("id")
 	);
 	CREATE INDEX ON "' . ATOM_DBPOSTS . '"("parent");
@@ -155,14 +156,15 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		`thumb3` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 		`thumb3_width` smallint(5) unsigned NOT NULL default '0',
 		`thumb3_height` smallint(5) unsigned NOT NULL default '0',
-		`stickied` tinyint(1) NOT NULL default '0',
-		`moderated` tinyint(1) NOT NULL default '1',
 		`likes` smallint(5) NOT NULL default '0',
+		`moderated` tinyint(1) NOT NULL default '1',
+		`stickied` tinyint(1) NOT NULL default '0',
+		`locked` tinyint(1) NOT NULL default '0',
 		PRIMARY KEY (`id`),
 		KEY `parent` (`parent`),
 		KEY `bumped` (`bumped`),
-		KEY `stickied` (`stickied`),
-		KEY `moderated` (`moderated`)
+		KEY `moderated` (`moderated`),
+		KEY `stickied` (`stickied`)
 	)";
 
 	$bans_sql = "CREATE TABLE `" . ATOM_DBBANS . "` (
@@ -266,8 +268,10 @@ function newPost($parent = ATOM_NEWTHREAD) {
 		'thumb3' => '',
 		'thumb3_width' => '0',
 		'thumb3_height' => '0',
+		'likes' => '0',
+		'moderated' => '1',
 		'stickied' => '0',
-		'moderated' => '1');
+		'locked' => '0');
 }
 
 function convertBytes($number) {

@@ -57,8 +57,9 @@ define('POST_IMAGE3_HEIGHT', 48);
 define('POST_THUMB3', 49);
 define('POST_THUMB3_WIDTH', 50);
 define('POST_THUMB3_HEIGHT', 51);
-define('POST_STICKIED', 52);
-define('POST_LIKES', 53);
+define('POST_LIKES', 52);
+define('POST_STICKIED', 53);
+define('POST_LOCKED', 54);
 
 # Ban Structure
 define('BANS_FILE', '.bans');
@@ -165,37 +166,33 @@ function insertPost($newpost) {
 	$post[POST_THUMB3]               = $newpost['thumb3'];
 	$post[POST_THUMB3_WIDTH]         = $newpost['thumb3_width'];
 	$post[POST_THUMB3_HEIGHT]        = $newpost['thumb3_height'];
-	$post[POST_STICKIED]             = $newpost['stickied'];
 	$post[POST_LIKES]                = $newpost['likes'];
+	$post[POST_STICKIED]             = $newpost['stickied'];
+	$post[POST_LOCKED]               = $newpost['locked'];
 	return $GLOBALS['db']->insertWithAutoId(POSTS_FILE, POST_ID, $post);
 }
 
-function stickyThreadByID($id, $setsticky) {
+function stickyThreadByID($id, $isStickied) {
 	$rows = $GLOBALS['db']->selectWhere(
 		POSTS_FILE,
 		new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON),
 		1);
 	if (count($rows) > 0) {
 		foreach ($rows as $post) {
-			$post[POST_STICKIED] = intval($setsticky);
+			$post[POST_STICKIED] = $isStickied;
 			$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post);
 		}
 	}
 }
 
-function lockThreadByID($id, $setlocked) {
-	if ($setlocked == 1) {
-		$setlocked = ATOM_LOCKTHR_COOKIE;
-	} elseif ($setlocked == 0) {
-		$setlocked = '';
-	}
+function lockThreadByID($id, $isLocked) {
 	$rows = $GLOBALS['db']->selectWhere(
 		POSTS_FILE,
 		new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON),
 		1);
 	if (count($rows) > 0) {
 		foreach ($rows as $post) {
-			$post[POST_EMAIL] = $setlocked;
+			$post[POST_LOCKED] = $isLocked;
 			$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post);
 		}
 	}
@@ -277,8 +274,9 @@ function convertPostsToSQLStyle($posts, $singlepost = false) {
 		$post['thumb3']               = $oldpost[POST_THUMB3];
 		$post['thumb3_width']         = $oldpost[POST_THUMB3_WIDTH];
 		$post['thumb3_height']        = $oldpost[POST_THUMB3_HEIGHT];
-		$post['stickied']             = isset($oldpost[POST_STICKIED]) ? $oldpost[POST_STICKIED] : 0;
 		$post['likes']                = $oldpost[POST_LIKES];
+		$post['stickied']             = $oldpost[POST_STICKIED];
+		$post['locked']               = $oldpost[POST_LOCKED];
 		if ($post['parent'] == '') {
 			$post['parent'] = ATOM_NEWTHREAD;
 		}

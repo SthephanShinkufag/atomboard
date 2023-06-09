@@ -70,8 +70,9 @@ if (!$result->fetchArray()) {
 		thumb3 TEXT NOT NULL,
 		thumb3_width INTEGER NOT NULL DEFAULT '0',
 		thumb3_height INTEGER NOT NULL DEFAULT '0',
+		likes INTEGER NOT NULL DEFAULT '0',
 		stickied INTEGER NOT NULL DEFAULT '0',
-		likes INTEGER NOT NULL DEFAULT '0'
+		locked INTEGER NOT NULL DEFAULT '0'
 	)");
 }
 
@@ -202,7 +203,9 @@ function insertPost($post) {
 			thumb3,
 			thumb3_width,
 			thumb3_height,
-			likes
+			likes,
+			stickied,
+			locked
 		) VALUES (
 			" . $post['parent'] . ",
 			" . time() . ",
@@ -255,29 +258,26 @@ function insertPost($post) {
 			'" . $post['thumb3'] . "',
 			" . $post['thumb3_width'] . ",
 			" . $post['thumb3_height'] . ",
-			" . $post['likes'] . "
+			" . $post['likes'] . ",
+			" . $post['stickied'] . ",
+			" . $post['locked'] . "
 		)");
 	return $db->lastInsertRowID();
 }
 
-function stickyThreadByID($id, $setsticky) {
+function stickyThreadByID($id, $isStickied) {
 	global $db;
 	$db->exec(
 		"UPDATE " . ATOM_DBPOSTS . "
-		SET stickied = '" . $db->escapeString($setsticky) . "'
+		SET stickied = '" . $isStickied . "'
 		WHERE id = " . $id);
 }
 
-function lockThreadByID($id, $setlocked) {
+function lockThreadByID($id, $isLocked) {
 	global $db;
-	if ($setlocked == 1) {
-		$setlocked = ATOM_LOCKTHR_COOKIE;
-	} elseif ($setlocked == 0) {
-		$setlocked = '';
-	}
 	$db->exec(
 		"UPDATE " . ATOM_DBPOSTS . "
-		SET email = '" . $db->escapeString($setlocked) . "'
+		SET locked = '" . $isLocked . "'
 		WHERE id = " . $id);
 }
 
