@@ -3,7 +3,7 @@ if (!defined('ATOM_BOARD')) {
 	die('');
 }
 
-# Post Structure
+# Posts database structure
 define('POSTS_FILE', '.posts');
 define('POST_ID', 0);
 define('POST_PARENT', 1);
@@ -60,8 +60,9 @@ define('POST_THUMB3_HEIGHT', 51);
 define('POST_LIKES', 52);
 define('POST_STICKIED', 53);
 define('POST_LOCKED', 54);
+define('POST_ENDLESS', 55);
 
-# Ban Structure
+# Bans database structure
 define('BANS_FILE', '.bans');
 define('BAN_ID', 0);
 define('BAN_IP', 1);
@@ -69,7 +70,7 @@ define('BAN_TIMESTAMP', 2);
 define('BAN_EXPIRE', 3);
 define('BAN_REASON', 4);
 
-# Likes Structure
+# Likes database structure
 define('LIKES_FILE', '.likes');
 define('LIKES_ID', 0);
 define('LIKES_IP', 1);
@@ -77,7 +78,7 @@ define('LIKES_BOARD', 2);
 define('LIKES_POSTNUM', 3);
 define('LIKES_ISLIKE', 4);
 
-# Modlog Structure
+# Modlog database structure
 define('MODLOG_FILE', '.modlog');
 define('MODLOG_ID', 0);
 define('MODLOG_TIMESTAMP', 1);
@@ -91,25 +92,77 @@ require_once 'flatfile/flatfile.php';
 $db = new Flatfile();
 $db->datadir = 'inc/flatfile/';
 
-# Post Functions
-function uniquePosts() {
-	return 0; // Unsupported by this database option
-}
+/* ==[ Posts ]============================================================================================= */
 
-function postByID($id) {
-	return convertPostsToSQLStyle(
-		$GLOBALS['db']->selectWhere(
-			POSTS_FILE,
-			new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON),
-			1
-		), true);
-}
-
-function threadExistsByID($id) {
-	$compClause = new AndWhereClause();
-	$compClause->add(new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON));
-	$compClause->add(new SimpleWhereClause(POST_PARENT, '=', 0, INTEGER_COMPARISON));
-	return count($GLOBALS['db']->selectWhere(POSTS_FILE, $compClause, 1)) > 0;
+function convertPostsToSQLStyle($posts, $isSinglePost = false) {
+	$newposts = array();
+	foreach ($posts as $oldpost) {
+		$post = newPost(ATOM_NEWTHREAD);
+		$post['id']                   = $oldpost[POST_ID];
+		$post['parent']               = $oldpost[POST_PARENT];
+		$post['timestamp']            = $oldpost[POST_TIMESTAMP];
+		$post['bumped']               = $oldpost[POST_BUMPED];
+		$post['ip']                   = $oldpost[POST_IP];
+		$post['name']                 = $oldpost[POST_NAME];
+		$post['tripcode']             = $oldpost[POST_TRIPCODE];
+		$post['email']                = $oldpost[POST_EMAIL];
+		$post['nameblock']            = $oldpost[POST_NAMEBLOCK];
+		$post['subject']              = $oldpost[POST_SUBJECT];
+		$post['message']              = $oldpost[POST_MESSAGE];
+		$post['password']             = $oldpost[POST_PASSWORD];
+		$post['file0']                = $oldpost[POST_FILE0];
+		$post['file0_hex']            = $oldpost[POST_FILE0_HEX];
+		$post['file0_original']       = $oldpost[POST_FILE0_ORIGINAL];
+		$post['file0_size']           = $oldpost[POST_FILE0_SIZE];
+		$post['file0_size_formatted'] = $oldpost[POST_FILE0_SIZE_FORMATTED];
+		$post['image0_width']         = $oldpost[POST_IMAGE0_WIDTH];
+		$post['image0_height']        = $oldpost[POST_IMAGE0_HEIGHT];
+		$post['thumb0']               = $oldpost[POST_THUMB0];
+		$post['thumb0_width']         = $oldpost[POST_THUMB0_WIDTH];
+		$post['thumb0_height']        = $oldpost[POST_THUMB0_HEIGHT];
+		$post['file1']                = $oldpost[POST_FILE1];
+		$post['file1_hex']            = $oldpost[POST_FILE1_HEX];
+		$post['file1_original']       = $oldpost[POST_FILE1_ORIGINAL];
+		$post['file1_size']           = $oldpost[POST_FILE1_SIZE];
+		$post['file1_size_formatted'] = $oldpost[POST_FILE1_SIZE_FORMATTED];
+		$post['image1_width']         = $oldpost[POST_IMAGE1_WIDTH];
+		$post['image1_height']        = $oldpost[POST_IMAGE1_HEIGHT];
+		$post['thumb1']               = $oldpost[POST_THUMB1];
+		$post['thumb1_width']         = $oldpost[POST_THUMB1_WIDTH];
+		$post['thumb1_height']        = $oldpost[POST_THUMB1_HEIGHT];
+		$post['file2']                = $oldpost[POST_FILE2];
+		$post['file2_hex']            = $oldpost[POST_FILE2_HEX];
+		$post['file2_original']       = $oldpost[POST_FILE2_ORIGINAL];
+		$post['file2_size']           = $oldpost[POST_FILE2_SIZE];
+		$post['file2_size_formatted'] = $oldpost[POST_FILE2_SIZE_FORMATTED];
+		$post['image2_width']         = $oldpost[POST_IMAGE2_WIDTH];
+		$post['image2_height']        = $oldpost[POST_IMAGE2_HEIGHT];
+		$post['thumb2']               = $oldpost[POST_THUMB2];
+		$post['thumb2_width']         = $oldpost[POST_THUMB2_WIDTH];
+		$post['thumb2_height']        = $oldpost[POST_THUMB2_HEIGHT];
+		$post['file3']                = $oldpost[POST_FILE3];
+		$post['file3_hex']            = $oldpost[POST_FILE3_HEX];
+		$post['file3_original']       = $oldpost[POST_FILE3_ORIGINAL];
+		$post['file3_size']           = $oldpost[POST_FILE3_SIZE];
+		$post['file3_size_formatted'] = $oldpost[POST_FILE3_SIZE_FORMATTED];
+		$post['image3_width']         = $oldpost[POST_IMAGE3_WIDTH];
+		$post['image3_height']        = $oldpost[POST_IMAGE3_HEIGHT];
+		$post['thumb3']               = $oldpost[POST_THUMB3];
+		$post['thumb3_width']         = $oldpost[POST_THUMB3_WIDTH];
+		$post['thumb3_height']        = $oldpost[POST_THUMB3_HEIGHT];
+		$post['likes']                = $oldpost[POST_LIKES];
+		$post['stickied']             = $oldpost[POST_STICKIED];
+		$post['locked']               = $oldpost[POST_LOCKED];
+		$post['endless']              = $oldpost[POST_ENDLESS];
+		if ($post['parent'] == '') {
+			$post['parent'] = ATOM_NEWTHREAD;
+		}
+		if ($isSinglePost) {
+			return $post;
+		}
+		$newposts[] = $post;
+	}
+	return $newposts;
 }
 
 function insertPost($newpost) {
@@ -169,182 +222,56 @@ function insertPost($newpost) {
 	$post[POST_LIKES]                = $newpost['likes'];
 	$post[POST_STICKIED]             = $newpost['stickied'];
 	$post[POST_LOCKED]               = $newpost['locked'];
+	$post[POST_ENDLESS]              = $newpost['endless'];
 	return $GLOBALS['db']->insertWithAutoId(POSTS_FILE, POST_ID, $post);
 }
 
-function stickyThreadByID($id, $isStickied) {
-	$rows = $GLOBALS['db']->selectWhere(
+function getPostEntry($id) {
+	return $GLOBALS['db']->selectWhere(
 		POSTS_FILE,
 		new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON),
 		1);
-	if (count($rows) > 0) {
-		foreach ($rows as $post) {
-			$post[POST_STICKIED] = $isStickied;
-			$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post);
-		}
-	}
 }
 
-function lockThreadByID($id, $isLocked) {
-	$rows = $GLOBALS['db']->selectWhere(
-		POSTS_FILE,
-		new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON),
-		1);
-	if (count($rows) > 0) {
-		foreach ($rows as $post) {
-			$post[POST_LOCKED] = $isLocked;
-			$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post);
-		}
-	}
+function getPost($id) {
+	return convertPostsToSQLStyle(getPostEntry($id), true);
 }
 
-function bumpThreadByID($id) {
-	$rows = $GLOBALS['db']->selectWhere(
-		POSTS_FILE,
-		new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON),
-		1);
-	if (count($rows) > 0) {
-		foreach ($rows as $post) {
-			$post[POST_BUMPED] = time();
-			$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post);
-		}
-	}
-}
-
-function countThreads() {
-	$rows = $GLOBALS['db']->selectWhere(
-		POSTS_FILE,
-		new SimpleWhereClause(POST_PARENT, '=', 0, INTEGER_COMPARISON));
-	return count($rows);
-}
-
-function convertPostsToSQLStyle($posts, $singlepost = false) {
-	$newposts = array();
-	foreach ($posts as $oldpost) {
-		$post = newPost();
-		$post['id']                   = $oldpost[POST_ID];
-		$post['parent']               = $oldpost[POST_PARENT];
-		$post['timestamp']            = $oldpost[POST_TIMESTAMP];
-		$post['bumped']               = $oldpost[POST_BUMPED];
-		$post['ip']                   = $oldpost[POST_IP];
-		$post['name']                 = $oldpost[POST_NAME];
-		$post['tripcode']             = $oldpost[POST_TRIPCODE];
-		$post['email']                = $oldpost[POST_EMAIL];
-		$post['nameblock']            = $oldpost[POST_NAMEBLOCK];
-		$post['subject']              = $oldpost[POST_SUBJECT];
-		$post['message']              = $oldpost[POST_MESSAGE];
-		$post['password']             = $oldpost[POST_PASSWORD];
-		$post['file0']                = $oldpost[POST_FILE0];
-		$post['file0_hex']            = $oldpost[POST_FILE0_HEX];
-		$post['file0_original']       = $oldpost[POST_FILE0_ORIGINAL];
-		$post['file0_size']           = $oldpost[POST_FILE0_SIZE];
-		$post['file0_size_formatted'] = $oldpost[POST_FILE0_SIZE_FORMATTED];
-		$post['image0_width']         = $oldpost[POST_IMAGE0_WIDTH];
-		$post['image0_height']        = $oldpost[POST_IMAGE0_HEIGHT];
-		$post['thumb0']               = $oldpost[POST_THUMB0];
-		$post['thumb0_width']         = $oldpost[POST_THUMB0_WIDTH];
-		$post['thumb0_height']        = $oldpost[POST_THUMB0_HEIGHT];
-		$post['file1']                = $oldpost[POST_FILE1];
-		$post['file1_hex']            = $oldpost[POST_FILE1_HEX];
-		$post['file1_original']       = $oldpost[POST_FILE1_ORIGINAL];
-		$post['file1_size']           = $oldpost[POST_FILE1_SIZE];
-		$post['file1_size_formatted'] = $oldpost[POST_FILE1_SIZE_FORMATTED];
-		$post['image1_width']         = $oldpost[POST_IMAGE1_WIDTH];
-		$post['image1_height']        = $oldpost[POST_IMAGE1_HEIGHT];
-		$post['thumb1']               = $oldpost[POST_THUMB1];
-		$post['thumb1_width']         = $oldpost[POST_THUMB1_WIDTH];
-		$post['thumb1_height']        = $oldpost[POST_THUMB1_HEIGHT];
-		$post['file2']                = $oldpost[POST_FILE2];
-		$post['file2_hex']            = $oldpost[POST_FILE2_HEX];
-		$post['file2_original']       = $oldpost[POST_FILE2_ORIGINAL];
-		$post['file2_size']           = $oldpost[POST_FILE2_SIZE];
-		$post['file2_size_formatted'] = $oldpost[POST_FILE2_SIZE_FORMATTED];
-		$post['image2_width']         = $oldpost[POST_IMAGE2_WIDTH];
-		$post['image2_height']        = $oldpost[POST_IMAGE2_HEIGHT];
-		$post['thumb2']               = $oldpost[POST_THUMB2];
-		$post['thumb2_width']         = $oldpost[POST_THUMB2_WIDTH];
-		$post['thumb2_height']        = $oldpost[POST_THUMB2_HEIGHT];
-		$post['file3']                = $oldpost[POST_FILE3];
-		$post['file3_hex']            = $oldpost[POST_FILE3_HEX];
-		$post['file3_original']       = $oldpost[POST_FILE3_ORIGINAL];
-		$post['file3_size']           = $oldpost[POST_FILE3_SIZE];
-		$post['file3_size_formatted'] = $oldpost[POST_FILE3_SIZE_FORMATTED];
-		$post['image3_width']         = $oldpost[POST_IMAGE3_WIDTH];
-		$post['image3_height']        = $oldpost[POST_IMAGE3_HEIGHT];
-		$post['thumb3']               = $oldpost[POST_THUMB3];
-		$post['thumb3_width']         = $oldpost[POST_THUMB3_WIDTH];
-		$post['thumb3_height']        = $oldpost[POST_THUMB3_HEIGHT];
-		$post['likes']                = $oldpost[POST_LIKES];
-		$post['stickied']             = $oldpost[POST_STICKIED];
-		$post['locked']               = $oldpost[POST_LOCKED];
-		if ($post['parent'] == '') {
-			$post['parent'] = ATOM_NEWTHREAD;
-		}
-		if ($singlepost) {
-			return $post;
-		}
-		$newposts[] = $post;
-	}
-	return $newposts;
-}
-
-function allThreads() {
-	$rows = $GLOBALS['db']->selectWhere(
-		POSTS_FILE,
-		new SimpleWhereClause(POST_PARENT, '=', 0, INTEGER_COMPARISON),
-		-1,
-		array(
-			new OrderBy(POST_STICKIED, DESCENDING, INTEGER_COMPARISON),
-			new OrderBy(POST_BUMPED, DESCENDING, INTEGER_COMPARISON)));
-	return convertPostsToSQLStyle($rows);
-}
-
-function numRepliesToThreadByID($id) {
-	$rows = $GLOBALS['db']->selectWhere(
-		POSTS_FILE,
-		new SimpleWhereClause(POST_PARENT, '=', $id, INTEGER_COMPARISON));
-	return count($rows);
-}
-
-function postsInThreadByID($id, $moderated_only = true) {
-	$compClause = new OrWhereClause();
-	$compClause->add(new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON));
-	$compClause->add(new SimpleWhereClause(POST_PARENT, '=', $id, INTEGER_COMPARISON));
-	$rows = $GLOBALS['db']->selectWhere(
-		POSTS_FILE,
-		$compClause,
-		-1,
-		new OrderBy(POST_ID, ASCENDING, INTEGER_COMPARISON));
-	return convertPostsToSQLStyle($rows);
-}
-
-function postsByHex($hex) {
+function getPostsByImageHex($hex) {
 	$compClause = new OrWhereClause();
 	$compClause->add(new SimpleWhereClause(POST_FILE0_HEX, '=', $hex, STRING_COMPARISON));
 	$compClause->add(new SimpleWhereClause(POST_FILE1_HEX, '=', $hex, STRING_COMPARISON));
 	$compClause->add(new SimpleWhereClause(POST_FILE2_HEX, '=', $hex, STRING_COMPARISON));
 	$compClause->add(new SimpleWhereClause(POST_FILE3_HEX, '=', $hex, STRING_COMPARISON));
-	$rows = $GLOBALS['db']->selectWhere(
-		POSTS_FILE,
-		$compClause,
-		1);
-	return convertPostsToSQLStyle($rows);
+	return convertPostsToSQLStyle($GLOBALS['db']->selectWhere(POSTS_FILE, $compClause, 1));
 }
 
-function latestPosts($moderated = true) {
-	$rows = $GLOBALS['db']->selectWhere(
+function getLatestPosts($moderated = true, $count) {
+	return convertPostsToSQLStyle($GLOBALS['db']->selectWhere(
 		POSTS_FILE,
 		NULL,
-		10,
-		new OrderBy(POST_TIMESTAMP, DESCENDING, INTEGER_COMPARISON));
-	return convertPostsToSQLStyle($rows);
+		$count,
+		new OrderBy(POST_TIMESTAMP, DESCENDING, INTEGER_COMPARISON)));
 }
 
-function deletePostByID($id) {
-	$posts = postsInThreadByID($id, false);
+function getLastPostByIP() {
+	return convertPostsToSQLStyle($GLOBALS['db']->selectWhere(
+		POSTS_FILE,
+		new SimpleWhereClause(POST_IP, '=', $_SERVER['REMOTE_ADDR'], STRING_COMPARISON),
+		1,
+		new OrderBy(POST_ID, DESCENDING, INTEGER_COMPARISON)
+	), true);
+}
+
+function getUniquePostersCount() {
+	return 0; // Unsupported by this database option
+}
+
+function deletePost($id) {
+	$posts = getThreadPosts($id, false);
 	foreach ($posts as $post) {
 		if ($post['id'] != $id) {
-			deletePostImages($post);
+			deletePostImagesFiles($post);
 			$GLOBALS['db']->deleteWhere(
 				POSTS_FILE,
 				new SimpleWhereClause(POST_ID, '=', $post['id'], INTEGER_COMPARISON));
@@ -352,139 +279,194 @@ function deletePostByID($id) {
 			$thispost = $post;
 		}
 	}
-	if (isset($thispost)) {
-		if ($thispost['parent'] == 0) {
-			@unlink('res/' . $thispost['id'] . '.html');
-		}
-		deletePostImages($thispost);
-		$GLOBALS['db']->deleteWhere(
-			POSTS_FILE,
-			new SimpleWhereClause(POST_ID, '=', $thispost['id'], INTEGER_COMPARISON));
+	if (!isset($thispost)) {
+		return;
 	}
-}
-
-function deleteImagesByImageID($post, $imgList) {
-	deletePostImages($post, $imgList);
-	if ($imgList && count($imgList) <= ATOM_FILES_COUNT) {
-		foreach ($imgList as $arrayIndex => $index) {
-			$idx10 = intval(trim(basename($index))) * 10;
-			$rows = $GLOBALS['db']->selectWhere(
-				POSTS_FILE,
-				new SimpleWhereClause(POST_ID, '=', $post['id'], INTEGER_COMPARISON),
-				1);
-			if (count($rows) == 0) {
-				continue;
-			}
-			foreach ($rows as $post_) {
-				$post_[POST_FILE0 + $idx10] = '';
-				$post_[POST_FILE0_HEX + $idx10] = '';
-				$post_[POST_FILE0_ORIGINAL + $idx10] = '';
-				$post_[POST_FILE0_SIZE + $idx10] = '0';
-				$post_[POST_FILE0_SIZE_FORMATTED + $idx10] = '';
-				$post_[POST_IMAGE0_WIDTH + $idx10] = '0';
-				$post_[POST_IMAGE0_HEIGHT + $idx10] = '0';
-				$post_[POST_THUMB0 + $idx10] = '';
-				$post_[POST_THUMB0_WIDTH + $idx10] = '0';
-				$post_[POST_THUMB0_HEIGHT + $idx10] = '0';
-				$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post_);
-			}
-		}
+	if ($thispost['parent'] == 0) {
+		@unlink('res/' . $thispost['id'] . '.html');
 	}
-}
-
-function hideImagesByImageID($post, $imgList) {
-	deletePostImagesThumb($post, $imgList);
-	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT) ) {
-		foreach ($imgList as $arrayIndex => $index) {
-			$idx10 = intval(trim(basename($index))) * 10;
-			$rows = $GLOBALS['db']->selectWhere(
-				POSTS_FILE,
-				new SimpleWhereClause(POST_ID, '=', $post['id'], INTEGER_COMPARISON),
-				1);
-			if (count($rows) == 0) {
-				continue;
-			}
-			foreach ($rows as $post_) {
-				$post_[POST_THUMB0 + $idx10] = 'spoiler.png';
-				$post_[POST_THUMB0_WIDTH + $idx10] = ATOM_FILE_MAXW;
-				$post_[POST_THUMB0_HEIGHT + $idx10] = ATOM_FILE_MAXW;
-				$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post_);
-			}
-		}
-	}
-}
-
-function editMessageInPostById($id, $newMessage) {
-	$rows = $GLOBALS['db']->selectWhere(
+	deletePostImagesFiles($thispost);
+	$GLOBALS['db']->deleteWhere(
 		POSTS_FILE,
-		new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON),
-		1);
-	if (count($rows) > 0) {
-		foreach ($rows as $post) {
+		new SimpleWhereClause(POST_ID, '=', $thispost['id'], INTEGER_COMPARISON));
+}
+
+function deletePostImages($post, $imgList) {
+	deletePostImagesFiles($post, $imgList);
+	if (!$imgList || count($imgList) > ATOM_FILES_COUNT) {
+		return;
+	}
+	foreach ($imgList as $arrayIndex => $index) {
+		$idx10 = intval(trim(basename($index))) * 10;
+		$posts = $GLOBALS['db']->selectWhere(
+			POSTS_FILE,
+			new SimpleWhereClause(POST_ID, '=', $post['id'], INTEGER_COMPARISON),
+			1);
+		if (count($posts) == 0) {
+			continue;
+		}
+		foreach ($posts as $post_) {
+			$post_[POST_FILE0 + $idx10] = '';
+			$post_[POST_FILE0_HEX + $idx10] = '';
+			$post_[POST_FILE0_ORIGINAL + $idx10] = '';
+			$post_[POST_FILE0_SIZE + $idx10] = '0';
+			$post_[POST_FILE0_SIZE_FORMATTED + $idx10] = '';
+			$post_[POST_IMAGE0_WIDTH + $idx10] = '0';
+			$post_[POST_IMAGE0_HEIGHT + $idx10] = '0';
+			$post_[POST_THUMB0 + $idx10] = '';
+			$post_[POST_THUMB0_WIDTH + $idx10] = '0';
+			$post_[POST_THUMB0_HEIGHT + $idx10] = '0';
+			$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post_);
+		}
+	}
+}
+
+function hidePostImages($post, $imgList) {
+	deletePostImagesFilesThumbFiles($post, $imgList);
+	if (!$imgList || count($imgList) > ATOM_FILES_COUNT) {
+		return;
+	}
+	foreach ($imgList as $arrayIndex => $index) {
+		$idx10 = intval(trim(basename($index))) * 10;
+		$posts = $GLOBALS['db']->selectWhere(
+			POSTS_FILE,
+			new SimpleWhereClause(POST_ID, '=', $post['id'], INTEGER_COMPARISON),
+			1);
+		if (count($posts) == 0) {
+			continue;
+		}
+		foreach ($posts as $post_) {
+			$post_[POST_THUMB0 + $idx10] = 'spoiler.png';
+			$post_[POST_THUMB0_WIDTH + $idx10] = ATOM_FILE_MAXW;
+			$post_[POST_THUMB0_HEIGHT + $idx10] = ATOM_FILE_MAXW;
+			$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post_);
+		}
+	}
+}
+
+function editPostMessage($id, $newMessage) {
+	$posts = getPostEntry($id);
+	if (count($posts) > 0) {
+		foreach ($posts as $post) {
 			$post[POST_MESSAGE] = $newMessage;
 			$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post);
 		}
 	}
 }
 
-function trimThreads() {
+/* ==[ Threads ]=========================================================================================== */
+
+function isThreadExists($id) {
+	$compClause = new AndWhereClause();
+	$compClause->add(new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON));
+	$compClause->add(new SimpleWhereClause(POST_PARENT, '=', 0, INTEGER_COMPARISON));
+	return count($GLOBALS['db']->selectWhere(POSTS_FILE, $compClause, 1)) > 0;
+}
+
+function getThreads() {
+	return convertPostsToSQLStyle($GLOBALS['db']->selectWhere(
+		POSTS_FILE,
+		new SimpleWhereClause(POST_PARENT, '=', 0, INTEGER_COMPARISON),
+		-1,
+		array(
+			new OrderBy(POST_STICKIED, DESCENDING, INTEGER_COMPARISON),
+			new OrderBy(POST_BUMPED, DESCENDING, INTEGER_COMPARISON))));
+}
+
+function getThreadsCount() {
+	return count($GLOBALS['db']->selectWhere(
+		POSTS_FILE,
+		new SimpleWhereClause(POST_PARENT, '=', 0, INTEGER_COMPARISON)));
+}
+
+function trimThreadsCount() {
 	if (ATOM_MAXTHREADS > 0) {
-		$numthreads = countThreads();
-		if ($numthreads > ATOM_MAXTHREADS) {
-			$allthreads = allThreads();
-			for ($i = ATOM_MAXTHREADS; $i < $numthreads; $i++) {
-				deletePostByID($allthreads[$i]['id']);
+		$numThreads = getThreadsCount();
+		if ($numThreads > ATOM_MAXTHREADS) {
+			$getThreads = getThreads();
+			for ($i = ATOM_MAXTHREADS; $i < $numThreads; $i++) {
+				deletePost($getThreads[$i]['id']);
 			}
 		}
 	}
 }
 
-function lastPostByIP() {
-	$rows = $GLOBALS['db']->selectWhere(
+function getThreadPosts($id, $moderatedOnly = true) {
+	$compClause = new OrWhereClause();
+	$compClause->add(new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON));
+	$compClause->add(new SimpleWhereClause(POST_PARENT, '=', $id, INTEGER_COMPARISON));
+	return convertPostsToSQLStyle($GLOBALS['db']->selectWhere(
 		POSTS_FILE,
-		new SimpleWhereClause(POST_IP, '=', $_SERVER['REMOTE_ADDR'], STRING_COMPARISON),
-		1,
-		new OrderBy(POST_ID, DESCENDING, INTEGER_COMPARISON));
-	return convertPostsToSQLStyle($rows, true);
+		$compClause,
+		-1,
+		new OrderBy(POST_ID, ASCENDING, INTEGER_COMPARISON)));
 }
 
-function likePostByID($id, $ip) {
-	$compClause = new AndWhereClause();
-	$compClause->add(new SimpleWhereClause(LIKES_IP, '=', $ip, STRING_COMPARISON));
-	$compClause->add(new SimpleWhereClause(LIKES_BOARD, '=', ATOM_BOARD, STRING_COMPARISON));
-	$compClause->add(new SimpleWhereClause(LIKES_POSTNUM, '=', $id, INTEGER_COMPARISON));
-	$rows = $GLOBALS['db']->selectWhere(LIKES_FILE, $compClause);
-	$isAlreadyLiked = count($rows);
-	if ($isAlreadyLiked) {
-		$GLOBALS['db']->deleteWhere(LIKES_FILE, $compClause);
-	} else {
-		$like = array();
-		$like[LIKES_ID] = '0';
-		$like[LIKES_IP] = $ip;
-		$like[LIKES_BOARD] = ATOM_BOARD;
-		$like[LIKES_POSTNUM] = $id;
-		$like[LIKES_ISLIKE] = '1';
-		$GLOBALS['db']->insertWithAutoId(LIKES_FILE, LIKES_ID, $like);
-	}
-	$compClause = new AndWhereClause();
-	$compClause->add(new SimpleWhereClause(LIKES_BOARD, '=', ATOM_BOARD, STRING_COMPARISON));
-	$compClause->add(new SimpleWhereClause(LIKES_POSTNUM, '=', $id, INTEGER_COMPARISON));
-	$rows = $GLOBALS['db']->selectWhere(LIKES_FILE, $compClause);
-	$countOfPostLikes = count($rows);
-	$rows = $GLOBALS['db']->selectWhere(
+function getThreadPostsCount($id) {
+	return count($GLOBALS['db']->selectWhere(
 		POSTS_FILE,
-		new SimpleWhereClause(POST_ID, '=', $id, INTEGER_COMPARISON),
-		1);
-	if (count($rows) > 0) {
-		foreach ($rows as $post) {
-			$post[POST_LIKES] = $countOfPostLikes;
+		new SimpleWhereClause(POST_PARENT, '=', $id, INTEGER_COMPARISON)));
+}
+
+function toggleStickyThread($id, $isStickied) {
+	$posts = getPostEntry($id);
+	if (count($posts) > 0) {
+		foreach ($posts as $post) {
+			$post[POST_STICKIED] = $isStickied;
 			$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post);
 		}
 	}
-	return array(!$isAlreadyLiked, $countOfPostLikes);
 }
 
-# Ban Functions
+function toggleLockThread($id, $isLocked) {
+	$posts = getPostEntry($id);
+	if (count($posts) > 0) {
+		foreach ($posts as $post) {
+			$post[POST_LOCKED] = $isLocked;
+			$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post);
+		}
+	}
+}
+
+function toggleEndlessThread($id, $isEndless) {
+	$posts = getPostEntry($id);
+	if (count($posts) > 0) {
+		foreach ($posts as $post) {
+			$post[POST_ENDLESS] = $isEndless;
+			$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post);
+		}
+	}
+}
+
+function bumpThread($id) {
+	$posts = getPostEntry($id);
+	if (count($posts) > 0) {
+		foreach ($posts as $post) {
+			$post[POST_BUMPED] = time();
+			$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post);
+		}
+	}
+}
+
+/* ==[ Bans ]============================================================================================== */
+
+function convertBansToSQLStyle($bans, $isSingleBan = false) {
+	$newbans = array();
+	foreach ($bans as $oldban) {
+		$ban = array(
+			'id' => $oldban[BAN_ID],
+			'ip' => $oldban[BAN_IP],
+			'timestamp' => $oldban[BAN_TIMESTAMP],
+			'expire' => $oldban[BAN_EXPIRE],
+			'reason' => $oldban[BAN_REASON]);
+		if ($isSingleBan) {
+			return $ban;
+		}
+		$newbans[] = $ban;
+	}
+	return $newbans;
+}
+
 function banByID($id) {
 	return convertBansToSQLStyle($GLOBALS['db']->selectWhere(
 		BANS_FILE,
@@ -501,40 +483,26 @@ function banByIP($ip) {
 	), true);
 }
 
-function allBans() {
-	$rows = $GLOBALS['db']->selectWhere(
+function getAllBans() {
+	return convertBansToSQLStyle($GLOBALS['db']->selectWhere(
 		BANS_FILE,
 		NULL,
 		-1,
-		new OrderBy(BAN_TIMESTAMP, DESCENDING, INTEGER_COMPARISON));
-	return convertBansToSQLStyle($rows);
+		new OrderBy(BAN_TIMESTAMP, DESCENDING, INTEGER_COMPARISON)));
 }
 
-function convertBansToSQLStyle($bans, $singleban = false) {
-	$newbans = array();
-	foreach ($bans as $oldban) {
-		$ban = array(
-			'id' => $oldban[BAN_ID],
-			'ip' => $oldban[BAN_IP],
-			'timestamp' => $oldban[BAN_TIMESTAMP],
-			'expire' => $oldban[BAN_EXPIRE],
-			'reason' => $oldban[BAN_REASON]);
-		if ($singleban) {
-			return $ban;
-		}
-		$newbans[] = $ban;
-	}
-	return $newbans;
+function insertBan($ban) {
+	$newban = array();
+	$newban[BAN_ID] = '0';
+	$newban[BAN_IP] = $ban['ip'];
+	$newban[BAN_TIMESTAMP] = time();
+	$newban[BAN_EXPIRE] = $ban['expire'];
+	$newban[BAN_REASON] = $ban['reason'];
+	return $GLOBALS['db']->insertWithAutoId(BANS_FILE, BAN_ID, $newban);
 }
 
-function insertBan($newban) {
-	$ban = array();
-	$ban[BAN_ID] = '0';
-	$ban[BAN_IP] = $newban['ip'];
-	$ban[BAN_TIMESTAMP] = time();
-	$ban[BAN_EXPIRE] = $newban['expire'];
-	$ban[BAN_REASON] = $newban['reason'];
-	return $GLOBALS['db']->insertWithAutoId(BANS_FILE, BAN_ID, $ban);
+function deleteBan($id) {
+	$GLOBALS['db']->deleteWhere(BANS_FILE, new SimpleWhereClause(BAN_ID, '=', $id, INTEGER_COMPARISON));
 }
 
 function clearExpiredBans() {
@@ -543,23 +511,11 @@ function clearExpiredBans() {
 	$compClause->add(new SimpleWhereClause(BAN_EXPIRE, '<=', time(), INTEGER_COMPARISON));
 	$bans = $GLOBALS['db']->selectWhere(BANS_FILE, $compClause, -1);
 	foreach ($bans as $ban) {
-		deleteBanByID($ban[BAN_ID]);
+		deleteBan($ban[BAN_ID]);
 	}
 }
 
-function deleteBanByID($id) {
-	$GLOBALS['db']->deleteWhere(BANS_FILE, new SimpleWhereClause(BAN_ID, '=', $id, INTEGER_COMPARISON));
-}
-
-// Likes functions
-function allLikes() {
-	$rows = $GLOBALS['db']->selectWhere(
-		LIKES_FILE,
-		NULL,
-		-1,
-		new OrderBy(LIKES_ID, ASCENDING, INTEGER_COMPARISON));
-	return convertLikesToSQLStyle($rows);
-}
+/* ==[ Likes ]============================================================================================= */
 
 function convertLikesToSQLStyle($likes) {
 	$newlikes = array();
@@ -574,7 +530,47 @@ function convertLikesToSQLStyle($likes) {
 	return $newlikes;
 }
 
-// Modlog functions
+function getAllLikes() {
+	return convertLikesToSQLStyle($GLOBALS['db']->selectWhere(
+		LIKES_FILE,
+		NULL,
+		-1,
+		new OrderBy(LIKES_ID, ASCENDING, INTEGER_COMPARISON)));
+}
+
+function toggleLikePost($id, $ip) {
+	$compClause = new AndWhereClause();
+	$compClause->add(new SimpleWhereClause(LIKES_IP, '=', $ip, STRING_COMPARISON));
+	$compClause->add(new SimpleWhereClause(LIKES_BOARD, '=', ATOM_BOARD, STRING_COMPARISON));
+	$compClause->add(new SimpleWhereClause(LIKES_POSTNUM, '=', $id, INTEGER_COMPARISON));
+	$isAlreadyLiked = count($GLOBALS['db']->selectWhere(LIKES_FILE, $compClause));
+	if ($isAlreadyLiked) {
+		$GLOBALS['db']->deleteWhere(LIKES_FILE, $compClause);
+	} else {
+		$like = array();
+		$like[LIKES_ID] = '0';
+		$like[LIKES_IP] = $ip;
+		$like[LIKES_BOARD] = ATOM_BOARD;
+		$like[LIKES_POSTNUM] = $id;
+		$like[LIKES_ISLIKE] = '1';
+		$GLOBALS['db']->insertWithAutoId(LIKES_FILE, LIKES_ID, $like);
+	}
+	$compClause = new AndWhereClause();
+	$compClause->add(new SimpleWhereClause(LIKES_BOARD, '=', ATOM_BOARD, STRING_COMPARISON));
+	$compClause->add(new SimpleWhereClause(LIKES_POSTNUM, '=', $id, INTEGER_COMPARISON));
+	$countOfPostLikes = count($GLOBALS['db']->selectWhere(LIKES_FILE, $compClause));
+	$posts = getPostEntry($id);
+	if (count($posts) > 0) {
+		foreach ($posts as $post) {
+			$post[POST_LIKES] = $countOfPostLikes;
+			$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post);
+		}
+	}
+	return array(!$isAlreadyLiked, $countOfPostLikes);
+}
+
+/* ==[ Modlog ]============================================================================================ */
+
 function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	$records = array();
 	$rows = array();

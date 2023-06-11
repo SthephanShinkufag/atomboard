@@ -19,7 +19,7 @@ function getCookie(name) {
 
 function unhighlightPosts() {
 	var els = $Q('.highlighted');
-	for(var i = 0, len = els.length; i < len; ++i) {
+	for (var i = 0, len = els.length; i < len; ++i) {
 		els[i].classList.remove('highlighted');
 	}
 }
@@ -185,11 +185,11 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 	}
 	var hash = window.location.hash;
-	if(hash) {
+	if (hash) {
 		var hashMatch = hash.match(/^#q([0-9]+)$/i);
 		if (hashMatch && hashMatch[1]) {
 			quotePost(hashMatch[1]);
-		} else if((hashMatch = hash.match(/^#([0-9]+)$/i)) && hashMatch[1]) {
+		} else if ((hashMatch = hash.match(/^#([0-9]+)$/i)) && hashMatch[1]) {
 			highlightPost(hashMatch[1]);
 		}
 	}
@@ -200,26 +200,26 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 	var handleEvent = function(e) {
 		var targetEl = e.target;
-		if(targetEl.classList.contains('posteruid')) {
-			if(e.type === 'click') {
+		if (targetEl.classList.contains('posteruid')) {
+			if (e.type === 'click') {
 				unhighlightPosts();
 				var uid = targetEl.textContent;
-				if(highlightedUID === uid) {
+				if (highlightedUID === uid) {
 					highlightedUID = null;
 					e.preventDefault();
 					return;
 				}
 				highlightedUID = uid;
 				var matchedEls = $Q('.posteruid[data-uid="' + uid + '"]');
-				for(var i = 0, len = matchedEls.length; i < len; ++i) {
+				for (var i = 0, len = matchedEls.length; i < len; ++i) {
 					var post = matchedEls[i];
-					while(!post.classList.contains('reply') && !post.classList.contains('oppost')) {
+					while (!post.classList.contains('reply') && !post.classList.contains('oppost')) {
 						post = post.parentNode;
 					}
 					post.classList.add('highlighted');
 				}
 				e.preventDefault();
-			} else if(e.type === 'mouseover') {
+			} else if (e.type === 'mouseover') {
 				targetEl.title = 'Click to highlight posts by (' + targetEl.textContent + ')';
 			}
 		}

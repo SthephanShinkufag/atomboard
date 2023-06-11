@@ -37,30 +37,7 @@ if (mysql_num_rows(mysql_query("SHOW TABLES LIKE '" . ATOM_DBMODLOG . "'")) == 0
 	mysql_query($modlog_sql);
 }
 
-# Post Functions
-function uniquePosts() {
-	$row = mysql_fetch_row(mysql_query(
-		"SELECT COUNT(DISTINCT(`ip`)) FROM " . ATOM_DBPOSTS));
-	return $row[0];
-}
-
-function postByID($id) {
-	$result = mysql_query(
-		"SELECT * FROM `" . ATOM_DBPOSTS . "`
-		WHERE `id` = '" . mysql_real_escape_string($id) . "' LIMIT 1");
-	if ($result) {
-		while ($post = mysql_fetch_assoc($result)) {
-			return $post;
-		}
-	}
-}
-
-function threadExistsByID($id) {
-	return mysql_result(mysql_query(
-		"SELECT COUNT(*) FROM `" . ATOM_DBPOSTS . "`
-		WHERE `id` = '" . mysql_real_escape_string($id) . "'
-		AND `parent` = 0 AND `moderated` = 1 LIMIT 1"), 0, 0) > 0;
-}
+/* ==[ Posts ]============================================================================================= */
 
 function insertPost($post) {
 	mysql_query(
@@ -119,7 +96,8 @@ function insertPost($post) {
 			`likes`,
 			`moderated`,
 			`stickied`,
-			`locked`
+			`locked`,
+			`endless`
 		) VALUES (
 			" . $post['parent'] . ",
 			" . time() . ",
@@ -175,81 +153,24 @@ function insertPost($post) {
 			" . $post['likes'] . ",
 			" . $post['moderated'] . ",
 			" . $post['stickied'] . ",
-			" . $post['locked'] . "
+			" . $post['locked'] . ",
+			" . $post['endless'] . "
 		)");
 	return mysql_insert_id();
 }
 
-function approvePostByID($id) {
-	mysql_query(
-		"UPDATE `" . ATOM_DBPOSTS .
-		"` SET `moderated` = 1
-		WHERE `id` = " . $id . " LIMIT 1");
-}
-
-function stickyThreadByID($id, $isStickied) {
-	mysql_query(
-		"UPDATE `" . ATOM_DBPOSTS . "`
-		SET `stickied` = '" . $isStickied . "'
-		WHERE `id` = " . $id . " LIMIT 1");
-}
-
-function lockThreadByID($id, $isLocked) {
-	mysql_query(
-		"UPDATE `" . ATOM_DBPOSTS . "`
-		SET `locked` = '" . $isLocked . "'
-		WHERE `id` = " . $id . " LIMIT 1");
-}
-
-function bumpThreadByID($id) {
-	mysql_query(
-		"UPDATE `" . ATOM_DBPOSTS . "`
-		SET `bumped` = " . time() . "
-		WHERE `id` = " . $id . " LIMIT 1");
-}
-
-function countThreads() {
-	return mysql_result(mysql_query(
-		"SELECT COUNT(*) FROM `" . ATOM_DBPOSTS . "`
-		WHERE `parent` = 0 AND `moderated` = 1"), 0, 0);
-}
-
-function allThreads() {
-	$threads = array();
+function getPost($id) {
 	$result = mysql_query(
 		"SELECT * FROM `" . ATOM_DBPOSTS . "`
-		WHERE `parent` = 0 AND `moderated` = 1
-		ORDER BY `stickied` DESC, `bumped` DESC");
-	if ($result) {
-		while ($thread = mysql_fetch_assoc($result)) {
-			$threads[] = $thread;
-		}
-	}
-	return $threads;
-}
-
-function numRepliesToThreadByID($id) {
-	return mysql_result(mysql_query(
-		"SELECT COUNT(*) FROM `" . ATOM_DBPOSTS . "`
-		WHERE `parent` = " . $id . " AND `moderated` = 1"), 0, 0);
-}
-
-function postsInThreadByID($id, $moderated_only = true) {
-	$posts = array();
-	$result = mysql_query(
-		"SELECT * FROM `" . ATOM_DBPOSTS . "`
-		WHERE (`id` = " . $id . " OR `parent` = " . $id . ")" .
-		($moderated_only ? " AND `moderated` = 1" : "") .
-		" ORDER BY `id` ASC");
+		WHERE `id` = '" . mysql_real_escape_string($id) . "' LIMIT 1");
 	if ($result) {
 		while ($post = mysql_fetch_assoc($result)) {
-			$posts[] = $post;
+			return $post;
 		}
 	}
-	return $posts;
 }
 
-function postsByHex($hex) {
+function getPostsByImageHex($hex) {
 	$posts = array();
 	$result = mysql_query(
 		"SELECT `id`, `parent` FROM `" . ATOM_DBPOSTS . "`
@@ -267,12 +188,12 @@ function postsByHex($hex) {
 	return $posts;
 }
 
-function latestPosts($moderated = true) {
+function getLatestPosts($moderated = true, $limit) {
 	$posts = array();
 	$result = mysql_query(
 		"SELECT * FROM `" . ATOM_DBPOSTS . "`
 		WHERE `moderated` = " . ($moderated ? '1' : '0') . "
-		ORDER BY `timestamp` DESC LIMIT 10");
+		ORDER BY `timestamp` DESC LIMIT " . $limit);
 	if ($result) {
 		while ($post = mysql_fetch_assoc($result)) {
 			$posts[] = $post;
@@ -281,11 +202,36 @@ function latestPosts($moderated = true) {
 	return $posts;
 }
 
-function deletePostByID($id) {
-	$posts = postsInThreadByID($id, false);
+function getLastPostByIP() {
+	$replies = mysql_query(
+		"SELECT * FROM `" . ATOM_DBPOSTS . "`
+		WHERE `ip` = '" . $_SERVER['REMOTE_ADDR'] . "'
+		ORDER BY `id` DESC LIMIT 1");
+	if ($replies) {
+		while ($post = mysql_fetch_assoc($replies)) {
+			return $post;
+		}
+	}
+}
+
+function getUniquePostersCount() {
+	$row = mysql_fetch_row(mysql_query(
+		"SELECT COUNT(DISTINCT(`ip`)) FROM " . ATOM_DBPOSTS));
+	return $row[0];
+}
+
+function approvePost($id) {
+	mysql_query(
+		"UPDATE `" . ATOM_DBPOSTS .
+		"` SET `moderated` = 1
+		WHERE `id` = " . $id . " LIMIT 1");
+}
+
+function deletePost($id) {
+	$posts = getThreadPosts($id, false);
 	foreach ($posts as $post) {
 		if ($post['id'] != $id) {
-			deletePostImages($post);
+			deletePostImagesFiles($post);
 			mysql_query(
 				"DELETE FROM `" . ATOM_DBPOSTS . "`
 				WHERE `id` = " . $post['id'] . " LIMIT 1");
@@ -297,15 +243,15 @@ function deletePostByID($id) {
 		if ($thispost['parent'] == ATOM_NEWTHREAD) {
 			@unlink('res/' . $thispost['id'] . '.html');
 		}
-		deletePostImages($thispost);
+		deletePostImagesFiles($thispost);
 		mysql_query(
 			"DELETE FROM `" . ATOM_DBPOSTS . "`
 			WHERE `id` = " . $thispost['id'] . " LIMIT 1");
 	}
 }
 
-function deleteImagesByImageID($post, $imgList) {
-	deletePostImages($post, $imgList);
+function deletePostImages($post, $imgList) {
+	deletePostImagesFiles($post, $imgList);
 	if ($imgList && count($imgList) <= ATOM_FILES_COUNT) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
@@ -326,8 +272,8 @@ function deleteImagesByImageID($post, $imgList) {
 	}
 }
 
-function hideImagesByImageID($post, $imgList) {
-	deletePostImagesThumb($post, $imgList);
+function hidePostImages($post, $imgList) {
+	deletePostImagesFilesThumbFiles($post, $imgList);
 	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT) ) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
@@ -341,13 +287,42 @@ function hideImagesByImageID($post, $imgList) {
 	}
 }
 
-function editMessageInPostById($id, $newMessage) {
+function editPostMessage($id, $newMessage) {
 	mysql_query("UPDATE `" . ATOM_DBPOSTS . "`
 		SET `message` = '" . $newMessage . "'
 		WHERE `id` = " . $id . " LIMIT 1");
 }
 
-function trimThreads() {
+/* ==[ Threads ]=========================================================================================== */
+
+function isThreadExists($id) {
+	return mysql_result(mysql_query(
+		"SELECT COUNT(*) FROM `" . ATOM_DBPOSTS . "`
+		WHERE `id` = '" . mysql_real_escape_string($id) . "'
+		AND `parent` = 0 AND `moderated` = 1 LIMIT 1"), 0, 0) > 0;
+}
+
+function getThreads() {
+	$threads = array();
+	$result = mysql_query(
+		"SELECT * FROM `" . ATOM_DBPOSTS . "`
+		WHERE `parent` = 0 AND `moderated` = 1
+		ORDER BY `stickied` DESC, `bumped` DESC");
+	if ($result) {
+		while ($thread = mysql_fetch_assoc($result)) {
+			$threads[] = $thread;
+		}
+	}
+	return $threads;
+}
+
+function getThreadsCount() {
+	return mysql_result(mysql_query(
+		"SELECT COUNT(*) FROM `" . ATOM_DBPOSTS . "`
+		WHERE `parent` = 0 AND `moderated` = 1"), 0, 0);
+}
+
+function trimThreadsCount() {
 	if (ATOM_MAXTHREADS > 0) {
 		$result = mysql_query(
 			"SELECT `id` FROM `" . ATOM_DBPOSTS . "`
@@ -355,25 +330,133 @@ function trimThreads() {
 			ORDER BY `stickied` DESC, `bumped` DESC LIMIT " . ATOM_MAXTHREADS . ", 10");
 		if ($result) {
 			while ($post = mysql_fetch_assoc($result)) {
-				deletePostByID($post['id']);
+				deletePost($post['id']);
 			}
 		}
 	}
 }
 
-function lastPostByIP() {
-	$replies = mysql_query(
+function getThreadPosts($id, $moderatedOnly = true) {
+	$posts = array();
+	$result = mysql_query(
 		"SELECT * FROM `" . ATOM_DBPOSTS . "`
-		WHERE `ip` = '" . $_SERVER['REMOTE_ADDR'] . "'
-		ORDER BY `id` DESC LIMIT 1");
-	if ($replies) {
-		while ($post = mysql_fetch_assoc($replies)) {
-			return $post;
+		WHERE (`id` = " . $id . " OR `parent` = " . $id . ")" .
+		($moderatedOnly ? " AND `moderated` = 1" : "") .
+		" ORDER BY `id` ASC");
+	if ($result) {
+		while ($post = mysql_fetch_assoc($result)) {
+			$posts[] = $post;
+		}
+	}
+	return $posts;
+}
+
+function getThreadPostsCount($id) {
+	return mysql_result(mysql_query(
+		"SELECT COUNT(*) FROM `" . ATOM_DBPOSTS . "`
+		WHERE `parent` = " . $id . " AND `moderated` = 1"), 0, 0);
+}
+
+function toggleStickyThread($id, $isStickied) {
+	mysql_query(
+		"UPDATE `" . ATOM_DBPOSTS . "`
+		SET `stickied` = '" . $isStickied . "'
+		WHERE `id` = " . $id . " LIMIT 1");
+}
+
+function toggleLockThread($id, $isLocked) {
+	mysql_query(
+		"UPDATE `" . ATOM_DBPOSTS . "`
+		SET `locked` = '" . $isLocked . "'
+		WHERE `id` = " . $id . " LIMIT 1");
+}
+
+function toggleEndlessThread($id, $isEndless) {
+	mysql_query(
+		"UPDATE `" . ATOM_DBPOSTS . "`
+		SET `endless` = '" . $isEndless . "'
+		WHERE `id` = " . $id . " LIMIT 1");
+}
+
+function bumpThread($id) {
+	mysql_query(
+		"UPDATE `" . ATOM_DBPOSTS . "`
+		SET `bumped` = " . time() . "
+		WHERE `id` = " . $id . " LIMIT 1");
+}
+
+/* ==[ Bans ]============================================================================================== */
+
+function banByID($id) {
+	$result = mysql_query(
+		"SELECT * FROM `" . ATOM_DBBANS . "`
+		WHERE `id` = '" . mysql_real_escape_string($id) . "' LIMIT 1");
+	if ($result) {
+		while ($ban = mysql_fetch_assoc($result)) {
+			return $ban;
 		}
 	}
 }
 
-function likePostByID($id, $ip) {
+function banByIP($ip) {
+	$result = mysql_query(
+		"SELECT * FROM `" . ATOM_DBBANS . "`
+		WHERE `ip` = '" . mysql_real_escape_string($ip) . "' LIMIT 1");
+	if ($result) {
+		while ($ban = mysql_fetch_assoc($result)) {
+			return $ban;
+		}
+	}
+}
+
+function getAllBans() {
+	$bans = array();
+	$result = mysql_query(
+		"SELECT * FROM `" . ATOM_DBBANS . "`
+		ORDER BY `timestamp` DESC");
+	if ($result) {
+		while ($ban = mysql_fetch_assoc($result)) {
+			$bans[] = $ban;
+		}
+	}
+	return $bans;
+}
+
+function insertBan($ban) {
+	mysql_query(
+		"INSERT INTO `" . ATOM_DBBANS . "`
+		(`ip`, `timestamp`, `expire`, `reason`)
+		VALUES (
+			'" . mysql_real_escape_string($ban['ip']) . "',
+			" . time() . ",
+			'" . mysql_real_escape_string($ban['expire']) . "',
+			'" . mysql_real_escape_string($ban['reason']) . "'
+		)");
+	return mysql_insert_id();
+}
+
+function deleteBan($id) {
+	mysql_query(
+		"DELETE FROM `" . ATOM_DBBANS . "`
+		WHERE `id` = " . mysql_real_escape_string($id) . " LIMIT 1");
+}
+
+function clearExpiredBans() {
+	$result = mysql_query(
+		"SELECT * FROM `" . ATOM_DBBANS . "`
+		WHERE `expire` > 0 AND `expire` <= " . time());
+	if ($result) {
+		while ($ban = mysql_fetch_assoc($result)) {
+			mysql_query(
+				"DELETE FROM `" . ATOM_DBBANS . "`
+				WHERE `id` = " . $ban['id'] . " LIMIT 1");
+		}
+	}
+}
+
+/* ==[ Likes ]============================================================================================= */
+
+function toggleLikePost($id, $ip) {
 	$isAlreadyLiked = mysql_result(mysql_query(
 		"SELECT COUNT(*) FROM `" . ATOM_DBLIKES . "`
 		WHERE `ip` = '" . $ip . "'
@@ -401,75 +484,8 @@ function likePostByID($id, $ip) {
 	return array(!$isAlreadyLiked, $countOfPostLikes);
 }
 
-# Ban Functions
-function banByID($id) {
-	$result = mysql_query(
-		"SELECT * FROM `" . ATOM_DBBANS . "`
-		WHERE `id` = '" . mysql_real_escape_string($id) . "' LIMIT 1");
-	if ($result) {
-		while ($ban = mysql_fetch_assoc($result)) {
-			return $ban;
-		}
-	}
-}
+/* ==[ Modlog ]============================================================================================ */
 
-function banByIP($ip) {
-	$result = mysql_query(
-		"SELECT * FROM `" . ATOM_DBBANS . "`
-		WHERE `ip` = '" . mysql_real_escape_string($ip) . "' LIMIT 1");
-	if ($result) {
-		while ($ban = mysql_fetch_assoc($result)) {
-			return $ban;
-		}
-	}
-}
-
-function allBans() {
-	$bans = array();
-	$result = mysql_query(
-		"SELECT * FROM `" . ATOM_DBBANS . "`
-		ORDER BY `timestamp` DESC");
-	if ($result) {
-		while ($ban = mysql_fetch_assoc($result)) {
-			$bans[] = $ban;
-		}
-	}
-	return $bans;
-}
-
-function insertBan($ban) {
-	mysql_query(
-		"INSERT INTO `" . ATOM_DBBANS . "`
-		(`ip`, `timestamp`, `expire`, `reason`)
-		VALUES (
-			'" . mysql_real_escape_string($ban['ip']) . "',
-			" . time() . ",
-			'" . mysql_real_escape_string($ban['expire']) . "',
-			'" . mysql_real_escape_string($ban['reason']) . "'
-		)");
-	return mysql_insert_id();
-}
-
-function clearExpiredBans() {
-	$result = mysql_query(
-		"SELECT * FROM `" . ATOM_DBBANS . "`
-		WHERE `expire` > 0 AND `expire` <= " . time());
-	if ($result) {
-		while ($ban = mysql_fetch_assoc($result)) {
-			mysql_query(
-				"DELETE FROM `" . ATOM_DBBANS . "`
-				WHERE `id` = " . $ban['id'] . " LIMIT 1");
-		}
-	}
-}
-
-function deleteBanByID($id) {
-	mysql_query(
-		"DELETE FROM `" . ATOM_DBBANS . "`
-		WHERE `id` = " . mysql_real_escape_string($id) . " LIMIT 1");
-}
-
-// Modlog functions
 function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	$records = array();
 	// If we need a modlog for the admin panel with all public+private records

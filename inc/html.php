@@ -3,6 +3,8 @@ if (!defined('ATOM_BOARD')) {
 	die('');
 }
 
+/* ==[ Page elements ]===================================================================================== */
+
 function pageHeader() {
 	return '<!DOCTYPE html>
 
@@ -17,8 +19,8 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARDDESC . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023060900">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023060900"></script>' .
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023061100">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023061100"></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') .
 	ATOM_HTML_HEAD . '
@@ -97,6 +99,8 @@ function pageFooter() {
 </html>';
 }
 
+/* ==[ Postform ]========================================================================================== */
+
 function supportedFileTypes() {
 	global $atom_uploads;
 	if (empty($atom_uploads)) {
@@ -170,10 +174,10 @@ function buildPostForm($parent, $isRawPost = false) {
 				' (new thread) or ' . ATOM_FILE_MAXW . 'x' . ATOM_FILE_MAXH . ' (reply)'
 			) . ' will be thumbnailed.</li>';
 	}
-	$uniquePostsHtml = '';
-	$uniquePosts = uniquePosts();
-	if ($uniquePosts > 0) {
-		$uniquePostsHtml = '<li>Currently ' . $uniquePosts . ' unique users.</li>';
+	$getUniquePostersCountHtml = '';
+	$getUniquePostersCount = getUniquePostersCount();
+	if ($getUniquePostersCount > 0) {
+		$getUniquePostersCountHtml = '<li>Currently ' . $getUniquePostersCount . ' unique users.</li>';
 	}
 
 	// Build postform
@@ -294,7 +298,7 @@ function buildPostForm($parent, $isRawPost = false) {
 								' . $fileTypesHtml . '
 								' . $maxFileSizeRulesHtml . '
 								' . $thumbnailsHtml . '
-								' . $uniquePostsHtml . '
+								' . $getUniquePostersCountHtml . '
 							</ul>
 						</td>
 					</tr>' .
@@ -314,18 +318,20 @@ function buildPostForm($parent, $isRawPost = false) {
 		</div>';
 }
 
+/* ==[ Post ]============================================================================================== */
+
 function buildPostBacklinks($id, $thrId) {
 	if (!ATOM_BACKLINKS) {
 		return '';
 	}
 	$str = '';
 	$match = '&gt;&gt;' . $id . '<';
-	$posts = postsInThreadByID($thrId);
+	$posts = getThreadPosts($thrId);
 	foreach ($posts as $reply) {
 		if (strpos($reply['message'], $match) === false) {
 			continue;
 		}
-		$post = postByID($reply['id']);
+		$post = getPost($reply['id']);
 		$isOp = $post['parent'] == ATOM_NEWTHREAD;
 		$str .= ($str != '' ? ', ' : '') . (!$post ? '&gt;&gt;' . $reply['id'] :
 			'<a class="' . ($isOp ? 'refop' : 'refreply') . '" href="/' . ATOM_BOARD . '/res/' .
@@ -475,11 +481,14 @@ function buildPost($post, $res, $isModPanel = false) {
 					'<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#q' . $id .
 						'" title="Click to reply to this post">' . $id . '</a>') .
 					($post['stickied'] == 1 ? '
-					<img src="/' . ATOM_BOARD .
-						'/icons/sticky.png" title="Thread is stickied" width="16" height="16">' : '') .
+					<img src="/' . ATOM_BOARD . '/icons/sticky.png"' .
+						' title="Thread is stickied to top" width="16" height="16">' : '') .
 					($post['locked'] == 1 ? '
-					<img src="/' . ATOM_BOARD .
-						'/icons/locked.png" title="Thread is locked" width="11" height="16">' : '') .
+					<img src="/' . ATOM_BOARD . '/icons/locked.png"' .
+						' title="Thread is locked for posting" width="11" height="16">' : '') .
+					($post['endless'] == 1 ? '
+					<img src="/' . ATOM_BOARD . '/icons/endless.png"' .
+						' title="Thread is endless" width="16" height="16">' : '') .
 					(ATOM_LIKES ? '
 					<span class="like-container">
 						<span class="like-icon' . ($likes ? ' like-enabled' : ' like-disabled') .
@@ -519,6 +528,8 @@ function buildPost($post, $res, $isModPanel = false) {
 				plural('post', $omitted) . ' omitted. Click ' . $replyBtn . ' to view.
 			</div>' : ''));
 }
+
+/* ==[ Page ]============================================================================================== */
 
 function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 	// Build page links: [Previous] [0] [1] [2] [Next]
@@ -586,15 +597,28 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 		pageFooter();
 }
 
-function rebuildIndexes() {
+/* ==[ Rebuilding ]======================================================================================== */
+
+function rebuildThreadPage($id) {
+	$htmlPosts = '';
+	$posts = getThreadPosts($id);
+	foreach ($posts as $post) {
+		$htmlPosts .= buildPost($post, ATOM_RESPAGE);
+	}
+	$htmlPosts .= '
+			<hr>';
+	writePage('res/' . $id . '.html', buildPage($htmlPosts, $id));
+}
+
+function rebuildIndexPages() {
 	global $atom_janitors;
 	$page = 0;
 	$i = 0;
 	$htmlPosts = '';
-	$threads = allThreads();
+	$threads = getThreads();
 	$pages = ceil(count($threads) / ATOM_THREADSPERPAGE) - 1;
 	foreach ($threads as $thread) {
-		$replies = postsInThreadByID($thread['id']);
+		$replies = getThreadPosts($thread['id']);
 		$thread['omitted'] = max(0, count($replies) - ATOM_PREVIEWREPLIES - 1);
 		// Build replies for preview
 		$htmlReplies = array();
@@ -625,19 +649,21 @@ function rebuildIndexes() {
 }
 
 function rebuildThread($id) {
-	$htmlPosts = '';
-	$posts = postsInThreadByID($id);
-	foreach ($posts as $post) {
-		$htmlPosts .= buildPost($post, ATOM_RESPAGE);
-	}
-	$htmlPosts .= '
-			<hr>';
-	writePage('res/' . $id . '.html', buildPage($htmlPosts, $id));
+	rebuildThreadPage($id);
+	rebuildIndexPages();
 }
 
-function adminBar() {
-	global $access, $atom_janitors;
-	return $access == 'disabled' ? '' : '
+/* ==[ Manage ]============================================================================================ */
+
+function manageInfo($text) {
+	return '<div class="manageinfo">' . $text . '</div>';
+}
+
+function managePage($text, $onload = '') {
+	global $returnlink, $access, $atom_janitors;
+	return pageHeader() . '<body' . $onload . '>' . pageWrapper($returnlink) . '
+		<div class="adminbar">' . (
+			$access == 'disabled' ? '' : '
 			[<a href="?manage">Status</a>]' .
 			($access == 'admin' || $access == 'moderator' ? '
 			[<a href="?manage&bans">Bans</a>]
@@ -650,13 +676,7 @@ function adminBar() {
 			[' : '') . ($access == 'admin' && ATOM_DBMIGRATE ?
 				'<a href="?manage&dbmigrate"><b>Migrate Database</b></a>] [' : '') .
 				'<a href="?manage&logout">Log Out</a>]
-		';
-}
-
-function managePage($text, $onload = '') {
-	global $returnlink;
-	return pageHeader() . '<body' . $onload . '>' . pageWrapper($returnlink) . '
-		<div class="adminbar">' . adminBar() . '</div>
+		') . '</div>
 		<div class="logo">
 			' . ATOM_LOGO . ATOM_BOARDDESC . '
 		</div>
@@ -675,7 +695,7 @@ function manageOnLoad($page) {
 	}
 }
 
-function manageLogInForm() {
+function manageLoginForm() {
 	return '<form id="atomboard" name="atomboard" method="post" action="?manage">
 			<fieldset>
 				<legend align="center">Enter an administrator or moderator password</legend>
@@ -715,8 +735,8 @@ function manageBanForm() {
 
 function manageBansTable() {
 	$text = '';
-	$allbans = allBans();
-	if (count($allbans) > 0) {
+	$getAllBans = getAllBans();
+	if (count($getAllBans) > 0) {
 		$text .= '
 		<table id="ban-table"><tbody>
 			<tr>
@@ -726,7 +746,7 @@ function manageBansTable() {
 				<th>Reason provided</th>
 				<th>&nbsp;</th>
 			</tr>';
-		foreach ($allbans as $ban) {
+		foreach ($getAllBans as $ban) {
 			$expire = $ban['expire'] > 0 ? date('y.m.d D H:i:s', $ban['expire']) : 'Does not expire';
 			$reason = $ban['reason'] == '' ? '&nbsp;' : htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8');
 			$text .= '<tr>
@@ -774,6 +794,7 @@ function manageModeratePost($post) {
 	$postOrThread = $isOp ? 'Thread' : 'Post';
 	$stickyHtml = '';
 	$lockedHtml = '';
+	$endlessHtml = '';
 	if ($isOp) {
 		$isStickied = $post['stickied'] == 1;
 		$stickyHtml = '
@@ -783,14 +804,17 @@ function manageModeratePost($post) {
 								<input type="hidden" name="manage" value="">
 								<input type="hidden" name="sticky" value="' . $post['id'] . '">
 								<input type="hidden" name="setsticky" value="' . ($isStickied ? 0 : 1) . '">
-								<input type="submit" value="' . ($isStickied ? 'Un-sticky' : 'Sticky') .
-									' Thread" class="managebutton" style="width: 50%;">
+								<button type="submit" class="managebutton" style="width: 50%;">
+									<img src="/' . ATOM_BOARD . '/icons/sticky.png" width="16" height="16" style="vertical-align: -3px;">
+									' . ($isStickied ? 'Unsticky' : 'Sticky') . ' thread
+								</button>
 							</form>
 						</td>
 						<td><small>' . ($isStickied ? 'Return this thread to a normal state.' :
 							'Keep this thread at the top of the board.') . '</small></td>
 					</tr>';
 		$isLocked = $post['locked'] == 1;
+		$lockedValue = $isLocked ? 'Unlock' : 'Lock';
 		$lockedHtml = '
 					<tr>
 						<td align="right" width="50%;">
@@ -798,15 +822,33 @@ function manageModeratePost($post) {
 								<input type="hidden" name="manage" value="">
 								<input type="hidden" name="locked" value="' . $post['id'] . '">
 								<input type="hidden" name="setlocked" value="' . ($isLocked ? 0 : 1) . '">
-								<input type="submit" value="' . ($isLocked ? 'Un-lock' : 'Lock') .
-									' Thread" class="managebutton" style="width: 50%;">
+								<button type="submit" class="managebutton" style="width: 50%;">
+									<img src="/' . ATOM_BOARD . '/icons/locked.png" width="11" height="16" style="vertical-align: -3px;">
+									' . $lockedValue . ' thread
+								</button>
 							</form>
 						</td>
-						<td><small>' . ($isLocked ? 'Unlock this thread.' : 'Lock this thread.') .
-							'</small></td>
+						<td><small>' . $lockedValue . ' this thread for posting.</small></td>
+					</tr>';
+		$isEndless = $post['endless'] == 1;
+		$endlessHtml = '
+					<tr>
+						<td align="right" width="50%;">
+							<form method="get" action="?">
+								<input type="hidden" name="manage" value="">
+								<input type="hidden" name="endless" value="' . $post['id'] . '">
+								<input type="hidden" name="setendless" value="' . ($isEndless ? 0 : 1) . '">
+								<button type="submit" class="managebutton" style="width: 50%;">
+									<img src="/' . ATOM_BOARD . '/icons/endless.png" width="16" height="16" style="vertical-align: -3px;">
+									Make ' . ($isEndless ? 'non-endless' : 'endless') . ' thread
+								</button>
+							</form>
+						</td>
+						<td><small>' . ($isEndless ? 'Disable' : 'Enable') .
+							' endless mode for this thread.</small></td>
 					</tr>';
 		$postHtml = '';
-		$posts = postsInThreadByID($post['id']);
+		$posts = getThreadPosts($post['id']);
 		foreach ($posts as $postTemp) {
 			$postHtml .= buildPost($postTemp, ATOM_INDEXPAGE, true);
 		}
@@ -830,7 +872,8 @@ function manageModeratePost($post) {
 						<td><small>' . $deleteInfo . '</small></td>
 					</tr>' .
 					$stickyHtml .
-					$lockedHtml . '
+					$lockedHtml .
+					$endlessHtml . '
 					<tr>
 						<td align="right" width="50%;">
 							<form method="get" action="?">
@@ -854,11 +897,11 @@ function manageModeratePost($post) {
 
 function manageStatus() {
 	global $access;
-	$threads = countThreads();
-	$bans = count(allBans());
+	$threads = getThreadsCount();
+	$bans = count(getAllBans());
 	if (ATOM_REQMOD == 'files' || ATOM_REQMOD == 'all') {
 		$reqModPostHtml = '';
-		$reqModPosts = latestPosts(false);
+		$reqModPosts = getLatestPosts(false, 20);
 		foreach ($reqModPosts as $post) {
 			$id = $post['id'];
 			$reqModPostHtml .= ($reqModPostHtml != '' ? '
@@ -899,7 +942,7 @@ function manageStatus() {
 		}
 	}
 	$postHtml = '';
-	$posts = latestPosts(true);
+	$posts = getLatestPosts(true, 20);
 	foreach ($posts as $post) {
 		$postHtml .= ($postHtml != '' ? '
 					<tr><td colspan="2"><hr></td></tr>' : '') . '
@@ -956,6 +999,8 @@ function manageStatus() {
 		<br>';
 }
 
+/* ==[ Catalog ]=========================================================================================== */
+
 function buildCatalogPage() {
 	$catalogHTML = '';
 	$numOfReplies = 0;
@@ -966,9 +1011,9 @@ function buildCatalogPage() {
 	$thumb = 'icons/noimage.png';
 	$thumb_width = ATOM_FILE_MAXW;
 	$thumb_height = ATOM_FILE_MAXH;
-	$OPposts = allThreads();
+	$OPposts = getThreads();
 	foreach ($OPposts as $post) {
-		$numOfReplies = numRepliesToThreadByID($post['id']);
+		$numOfReplies = getThreadPostsCount($post['id']);
 		if (function_exists('mb_substr') && extension_loaded('mbstring')) {
 			$OPpostMessage = tidy_repair_string(
 				mb_substr($post['message'], 0, 160, 'UTF-8'),
@@ -1020,6 +1065,8 @@ function buildCatalogPage() {
 		</div>' .
 		pageFooter();
 }
+
+/* ==[ Modlog ]============================================================================================ */
 
 function generateModLogForm() {
 	$periodStartDate = isset($_POST['from']) ? $_POST['from'] : date("Y-m-d", strtotime("-2 day"));

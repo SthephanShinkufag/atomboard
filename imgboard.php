@@ -9,7 +9,8 @@ if (function_exists('ob_get_level')) {
 		ob_end_flush();
 	}
 }
-# PHP <7.4
+
+# XXX: PHP <7.4
 #if (get_magic_quotes_gpc()) {
 #	foreach ($_GET as $key => $val) {
 #		$_GET[$key] = stripslashes($val);
@@ -22,13 +23,10 @@ if (function_exists('ob_get_level')) {
 #	set_magic_quotes_runtime(0);
 #}
 
-function manageInfo($text) {
-	return '<div class="manageinfo">' . $text . '</div>';
-}
-
+// Generating info messages
 function fancyDie($message) {
 	die('<head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/global.css">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css">
 </head>
 <body align="center">
 	<br>
@@ -38,6 +36,7 @@ function fancyDie($message) {
 </body>');
 }
 
+// Settings initialization
 if (!file_exists('settings.php')) {
 	fancyDie('Please copy the file settings.default.php to settings.php');
 }
@@ -45,11 +44,11 @@ require 'settings.php';
 if (ATOM_TRIPSEED == '' || ATOM_ADMINPASS == '') {
 	fancyDie('settings.php: ATOM_TRIPSEED and ATOM_ADMINPASS must be configured.');
 }
-if (ATOM_CAPTCHA === 'recaptcha' && (ATOM_RECAPTCHA_SITE == '' || ATOM_RECAPTCHA_SECRET == '')) {
+if (ATOM_CAPTCHA == 'recaptcha' && (ATOM_RECAPTCHA_SITE == '' || ATOM_RECAPTCHA_SECRET == '')) {
 	fancyDie('settings.php: ATOM_RECAPTCHA_SITE and ATOM_RECAPTCHA_SECRET must be configured.');
 }
 
-// Check directories are writable by the script
+// Check if directories are writable by the script
 $writedirs = array('res', 'src', 'thumb');
 if (ATOM_DBMODE == 'flatfile') {
 	$writedirs[] = 'inc/flatfile';
@@ -60,6 +59,7 @@ foreach ($writedirs as $dir) {
 	}
 }
 
+// Include php files
 $includes = array('inc/defines.php', 'inc/functions.php', 'inc/html.php');
 if (in_array(ATOM_DBMODE, array('flatfile', 'mysql', 'mysqli', 'sqlite', 'sqlite3', 'pdo'))) {
 	$includes[] = 'inc/database_' . ATOM_DBMODE . '.php';
@@ -72,9 +72,13 @@ foreach ($includes as $include) {
 if (ATOM_TIMEZONE != '') {
 	date_default_timezone_set(ATOM_TIMEZONE);
 }
+
+// Redirect after request
 $redirect = true;
 
-// Check if the request is to make a post or thread
+
+/* ==[ Make a post/thread ]================================================================================ */
+
 if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	isset($_POST['name']) ||
 	isset($_POST['email']) ||
@@ -84,57 +88,202 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	isset($_POST['embed']) ||
 	isset($_POST['password']))
 ) {
+
 	if (ATOM_DBMIGRATE) {
 		fancyDie('Posting is currently disabled.<br>Please try again in a few moments.');
 	}
-	$access = checkAccess();
+
+	/* ==[ Post submission check ]========================================================================= */
+
+	// Check for access role [admin/moderator/janitor/disabled]
+	$access = checkAccessRights();
 	$noAccess = $access == 'disabled';
-	$rawPost = isRawPost();
-	$rawPostText = '';
 	if ($noAccess) {
-		checkCAPTCHA();
-		checkBanned();
-		checkMessageSize();
-		checkFlood();
+
+		// Check for recaptcha
+		if (ATOM_CAPTCHA == 'recaptcha') {
+			require_once 'inc/recaptcha/autoload.php';
+			$captcha = isset($_POST['g-recaptcha-response']) ? $_POST['g-recaptcha-response'] : '';
+			$failed_captcha = true;
+			$recaptcha = new \ReCaptcha\ReCaptcha(ATOM_RECAPTCHA_SECRET);
+			$resp = $recaptcha->verify($captcha, $_SERVER['REMOTE_ADDR']);
+			if ($resp->isSuccess()) {
+				$failed_captcha = false;
+			}
+			if ($failed_captcha) {
+				$captcha_error = 'Failed CAPTCHA.';
+				$errCodes = $resp->getErrorCodes();
+				$errReason = '';
+				if (count($errCodes) == 1) {
+					$errCodes = $errCodes;
+					$errReason = $errCodes[0];
+				}
+				if ($errReason == 'missing-input-response') {
+					$captcha_error .= ' Please click the checkbox labeled "I\'m not a robot".';
+				} else {
+					$captcha_error .= ' Reason:';
+					foreach ($errCodes as $error) {
+						$captcha_error .= '<br>' . $error;
+					}
+				}
+				fancyDie($captcha_error);
+			}
+		}
+
+		// Check for simple captcha
+		elseif (ATOM_CAPTCHA) {
+			$captcha = isset($_POST['captcha']) ? strtolower(trim($_POST['captcha'])) : '';
+			$captcha_solution = isset($_SESSION['atom_captcha']) ?
+				strtolower(trim($_SESSION['atom_captcha'])) : '';
+			if ($captcha == '') {
+				fancyDie('Please enter the CAPTCHA text.');
+			} elseif ($captcha != $captcha_solution) {
+				fancyDie('Incorrect CAPTCHA text entered, please try again.<br>' .
+					'Click the image to retrieve a new CAPTCHA.');
+			}
+		}
+
+		// Check for ban
+		$ban = banByIP($_SERVER['REMOTE_ADDR']);
+		if ($ban) {
+			if ($ban['expire'] == 0 || $ban['expire'] > time()) {
+				$expire = $ban['expire'] > 0 ?
+					('<br>This ban will expire ' . date('y.m.d D H:i:s', $ban['expire'])) :
+					'<br>This ban is permanent and will not expire.';
+				$reason = $ban['reason'] == '' ? '' : '<br>Reason: ' . $ban['reason'];
+				fancyDie('Your IP address ' . $ban['ip'] . ' has been banned from posting on this image board. ' .
+					$expire . $reason);
+			} else {
+				clearExpiredBans();
+			}
+		}
+
+		// Check for message size
+		if (strlen($_POST['message']) > 8000) {
+			fancyDie('Please shorten your message, or post it in multiple parts.<br>Your message is ' .
+				strlen($_POST['message']) . ' characters long, and the maximum allowed is 8000.');
+		}
+
+		// Check for flood
+		if (ATOM_POSTING_DELAY > 0) {
+			$lastpost = getLastPostByIP();
+			if ($lastpost && (time() - $lastpost['timestamp']) < ATOM_POSTING_DELAY) {
+				fancyDie('Please wait a moment before posting again.<br>' .
+					'You will be able to make another post in ' .
+					(ATOM_POSTING_DELAY - (time() - $lastpost['timestamp'])) .
+					' ' . plural('second', (ATOM_POSTING_DELAY - (time() - $lastpost['timestamp']))) . '.');
+			}
+		}
 	}
-	$post = newPost(setParent());
+
+	// Check for parent thread
+	$parentId = ATOM_NEWTHREAD;
+	if (isset($_POST['parent'])) {
+		if ($_POST['parent'] != ATOM_NEWTHREAD) {
+			if (!isThreadExists($_POST['parent'])) {
+				fancyDie('Invalid parent thread ID supplied, unable to create post.');
+			}
+			$parentId = $_POST['parent'];
+		}
+	}
+
+	/* ==[ Filling post fields ]=========================================================================== */
+
+	// Initialize default post fields
+	$post = newPost($parentId);
 	if ($post['parent'] != ATOM_NEWTHREAD && $noAccess) {
-		$parentPost = postByID($post['parent']);
+		$parentPost = getPost($post['parent']);
 		if ($parentPost['locked']) {
 			fancyDie('Posting in this thread is currently disabled.<br>Thread is locked.');
 		}
 	}
+
 	$hideFields = $post['parent'] == ATOM_NEWTHREAD ? $atom_hidefieldsop : $atom_hidefields;
 	$post['ip'] = $_SERVER['REMOTE_ADDR'];
+	$rawPost = isRawPost();
+
+	// Get name/tripcode
 	if ($rawPost || !in_array('name', $hideFields)) {
-		list($post['name'], $post['tripcode']) = nameAndTripcode($_POST['name']);
-		$post['name'] = cleanString(substr($post['name'], 0, 75));
+		$postName = $_POST['name'];
+		if (preg_match('/(#|!)(.*)/', $postName, $regs)) {
+			$cap = $regs[2];
+			$cap_full = '#' . $regs[2];
+			if (function_exists('mb_convert_encoding')) {
+				$recoded_cap = mb_convert_encoding($cap, 'SJIS', 'UTF-8');
+				if ($recoded_cap != '') {
+					$cap = $recoded_cap;
+				}
+			}
+			if (strpos($postName, '#') === false) {
+				$cap_delimiter = '!';
+			} elseif (strpos($postName, '!') === false) {
+				$cap_delimiter = '#';
+			} else {
+				$cap_delimiter = strpos($postName, '#') < strpos($postName, '!') ? '#' : '!';
+			}
+			if (preg_match('/(.*)(' . $cap_delimiter . ')(.*)/', $cap, $regs_secure)) {
+				$cap = $regs_secure[1];
+				$cap_secure = $regs_secure[3];
+				$is_secure_trip = true;
+			} else {
+				$is_secure_trip = false;
+			}
+			$postTripcode = '';
+			if ($cap != '') {
+				$cap = strtr($cap, '&amp;', '&');
+				$cap = strtr($cap, '&#44;', ', ');
+				$salt = substr($cap . 'H.', 1, 2);
+				$salt = preg_replace('/[^\.-z]/', '.', $salt);
+				$salt = strtr($salt, ':;<=>?@[\\]^_`', 'ABCDEFGabcdef');
+				$postTripcode = substr(crypt($cap, $salt), -10);
+			}
+			if ($is_secure_trip) {
+				if ($cap != '') {
+					$postTripcode .= '!';
+				}
+				$postTripcode .= '!' . substr(md5($cap_secure . ATOM_TRIPSEED), 2, 10);
+			}
+			$post['name'] = preg_replace('/(' . $cap_delimiter . ')(.*)/', '', $postName);
+			$post['tripcode'] = $postTripcode;
+		} else {
+			$post['name'] = $postName;
+			$post['tripcode'] = '';
+		}
+		$post['name'] = escapeHTML(substr($post['name'], 0, 75));
 	}
+
+	// Get email
 	if ($rawPost || !in_array('email', $hideFields)) {
-		$post['email'] = cleanString(str_replace('"', '&quot;', substr($_POST['email'], 0, 75)));
+		$post['email'] = escapeHTML(str_replace('"', '&quot;', substr($_POST['email'], 0, 75)));
 	}
+
+	// Get subject
 	if ($rawPost || !in_array('subject', $hideFields)) {
-		$post['subject'] = cleanString(substr($_POST['subject'], 0, 75));
+		$post['subject'] = escapeHTML(substr($_POST['subject'], 0, 75));
 	}
+
+	// Get message with markup and >>links
+	$rawPostText = '';
 	if ($rawPost || !in_array('message', $hideFields)) {
 		$post['message'] = $_POST['message'];
+
+		// Treat message as raw HTML
 		if ($rawPost) {
-			// Treat message as raw HTML
 			$rawPostText = $access == 'admin' ? ' <span style="color: red;">## Admin</span>' :
 				' <span style="color: purple;">## Mod</span>';
-		} else {
-			$msg = cleanString(rtrim($post['message']));
+		}
+
+		// Markup text formatting
+		else {
+			$msg = escapeHTML(rtrim($post['message']));
 			if (ATOM_WORDBREAK > 0) {
 				$msg = preg_replace(
 					'/([^\s]{' . ATOM_WORDBREAK . '})(?=[^\s])/',
 					'$1' . ATOM_WORDBREAK_IDENTIFIER,
 					$msg);
 			}
-			// MARKUP
 			// [code]Block code[/code]
-			$msg = preg_replace_callback('/\[code\]\r?\n?([\s\S]*?)\r?\n?\[\/code\]/i',
-				function($matches)
-			{
+			$msg = preg_replace_callback('/\[code\]\r?\n?([\s\S]*?)\r?\n?\[\/code\]/i', function($matches) {
 				$m = $matches[1];
 				$m = str_replace("\r\n", '@!@ATOM_LINE_END@!@', $m);
 				$m = str_replace("\r", '@!@ATOM_LINE_END@!@', $m);
@@ -163,9 +312,9 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$m = str_replace('%%', '&#37;&#37;', $m);
 				return '<code>' . $m . '</code>';
 			}, $msg);
-			// Post links
+			// Post >>links
 			$msg = preg_replace_callback('/&gt;&gt;([0-9]+)/', function($matches) {
-				$post = postByID($matches[1]);
+				$post = getPost($matches[1]);
 				if ($post) {
 					$isOp = $post['parent'] == ATOM_NEWTHREAD;
 					return '<a class="' .
@@ -214,25 +363,58 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			$msg = str_replace('@!@ATOM_GT@!@', '&gt;', $msg);
 			$msg = str_replace('@!@ATOM_LINE_END@!@', "\r\n", $msg);
 			if (ATOM_WORDBREAK > 0) {
-				$msg = finishWordBreak($msg);
+				$msg = str_replace(
+					ATOM_WORDBREAK_IDENTIFIER,
+					'<br>',
+					preg_replace_callback('/<a(.*?)href="([^"]*?)"(.*?)>(.*?)<\/a>/', function($matches) {
+						return '<a' . $matches[1] . 'href="' .
+							str_replace(ATOM_WORDBREAK_IDENTIFIER, '', $matches[2]) . '"' . $matches[3] . '>' .
+							str_replace(ATOM_WORDBREAK_IDENTIFIER, '<br>', $matches[4]) . '</a>';
+					}, msg)
+				);
 			}
 			$post['message'] = $msg;
 			// $post['message'] = $msg . '<br>';
 		}
 	}
+
+	// Get password
 	if ($rawPost || !in_array('password', $hideFields)) {
 		$post['password'] = $_POST['password'] != '' ? md5(md5($_POST['password'])) : '';
 	}
-	$post['nameblock'] = nameBlock(
-		$post['name'],
-		$post['tripcode'],
-		$post['email'],
-		$post['ip'],
-		$post['parent'],
-		time(),
-		$rawPostText);
 
-	// Embed URL uploaded
+	// Get Nameblock
+	$postName = $post['name'];
+	$postTripcode = $post['tripcode'];
+	$postEmail = $post['email'];
+	$posterUID = '';
+	if (ATOM_POSTERUID) {
+		$hash = substr(md5($post['ip'] . intval($post['parent']) . ATOM_TRIPSEED), 0, 8);
+		$hashint = hexdec('0x' . $hash);
+		$red = $hashint >> 24 & 255;
+		$green = $hashint >> 16 & 255;
+		$blue = $hashint >> 8 & 255;
+		$isBlack = 0.299 * $red + 0.587 * $green + 0.114 * $blue > 125;
+		$posterUID = ' <span class="posteruid" data-uid="' . $hash . '" style="background-color: rgb(' .
+			$red . ', ' . $green . ', ' . $blue . '); color: ' .
+			($isBlack ? 'black' : 'white') . ';">' . $hash . '</span>';
+	}
+	$postNameBlock = '<span class="postername' .
+		(checkAccessRights() != 'disabled' && $postName != '' ? ' postername-admin' : '') . '">';
+	$postNameBlock .= $postName == '' && $postTripcode == '' ? ATOM_POSTERNAME : $postName;
+	if ($postTripcode != '') {
+		$postNameBlock .= '</span><span class="postertrip">!' . $postTripcode;
+	}
+	$postNameBlock .= '</span>' . $posterUID;
+	$lowEmail = strtolower($postEmail);
+	if ($postEmail != '' && $lowEmail != 'noko') {
+		$postNameBlock = '<a href="mailto:' . $postEmail . '"' .
+			($lowEmail == 'sage' ? ' class="sage"' : '') . '>' . $postNameBlock . '</a>';
+	}
+	$post['nameblock'] = $postNameBlock . $rawPostText . ' ' . date('d.m.y D H:i:s', time());
+
+	/* ==[ Embed URL upload ]============================================================================== */
+
 	if (isset($_POST['embed']) &&
 		trim($_POST['embed']) != '' &&
 		($rawPost || !in_array('embed', $hideFields))
@@ -269,7 +451,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			fancyDie('Error while processing audio/video.');
 		}
 		$thumbLocation = 'thumb/' . $post['thumb0'];
-		list($thumbMaxWidth, $thumbMaxHeight) = thumbnailDimensions($post, '0');
+		list($thumbMaxWidth, $thumbMaxHeight) = getThumbnailDimensions($post, '0');
 		if (!createThumbnail($fileLocation, $thumbLocation, $thumbMaxWidth, $thumbMaxHeight)) {
 			@unlink($fileLocation);
 			fancyDie('Could not create thumbnail.');
@@ -282,46 +464,106 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		$thumbInfo = getimagesize($thumbLocation);
 		$post['thumb0_width'] = $thumbInfo[0];
 		$post['thumb0_height'] = $thumbInfo[1];
-		$post['file0_original'] = cleanString($embed['title']);
+		$post['file0_original'] = escapeHTML($embed['title']);
 		$post['file0'] = str_ireplace(array('src="https://', 'src="http://'), 'src="//', $embed['html']);
+	}
 
-	// Images uploaded
-	} elseif (isset($_FILES['file']) &&
+	/* ==[ Images upload ]================================================================================= */
+
+	elseif (isset($_FILES['file']) &&
 		($rawPost || !in_array('file', $hideFields)) &&
 		$_FILES['file']['tmp_name'][0]
 	) {
 		$filesCount = 0;
-		$sizeOfCurrentFileInBytes = 0;
-		$sizeOfAllFilesInBytes = 0;
-		foreach ($_FILES["file"]["error"] as $index => $error) {
+		$currentFileBytes = 0;
+		$allFilesBytes = 0;
+		foreach ($_FILES['file']['error'] as $index => $error) {
 			if (!$_FILES['file']['tmp_name'][$index] || $filesCount >= ATOM_FILES_COUNT) {
 				continue;
 			}
-			validateFileUpload($error);
+
+			// Check for upload errors
+			switch ($error) {
+			case UPLOAD_ERR_OK:
+				break;
+			case UPLOAD_ERR_FORM_SIZE:
+				fancyDie('That file is larger than ' . ATOM_FILE_MAXKBDESC . '.');
+				break;
+			case UPLOAD_ERR_INI_SIZE:
+				fancyDie('The uploaded file exceeds the upload_max_filesize directive (' .
+					ini_get('upload_max_filesize') . ') in php.ini.');
+				break;
+			case UPLOAD_ERR_PARTIAL:
+				fancyDie('The uploaded file was only partially uploaded.');
+				break;
+			case UPLOAD_ERR_NO_FILE:
+				fancyDie('No file was uploaded.');
+				break;
+			case UPLOAD_ERR_NO_TMP_DIR:
+				fancyDie('Missing a temporary folder.');
+				break;
+			case UPLOAD_ERR_CANT_WRITE:
+				fancyDie('Failed to write file to disk.');
+				break;
+			case UPLOAD_ERR_EXTENSION:
+				fancyDie('Unable to save the uploaded file. Extension error');
+				break;
+			default:
+				fancyDie('Unable to save the uploaded file.');
+			}
 			if (!is_file($_FILES['file']['tmp_name'][$index]) ||
 				!is_readable($_FILES['file']['tmp_name'][$index])
 			) {
 				fancyDie('File transfer failure.<br>Please retry the submission.');
 			}
-			$sizeOfCurrentFileInBytes = filesize($_FILES['file']['tmp_name'][$index]);
-			$sizeOfAllFilesInBytes += $sizeOfCurrentFileInBytes;
-			if ((ATOM_FILE_MAXKB > 0) && ($sizeOfCurrentFileInBytes > (ATOM_FILE_MAXKB * 1024))) {
+
+			// Check for bytes size restriction
+			$currentFileBytes = filesize($_FILES['file']['tmp_name'][$index]);
+			$allFilesBytes += $currentFileBytes;
+			if ((ATOM_FILE_MAXKB > 0) && ($currentFileBytes > (ATOM_FILE_MAXKB * 1024))) {
 				fancyDie('That file is larger than ' . ATOM_FILE_MAXKBDESC . '.');
 			}
-			if ((ATOM_FILE_MAXKB > 0) && ($sizeOfAllFilesInBytes > (ATOM_FILE_MAXKB * 1024))) {
+			if ((ATOM_FILE_MAXKB > 0) && ($allFilesBytes > (ATOM_FILE_MAXKB * 1024))) {
 				// silently drop all remained files if comulative size is getting more than ATOM_FILE_MAXKB.
 				// or uncomment fancyDie to get error message and lost post.
 				// fancyDie('Size of all files is larger than ' . ATOM_FILE_MAXKBDESC . '.');
 				continue;
 			}
+
+			// Get post image fields
 			$post['file' . $index . '_original'] = trim(
 				htmlentities(substr(basename($_FILES['file']['name'][$index]), 0, 50), ENT_QUOTES, 'UTF-8'));
 			$post['file' . $index . '_hex'] = md5_file($_FILES['file']['tmp_name'][$index]);
 			$post['file' . $index . '_size'] = $_FILES['file']['size'][$index];
-			$post['file' . $index . '_size_formatted'] = convertBytes($post['file' . $index . '_size']);
-			if (ATOM_FILE_DUPLICATE === false) {
-				checkDuplicateFile($post['file' . $index . '_hex']);
+
+			// Convert file bytes
+			$fileBytes = $post['file' . $index . '_size'];
+			$bytesLen = strlen($fileBytes);
+			if ($bytesLen < 4) {
+				$fileBytes = sprintf("%dB", $fileBytes);
+			} elseif ($bytesLen <= 6) {
+				$fileBytes = sprintf("%0.2fKB", $fileBytes / 1024);
+			} elseif ($bytesLen <= 9) {
+				$fileBytes = sprintf("%0.2fMB", $fileBytes / 1024 / 1024);
+			} else {
+				$fileBytes = sprintf("%0.2fGB", $fileBytes / 1024 / 1024 / 1024);
 			}
+			$post['file' . $index . '_size_formatted'] = $fileBytes;
+
+			// Check for file duplicates
+			if (ATOM_FILE_DUPLICATE === false) {
+				$hex = $post['file' . $index . '_hex'];
+				$hexMatches = getPostsByImageHex($hex);
+				if (count($hexMatches) > 0) {
+					foreach ($hexMatches as $hexMatch) {
+						fancyDie("Duplicate file uploaded.<br>That file has already been posted <a href=\"res/" .
+							($hexMatch['parent'] == ATOM_NEWTHREAD ? $hexMatch['id'] : $hexMatch['parent']) .
+							".html#" . $hexMatch['id'] . "\">here</a>.");
+					}
+				}
+			}
+
+			// Check for supported file types
 			$fileMimeSplit = explode(' ', trim(mime_content_type($_FILES['file']['tmp_name'][$index])));
 			if (count($fileMimeSplit) > 0) {
 				$fileMime = strtolower(array_pop($fileMimeSplit));
@@ -336,9 +578,13 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			if (empty($fileMime) || !isset($atom_uploads[$fileMime])) {
 				fancyDie(supportedFileTypes());
 			}
+
+			// Generate file name and location
 			$fileName = time() . substr(microtime(), 2, 3) . '-' . $index;
 			$post['file' . $index] = $fileName . '.' . $atom_uploads[$fileMime][0];
 			$fileLocation = 'src/' . $post['file' . $index];
+
+			// Upload file
 			if (!move_uploaded_file($_FILES['file']['tmp_name'][$index], $fileLocation)) {
 				fancyDie('Could not copy uploaded file.');
 			}
@@ -346,6 +592,8 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				@unlink($fileLocation);
 				fancyDie('File transfer failure.<br>Please go back and try again.');
 			}
+
+			// Get video info and its thumbnail
 			if ($fileMime == 'audio/webm' ||
 				$fileMime == 'video/webm' ||
 				$fileMime == 'video/mp4' ||
@@ -356,7 +604,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$post['image' . $index . '_height'] = max(0, intval(shell_exec(
 					'mediainfo --Inform="Video;%Height%" ' . $fileLocation)));
 				if ($post['image' . $index . '_width'] > 0 && $post['image' . $index . '_height'] > 0) {
-					list($thumbMaxWidth, $thumbMaxHeight) = thumbnailDimensions($post, $index);
+					list($thumbMaxWidth, $thumbMaxHeight) = getThumbnailDimensions($post, $index);
 					$post['thumb' . $index] = $fileName . 's.jpg';
 					shell_exec('ffmpegthumbnailer -t 1 -s ' . max($thumbMaxWidth, $thumbMaxHeight) .
 						' -i ' . $fileLocation . ' -o thumb/' . $post['thumb' . $index]);
@@ -384,7 +632,10 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 						($post['file' . $index . '_original'] != '' ?
 							(', ' . $post['file' . $index . '_original']) : '');
 				}
-			} elseif (in_array($fileMime, array(
+			}
+
+			// Get image info
+			elseif (in_array($fileMime, array(
 				'image/jpeg',
 				'image/pjpeg',
 				'image/png',
@@ -396,6 +647,8 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$post['image' . $index . '_width'] = $fileInfo[0];
 				$post['image' . $index . '_height'] = $fileInfo[1];
 			}
+
+			// Get optional image thumbnail
 			if (isset($atom_uploads[$fileMime][1])) {
 				$thumbFileSplit = explode('.', $atom_uploads[$fileMime][1]);
 				$post['thumb' . $index] = $fileName . 's.' . array_pop($thumbFileSplit);
@@ -404,9 +657,12 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 					fancyDie('Could not create thumbnail.');
 				}
 				if ($fileMime == 'application/x-shockwave-flash') {
-					(ATOM_VIDEO_OVERLAY)?addVideoOverlay('thumb/' . $post['thumb' . $index]):'';
+					ATOM_VIDEO_OVERLAY ? addVideoOverlay('thumb/' . $post['thumb' . $index]):'';
 				}
-			} elseif (in_array($fileMime, array(
+			}
+
+			// Get default image thumbnail
+			elseif (in_array($fileMime, array(
 				'image/jpeg',
 				'image/pjpeg',
 				'image/png',
@@ -414,7 +670,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				'image/webp'
 			))) {
 				$post['thumb' . $index] = $fileName . 's.' . $atom_uploads[$fileMime][0];
-				list($thumbMaxWidth, $thumbMaxHeight) = thumbnailDimensions($post, $index);
+				list($thumbMaxWidth, $thumbMaxHeight) = getThumbnailDimensions($post, $index);
 				if (!createThumbnail(
 					$fileLocation,
 					'thumb/' . $post['thumb' . $index],
@@ -425,16 +681,20 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 					fancyDie('Could not create thumbnail.');
 				}
 			}
+
+			// Get thumbnail info
 			if ($post['thumb' . $index] != '') {
 				$thumbInfo = getimagesize('thumb/' . $post['thumb' . $index]);
 				$post['thumb' . $index . '_width'] = $thumbInfo[0];
 				$post['thumb' . $index . '_height'] = $thumbInfo[1];
 			}
+
 			$filesCount++;
 		}
 	}
 
-	// No file uploaded
+	/* ==[ No file upload ]================================================================================ */
+
 	if ($post['file0'] == '') {
 		$allowed = '';
 		if (!empty($atom_uploads) && ($rawPost || !in_array('file', $hideFields))) {
@@ -471,43 +731,47 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	$post['likes'] = 0;
 	$post['id'] = insertPost($post);
 
-	if ($post['moderated'] == '1') {
-		if (ATOM_ALWAYSNOKO || strtolower($post['email']) == 'noko') {
-			$redirect = '/' . ATOM_BOARD . '/res/' .
-				($post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent']) .
-				'.html#' . $post['id'];
-		}
-		trimThreads();
-		if ($post['parent'] != ATOM_NEWTHREAD) {
-			rebuildThread($post['parent']);
-			if (strtolower($post['email']) != 'sage') {
-				if (ATOM_BUMPLIMIT == 0 || numRepliesToThreadByID($post['parent']) <= ATOM_BUMPLIMIT) {
-					bumpThreadByID($post['parent']);
-				}
-			}
-		} else {
-			rebuildThread($post['id']);
-		}
-		rebuildIndexes();
-	}
+	/* ==[ Post/thread creation ]========================================================================== */
 
-// Check if the request is to delete a post and/or its associated image
-} elseif (isset($_GET['delete']) && !isset($_GET['manage'])) {
+	if ($post['moderated'] == '1') {
+		$isOp = $post['parent'] == ATOM_NEWTHREAD;
+		$threadId = $isOp ? $post['id'] : $post['parent'];
+		if (ATOM_ALWAYSNOKO || strtolower($post['email']) == 'noko') {
+			$redirect = '/' . ATOM_BOARD . '/res/' . $threadId . '.html#' . $post['id'];
+		}
+		trimThreadsCount();
+		rebuildThreadPage($threadId);
+		if (!$isOp) {
+			if (ATOM_THREAD_LIMIT == 0 || getThreadPostsCount($threadId) <= ATOM_THREAD_LIMIT) {
+				if (strtolower($post['email']) != 'sage') {
+					bumpThread($threadId);
+				}
+			} elseif (ATOM_THREAD_LIMIT != 0) {
+				trimThreadPostsCount($threadId);
+			}
+		}
+		rebuildIndexPages();
+	}
+}
+
+/* ==[ Delete a post and/or its images ]=================================================================== */
+
+elseif (isset($_GET['delete']) && !isset($_GET['manage'])) {
 	if (!isset($_POST['delete'])) {
 		fancyDie('Tick the box next to a post and click "Delete" to delete it.');
 	}
 	if (ATOM_DBMIGRATE) {
 		fancyDie('Post deletion is currently disabled.<br>Please try again in a few moments.');
 	}
-	$post = postByID($_POST['delete']);
+	$post = getPost($_POST['delete']);
 	if ($post) {
-		if (checkAccess() != 'disabled' && $_POST['password'] == '') {
+		if (checkAccessRights() != 'disabled' && $_POST['password'] == '') {
 			// Redirect to post moderation page
 			echo '<meta http-equiv="refresh" content="0;url=' . basename($_SERVER['PHP_SELF']) .
 				'?manage&moderate=' . $_POST['delete'] . '">';
 		} elseif ($post['password'] != '' && md5(md5($_POST['password'])) == $post['password']) {
-			deletePostByID($post['id']);
-			threadUpdated($post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent']);
+			deletePost($post['id']);
+			rebuildThread($post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent']);
 			fancyDie('Post deleted.');
 		} else {
 			fancyDie('Invalid password.');
@@ -517,26 +781,32 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			'Please go back, refresh the page, and try again.');
 	}
 	$redirect = false;
+}
 
-// Check if the request is to access the management area
-} elseif (isset($_GET['manage'])) {
+/* ==[ Access the management area ]======================================================================== */
+
+elseif (isset($_GET['manage'])) {
 	$text = '';
 	$onload = '';
 	$redirect = false;
-	$access = checkAccess();
+	$access = checkAccessRights();
 	if ($access != 'disabled') {
 		if ($access == 'admin') {
-			// Rebuild all posts
-			if (isset($_GET['rebuildall'])) {
-				$allthreads = allThreads();
-				foreach ($allthreads as $thread) {
-					rebuildThread($thread['id']);
-				}
-				rebuildIndexes();
-				$text .= manageInfo('Rebuilt board.');
 
-			// Update board
-			} elseif (isset($_GET['update'])) {
+			/* ==[ Rebuild all posts ]===================================================================== */
+
+			if (isset($_GET['rebuildall'])) {
+				$getThreads = getThreads();
+				foreach ($getThreads as $thread) {
+					rebuildThreadPage($thread['id']);
+				}
+				rebuildIndexPages();
+				$text .= manageInfo('Rebuilt board.');
+			}
+
+			/* ==[ Update board ]========================================================================== */
+
+			elseif (isset($_GET['update'])) {
 				if (is_dir('.git')) {
 					$gitOutput = shell_exec('git pull 2>&1');
 					$text .=
@@ -559,9 +829,11 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			<b>.git</b> folder.
 		</p>';
 				}
+			}
 
-			// Flatfile to MySQLi migration
-			} elseif (isset($_GET['dbmigrate'])) {
+			/* ==[ Flatfile to MySQLi migration ]========================================================== */
+
+			elseif (isset($_GET['dbmigrate'])) {
 				if (!ATOM_DBMIGRATE) {
 					fancyDie('settings.php: Set ATOM_DBMIGRATE to true to use this feature.');
 				} elseif (!isset($_GET['go'])) {
@@ -615,9 +887,9 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 						mysqli_query($link, $bans_sql);
 						mysqli_query($link, $likes_sql);
 						$maxId = 0;
-						$threads = allThreads();
+						$threads = getThreads();
 						foreach ($threads as $thread) {
-							$posts = postsInThreadByID($thread['id']);
+							$posts = getThreadPosts($thread['id']);
 							foreach ($posts as $post) {
 								mysqli_query($link,
 									'INSERT INTO `' . ATOM_DBPOSTS . '` (
@@ -743,7 +1015,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 								ATOM_DBPOSTS . '</code>, please set it to ' . ($maxId + 1) . '.</p>';
 						}
 						$maxId = 0;
-						$bans = allBans();
+						$bans = getAllBans();
 						foreach ($bans as $ban) {
 							$maxId = max($maxId, $ban['id']);
 							mysqli_query($link,
@@ -770,7 +1042,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 								' please set it to ' . ($maxId + 1) . '.</p>';
 						}
 						$maxId = 0;
-						$likes = allLikes();
+						$likes = getAllLikes();
 						foreach ($likes as $like) {
 							$maxId = max($maxId, $like['id']);
 							mysqli_query($link,
@@ -807,7 +1079,9 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		}
 
 		if($access != 'janitor') {
-			// Show ban form and list of bans
+
+			/* ==[ Show ban form and list of bans ]======================================================== */
+
 			if (isset($_GET['bans'])) {
 				clearExpiredBans();
 				if (isset($_POST['ip'])) {
@@ -826,15 +1100,17 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				} elseif (isset($_GET['lift'])) {
 					$ban = banByID($_GET['lift']);
 					if ($ban) {
-						deleteBanByID($_GET['lift']);
+						deleteBan($_GET['lift']);
 						$text .= manageInfo('Ban record lifted for ' . $ban['ip']);
 					}
 				}
 				$onload = manageOnLoad('bans');
 				$text .= manageBanForm() . manageBansTable();
+			}
 
-			// Show moderation log
-			} elseif (isset($_GET['modlog'])) {
+			/* ==[ Show moderation log ]=================================================================== */
+
+			elseif (isset($_GET['modlog'])) {
 				$fromtime = 0;
 				$totime = 0;
 				if (isset($_POST['from']) && isset($_POST['to'])) {
@@ -850,15 +1126,16 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			}
 		}
 
-		// Delete posts or threads
+		/* ==[ Delete posts or threads ]=================================================================== */
+
 		if (isset($_GET['delete'])) {
-			$post = postByID($_GET['delete']);
+			$post = getPost($_GET['delete']);
 			if ($post) {
-				deletePostByID($post['id']);
-				rebuildIndexes();
-				$isOP = $post['parent'] == ATOM_NEWTHREAD;
-				if (!$isOP) {
-					rebuildThread($post['parent']);
+				deletePost($post['id']);
+				rebuildIndexPages();
+				$isOp = $post['parent'] == ATOM_NEWTHREAD;
+				if (!$isOp) {
+					rebuildThreadPage($post['parent']);
 					modLog('Deleted post №' . $post['id'] . ' in thread №' .
 						$post['parent'] . '.', '0', 'Black');
 				} else {
@@ -868,79 +1145,89 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			} else {
 				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 			}
+		}
 
-		// Delete or hide images
-		} elseif (isset($_GET['delete-img']) && isset($_GET["delete-img-mod"]) && isset($_GET["action"])) {
-			if ($_GET["action"] == 'delete') {
-				$post = postByID($_GET['delete-img']);
+		/* ==[ Delete/hide images ]======================================================================== */
+
+		elseif (isset($_GET['delete-img']) && isset($_GET['delete-img-mod']) && isset($_GET['action'])) {
+			if ($_GET['action'] == 'delete') {
+				$post = getPost($_GET['delete-img']);
 				if ($post) {
-					deleteImagesByImageID($post, $_GET["delete-img-mod"]);
-					$isOP = $post['parent'] == ATOM_NEWTHREAD;
-					threadUpdated($isOP ? $post['id'] : $post['parent']);
+					deletePostImages($post, $_GET['delete-img-mod']);
+					$isOp = $post['parent'] == ATOM_NEWTHREAD;
+					rebuildThread($isOp ? $post['id'] : $post['parent']);
 					$text .= manageInfo('Selected images from post No.' .
 						$post['id'] . ' are deleted.');
 					modLog('Deleted image(s) of ' .
-						($isOP ? 'op-post in thread №' . $post['id'] :
+						($isOp ? 'op-post in thread №' . $post['id'] :
 							'post №' . $post['id'] . ' in thread №' . $post['parent']) . '.', '0', 'Black');
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 				}
-			} elseif ($_GET["action"] == 'hide') {
-				$post = postByID($_GET['delete-img']);
+			} elseif ($_GET['action'] == 'hide') {
+				$post = getPost($_GET['delete-img']);
 				if ($post) {
-					hideImagesByImageID($post, $_GET["delete-img-mod"]);
-					$isOP = $post['parent'] == ATOM_NEWTHREAD;
-					threadUpdated($isOP ? $post['id'] : $post['parent']);
+					hidePostImages($post, $_GET['delete-img-mod']);
+					$isOp = $post['parent'] == ATOM_NEWTHREAD;
+					rebuildThread($isOp ? $post['id'] : $post['parent']);
 					$text .= manageInfo('Thumbnails for selected images from post No.' .
 						$post['id'] . ' are changed.');
 					modLog('Hidden thumbnail(s) of ' .
-						($isOP ? 'op-post in thread №' . $post['id'] :
+						($isOp ? 'op-post in thread №' . $post['id'] :
 							'post №' . $post['id'] . ' in thread №' . $post['parent']) . '.', '0', 'Black');
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 				}
 			}
+		}
 
-		// Edit messages in posts
-		} elseif (isset($_GET['editpost']) && isset($_POST['message'])) {
-			$post = postByID($_GET['editpost']);
+		/* ==[ Edit message in post ]====================================================================== */
+
+		elseif (isset($_GET['editpost']) && isset($_POST['message'])) {
+			$post = getPost($_GET['editpost']);
 			$newMessage = $_POST['message'] . '<br><br><span style="color: purple;">Message edited: ' .
 				(date('d.m.y D H:i:s', time())) . '</span>';
 			if ($post) {
-				editMessageInPostById($post['id'], $newMessage);
-				$isOP = $post['parent'] == ATOM_NEWTHREAD;
-				threadUpdated($isOP ? $post['id'] : $post['parent']);
+				editPostMessage($post['id'], $newMessage);
+				$isOp = $post['parent'] == ATOM_NEWTHREAD;
+				rebuildThread($isOp ? $post['id'] : $post['parent']);
 				$text .= manageInfo('Message in post No.' . $post['id'] . ' changed.');
 				modLog('Edited message of ' .
-					($isOP ? 'op-post in thread №' . $post['id'] :
+					($isOp ? 'op-post in thread №' . $post['id'] :
 						'post №' . $post['id'] . ' in thread №' . $post['parent']) . '.', '0', 'Black');
 			} else {
 				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 			}
+		}
 
-		// Approve posts if premoderation enabled (see ATOM_REQMOD)
-		} elseif (isset($_GET['approve'])) {
+		/* ==[ Approve post if premoderation enabled (see ATOM_REQMOD) ]=================================== */
+
+		elseif (isset($_GET['approve'])) {
 			if ($_GET['approve'] > 0) {
-				$post = postByID($_GET['approve']);
+				$post = getPost($_GET['approve']);
 				if ($post) {
-					approvePostByID($post['id']);
+					approvePost($post['id']);
 					$threadId = $post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent'];
-					if (strtolower($post['email']) != 'sage' &&
-						(ATOM_BUMPLIMIT == 0 || numRepliesToThreadByID($threadId) <= ATOM_BUMPLIMIT)
-					) {
-						bumpThreadByID($threadId);
+					if (ATOM_THREAD_LIMIT == 0 || getThreadPostsCount($threadId) <= ATOM_THREAD_LIMIT) {
+						if (strtolower($post['email']) != 'sage') {
+							bumpThread($threadId);
+						}
+					} elseif (ATOM_THREAD_LIMIT != 0) {
+						trimThreadPostsCount($threadId);
 					}
-					threadUpdated($threadId);
+					rebuildThread($threadId);
 					$text .= manageInfo('Post No.' . $post['id'] . ' approved.');
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 				}
 			}
+		}
 
-		// Show post moderation form
-		} elseif (isset($_GET['moderate'])) {
+		/* ==[ Show post moderation form ]================================================================= */
+
+		elseif (isset($_GET['moderate'])) {
 			if ($_GET['moderate'] > 0) {
-				$post = postByID($_GET['moderate']);
+				$post = getPost($_GET['moderate']);
 				if ($post) {
 					$text .= manageModeratePost($post);
 				} else {
@@ -950,17 +1237,19 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				$onload = manageOnLoad('moderate');
 				$text .= manageModeratePostForm();
 			}
+		}
 
-		// Sticky threads
-		} elseif (isset($_GET['sticky']) && isset($_GET['setsticky'])) {
+		/* ==[ Sticky thread ]============================================================================= */
+
+		elseif (isset($_GET['sticky']) && isset($_GET['setsticky'])) {
 			if ($_GET['sticky'] > 0) {
-				$post = postByID($_GET['sticky']);
+				$post = getPost($_GET['sticky']);
 				if ($post && $post['parent'] == ATOM_NEWTHREAD) {
 					$isStickied = intval($_GET['setsticky']);
-					stickyThreadByID($post['id'], $isStickied);
-					threadUpdated($post['id']);
+					toggleStickyThread($post['id'], $isStickied);
+					rebuildThread($post['id']);
 					$stickiedText = $isStickied == 1 ? 'stickied' : 'un-stickied';
-					$text .= manageInfo('Thread No.' . $post['id'] . ' ' . $stickiedText . '.');
+					$text .= manageInfo('Thread No.' . $post['id'] . ' is ' . $stickiedText . '.');
 					modLog(ucfirst($stickiedText) . ' thread №' . $post['id'] . '.', '0', 'Black');
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
@@ -968,17 +1257,19 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			} else {
 				fancyDie('Form data was lost. Please go back and try again.');
 			}
+		}
 
-		// Lock threads
-		} elseif (isset($_GET['locked']) && isset($_GET['setlocked'])) {
+		/* ==[ Lock thread ]=============================================================================== */
+
+		elseif (isset($_GET['locked']) && isset($_GET['setlocked'])) {
 			if ($_GET['locked'] > 0) {
-				$post = postByID($_GET['locked']);
+				$post = getPost($_GET['locked']);
 				if ($post && $post['parent'] == ATOM_NEWTHREAD) {
 					$isLocked = intval($_GET['setlocked']);
-					lockThreadByID($post['id'], $isLocked);
-					threadUpdated($post['id']);
+					toggleLockThread($post['id'], $isLocked);
+					rebuildThread($post['id']);
 					$lockedText = $isLocked == 1 ? 'locked' : 'un-locked';
-					$text .= manageInfo('Thread No.' . $post['id'] . ' ' . $lockedText . '.');
+					$text .= manageInfo('Thread No.' . $post['id'] . ' is ' . $lockedText . '.');
 					modLog(ucfirst($lockedText) . ' thread №' . $post['id'] . '.', '0', 'Black');
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
@@ -986,14 +1277,38 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			} else {
 				fancyDie('Form data was lost. Please go back and try again.');
 			}
+		}
 
-		// Raw post sending
-		} elseif (isset($_GET['rawpost'])) {
+		/* ==[ Make endless threads ]====================================================================== */
+
+		elseif (isset($_GET['endless']) && isset($_GET['setendless'])) {
+			if ($_GET['endless'] > 0) {
+				$post = getPost($_GET['endless']);
+				if ($post && $post['parent'] == ATOM_NEWTHREAD) {
+					$isEndless = intval($_GET['setendless']);
+					toggleEndlessThread($post['id'], $isEndless);
+					rebuildThread($post['id']);
+					$endlessText = $isEndless == 1 ? 'made endless' : 'made non-endless';
+					$text .= manageInfo('Thread No.' . $post['id'] . ' is ' . $endlessText . '.');
+					modLog(ucfirst($endlessText) . ' thread №' . $post['id'] . '.', '0', 'Black');
+				} else {
+					fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
+				}
+			} else {
+				fancyDie('Form data was lost. Please go back and try again.');
+			}
+		}
+
+		/* ==[ Raw post sending ]========================================================================== */
+
+		elseif (isset($_GET['rawpost'])) {
 			$onload = manageOnLoad('rawpost');
 			$text .= buildPostForm(0, true);
+		}
 
-		// Log out
-		} elseif (isset($_GET['logout'])) {
+		/* ==[ Log out ]=================================================================================== */
+
+		elseif (isset($_GET['logout'])) {
 			$_SESSION['atomboard'] = '';
 			session_destroy();
 			if ($access != 'admin') {
@@ -1002,25 +1317,31 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 			die('<meta http-equiv="refresh" content="0;url=' . basename($_SERVER['PHP_SELF']) . '?manage">');
 		}
 
-		// Show status for posts
+		/* ==[ Show status for posts ]===================================================================== */
+
 		if ($text == '') {
 			$text = manageStatus();
 		}
 
-	// Show login form
+	/* ==[ Show login form ]=============================================================================== */
+
 	} else {
 		$onload = manageOnLoad('login');
-		$text .= manageLogInForm();
+		$text .= manageLoginForm();
 	}
-	echo managePage($text, $onload);
 
-// Set or unset like for post
-} elseif (isset($_GET['like'])) {
+	echo managePage($text, $onload);
+}
+
+
+/* ==[ Set/unset like for post ]=========================================================================== */
+
+elseif (isset($_GET['like'])) {
 	$postNum = $_GET['like'];
-	$result = likePostByID($postNum, $_SERVER['REMOTE_ADDR']);
-	$post = postByID($postNum);
+	$result = toggleLikePost($postNum, $_SERVER['REMOTE_ADDR']);
+	$post = getPost($postNum);
 	$post['likes'] = $result;
-	threadUpdated($post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent']);
+	rebuildThread($post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent']);
 	echo '{
 		"status": "ok",
 		"message": "' . (
@@ -1030,9 +1351,12 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		"likes": ' . $result[1] . ' }';
 	$redirect = false;
 
-} elseif (!file_exists(ATOM_INDEX) || countThreads() == 0) {
-	rebuildIndexes();
+} elseif (!file_exists(ATOM_INDEX) || getThreadsCount() == 0) {
+	rebuildIndexPages();
 }
+
+
+/* ==[ Redirection ]======================================================================================= */
 
 if ($redirect) {
 	if (isset($slowRedirect)) {

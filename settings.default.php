@@ -34,7 +34,7 @@ $atom_moderators = array(
 	// 'Mod3' => 'Password3'
 );
 // Janitors only have access to delete (and moderate if ATOM_REQMOD is set) posts
-// If the array is not empty, the janitorlog.html will be generated.
+// If the array is not empty, the janitorlog.html will be generated
 $atom_janitors = array(
 	// 'Janitor1' => 'Password1',
 	// 'Janitor2' => 'Password2',
@@ -79,8 +79,8 @@ define('ATOM_DBNAME', '');
 // PDO driver to use: 'mysql', 'pgsql', 'sqlite'
 define('ATOM_DBDRIVER', 'mysql');
 // Enter a custom DSN to override all of the connection/driver settings above  (see README for instructions)
-// When changing this, you should still set ATOM_DBDRIVER appropriately.
-// If you're using PDO with a MySQL or pgSQL database, you should leave this blank.
+// When changing this, you should still set ATOM_DBDRIVER appropriately
+// If you're using PDO with a MySQL or pgSQL database, you should leave this blank
 define('ATOM_DBDSN', '');
 
 /* ==[ Posts ]============================================================================================= */
@@ -101,7 +101,7 @@ define('ATOM_WORDBREAK', 0);
 /* ==[ Index page and threads ]============================================================================ */
 // Amount of threads shown per index page
 define('ATOM_THREADSPERPAGE', 10);
-// Amount of replies previewed on index pages
+// Amount of posts previewed on index pages
 define('ATOM_PREVIEWREPLIES', 5);
 // Amount of text lines to truncate posts on index pages [0 to disable]
 define('ATOM_TRUNC_LINES', 10);
@@ -109,8 +109,9 @@ define('ATOM_TRUNC_LINES', 10);
 define('ATOM_TRUNC_SIZE', 1536);
 // Oldest threads are discarded when the thread count passes this limit [0 to disable]
 define('ATOM_MAXTHREADS', 100);
-// Bump limit - maximum replies before a thread stops bumping [0 to disable]
-define('ATOM_BUMPLIMIT', 500);
+// Maximum posts before a thread stops bumping [0 to disable]
+// For endless mode: if the number of posts in a thread exceeds this value, old posts will be deleted
+define('ATOM_THREAD_LIMIT', 500);
 
 /* ==[ Reply form and posting ]============================================================================ */
 // Delay (in seconds) between posts from the same IP address to help control flooding [0 to disable]

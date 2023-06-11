@@ -25,23 +25,28 @@ Features
    - Named links formatting, like on github: `[atomboard](https://github.com/SthephanShinkufag/atomboard/)`
  - Posting:
    - YouTube, Vimeo and SoundCloud embedding.
-   - CAPTCHA (A simple implementation is included, reCAPTCHA is also supported).
+   - CAPTCHA (a simple implementation or reCAPTCHA).
  - Post files:
-   - You can upload 4 files per post.
+   - You can upload up to 4 files per post.
    - Supported GIF, JPG, PNG, MP4, MOV, WebM and WebP upload.
    - Upload, view and expand WEBM, MP4 and MOV without instaled `mediainfo` and `ffmpegthumbnailer`. Videos are injected right in page without generated thumbnails.
    - Allow new threads without requiring a file, or even disallow sending of files entirely.
- - Posts and threads:
-   - Reference links >>12345
-   - Post deletion via password.
+ - Posts:
+   - Reference links >>1234 to posts.
+   - Backlinks >>1234 from replying posts.
    - Likes (reactions to posts).
-   - "Sage" indicator in posts.
-   - Threads can be locked for posting.
-   - Truncating of long posts by size in bytes and by number of lines.
+   - Displaying unique ID's and country flags for posters.
+   - Highlighting posts by clicking on unique ID's.
    - Custom default posts names.
+   - Posts deletion via password.
+   - Sending posts with "sage" not to bump the thread.
+   - Truncating long messages by size in bytes and by number of lines on index page.
+ - Threads:
+   - Threads can be locked for posting.
+   - Threads can be sticked to the top of index page.
+   - Endless thread mode, when old posts are deleted after the limit.
  - Catalog page `catalog.html`.
  - Convenient css support for mobile devices.
- - Displaying unique hash ID's and country flags for posters
 
 Installing
 ------------

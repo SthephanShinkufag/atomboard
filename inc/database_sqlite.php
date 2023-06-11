@@ -71,7 +71,8 @@ if (sqlite_num_rows($result) == 0) {
 		thumb3_height INTEGER NOT NULL DEFAULT '0',
 		likes INTEGER NOT NULL DEFAULT '0',
 		stickied INTEGER NOT NULL DEFAULT '0',
-		locked INTEGER NOT NULL DEFAULT '0'
+		locked INTEGER NOT NULL DEFAULT '0',
+		endless INTEGER NOT NULL DEFAULT '0'
 	)");
 }
 
@@ -124,29 +125,10 @@ sqlite_query($db,
 	"ALTER TABLE " . ATOM_DBPOSTS . "
 	ADD COLUMN stickied INTEGER NOT NULL DEFAULT '0'");
 
-# Post Functions
-function uniquePosts() {
-	return sqlite_fetch_single(sqlite_query($GLOBALS["db"],
-		"SELECT COUNT(ip) FROM (SELECT DISTINCT ip FROM " . ATOM_DBPOSTS . ")"));
-}
-
-function postByID($id) {
-	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
-		"SELECT * FROM " . ATOM_DBPOSTS . "
-		WHERE id = '" . sqlite_escape_string($id) . "' LIMIT 1"), SQLITE_ASSOC);
-	foreach ($result as $post) {
-		return $post;
-	}
-}
-
-function threadExistsByID($id) {
-	return sqlite_fetch_single(sqlite_query($GLOBALS["db"],
-		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
-		WHERE id = '" . sqlite_escape_string($id) . "' AND parent = 0 LIMIT 1")) > 0;
-}
+/* ==[ Posts ]============================================================================================= */
 
 function insertPost($post) {
-	sqlite_query($GLOBALS["db"],
+	sqlite_query($GLOBALS['db'],
 		"INSERT INTO " . ATOM_DBPOSTS . " (
 			parent,
 			timestamp,
@@ -201,7 +183,8 @@ function insertPost($post) {
 			thumb3_height,
 			likes,
 			stickied,
-			locked
+			locked,
+			endless
 		) VALUES (
 			" . $post['parent'] . ",
 			" . time() . ",
@@ -256,71 +239,24 @@ function insertPost($post) {
 			" . $post['thumb3_height'] . ",
 			" . $post['likes'] . ",
 			" . $post['stickied'] . ",
-			" . $post['locked'] . "
+			" . $post['locked'] . ",
+			" . $post['endless'] . "
 		)");
-	return sqlite_last_insert_rowid($GLOBALS["db"]);
+	return sqlite_last_insert_rowid($GLOBALS['db']);
 }
 
-function stickyThreadByID($id, $isStickied) {
-	sqlite_query($GLOBALS["db"],
-		"UPDATE " . ATOM_DBPOSTS . "
-		SET stickied = '" . $isStickied . "'
-		WHERE id = " . $id);
-}
-
-function lockThreadByID($id, $isLocked) {
-	sqlite_query($GLOBALS["db"],
-		"UPDATE " . ATOM_DBPOSTS . "
-		SET locked = '" . $isLocked . "'
-		WHERE id = " . $id);
-}
-
-function bumpThreadByID($id) {
-	sqlite_query($GLOBALS["db"],
-		"UPDATE " . ATOM_DBPOSTS . "
-		SET bumped = " . time() . "
-		WHERE id = " . $id);
-}
-
-function countThreads() {
-	return sqlite_fetch_single(sqlite_query($GLOBALS["db"],
-		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
-		WHERE parent = 0"));
-}
-
-function allThreads() {
-	$threads = array();
-	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
+function getPost($id) {
+	$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
 		"SELECT * FROM " . ATOM_DBPOSTS . "
-		WHERE parent = 0
-		ORDER BY stickied DESC, bumped DESC"), SQLITE_ASSOC);
-	foreach ($result as $thread) {
-		$threads[] = $thread;
-	}
-	return $threads;
-}
-
-function numRepliesToThreadByID($id) {
-	return sqlite_fetch_single(sqlite_query($GLOBALS["db"],
-		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
-		WHERE parent = " . $id));
-}
-
-function postsInThreadByID($id, $moderated_only = true) {
-	$posts = array();
-	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
-		"SELECT * FROM " . ATOM_DBPOSTS . "
-		WHERE id = " . $id . " OR parent = " . $id . "
-		ORDER BY id ASC"), SQLITE_ASSOC);
+		WHERE id = '" . sqlite_escape_string($id) . "' LIMIT 1"), SQLITE_ASSOC);
 	foreach ($result as $post) {
-		$posts[] = $post;
+		return $post;
 	}
-	return $posts;
 }
 
-function postsByHex($hex) {
+function getPostsByImageHex($hex) {
 	$posts = array();
-	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
+	$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
 		"SELECT id, parent FROM " . ATOM_DBPOSTS . "
 		WHERE (
 			file0_hex = '" . sqlite_escape_string($hex) . "'
@@ -334,23 +270,38 @@ function postsByHex($hex) {
 	return $posts;
 }
 
-function latestPosts($moderated = true) {
+function getLatestPosts($moderated = true, $limit) {
 	$posts = array();
-	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
+	$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
 		"SELECT * FROM " . ATOM_DBPOSTS . "
-		ORDER BY timestamp DESC LIMIT 10"), SQLITE_ASSOC);
+		ORDER BY timestamp DESC LIMIT " . $limit), SQLITE_ASSOC);
 	foreach ($result as $post) {
 		$posts[] = $post;
 	}
 	return $posts;
 }
 
-function deletePostByID($id) {
-	$posts = postsInThreadByID($id, false);
+function getLastPostByIP() {
+	$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
+		"SELECT * FROM " . ATOM_DBPOSTS . "
+		WHERE ip = '" . $_SERVER['REMOTE_ADDR'] . "'
+		ORDER BY id DESC LIMIT 1"), SQLITE_ASSOC);
+	foreach ($result as $post) {
+		return $post;
+	}
+}
+
+function getUniquePostersCount() {
+	return sqlite_fetch_single(sqlite_query($GLOBALS['db'],
+		"SELECT COUNT(ip) FROM (SELECT DISTINCT ip FROM " . ATOM_DBPOSTS . ")"));
+}
+
+function deletePost($id) {
+	$posts = getThreadPosts($id, false);
 	foreach ($posts as $post) {
 		if ($post['id'] != $id) {
-			deletePostImages($post);
-			sqlite_query($GLOBALS["db"],
+			deletePostImagesFiles($post);
+			sqlite_query($GLOBALS['db'],
 				"DELETE FROM " . ATOM_DBPOSTS . "
 				WHERE id = " . $post['id']);
 		} else {
@@ -361,19 +312,19 @@ function deletePostByID($id) {
 		if ($thispost['parent'] == ATOM_NEWTHREAD) {
 			@unlink('res/' . $thispost['id'] . '.html');
 		}
-		deletePostImages($thispost);
-		sqlite_query($GLOBALS["db"],
+		deletePostImagesFiles($thispost);
+		sqlite_query($GLOBALS['db'],
 			"DELETE FROM " . ATOM_DBPOSTS . "
 			WHERE id = " . $thispost['id']);
 	}
 }
 
-function deleteImagesByImageID($post, $imgList) {
-	deletePostImages($post, $imgList);
+function deletePostImages($post, $imgList) {
+	deletePostImagesFiles($post, $imgList);
 	if ($imgList && count($imgList) <= ATOM_FILES_COUNT) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
-			sqlite_query($GLOBALS["db"],
+			sqlite_query($GLOBALS['db'],
 				"UPDATE " . ATOM_DBPOSTS . "
 				SET file" . $index . " = '',
 					file" . $index . "_hex = '',
@@ -390,12 +341,12 @@ function deleteImagesByImageID($post, $imgList) {
 	}
 }
 
-function hideImagesByImageID($post, $imgList) {
-	deletePostImagesThumb($post, $imgList);
+function hidePostImages($post, $imgList) {
+	deletePostImagesFilesThumbFiles($post, $imgList);
 	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT) ) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
-			sqlite_query($GLOBALS["db"],
+			sqlite_query($GLOBALS['db'],
 				"UPDATE " . ATOM_DBPOSTS . "
 				SET thumb" . $index . " = 'spoiler.png',
 					thumb" . $index . "_width = " . ATOM_FILE_MAXW . ",
@@ -405,66 +356,101 @@ function hideImagesByImageID($post, $imgList) {
 	}
 }
 
-function editMessageInPostById($id, $newMessage) {
-	sqlite_query($GLOBALS["db"],
+function editPostMessage($id, $newMessage) {
+	sqlite_query($GLOBALS['db'],
 		"UPDATE " . ATOM_DBPOSTS . "
 		SET message = '" . $newMessage . "'
 		WHERE id = " . $id);
 }
 
-function trimThreads() {
+/* ==[ Threads ]=========================================================================================== */
+
+function isThreadExists($id) {
+	return sqlite_fetch_single(sqlite_query($GLOBALS['db'],
+		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
+		WHERE id = '" . sqlite_escape_string($id) . "' AND parent = 0 LIMIT 1")) > 0;
+}
+
+function getThreads() {
+	$threads = array();
+	$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
+		"SELECT * FROM " . ATOM_DBPOSTS . "
+		WHERE parent = 0
+		ORDER BY stickied DESC, bumped DESC"), SQLITE_ASSOC);
+	foreach ($result as $thread) {
+		$threads[] = $thread;
+	}
+	return $threads;
+}
+
+function getThreadsCount() {
+	return sqlite_fetch_single(sqlite_query($GLOBALS['db'],
+		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
+		WHERE parent = 0"));
+}
+
+function trimThreadsCount() {
 	if (ATOM_MAXTHREADS > 0) {
-		$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
+		$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
 			"SELECT id FROM " . ATOM_DBPOSTS . "
 			WHERE parent = 0
 			ORDER BY stickied DESC, bumped DESC LIMIT " . ATOM_MAXTHREADS . ", 10"), SQLITE_ASSOC);
 		foreach ($result as $post) {
-			deletePostByID($post['id']);
+			deletePost($post['id']);
 		}
 	}
 }
 
-function lastPostByIP() {
-	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
+function getThreadPosts($id, $moderatedOnly = true) {
+	$posts = array();
+	$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
 		"SELECT * FROM " . ATOM_DBPOSTS . "
-		WHERE ip = '" . $_SERVER['REMOTE_ADDR'] . "'
-		ORDER BY id DESC LIMIT 1"), SQLITE_ASSOC);
+		WHERE id = " . $id . " OR parent = " . $id . "
+		ORDER BY id ASC"), SQLITE_ASSOC);
 	foreach ($result as $post) {
-		return $post;
+		$posts[] = $post;
 	}
+	return $posts;
 }
 
-function likePostByID($id, $ip) {
-	$isAlreadyLiked = sqlite_fetch_single(sqlite_query($GLOBALS["db"],
-		"SELECT COUNT(*) FROM " . ATOM_DBLIKES . "
-		WHERE ip = '" . $ip . "'
-			AND board = '" . ATOM_BOARD . "'
-			AND postnum = " . $id));
-	if ($isAlreadyLiked) {
-		sqlite_query($GLOBALS["db"],
-			"DELETE FROM " . ATOM_DBLIKES . "
-			WHERE ip = '" . $ip . "'
-				AND board = '" . ATOM_BOARD . "'
-				AND postnum = " . $id);
-	} else {
-		sqlite_query($GLOBALS["db"],
-			"INSERT INTO " . ATOM_DBLIKES . "
-			(ip, board, postnum)
-			VALUES ('" . $ip . "', '" . ATOM_BOARD . "', " . $id . ")");
-	}
-	$countOfPostLikes = sqlite_fetch_single(sqlite_query($GLOBALS["db"],
-		"SELECT COUNT(*) FROM " . ATOM_DBLIKES . "
-		WHERE board = '" . ATOM_BOARD . "' AND postnum = " . $id));
-	sqlite_query($GLOBALS["db"],
+function getThreadPostsCount($id) {
+	return sqlite_fetch_single(sqlite_query($GLOBALS['db'],
+		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
+		WHERE parent = " . $id));
+}
+
+function toggleStickyThread($id, $isStickied) {
+	sqlite_query($GLOBALS['db'],
 		"UPDATE " . ATOM_DBPOSTS . "
-		SET likes = " . $countOfPostLikes . "
+		SET stickied = '" . $isStickied . "'
 		WHERE id = " . $id);
-	return array(!$isAlreadyLiked, $countOfPostLikes);
 }
 
-# Ban Functions
+function toggleLockThread($id, $isLocked) {
+	sqlite_query($GLOBALS['db'],
+		"UPDATE " . ATOM_DBPOSTS . "
+		SET locked = '" . $isLocked . "'
+		WHERE id = " . $id);
+}
+
+function toggleEndlessThread($id, $isEndless) {
+	sqlite_query($GLOBALS['db'],
+		"UPDATE " . ATOM_DBPOSTS . "
+		SET endless = '" . $isEndless . "'
+		WHERE id = " . $id);
+}
+
+function bumpThread($id) {
+	sqlite_query($GLOBALS['db'],
+		"UPDATE " . ATOM_DBPOSTS . "
+		SET bumped = " . time() . "
+		WHERE id = " . $id);
+}
+
+/* ==[ Bans ]============================================================================================== */
+
 function banByID($id) {
-	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
+	$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
 		"SELECT * FROM " . ATOM_DBBANS . "
 		WHERE id = '" . sqlite_escape_string($id) . "' LIMIT 1"), SQLITE_ASSOC);
 	foreach ($result as $ban) {
@@ -473,7 +459,7 @@ function banByID($id) {
 }
 
 function banByIP($ip) {
-	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
+	$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
 		"SELECT * FROM " . ATOM_DBBANS . "
 		WHERE ip = '" . sqlite_escape_string($ip) . "' LIMIT 1"), SQLITE_ASSOC);
 	foreach ($result as $ban) {
@@ -481,9 +467,9 @@ function banByIP($ip) {
 	}
 }
 
-function allBans() {
+function getAllBans() {
 	$bans = array();
-	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
+	$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
 		"SELECT * FROM " . ATOM_DBBANS . "
 		ORDER BY timestamp DESC"), SQLITE_ASSOC);
 	foreach ($result as $ban) {
@@ -493,7 +479,7 @@ function allBans() {
 }
 
 function insertBan($ban) {
-	sqlite_query($GLOBALS["db"],
+	sqlite_query($GLOBALS['db'],
 		"INSERT INTO " . ATOM_DBBANS . "
 		(ip, timestamp, expire, reason)
 		VALUES (
@@ -502,33 +488,64 @@ function insertBan($ban) {
 			'" . sqlite_escape_string($ban['expire']) . "',
 			'" . sqlite_escape_string($ban['reason']) . "'
 		)");
-	return sqlite_last_insert_rowid($GLOBALS["db"]);
+	return sqlite_last_insert_rowid($GLOBALS['db']);
+}
+
+function deleteBan($id) {
+	sqlite_query($GLOBALS['db'],
+		"DELETE FROM " . ATOM_DBBANS . "
+		WHERE id = " . sqlite_escape_string($id));
 }
 
 function clearExpiredBans() {
-	$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
+	$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
 		"SELECT * FROM " . ATOM_DBBANS . "
 		WHERE expire > 0 AND expire <= " . time()), SQLITE_ASSOC);
 	foreach ($result as $ban) {
-		sqlite_query($GLOBALS["db"],
+		sqlite_query($GLOBALS['db'],
 			"DELETE FROM " . ATOM_DBBANS . "
 			WHERE id = " . $ban['id']);
 	}
 }
 
-function deleteBanByID($id) {
-	sqlite_query($GLOBALS["db"],
-		"DELETE FROM " . ATOM_DBBANS . "
-		WHERE id = " . sqlite_escape_string($id));
+/* ==[ Likes ]============================================================================================= */
+
+function toggleLikePost($id, $ip) {
+	$isAlreadyLiked = sqlite_fetch_single(sqlite_query($GLOBALS['db'],
+		"SELECT COUNT(*) FROM " . ATOM_DBLIKES . "
+		WHERE ip = '" . $ip . "'
+			AND board = '" . ATOM_BOARD . "'
+			AND postnum = " . $id));
+	if ($isAlreadyLiked) {
+		sqlite_query($GLOBALS['db'],
+			"DELETE FROM " . ATOM_DBLIKES . "
+			WHERE ip = '" . $ip . "'
+				AND board = '" . ATOM_BOARD . "'
+				AND postnum = " . $id);
+	} else {
+		sqlite_query($GLOBALS['db'],
+			"INSERT INTO " . ATOM_DBLIKES . "
+			(ip, board, postnum)
+			VALUES ('" . $ip . "', '" . ATOM_BOARD . "', " . $id . ")");
+	}
+	$countOfPostLikes = sqlite_fetch_single(sqlite_query($GLOBALS['db'],
+		"SELECT COUNT(*) FROM " . ATOM_DBLIKES . "
+		WHERE board = '" . ATOM_BOARD . "' AND postnum = " . $id));
+	sqlite_query($GLOBALS['db'],
+		"UPDATE " . ATOM_DBPOSTS . "
+		SET likes = " . $countOfPostLikes . "
+		WHERE id = " . $id);
+	return array(!$isAlreadyLiked, $countOfPostLikes);
 }
 
-// Modlog functions
+/* ==[ Modlog ]============================================================================================ */
+
 function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	$records = array();
 	// If we need a modlog for the admin panel with all public+private records
 	if ($private === '1') {
 		if ($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
-			$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
+			$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
 				"SELECT timestamp, username, action, color FROM " . ATOM_DBMODLOG . "
 				WHERE boardname = '" . ATOM_BOARD . "'
 				ORDER BY timestamp DESC LIMIT 100"));
@@ -536,7 +553,7 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 				$records[] = $row;
 			}
 		} elseif ($periodEndDate !== 0 && $periodStartDate !== 0) { // If the date range is set
-			$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
+			$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
 				"SELECT timestamp, username, action, color FROM " . ATOM_DBMODLOG . "
 				WHERE boardname = '" . ATOM_BOARD . "'
 					AND timestamp >= " . $periodStartDate . "
@@ -548,7 +565,7 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 		}
 	// If we need only public records
 	} elseif ($private === '0') {
-		$result = sqlite_fetch_all(sqlite_query($GLOBALS["db"],
+		$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
 			"SELECT timestamp, action FROM `" . ATOM_DBMODLOG . "`
 			WHERE boardname = '" . ATOM_BOARD . "'
 				AND private = '0'
@@ -565,7 +582,7 @@ function modLog($action, $private = '1', $color = 'Black') {
 	// '[1, 0]': 1 = Private record. 0 = Public record.
 	// 'Color': Choose what to put in style="color: " for this record
 	$userName = isset($_SESSION['atom_user']) ? $_SESSION['atom_user'] : 'UNKNOWN';
-	sqlite_fetch_all(sqlite_query($GLOBALS["db"],
+	sqlite_fetch_all(sqlite_query($GLOBALS['db'],
 		"INSERT INTO " . ATOM_DBMODLOG . "
 		(timestamp, boardname, username, action, color, private)
 		VALUES (

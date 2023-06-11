@@ -241,6 +241,7 @@ pre + br {
 }
 
 .reflink {
+	display: inline-flex;
 	font-weight: bold;
 }
 
@@ -250,6 +251,10 @@ pre + br {
 
 .reflink a:hover {
 	color: #dd0000;
+}
+
+.reflink > img, .reflink > .like-container {
+	margin: 0 2px;
 }
 
 .reply {

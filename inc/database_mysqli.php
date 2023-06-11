@@ -41,40 +41,13 @@ if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBMODLOG . "
 	mysqli_query($link, $modlog_sql);
 }
 
-# Utililty
 function mysqli_result($res, $row, $field = 0) {
 	$res->data_seek($row);
 	$datarow = $res->fetch_array();
 	return $datarow[$field];
 }
 
-# Post Functions
-function uniquePosts() {
-	global $link;
-	$row = mysqli_fetch_row(mysqli_query($link,
-		"SELECT COUNT(DISTINCT(`ip`)) FROM " . ATOM_DBPOSTS));
-	return $row[0];
-}
-
-function postByID($id) {
-	global $link;
-	$result = mysqli_query($link,
-		"SELECT * FROM `" . ATOM_DBPOSTS . "`
-		WHERE `id` = '" . mysqli_real_escape_string($link, $id) . "' LIMIT 1");
-	if ($result) {
-		while ($post = mysqli_fetch_assoc($result)) {
-			return $post;
-		}
-	}
-}
-
-function threadExistsByID($id) {
-	global $link;
-	return mysqli_result(mysqli_query($link,
-		"SELECT COUNT(*) FROM `" . ATOM_DBPOSTS . "`
-		WHERE `id` = '" . mysqli_real_escape_string($link, $id) . "'
-			AND `parent` = 0 AND `moderated` = 1 LIMIT 1"), 0, 0) > 0;
-}
+/* ==[ Posts ]============================================================================================= */
 
 function insertPost($post) {
 	global $link;
@@ -134,7 +107,8 @@ function insertPost($post) {
 			`likes`,
 			`moderated`,
 			`stickied`,
-			`locked`
+			`locked`,
+			`endless`
 		) VALUES (
 			" . $post['parent'] . ",
 			" . time() . ",
@@ -190,89 +164,25 @@ function insertPost($post) {
 			" . $post['likes'] . ",
 			" . $post['moderated'] . ",
 			" . $post['stickied'] . ",
-			" . $post['locked'] . "
+			" . $post['locked'] . ",
+			" . $post['endless'] . "
 		)");
 	return mysqli_insert_id($link);
 }
 
-function approvePostByID($id) {
+function getPost($id) {
 	global $link;
-	mysqli_query($link,
-		"UPDATE `" . ATOM_DBPOSTS . "`
-		SET `moderated` = 1
-		WHERE `id` = " . $id . " LIMIT 1");
-}
-
-function stickyThreadByID($id, $isStickied) {
-	global $link;
-	mysqli_query($link,
-		"UPDATE `" . ATOM_DBPOSTS . "`
-		SET `stickied` = '" . $isStickied . "'
-		WHERE `id` = " . $id . " LIMIT 1");
-}
-
-function lockThreadByID($id, $isLocked) {
-	global $link;
-	mysqli_query($link,
-		"UPDATE `" . ATOM_DBPOSTS . "`
-		SET `locked` = '" . $isLocked . "'
-		WHERE `id` = " . $id . " LIMIT 1");
-}
-
-function bumpThreadByID($id) {
-	global $link;
-	mysqli_query($link,
-		"UPDATE `" . ATOM_DBPOSTS . "`
-		SET `bumped` = " . time() . "
-		WHERE `id` = " . $id . " LIMIT 1");
-}
-
-function countThreads() {
-	global $link;
-	return mysqli_result(mysqli_query($link,
-		"SELECT COUNT(*) FROM `" . ATOM_DBPOSTS . "`
-		WHERE `parent` = 0 AND `moderated` = 1"), 0, 0);
-}
-
-function allThreads() {
-	global $link;
-	$threads = array();
 	$result = mysqli_query($link,
 		"SELECT * FROM `" . ATOM_DBPOSTS . "`
-		WHERE `parent` = 0 AND `moderated` = 1
-		ORDER BY `stickied` DESC, `bumped` DESC");
-	if ($result) {
-		while ($thread = mysqli_fetch_assoc($result)) {
-			$threads[] = $thread;
-		}
-	}
-	return $threads;
-}
-
-function numRepliesToThreadByID($id) {
-	global $link;
-	return mysqli_result(mysqli_query($link,
-		"SELECT COUNT(*) FROM `" . ATOM_DBPOSTS . "`
-		WHERE `parent` = " . $id . " AND `moderated` = 1"), 0, 0);
-}
-
-function postsInThreadByID($id, $moderated_only = true) {
-	global $link;
-	$posts = array();
-	$result = mysqli_query($link,
-		"SELECT * FROM `" . ATOM_DBPOSTS . "`
-		WHERE (`id` = " . $id . " OR `parent` = " . $id . ")" .
-		($moderated_only ? " AND `moderated` = 1" : "") .
-		" ORDER BY `id` ASC");
+		WHERE `id` = '" . mysqli_real_escape_string($link, $id) . "' LIMIT 1");
 	if ($result) {
 		while ($post = mysqli_fetch_assoc($result)) {
-			$posts[] = $post;
+			return $post;
 		}
 	}
-	return $posts;
 }
 
-function postsByHex($hex) {
+function getPostsByImageHex($hex) {
 	global $link;
 	$posts = array();
 	$result = mysqli_query($link,
@@ -291,13 +201,13 @@ function postsByHex($hex) {
 	return $posts;
 }
 
-function latestPosts($moderated = true) {
+function getLatestPosts($moderated = true, $limit) {
 	global $link;
 	$posts = array();
 	$result = mysqli_query($link,
 		"SELECT * FROM `" . ATOM_DBPOSTS . "`
 		WHERE `moderated` = " . ($moderated ? '1' : '0') . "
-		ORDER BY `timestamp` DESC LIMIT 10");
+		ORDER BY `timestamp` DESC LIMIT " . $limit);
 	if ($result) {
 		while ($post = mysqli_fetch_assoc($result)) {
 			$posts[] = $post;
@@ -306,12 +216,40 @@ function latestPosts($moderated = true) {
 	return $posts;
 }
 
-function deletePostByID($id) {
+function getLastPostByIP() {
 	global $link;
-	$posts = postsInThreadByID($id, false);
+	$replies = mysqli_query($link,
+		"SELECT * FROM `" . ATOM_DBPOSTS . "`
+		WHERE `ip` = '" . $_SERVER['REMOTE_ADDR'] . "'
+		ORDER BY `id` DESC LIMIT 1");
+	if ($replies) {
+		while ($post = mysqli_fetch_assoc($replies)) {
+			return $post;
+		}
+	}
+}
+
+function getUniquePostersCount() {
+	global $link;
+	$row = mysqli_fetch_row(mysqli_query($link,
+		"SELECT COUNT(DISTINCT(`ip`)) FROM " . ATOM_DBPOSTS));
+	return $row[0];
+}
+
+function approvePost($id) {
+	global $link;
+	mysqli_query($link,
+		"UPDATE `" . ATOM_DBPOSTS . "`
+		SET `moderated` = 1
+		WHERE `id` = " . $id . " LIMIT 1");
+}
+
+function deletePost($id) {
+	global $link;
+	$posts = getThreadPosts($id, false);
 	foreach ($posts as $post) {
 		if ($post['id'] != $id) {
-			deletePostImages($post);
+			deletePostImagesFiles($post);
 			mysqli_query($link,
 				"DELETE FROM `" . ATOM_DBPOSTS . "`
 				WHERE `id` = " . $post['id'] . " LIMIT 1");
@@ -323,16 +261,16 @@ function deletePostByID($id) {
 		if ($thispost['parent'] == ATOM_NEWTHREAD) {
 			@unlink('res/' . $thispost['id'] . '.html');
 		}
-		deletePostImages($thispost);
+		deletePostImagesFiles($thispost);
 		mysqli_query($link,
 			"DELETE FROM `" . ATOM_DBPOSTS . "`
 			WHERE `id` = " . $thispost['id'] . " LIMIT 1");
 	}
 }
 
-function deleteImagesByImageID($post, $imgList) {
+function deletePostImages($post, $imgList) {
 	global $link;
-	deletePostImages($post, $imgList);
+	deletePostImagesFiles($post, $imgList);
 	if ($imgList && count($imgList) <= ATOM_FILES_COUNT) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
@@ -353,9 +291,9 @@ function deleteImagesByImageID($post, $imgList) {
 	}
 }
 
-function hideImagesByImageID($post, $imgList) {
+function hidePostImages($post, $imgList) {
 	global $link;
-	deletePostImagesThumb($post, $imgList);
+	deletePostImagesFilesThumbFiles($post, $imgList);
 	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT) ) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
@@ -369,7 +307,7 @@ function hideImagesByImageID($post, $imgList) {
 	}
 }
 
-function editMessageInPostById($id, $newMessage) {
+function editPostMessage($id, $newMessage) {
 	global $link;
 	mysqli_query($link,
 		"UPDATE `" . ATOM_DBPOSTS . "`
@@ -377,7 +315,39 @@ function editMessageInPostById($id, $newMessage) {
 		WHERE `id` = " . $id . " LIMIT 1");
 }
 
-function trimThreads() {
+/* ==[ Threads ]=========================================================================================== */
+
+function isThreadExists($id) {
+	global $link;
+	return mysqli_result(mysqli_query($link,
+		"SELECT COUNT(*) FROM `" . ATOM_DBPOSTS . "`
+		WHERE `id` = '" . mysqli_real_escape_string($link, $id) . "'
+			AND `parent` = 0 AND `moderated` = 1 LIMIT 1"), 0, 0) > 0;
+}
+
+function getThreads() {
+	global $link;
+	$threads = array();
+	$result = mysqli_query($link,
+		"SELECT * FROM `" . ATOM_DBPOSTS . "`
+		WHERE `parent` = 0 AND `moderated` = 1
+		ORDER BY `stickied` DESC, `bumped` DESC");
+	if ($result) {
+		while ($thread = mysqli_fetch_assoc($result)) {
+			$threads[] = $thread;
+		}
+	}
+	return $threads;
+}
+
+function getThreadsCount() {
+	global $link;
+	return mysqli_result(mysqli_query($link,
+		"SELECT COUNT(*) FROM `" . ATOM_DBPOSTS . "`
+		WHERE `parent` = 0 AND `moderated` = 1"), 0, 0);
+}
+
+function trimThreadsCount() {
 	global $link;
 	if (ATOM_MAXTHREADS > 0) {
 		$result = mysqli_query($link,
@@ -386,26 +356,145 @@ function trimThreads() {
 			ORDER BY `stickied` DESC, `bumped` DESC LIMIT " . ATOM_MAXTHREADS . ", 10");
 		if ($result) {
 			while ($post = mysqli_fetch_assoc($result)) {
-				deletePostByID($post['id']);
+				deletePost($post['id']);
 			}
 		}
 	}
 }
 
-function lastPostByIP() {
+function getThreadPosts($id, $moderatedOnly = true) {
 	global $link;
-	$replies = mysqli_query($link,
+	$posts = array();
+	$result = mysqli_query($link,
 		"SELECT * FROM `" . ATOM_DBPOSTS . "`
-		WHERE `ip` = '" . $_SERVER['REMOTE_ADDR'] . "'
-		ORDER BY `id` DESC LIMIT 1");
-	if ($replies) {
-		while ($post = mysqli_fetch_assoc($replies)) {
-			return $post;
+		WHERE (`id` = " . $id . " OR `parent` = " . $id . ")" .
+		($moderatedOnly ? " AND `moderated` = 1" : "") .
+		" ORDER BY `id` ASC");
+	if ($result) {
+		while ($post = mysqli_fetch_assoc($result)) {
+			$posts[] = $post;
+		}
+	}
+	return $posts;
+}
+
+function getThreadPostsCount($id) {
+	global $link;
+	return mysqli_result(mysqli_query($link,
+		"SELECT COUNT(*) FROM `" . ATOM_DBPOSTS . "`
+		WHERE `parent` = " . $id . " AND `moderated` = 1"), 0, 0);
+}
+
+function toggleStickyThread($id, $isStickied) {
+	global $link;
+	mysqli_query($link,
+		"UPDATE `" . ATOM_DBPOSTS . "`
+		SET `stickied` = '" . $isStickied . "'
+		WHERE `id` = " . $id . " LIMIT 1");
+}
+
+function toggleLockThread($id, $isLocked) {
+	global $link;
+	mysqli_query($link,
+		"UPDATE `" . ATOM_DBPOSTS . "`
+		SET `locked` = '" . $isLocked . "'
+		WHERE `id` = " . $id . " LIMIT 1");
+}
+
+function toggleEndlessThread($id, $isEndless) {
+	global $link;
+	mysqli_query($link,
+		"UPDATE `" . ATOM_DBPOSTS . "`
+		SET `endless` = '" . $isEndless . "'
+		WHERE `id` = " . $id . " LIMIT 1");
+}
+
+function bumpThread($id) {
+	global $link;
+	mysqli_query($link,
+		"UPDATE `" . ATOM_DBPOSTS . "`
+		SET `bumped` = " . time() . "
+		WHERE `id` = " . $id . " LIMIT 1");
+}
+
+/* ==[ Bans ]============================================================================================== */
+
+function banByID($id) {
+	global $link;
+	$result = mysqli_query($link,
+		"SELECT * FROM `" . ATOM_DBBANS . "`
+		WHERE `id` = '" . mysqli_real_escape_string($link, $id) . "' LIMIT 1");
+	if ($result) {
+		while ($ban = mysqli_fetch_assoc($result)) {
+			return $ban;
 		}
 	}
 }
 
-function likePostByID($id, $ip) {
+function banByIP($ip) {
+	global $link;
+	$result = mysqli_query($link,
+		"SELECT * FROM `" . ATOM_DBBANS . "`
+		WHERE `ip` = '" . mysqli_real_escape_string($link, $ip) . "' LIMIT 1");
+	if ($result) {
+		while ($ban = mysqli_fetch_assoc($result)) {
+			return $ban;
+		}
+	}
+}
+
+function getAllBans() {
+	global $link;
+	$bans = array();
+	$result = mysqli_query($link,
+		"SELECT * FROM `" . ATOM_DBBANS . "`
+		ORDER BY `timestamp` DESC");
+	if ($result) {
+		while ($ban = mysqli_fetch_assoc($result)) {
+			$bans[] = $ban;
+		}
+	}
+	return $bans;
+}
+
+function insertBan($ban) {
+	global $link;
+	mysqli_query($link,
+		"INSERT INTO `" . ATOM_DBBANS . "`
+		(`ip`, `timestamp`, `expire`, `reason`)
+		VALUES (
+			'" . mysqli_real_escape_string($link, $ban['ip']) . "',
+			" . time() . ",
+			'" . mysqli_real_escape_string($link, $ban['expire']) . "',
+			'" . mysqli_real_escape_string($link, $ban['reason']) . "'
+		)");
+	return mysqli_insert_id($link);
+}
+
+function deleteBan($id) {
+	global $link;
+	mysqli_query($link,
+		"DELETE FROM `" . ATOM_DBBANS . "`
+		WHERE `id` = " . mysqli_real_escape_string($link, $id) . " LIMIT 1");
+}
+
+function clearExpiredBans() {
+	global $link;
+	$result = mysqli_query($link,
+		"SELECT * FROM `" . ATOM_DBBANS . "`
+		WHERE `expire` > 0 AND `expire` <= " . time());
+	if ($result) {
+		while ($ban = mysqli_fetch_assoc($result)) {
+			mysqli_query($link,
+				"DELETE FROM `" . ATOM_DBBANS . "`
+				WHERE `id` = " . $ban['id'] . " LIMIT 1");
+		}
+	}
+}
+
+/* ==[ Likes ]============================================================================================= */
+
+function toggleLikePost($id, $ip) {
 	global $link;
 	$isAlreadyLiked = mysqli_result(mysqli_query($link,
 		"SELECT COUNT(*) FROM `" . ATOM_DBLIKES . "`
@@ -434,81 +523,8 @@ function likePostByID($id, $ip) {
 	return array(!$isAlreadyLiked, $countOfPostLikes);
 }
 
-# Ban Functions
-function banByID($id) {
-	global $link;
-	$result = mysqli_query($link,
-		"SELECT * FROM `" . ATOM_DBBANS . "`
-		WHERE `id` = '" . mysqli_real_escape_string($link, $id) . "' LIMIT 1");
-	if ($result) {
-		while ($ban = mysqli_fetch_assoc($result)) {
-			return $ban;
-		}
-	}
-}
+/* ==[ Modlog ]============================================================================================ */
 
-function banByIP($ip) {
-	global $link;
-	$result = mysqli_query($link,
-		"SELECT * FROM `" . ATOM_DBBANS . "`
-		WHERE `ip` = '" . mysqli_real_escape_string($link, $ip) . "' LIMIT 1");
-	if ($result) {
-		while ($ban = mysqli_fetch_assoc($result)) {
-			return $ban;
-		}
-	}
-}
-
-function allBans() {
-	global $link;
-	$bans = array();
-	$result = mysqli_query($link,
-		"SELECT * FROM `" . ATOM_DBBANS . "`
-		ORDER BY `timestamp` DESC");
-	if ($result) {
-		while ($ban = mysqli_fetch_assoc($result)) {
-			$bans[] = $ban;
-		}
-	}
-	return $bans;
-}
-
-function insertBan($ban) {
-	global $link;
-	mysqli_query($link,
-		"INSERT INTO `" . ATOM_DBBANS . "`
-		(`ip`, `timestamp`, `expire`, `reason`)
-		VALUES (
-			'" . mysqli_real_escape_string($link, $ban['ip']) . "',
-			" . time() . ",
-			'" . mysqli_real_escape_string($link, $ban['expire']) . "',
-			'" . mysqli_real_escape_string($link, $ban['reason']) . "'
-		)");
-	return mysqli_insert_id($link);
-}
-
-function clearExpiredBans() {
-	global $link;
-	$result = mysqli_query($link,
-		"SELECT * FROM `" . ATOM_DBBANS . "`
-		WHERE `expire` > 0 AND `expire` <= " . time());
-	if ($result) {
-		while ($ban = mysqli_fetch_assoc($result)) {
-			mysqli_query($link,
-				"DELETE FROM `" . ATOM_DBBANS . "`
-				WHERE `id` = " . $ban['id'] . " LIMIT 1");
-		}
-	}
-}
-
-function deleteBanByID($id) {
-	global $link;
-	mysqli_query($link,
-		"DELETE FROM `" . ATOM_DBBANS . "`
-		WHERE `id` = " . mysqli_real_escape_string($link, $id) . " LIMIT 1");
-}
-
-// Modlog functions
 function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	global $link;
 	$records = array();

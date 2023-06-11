@@ -72,7 +72,8 @@ if (!$result->fetchArray()) {
 		thumb3_height INTEGER NOT NULL DEFAULT '0',
 		likes INTEGER NOT NULL DEFAULT '0',
 		stickied INTEGER NOT NULL DEFAULT '0',
-		locked INTEGER NOT NULL DEFAULT '0'
+		locked INTEGER NOT NULL DEFAULT '0',
+		endless INTEGER NOT NULL DEFAULT '0'
 	)");
 }
 
@@ -125,28 +126,7 @@ if (!$result->fetchArray()) {
 	"ALTER TABLE " . ATOM_DBPOSTS . "
 	ADD COLUMN stickied INTEGER NOT NULL DEFAULT '0'");
 
-# Post Functions
-function uniquePosts() {
-	global $db;
-	return $db->querySingle("SELECT COUNT(ip) FROM (SELECT DISTINCT ip FROM " . ATOM_DBPOSTS . ")");
-}
-
-function postByID($id) {
-	global $db;
-	$result = $db->query(
-		"SELECT * FROM " . ATOM_DBPOSTS . "
-		WHERE id = '" . $db->escapeString($id) . "' LIMIT 1");
-	while ($post = $result->fetchArray()) {
-		return $post;
-	}
-}
-
-function threadExistsByID($id) {
-	global $db;
-	return $db->querySingle(
-		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
-		WHERE id = '" . $db->escapeString($id) . "' AND parent = 0 LIMIT 1") > 0;
-}
+/* ==[ Posts ]============================================================================================= */
 
 function insertPost($post) {
 	global $db;
@@ -205,7 +185,8 @@ function insertPost($post) {
 			thumb3_height,
 			likes,
 			stickied,
-			locked
+			locked,
+			endless
 		) VALUES (
 			" . $post['parent'] . ",
 			" . time() . ",
@@ -260,76 +241,23 @@ function insertPost($post) {
 			" . $post['thumb3_height'] . ",
 			" . $post['likes'] . ",
 			" . $post['stickied'] . ",
-			" . $post['locked'] . "
+			" . $post['locked'] . ",
+			" . $post['endless'] . "
 		)");
 	return $db->lastInsertRowID();
 }
 
-function stickyThreadByID($id, $isStickied) {
+function getPost($id) {
 	global $db;
-	$db->exec(
-		"UPDATE " . ATOM_DBPOSTS . "
-		SET stickied = '" . $isStickied . "'
-		WHERE id = " . $id);
-}
-
-function lockThreadByID($id, $isLocked) {
-	global $db;
-	$db->exec(
-		"UPDATE " . ATOM_DBPOSTS . "
-		SET locked = '" . $isLocked . "'
-		WHERE id = " . $id);
-}
-
-function bumpThreadByID($id) {
-	global $db;
-	$db->exec(
-		"UPDATE " . ATOM_DBPOSTS . "
-		SET bumped = " . time() . "
-		WHERE id = " . $id);
-}
-
-function countThreads() {
-	global $db;
-	return $db->querySingle(
-		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
-		WHERE parent = 0");
-}
-
-function allThreads() {
-	global $db;
-	$threads = array();
 	$result = $db->query(
 		"SELECT * FROM " . ATOM_DBPOSTS . "
-		WHERE parent = 0
-		ORDER BY stickied DESC, bumped DESC");
-	while ($thread = $result->fetchArray()) {
-		$threads[] = $thread;
-	}
-	return $threads;
-}
-
-function numRepliesToThreadByID($id) {
-	global $db;
-	return $db->querySingle(
-		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
-		WHERE parent = " . $id);
-}
-
-function postsInThreadByID($id, $moderated_only = true) {
-	global $db;
-	$posts = array();
-	$result = $db->query(
-		"SELECT * FROM " . ATOM_DBPOSTS . "
-		WHERE id = " . $id . " OR parent = " . $id . "
-		ORDER BY id ASC");
+		WHERE id = '" . $db->escapeString($id) . "' LIMIT 1");
 	while ($post = $result->fetchArray()) {
-		$posts[] = $post;
+		return $post;
 	}
-	return $posts;
 }
 
-function postsByHex($hex) {
+function getPostsByImageHex($hex) {
 	global $db;
 	$posts = array();
 	$result = $db->query(
@@ -345,24 +273,40 @@ function postsByHex($hex) {
 	return $posts;
 }
 
-function latestPosts($moderated = true) {
+function getLatestPosts($moderated = true, $limit) {
 	global $db;
 	$posts = array();
 	$result = $db->query(
 		"SELECT * FROM " . ATOM_DBPOSTS . "
-		ORDER BY timestamp DESC LIMIT 10");
+		ORDER BY timestamp DESC LIMIT " . $limit);
 	while ($post = $result->fetchArray()) {
 		$posts[] = $post;
 	}
 	return $posts;
 }
 
-function deletePostByID($id) {
+function getLastPostByIP() {
 	global $db;
-	$posts = postsInThreadByID($id, false);
+	$result = $db->query(
+		"SELECT * FROM " . ATOM_DBPOSTS . "
+		WHERE ip = '" . $_SERVER['REMOTE_ADDR'] . "'
+		ORDER BY id DESC LIMIT 1");
+	while ($post = $result->fetchArray()) {
+		return $post;
+	}
+}
+
+function getUniquePostersCount() {
+	global $db;
+	return $db->querySingle("SELECT COUNT(ip) FROM (SELECT DISTINCT ip FROM " . ATOM_DBPOSTS . ")");
+}
+
+function deletePost($id) {
+	global $db;
+	$posts = getThreadPosts($id, false);
 	foreach ($posts as $post) {
 		if ($post['id'] != $id) {
-			deletePostImages($post);
+			deletePostImagesFiles($post);
 			$db->exec(
 				"DELETE FROM " . ATOM_DBPOSTS . "
 				WHERE id = " . $post['id']);
@@ -374,16 +318,16 @@ function deletePostByID($id) {
 		if ($thispost['parent'] == ATOM_NEWTHREAD) {
 			@unlink('res/' . $thispost['id'] . '.html');
 		}
-		deletePostImages($thispost);
+		deletePostImagesFiles($thispost);
 		$db->exec(
 			"DELETE FROM " . ATOM_DBPOSTS . "
 			WHERE id = " . $thispost['id']);
 	}
 }
 
-function deleteImagesByImageID($post, $imgList) {
+function deletePostImages($post, $imgList) {
 	global $db;
-	deletePostImages($post, $imgList);
+	deletePostImagesFiles($post, $imgList);
 	if ($imgList && count($imgList) <= ATOM_FILES_COUNT) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
@@ -404,9 +348,9 @@ function deleteImagesByImageID($post, $imgList) {
 	}
 }
 
-function hideImagesByImageID($post, $imgList) {
+function hidePostImages($post, $imgList) {
 	global $db;
-	deletePostImagesThumb($post, $imgList);
+	deletePostImagesFilesThumbFiles($post, $imgList);
 	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT) ) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
@@ -420,7 +364,7 @@ function hideImagesByImageID($post, $imgList) {
 	}
 }
 
-function editMessageInPostById($id, $newMessage) {
+function editPostMessage($id, $newMessage) {
 	global $db;
 	$db->exec(
 		"UPDATE " . ATOM_DBPOSTS . "
@@ -428,7 +372,36 @@ function editMessageInPostById($id, $newMessage) {
 		WHERE id = " . $id);
 }
 
-function trimThreads() {
+/* ==[ Threads ]=========================================================================================== */
+
+function isThreadExists($id) {
+	global $db;
+	return $db->querySingle(
+		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
+		WHERE id = '" . $db->escapeString($id) . "' AND parent = 0 LIMIT 1") > 0;
+}
+
+function getThreads() {
+	global $db;
+	$threads = array();
+	$result = $db->query(
+		"SELECT * FROM " . ATOM_DBPOSTS . "
+		WHERE parent = 0
+		ORDER BY stickied DESC, bumped DESC");
+	while ($thread = $result->fetchArray()) {
+		$threads[] = $thread;
+	}
+	return $threads;
+}
+
+function getThreadsCount() {
+	global $db;
+	return $db->querySingle(
+		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
+		WHERE parent = 0");
+}
+
+function trimThreadsCount() {
 	global $db;
 	if (ATOM_MAXTHREADS > 0) {
 		$result = $db->query(
@@ -436,23 +409,133 @@ function trimThreads() {
 			WHERE parent = 0" . "
 			ORDER BY stickied DESC, bumped DESC LIMIT " . ATOM_MAXTHREADS . ", 10");
 		while ($post = $result->fetchArray()) {
-			deletePostByID($post['id']);
+			deletePost($post['id']);
 		}
 	}
 }
 
-function lastPostByIP() {
+function getThreadPosts($id, $moderatedOnly = true) {
 	global $db;
+	$posts = array();
 	$result = $db->query(
 		"SELECT * FROM " . ATOM_DBPOSTS . "
-		WHERE ip = '" . $_SERVER['REMOTE_ADDR'] . "'
-		ORDER BY id DESC LIMIT 1");
+		WHERE id = " . $id . " OR parent = " . $id . "
+		ORDER BY id ASC");
 	while ($post = $result->fetchArray()) {
-		return $post;
+		$posts[] = $post;
+	}
+	return $posts;
+}
+
+function getThreadPostsCount($id) {
+	global $db;
+	return $db->querySingle(
+		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
+		WHERE parent = " . $id);
+}
+
+function toggleStickyThread($id, $isStickied) {
+	global $db;
+	$db->exec(
+		"UPDATE " . ATOM_DBPOSTS . "
+		SET stickied = '" . $isStickied . "'
+		WHERE id = " . $id);
+}
+
+function toggleLockThread($id, $isLocked) {
+	global $db;
+	$db->exec(
+		"UPDATE " . ATOM_DBPOSTS . "
+		SET locked = '" . $isLocked . "'
+		WHERE id = " . $id);
+}
+
+function toggleEndlessThread($id, $isEndless) {
+	global $db;
+	$db->exec(
+		"UPDATE " . ATOM_DBPOSTS . "
+		SET endless = '" . $isEndless . "'
+		WHERE id = " . $id);
+}
+
+function bumpThread($id) {
+	global $db;
+	$db->exec(
+		"UPDATE " . ATOM_DBPOSTS . "
+		SET bumped = " . time() . "
+		WHERE id = " . $id);
+}
+
+/* ==[ Bans ]============================================================================================== */
+
+function banByID($id) {
+	global $db;
+	$result = $db->query(
+		"SELECT * FROM " . ATOM_DBBANS . "
+		WHERE id = '" . $db->escapeString($id) . "' LIMIT 1");
+	while ($ban = $result->fetchArray()) {
+		return $ban;
 	}
 }
 
-function likePostByID($id, $ip) {
+function banByIP($ip) {
+	global $db;
+	$result = $db->query(
+		"SELECT * FROM " . ATOM_DBBANS . "
+		WHERE ip = '" . $db->escapeString($ip) . "' LIMIT 1");
+	while ($ban = $result->fetchArray()) {
+		return $ban;
+	}
+}
+
+function getAllBans() {
+	global $db;
+	$bans = array();
+	$result = $db->query(
+		"SELECT * FROM " . ATOM_DBBANS . "
+		ORDER BY timestamp DESC");
+	while ($ban = $result->fetchArray()) {
+		$bans[] = $ban;
+	}
+	return $bans;
+}
+
+function insertBan($ban) {
+	global $db;
+	$db->exec(
+		"INSERT INTO " . ATOM_DBBANS . "
+		(ip, timestamp, expire, reason)
+		VALUES (
+			'" . $db->escapeString($ban['ip']) . "',
+			" . time() . ",
+			'" . $db->escapeString($ban['expire']) . "',
+			'" . $db->escapeString($ban['reason']) . "'
+		)");
+	return $db->lastInsertRowID();
+}
+
+function deleteBan($id) {
+	global $db;
+	$db->exec(
+		"DELETE FROM " . ATOM_DBBANS . "
+		WHERE id = " . $db->escapeString($id));
+}
+
+function clearExpiredBans() {
+	global $db;
+	$result = $db->query(
+		"SELECT * FROM " . ATOM_DBBANS . "
+		WHERE expire > 0 AND expire <= " . time());
+	while ($ban = $result->fetchArray()) {
+		$db->exec(
+			"DELETE FROM " . ATOM_DBBANS . "
+			WHERE id = " . $ban['id']);
+	}
+}
+
+/* ==[ Likes ]============================================================================================= */
+
+function toggleLikePost($id, $ip) {
 	global $db;
 	$isAlreadyLiked = $db->querySingle(
 		"SELECT COUNT(*) FROM " . ATOM_DBLIKES . "
@@ -481,73 +564,8 @@ function likePostByID($id, $ip) {
 	return array(!$isAlreadyLiked, $countOfPostLikes);
 }
 
-# Ban Functions
-function banByID($id) {
-	global $db;
-	$result = $db->query(
-		"SELECT * FROM " . ATOM_DBBANS . "
-		WHERE id = '" . $db->escapeString($id) . "' LIMIT 1");
-	while ($ban = $result->fetchArray()) {
-		return $ban;
-	}
-}
+/* ==[ Modlog ]============================================================================================ */
 
-function banByIP($ip) {
-	global $db;
-	$result = $db->query(
-		"SELECT * FROM " . ATOM_DBBANS . "
-		WHERE ip = '" . $db->escapeString($ip) . "' LIMIT 1");
-	while ($ban = $result->fetchArray()) {
-		return $ban;
-	}
-}
-
-function allBans() {
-	global $db;
-	$bans = array();
-	$result = $db->query(
-		"SELECT * FROM " . ATOM_DBBANS . "
-		ORDER BY timestamp DESC");
-	while ($ban = $result->fetchArray()) {
-		$bans[] = $ban;
-	}
-	return $bans;
-}
-
-function insertBan($ban) {
-	global $db;
-	$db->exec(
-		"INSERT INTO " . ATOM_DBBANS . "
-		(ip, timestamp, expire, reason)
-		VALUES (
-			'" . $db->escapeString($ban['ip']) . "',
-			" . time() . ",
-			'" . $db->escapeString($ban['expire']) . "',
-			'" . $db->escapeString($ban['reason']) . "'
-		)");
-	return $db->lastInsertRowID();
-}
-
-function clearExpiredBans() {
-	global $db;
-	$result = $db->query(
-		"SELECT * FROM " . ATOM_DBBANS . "
-		WHERE expire > 0 AND expire <= " . time());
-	while ($ban = $result->fetchArray()) {
-		$db->exec(
-			"DELETE FROM " . ATOM_DBBANS . "
-			WHERE id = " . $ban['id']);
-	}
-}
-
-function deleteBanByID($id) {
-	global $db;
-	$db->exec(
-		"DELETE FROM " . ATOM_DBBANS . "
-		WHERE id = " . $db->escapeString($id));
-}
-
-// Modlog functions
 function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	global $db;
 	$records = array();
