@@ -141,6 +141,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				fancyDie('Incorrect CAPTCHA text entered, please try again.<br>' .
 					'Click the image to retrieve a new CAPTCHA.');
 			}
+			unset($_SESSION['atom_captcha']);
 		}
 
 		// Check for ban
