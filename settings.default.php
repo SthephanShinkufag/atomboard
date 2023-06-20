@@ -6,23 +6,20 @@
 /* ==[ Board description and customization ]=============================================================== */
 // Unique identifier for this board using only letters and numbers
 define('ATOM_BOARD', '');
-// Displayed at the top of every page
-define('ATOM_BOARDDESC', '');
-// Logo HTML - specify your code to be added at the top of the page
-define('ATOM_LOGO', '');
+// Description displayed at the top of every page
+define('ATOM_BOARD_DESCRIPTION', '');
 // Name of the index page
 define('ATOM_INDEX', 'index.html');
 // Timezone (see https://secure.php.net/manual/en/timezones.php - e.g. 'America/Los_Angeles')
 define('ATOM_TIMEZONE', 'UTC');
-// <head> HTML - specify your code to be added to the end of the <head> element
-define('ATOM_HTML_HEAD', '');
-// Sidebar HTML - specify your navigation buttons to be added at the left side of the page
-define('ATOM_HTML_LEFTSIDE', '
-				<a class="aside-btn" id="aside-btn-home" href="/" title="Home">
-					<svg><use xlink:href="#symbol-home"/></svg>
-				</a>
-				<a class="aside-btn aside-btn-board" href="/' . ATOM_BOARD . '/" title="' .
-					ATOM_BOARDDESC . '">' . ATOM_BOARD .'</a>');
+// Specify your code on the top of index pages
+define('ATOM_HTML_TOP_INFO', '');
+// Specify your navigation links to be added at the top and the bottom of the page
+define('ATOM_HTML_NAVIGATION', '
+			<a class="navigation-link" href="/" title="Main page">Home</a>
+			<span class="navigation-separator"></span>
+			<a class="navigation-link" href="/' . ATOM_BOARD . '/" title="' . ATOM_BOARD_DESCRIPTION . '">' .
+				ATOM_BOARD . '</a>');
 
 /* ==[ Administration staff ]============================================================================== */
 // Administrator password. Administrator has full access to the board

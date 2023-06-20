@@ -1,3 +1,5 @@
+/* ==[Main rules]========================================================================================== */
+
 a {
 	color: #0f73c8;
 	text-decoration: none;
@@ -10,12 +12,6 @@ a:hover {
 .abbrev, .omittedposts {
 	color: #707070;
 	margin-top: 6px;
-}
-
-.adminbar {
-	text-align: right;
-	clear: both;
-	float: right;
 }
 
 #ban-table {
@@ -34,6 +30,7 @@ a:hover {
 }
 
 body {
+	margin: 0;
 	text-align: center;
 }
 
@@ -43,10 +40,20 @@ body, html {
 	font: 14px Helvetica, Arial, sans-serif;
 }
 
-hr {
-	margin: 10px;
+.description {
+	margin: 7px 0;
 	clear: both;
-	border-top: 1px dashed #888;
+	text-align: center;
+	font-size: 2em;
+	line-height: 1em;
+	color: #71819f;
+	width: 100%;
+}
+
+hr {
+	margin: 10px 0;
+	clear: both;
+	border-top: 1px solid #8ab2ff;
 	border-bottom: none;
 	border-left: none;
 	border-right: none;
@@ -58,36 +65,11 @@ hr {
 	text-align: center;
 }
 
-.link-button {
-	display: inline-block;
-	padding: 2px 6px;
-	background-image: linear-gradient(to bottom, #c8c8c8, #6c6c6c);
-	color: #fff !important;
-	border-radius: 3px;
-	font-weight: bold;
-}
-
-.link-button:hover {
-	background-image: linear-gradient(to top, #c8c8c8, #6c6c6c);
-}
-
 .login {
 	text-align: center;
 }
 
-.logo {
-	margin: 7px 0;
-	clear: both;
-	text-align: center;
-	font-size: 2em;
-	line-height: 1em;
-	color: #800000;
-	width: 100%;
-}
-
 .managebutton {
-	font-size: 15px;
-	height: 28px;
 	margin: 0.2em;
 }
 
@@ -101,20 +83,11 @@ hr {
 
 .userdelete {
 	float: right;
-	text-align: center;
 	white-space: nowrap;
 }
 
-.vyshyvanka {
-	background: url("../icons/vyshyvanka_30x64.png"), #eee;
-	background-repeat: repeat-x;
-	background-size: auto 64px;
-	height: 64px;
-	opacity: .8;
-}
-
 .wrapper {
-	width: 70%;
+	display: inline-block;
 	width: calc(100% - 210px);
 	max-width: 1224px;
 	text-align: left;
@@ -131,18 +104,18 @@ hr {
 	overflow: hidden;
 	vertical-align: top;
 	display: inline-block;
-	max-width: 236px;
-	width: 236px;
+	max-width: 280px;
+	width: 280px;
 	max-height: 350px;
 	height: 350px;
+	padding-left: 3px;
+	padding-right: 3px;
 	text-align: center;
 	margin: 3px;
 	padding-top: 6px;
 	background: #ddd;
 	color: #34343f;
 	border: 1px solid #ccc;
-	padding-left: 3px;
-	padding-right: 3px;
 	border-radius: 8px;
 }
 
@@ -188,6 +161,7 @@ del {
 .message {
 	margin: 1em 20px 5px 20px;
 	line-height: 19px;
+	word-break: break-word;
 }
 
 .oppost > .backlinks {
@@ -205,7 +179,7 @@ del {
 }
 
 .postername {
-	color: #448bc6;
+	color: #438ad7;
 	font: bold 13px Verdana, Arial, sans-serif;
 }
 
@@ -243,6 +217,7 @@ pre + br {
 .reflink {
 	display: inline-flex;
 	font-weight: bold;
+	font-size: 13px;
 }
 
 .reflink a {
@@ -254,7 +229,7 @@ pre + br {
 }
 
 .reflink > img, .reflink > .like-container {
-	margin: 0 2px;
+	margin-left: 4px;
 }
 
 .reply {
@@ -285,11 +260,6 @@ pre + br {
 	min-width: 325px;
 }
 
-.reply > .reflink {
-	font-size: 13px;
-	margin-left: 4px;
-}
-
 .sage::after {
 	content: " sage";
 	font-weight: bold;
@@ -303,11 +273,6 @@ pre + br {
 
 .spoiler:hover {
 	color: #333;
-}
-
-textarea#message {
-	width: 100%;
-	height: 250px;
 }
 
 .thumb {
@@ -370,8 +335,8 @@ video.thumb {
 }
 
 #message {
-	width: 298px;
-	height: 100px;
+	width: 98%;
+	height: 200px;
 }
 
 .postarea {
@@ -393,7 +358,7 @@ video.thumb {
 }
 
 .postform-input {
-	width: 298px;
+	width: 98%;
 }
 
 .rules {
@@ -410,92 +375,16 @@ video.thumb {
 	padding-left: 0;
 }
 
-/* ==[ Aside buttons ]===================================================================================== */
-
-.aside {
-	width: 40px;
-}
-
-.aside, .wrapper {
-	display: inline-block;
-	vertical-align: top;
-	margin: 0 20px;
-}
-
-.aside div {
-	position: fixed;
-	width: inherit;
-}
-
-.aside-bottom {
-	bottom: 25px;
-}
-
-.aside-btn {
-	display: block;
-	width: 40px;
-	height: 40px;
-	margin-bottom: 4px;
-	border-radius: 5px;
-	background-color: #ccc;
-	color: #606060;
-	outline: none;
-	text-decoration: none;
-	cursor: pointer;
-}
-
-.aside-top {
-	margin-top: 20px;
-}
-
-.aside-btn:hover {
-	background-color: #bdc5d4;
-	color: #367cb9;
-}
-
-.aside-btn > svg {
-	width: 24px;
-	height: 24px;
-	margin: 8px;
-	fill: currentColor;
-}
-
-.aside-btn-board {
-	font-weight: bold;
-	font-size: 18px;
-	line-height: 38px;
-}
-
-.aside-btn-indent {
-	margin-bottom: 40px;
-}
-
-#aside-btn-tobottom > svg, #aside-btn-tobottom-mobile > svg {
-	transform: rotate(-90deg);
-}
-
-#aside-btn-tobottom-mobile {
-	display: none;
-}
-
-#aside-btn-totop > svg {
-	transform: rotate(90deg);
-}
-
 /* ==[ Like post button ]================================================================================== */
 
 .like-container {
 	height: 16px;
-	display: inline-block;
-	vertical-align: -1px;
-	margin-left: 3px;
 	cursor: pointer;
 }
 
 .like-counter {
-	vertical-align: 1px;
-	color: #619cc8;
-	font: 14px tahoma;
+	vertical-align: top;
+	color: #ff5b9c;
 }
 
 .like-disabled {
@@ -509,52 +398,81 @@ video.thumb {
 .like-icon > svg {
 	width: 12px;
 	height: 12px;
+	margin-top: 1px;
 	fill: currentColor;
+}
+
+/* ==[ Links and buttons ]================================================================================= */
+
+.link-button {
+	display: inline-block;
+	padding: 1px 4px 2px 4px;
+	background-image: linear-gradient(to bottom, #c9d4e6, #577dae);
+	color: #fff !important;
+	border-radius: 3px;
+	font-weight: bold;
+	font-size: 13px;
+}
+
+.link-button:hover {
+	background: #5f83bb;
+}
+
+.navigation {
+	display: flex;
+	justify-content: center;
+	flex-wrap: wrap;
+	background-image: linear-gradient(to top, #c1d3fb, #375a88);
+}
+
+#navigation-bottom {
+	margin-top: 8px;
+}
+
+.navigation-link {
+	margin: -1px 0 0 -1px;
+	padding: 2px 8px 4px 8px;
+	border: 1px solid #c0ccd7;
+	color: #fff !important;
+	font-size: 13px;
+	font-weight: bold;
+}
+
+.navigation-link:hover {
+	background: #5d7aa8;
+}
+
+.navigation-separator {
+	flex-grow: 1;
+}
+
+.panel {
+	text-align: center;
+	clear: both;
+}
+
+#panel-top, #panel-adminbar {
+	margin: 10px 0;
 }
 
 /* ==[ Mobile devices ]==================================================================================== */
 
 @media only screen and (max-width: 770px) {
-	.aside, .wrapper {
-		width: auto;
-		margin: 0;
-	}
-	.aside div {
-		position: static;
-		display: inline-block;
-	}
-	.aside-btn {
-		display: inline-block;
-	}
-	.aside-btn-board {
-		vertical-align: top;
-	}
-	.aside-btn-indent {
-		margin-bottom: 0;
-	}
-	#aside-btn-tobottom {
-		display: none;
-	}
-	#aside-btn-tobottom-mobile {
-		display: inline-block;
-	}
-	.aside-right {
-		margin-top: 10px;
-	}
-	.aside-top {
-		margin-top: 0;
-	}
 	div[id^="thumbfile"] > a {
 		display: inline-block;
+	}
+	.navigation-separator {
+		flex-grow: 0;
 	}
 	.message {
 		min-width: auto !important;
 	}
 	.reply {
-		max-width: 90vw;
+		max-width: 96vw;
 	}
 	.wrapper {
-		display:block;
+		display: block;
+		width: auto;
 	}
 }
 

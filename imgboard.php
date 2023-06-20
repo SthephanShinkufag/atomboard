@@ -26,7 +26,7 @@ if (function_exists('ob_get_level')) {
 // Generating info messages
 function fancyDie($message) {
 	die('<head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023061900">
 </head>
 <body align="center">
 	<br>

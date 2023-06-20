@@ -17,81 +17,54 @@ function pageHeader() {
 	<meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT">
 	<meta http-equiv="pragma" content="no-cache">
 	<meta name="viewport" content="width=device-width,initial-scale=1">
-	<title>' . ATOM_BOARDDESC . '</title>
+	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023061100">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023061900">
 	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023061100"></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
-	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') .
-	ATOM_HTML_HEAD . '
+	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
 ';
 }
 
-function pageWrapper($returnHref) {
+function pageWrapper($description, $needReturn) {
 	return '
-	<div class="aside aside-left">
-		<div class="aside-top">
-			<nav>' .
-				ATOM_HTML_LEFTSIDE . '
-			</nav>
-		</div>
-		<div class="aside-bottom">' . ($returnHref ? '
-			<a class="aside-btn" id="aside-btn-return" href="/' . ATOM_BOARD . '/" title="Return">
-				<svg><use xlink:href="#symbol-arrow-left"/></svg>
-			</a>' : '') . '
-			<a class="aside-btn" id="aside-btn-tobottom-mobile" href="#"' .
-				' title="To bottom" onclick="window.scroll(0, document.body.scrollHeight); return false;">
-				<svg><use xlink:href="#symbol-arrow-left"/></svg>
-			</a>
-		</div>
-	</div>
 	<div class="wrapper">
-		<div class="vyshyvanka"></div>';
+		<div id="navigation-top" class="navigation">' . ATOM_HTML_NAVIGATION . '
+			<a class="navigation-link" href="/' . ATOM_BOARD . '/catalog.html" title="Go to catalog">Catalog</a>
+			<a class="navigation-link" href="/' . ATOM_BOARD . '/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
+		</div>
+		<div class="description">' . $description . '</div>
+		<hr>
+		<div id="panel-top" class="panel">' .
+			($needReturn ? '
+			<a class="link-button" href="/' . ATOM_BOARD . '/" title="Return to board">Return</a>' : '') . '
+			<a class="link-button" href="#" title="Navigate to bottom" onclick="window.scroll(0, document.body.scrollHeight); return false;">To bottom</a>
+		</div>
+		';
 }
 
-function pageFooter() {
+function pageFooter($needReturn) {
 	return '
+		<div id="panel-bottom" class="panel">' .
+			($needReturn ? '
+			<a class="link-button" href="/' . ATOM_BOARD . '/" title="Return to board">Return</a>' : '') . '
+			<a class="link-button" href="#" title="Navigate to top" onclick="window.scroll(0, 0); return false;">To top</a>
+		</div>
+		<hr>
 		<div class="footer">
 			<div>We are not responsible for the content posted on this site. Any information posted here is the responsibility of the user who uploaded it.<br>The content on the site is intended for persons over 18 years of age.</div>
 			- <a href="https://github.com/SthephanShinkufag/atomboard">atomboard</a> -
 		</div>
-		<div class="vyshyvanka"></div>
-	</div>
-	<div class="aside aside-right">
-		<div class="aside-top">
-			<a class="aside-btn" id="aside-btn-totop" href="#" title="To top" onclick="window.scroll(0, 0); return false;">
-				<svg><use xlink:href="#symbol-arrow-left"/></svg>
-			</a>
-		</div>
-		<div class="aside-bottom">
-			<a class="aside-btn" id="aside-btn-tobottom" href="#" title="To bottom" onclick="window.scroll(0, document.body.scrollHeight); return false;">
-				<svg><use xlink:href="#symbol-arrow-left"/></svg>
-			</a>
+		<div id="navigation-bottom" class="navigation"> ' . ATOM_HTML_NAVIGATION . '
+			<a class="navigation-link" href="/' . ATOM_BOARD . '/catalog.html" title="Go to catalog">Catalog</a>
+			<a class="navigation-link" href="/' . ATOM_BOARD . '/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
 		</div>
 	</div>
 	<div id="svg-icons" style="height: 0; width: 0; overflow: hidden;">
 		<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-			<symbol viewBox="0 0 1024 1024" id="symbol-arrow-left">
-				<path d="M958.1 333.6H541.8v-177c0-16.9-5.5-31.2-16.4-43.1-11.9-11.9-26.3-17.9-43.1-17.9h-59.5L6.4 512l416.4 416.4h59.5c16.9 0 31.2-5.5 43.1-16.4 10.9-11.9 16.4-26.3 16.4-43.1V690.4h416.4c16.9 0 31.2-5.4 43.1-16.4 10.9-11.9 16.4-26.3 16.4-43.1V394.5c0-16.9-5.5-31.2-16.4-43.1-12-11.9-26.4-17.9-43.2-17.8z"/>
-			</symbol>
-			<symbol viewBox="0 0 1024 1024" id="symbol-high">
-				<path d="M259.2 575.2c0-16.9-6.3-31.6-19-44.3-12.6-12.6-27.4-18.9-44.2-18.9H69.6c-17.9 0-33.2 6.3-45.8 18.9-11.6 12.7-17.4 27.9-17.4 45.9v377.6c0 17.9 5.8 33.2 17.4 45.8 12.6 11.6 27.9 17.4 45.8 17.4H196c16.8 0 31.6-5.8 44.2-17.3 12.6-12.7 19-27.9 19-45.8V575.2zm360.2-297.1c-12.6-12.6-27.4-18.9-44.2-18.9H448.8c-17.9 0-33.2 6.3-45.9 18.9-11.6 12.6-17.4 27.9-17.4 45.8v630.4c0 17.9 5.8 33.2 17.4 45.8 12.6 11.6 27.9 17.4 45.8 17.4h126.4c16.9 0 31.6-5.8 44.3-17.4 12.6-12.7 19-27.9 19-45.8v-632c0-16.8-6.3-31.5-19-44.2zM782.2 25.3c-11.6 12.6-17.4 27.9-17.4 45.8v883.2c0 17.9 5.8 33.2 17.4 45.8 12.6 11.6 27.9 17.4 45.8 17.4h126.4c16.9 0 31.6-5.8 44.3-17.4 12.6-12.7 18.9-27.9 18.9-45.8V69.6c0-16.9-6.3-31.6-18.9-44.3C986 12.7 971.2 6.4 954.4 6.4H828c-17.9 0-33.2 6.3-45.8 18.9z"/>
-			</symbol>
-			<symbol viewBox="0 0 1024 1024" id="symbol-home">
-				<path d="M386.2 1017V637.8H639V1017h189.6c16.9 0 31.6-5.8 44.3-17.4 12.6-12.7 18.9-27.9 18.9-45.8v-316h126.4V511.4L512.6 5.8 7 511.4v126.4h126.4v316c0 17.9 5.8 33.2 17.4 45.8 12.6 11.6 27.9 17.4 45.8 17.4h189.6z"/>
-			</symbol>
-			<symbol viewBox="0 0 1024 1024" id="symbol-github">
-				<path d="M512 6.4c279.2 0 505.6 232.1 505.6 518.4 0 229-144.7 423.1-345.5 491.8-25.7 5.1-34.8-11-34.8-24.9 0-17 .6-72.8.6-142.2 0-48.4-16.2-79.9-34.4-96 112.7-12.8 230.9-56.6 230.9-255.8 0-56.6-19.6-102.8-52-139.1 5.2-13.2 22.6-65.8-5-137.2 0 0-42.3-14-138.9 53.1-40.4-11.5-83.6-17.2-126.6-17.4-43 .2-86.2 6-126.6 17.4-96.6-67.1-139-53.1-139-53.1-27.5 71.4-10.2 124.1-4.9 137.2-32.4 36.2-52.1 82.5-52.1 139.1 0 198.7 118 243.1 230.3 256.2-14.5 12.9-27.5 35.9-32.1 69.3-28.8 13.3-102.1 36.2-147.2-43 0 0-26.7-49.8-77.4-53.5 0 0-49.4-.7-3.5 31.5 0 0 33.2 15.9 56.1 75.8 0 0 29.7 100.8 170.3 69.5.3 43.3.7 75.9.7 88.2 0 13.7-9.2 29.8-34.5 25C151.2 948.2 6.4 753.9 6.4 524.8 6.4 238.5 232.7 6.4 512 6.4z"/>
-			</symbol>
 			<symbol viewBox="0 0 16 16" id="symbol-like">
 				<path d="M14.8 1.6l-.3-.3C13-.5 10.4-.4 8.9 1.4l-.9 1-.9-1C5.6-.4 3-.4 1.5 1.4l-.3.3C-.4 3.5-.4 6.3 1.1 8.1l1 1.1L8 16l5.9-6.8 1-1.2c1.5-1.8 1.5-4.6-.1-6.4z"/>
-			</symbol>
-			<symbol viewBox="0 0 512 512" id="symbol-music">
-				<path d="M511.99 32.01c0-21.71-21.1-37.01-41.6-30.51L150.4 96c-13.3 4.2-22.4 16.5-22.4 30.5v261.42c-10.05-2.38-20.72-3.92-32-3.92-53.02 0-96 28.65-96 64s42.98 64 96 64 96-28.65 96-64V214.31l256-75.02v184.63c-10.05-2.38-20.72-3.92-32-3.92-53.02 0-96 28.65-96 64s42.98 64 96 64 96-28.65 96-64l-.01-351.99z"/>
-			</symbol>
-			<symbol viewBox="0 0 512 512" id="symbol-list">
-				<path d="M149.333 216v80c0 13.255-10.745 24-24 24H24c-13.255 0-24-10.745-24-24v-80c0-13.255 10.745-24 24-24h101.333c13.255 0 24 10.745 24 24zM0 376v80c0 13.255 10.745 24 24 24h101.333c13.255 0 24-10.745 24-24v-80c0-13.255-10.745-24-24-24H24c-13.255 0-24 10.745-24 24zM125.333 32H24C10.745 32 0 42.745 0 56v80c0 13.255 10.745 24 24 24h101.333c13.255 0 24-10.745 24-24V56c0-13.255-10.745-24-24-24zm80 448H488c13.255 0 24-10.745 24-24v-80c0-13.255-10.745-24-24-24H205.333c-13.255 0-24 10.745-24 24v80c0 13.255 10.745 24 24 24zm-24-424v80c0 13.255 10.745 24 24 24H488c13.255 0 24-10.745 24-24V56c0-13.255-10.745-24-24-24H205.333c-13.255 0-24 10.745-24 24zm24 264H488c13.255 0 24-10.745 24-24v-80c0-13.255-10.745-24-24-24H205.333c-13.255 0-24 10.745-24 24v80c0 13.255 10.745 24 24 24z"/>
 			</symbol>
 		</svg>
 	</div>
@@ -210,8 +183,8 @@ function buildPostForm($parent, $isRawPost = false) {
 					$isRawPost || !in_array('name', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
-						<td style="display: flex">
-							<input type="text" class="postform-input" name="name" placeholder="Name" maxlength="75" accesskey="n" style="width: 100%"> ' .
+						<td>
+							<input type="text" class="postform-input" name="name" placeholder="Name" maxlength="75" accesskey="n"> ' .
 							$postformExtra['name'] . '
 						</td>
 					</tr>' : ''
@@ -219,8 +192,8 @@ function buildPostForm($parent, $isRawPost = false) {
 					$isRawPost || !in_array('email', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
-						<td style="display: flex">
-							<input type="text" class="postform-input" name="email" placeholder="Mail" maxlength="75" accesskey="e" style="width: 100%"> ' .
+						<td>
+							<input type="text" class="postform-input" name="email" placeholder="Mail" maxlength="75" accesskey="e"> ' .
 							$postformExtra['email'] . '
 						</td>
 					</tr>' : ''
@@ -228,7 +201,7 @@ function buildPostForm($parent, $isRawPost = false) {
 					$isRawPost || !in_array('subject', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
-						<td style="display: flex">
+						<td style="display: flex;">
 							<input type="text" class="postform-input" name="subject" placeholder="Subject" maxlength="75" accesskey="s" style="width: 100%" autocomplete="off"> ' .
 							$postformExtra['subject'] . '
 						</td>
@@ -533,9 +506,9 @@ function buildPost($post, $res, $isModPanel = false) {
 
 function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 	// Build page links: [Previous] [0] [1] [2] [Next]
-	$isOnPage = $parent == ATOM_NEWTHREAD;
+	$isInThread = $parent != ATOM_NEWTHREAD;
 	$pagelinks = '';
-	if ($isOnPage) {
+	if (!$isInThread) {
 		$pages = max($pages, 0);
 		$pagelinks = ($thispage == 0 ?
 					'<td>Previous</td>' :
@@ -561,30 +534,17 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 					</td>');
 	}
 	// Build page's body
-	return pageHeader() . '<body class="tinyib atomboard">' . pageWrapper(!$isOnPage) . '
-		<div class="logo">
-			' . ATOM_LOGO . ATOM_BOARDDESC . '
-		</div>' .
-		($isOnPage ? '
-		<div style="text-align: center; margin: 8px 0;">
-			<a class="link-button" href="/' . ATOM_BOARD . '/catalog.html">Catalog</a>
-		</div>' : '') .
+	return pageHeader() . '<body class="tinyib atomboard">' .
+		pageWrapper(ATOM_BOARD_DESCRIPTION, $isInThread) .
+		($isInThread ? '' : ATOM_HTML_TOP_INFO . '<hr>') .
 		buildPostForm($parent) . '
 		<hr>
 		<form id="delform" action="/' . ATOM_BOARD . '/imgboard.php?delete" method="post">
 			<input type="hidden" name="board" value="' . ATOM_BOARD . '">' .
 			$htmlPosts . '
-			<table class="userdelete">
-				<tbody>
-					<tr>
-						<td>Delete Post <input type="password" name="password" id="deletepostpassword" size="8" placeholder="Password">&nbsp;<input name="deletepost" value="Delete" type="submit"></td>
-						<td>
-							<a class="link-button" href="/' . ATOM_BOARD . '/' . basename($_SERVER['PHP_SELF']) .
-							'?manage">Manage</a>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+			<div class="userdelete">
+				Delete Post <input type="password" name="password" id="deletepostpassword" size="8" placeholder="Password">&nbsp;<input name="deletepost" value="Delete" type="submit">
+			</div>
 		</form>
 		<table>
 			<tbody>
@@ -592,9 +552,8 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 					' . $pagelinks . '
 				</tr>
 			</tbody>
-		</table>
-		<br>' .
-		pageFooter();
+		</table>' .
+		pageFooter($isInThread);
 }
 
 /* ==[ Rebuilding ]======================================================================================== */
@@ -661,29 +620,28 @@ function manageInfo($text) {
 
 function managePage($text, $onload = '') {
 	global $returnlink, $access, $atom_janitors;
-	return pageHeader() . '<body' . $onload . '>' . pageWrapper($returnlink) . '
-		<div class="adminbar">' . (
+	return pageHeader() . '<body' . $onload . '>' .
+		pageWrapper(ATOM_BOARD_DESCRIPTION, true) .
+		'<hr>
+		<div id="panel-adminbar" class="panel">' . (
 			$access == 'disabled' ? '' : '
-			[<a href="?manage">Status</a>]' .
+			<a class="link-button" href="?manage">Status</a>' .
 			($access == 'admin' || $access == 'moderator' ? '
-			[<a href="?manage&bans">Bans</a>]
-			[<a href="?manage&modlog">ModLog</a>]' : '') .
+			<a class="link-button" href="?manage&bans">Bans</a>
+			<a class="link-button" href="?manage&modlog">ModLog</a>' : '') .
 			(count($atom_janitors) != 0 && $access == 'janitor' ? '
-			[<a href="/' . ATOM_BOARD . '/janitorlog.html">JanitorLog</a>]' : '') . '
-			[<a href="?manage&moderate">Moderate Post</a>]
-			[<a href="?manage&rawpost">Raw Post</a>]
-			[' . ($access == 'admin' ? '<a href="?manage&rebuildall">Rebuild All</a>]
-			[' : '') . ($access == 'admin' && ATOM_DBMIGRATE ?
-				'<a href="?manage&dbmigrate"><b>Migrate Database</b></a>] [' : '') .
-				'<a href="?manage&logout">Log Out</a>]
+			<a class="link-button" href="/' . ATOM_BOARD . '/janitorlog.html">JanitorLog</a>' : '') . '
+			<a class="link-button" href="?manage&moderate">Moderate Post</a>
+			<a class="link-button" href="?manage&rawpost">Raw Post</a>' .
+			($access == 'admin' ? '
+			<a class="link-button" href="?manage&rebuildall">Rebuild All</a>' : '') .
+			($access == 'admin' && ATOM_DBMIGRATE ? '
+			<a class="link-button" href="?manage&dbmigrate"><b>Migrate Database</b></a>' : '') . '
+			<a class="link-button" href="?manage&logout">Log Out</a>
 		') . '</div>
-		<div class="logo">
-			' . ATOM_LOGO . ATOM_BOARDDESC . '
-		</div>
-		<hr width="90%">
 		' . $text . '
 		<hr>' .
-	pageFooter();
+	pageFooter(true);
 }
 
 function manageOnLoad($page) {
@@ -776,9 +734,11 @@ function manageModeratePostForm() {
 				<small>
 					<b>Tip:</b> While browsing the image board, you can easily moderate a post if you are logged in:<br>
 					Tick the box next to a post and click "Delete" at the bottom of the page with a blank password.
-				</small><br>
+				</small>
+				<br>
 			</fieldset>
-		</form><br>';
+		</form>
+		<br>';
 }
 
 function manageModeratePost($post) {
@@ -1047,23 +1007,20 @@ function buildCatalogPage() {
 					($OPpostSubject ? '
 					<span class="filetitle">' . $OPpostSubject . '</span>
 					<br>' : '') . '
-					<span class="postername">' . $OPuserName . ' (R: ' . $numOfReplies . ')</span>
+					<span class="postername">' . $OPuserName . '</span>
+					<span>replies: ' . $numOfReplies . '</span>
 					<br>
 				</center>
 				<div class="message" style="text-align: left">' . $OPpostMessage . '</div>
 				<br>
 			</div>';
 	}
-	return pageHeader() . '<body>' . pageWrapper('back') . '
-		<div class="logo">
-			' . ATOM_LOGO . ATOM_BOARDDESC . ' / Catalog
-		</div>
-		<hr>
-		<br>
-		<div style="text-align: center">' .
+	return pageHeader() . '<body>' .
+		pageWrapper(ATOM_BOARD_DESCRIPTION . ' / Catalog', true) .
+		'<center>' .
 			$catalogHTML . '
-		</div>' .
-		pageFooter();
+		</center>' .
+		pageFooter(true);
 }
 
 /* ==[ Modlog ]============================================================================================ */
@@ -1072,12 +1029,16 @@ function generateModLogForm() {
 	$periodStartDate = isset($_POST['from']) ? $_POST['from'] : date("Y-m-d", strtotime("-2 day"));
 	$periodEndDate = isset($_POST['to']) ? $_POST['to'] : date("Y-m-d", strtotime("+1 day"));
 	return '<form method="post" action="?manage&modlog">
-			<span>From:</span>
-			<input name="from" type="date" value="' . $periodStartDate . '">
-			<span>To: </span>
-			<input name="to" type="date" value="' . $periodEndDate . '">&nbsp;
-			<input type="submit" value="Show records" class="managebutton">
-		</form><br><br>';
+			<fieldset>
+				<legend>Select moderation period</legend>
+				<span>From:</span>
+				<input name="from" type="date" value="' . $periodStartDate . '">
+				<span>To: </span>
+				<input name="to" type="date" value="' . $periodEndDate . '">&nbsp;
+				<input type="submit" value="Show records" class="managebutton">
+			</fieldset>
+		</form>
+		<br>';
 }
 
 function generateModLogTable($isModerators = false, $fromtime = '0', $totime = '0') {
@@ -1115,14 +1076,10 @@ function generateModLogTable($isModerators = false, $fromtime = '0', $totime = '
 }
 
 function buildModLogPage() {
-	return pageHeader() . '<body>' . pageWrapper('back') . '
-		<div class="logo">
-			' . ATOM_LOGO . ATOM_BOARDDESC . ' / Modlog
-		</div>
-		<hr>
-		<br>
-		<center>
+	return pageHeader() . '<body>' .
+		pageWrapper(ATOM_BOARD_DESCRIPTION . ' / Modlog', true) .
+		'<center>
 			' . generateModLogTable() . '
 		</center>' .
-		pageFooter();
+		pageFooter(true);
 }
