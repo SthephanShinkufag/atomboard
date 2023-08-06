@@ -222,6 +222,19 @@ function getPost($id) {
 	}
 }
 
+function getPostsByIP($ip) {
+	$posts = array();
+	$results = pdoQuery(
+		"SELECT * FROM " . ATOM_DBPOSTS . "
+		WHERE ip = ?
+		ORDER BY timestamp DESC",
+		array($ip));
+	while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
+		$posts[] = $row;
+	}
+	return $posts;
+}
+
 function getPostsByImageHex($hex) {
 	$posts = array();
 	$results = pdoQuery(

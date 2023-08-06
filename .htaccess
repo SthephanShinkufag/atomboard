@@ -16,7 +16,6 @@ Header unset Vary
 ExpiresActive On
 ExpiresByType application/octet-stream "access plus 2592000 seconds"
 ExpiresByType application/x-javascript "access plus 216000 seconds"
-ExpiresByType application/x-shockwave-flash "access plus 2592000 seconds"
 ExpiresByType audio/webm "access plus 2592000 seconds"
 ExpiresByType image/gif "access plus 2592000 seconds"
 ExpiresByType image/jpeg "access plus 2592000 seconds"

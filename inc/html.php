@@ -536,7 +536,7 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 	// Build page's body
 	return pageHeader() . '<body class="tinyib atomboard">' .
 		pageWrapper(ATOM_BOARD_DESCRIPTION, $isInThread) .
-		($isInThread ? '' : ATOM_HTML_TOP_INFO . '<hr>') .
+		(!$isInThread && ATOM_HTML_TOP_INFO ? ATOM_HTML_TOP_INFO . '<hr>' : '') .
 		buildPostForm($parent) . '
 		<hr>
 		<form id="delform" action="/' . ATOM_BOARD . '/imgboard.php?delete" method="post">
@@ -705,11 +705,11 @@ function manageBansTable() {
 				<th>&nbsp;</th>
 			</tr>';
 		foreach ($getAllBans as $ban) {
-			$expire = $ban['expire'] > 0 ? date('y.m.d D H:i:s', $ban['expire']) : 'Does not expire';
+			$expire = $ban['expire'] > 0 ? date('d.m.Y D H:i:s', $ban['expire']) : 'Does not expire';
 			$reason = $ban['reason'] == '' ? '&nbsp;' : htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8');
 			$text .= '<tr>
 				<td>' . $ban['ip'] . '</td>
-				<td>' . date('y.m.d D H:i:s', $ban['timestamp']) . '</td>
+				<td>' . date('d.m.Y D H:i:s', $ban['timestamp']) . '</td>
 				<td>' . $expire . '</td><td>' . $reason . '</td>
 				<td><a href="?manage&bans&lift=' . $ban['id'] . '">lift</a></td>
 			</tr>';
@@ -744,13 +744,13 @@ function manageModeratePostForm() {
 function manageModeratePost($post) {
 	global $access;
 	$ip = $post['ip'];
+	$isOp = $post['parent'] == ATOM_NEWTHREAD;
+	$deleteInfo = $isOp ? 'This will delete the entire thread below.' : 'This will delete the post below.';
 	$ban = banByIP($ip);
 	$banDisabled = !$ban && ($access == 'admin' || $access == 'moderator') ? '' : ' disabled';
 	$banInfo = $ban ? ' A ban record already exists for ' . $ip :
 		($access == 'admin' || $access == 'moderator' ?
 			'IP address: ' . $ip : 'Only an administrator may ban an IP address.');
-	$isOp = $post['parent'] == ATOM_NEWTHREAD;
-	$deleteInfo = $isOp ? 'This will delete the entire thread below.' : 'This will delete the post below.';
 	$postOrThread = $isOp ? 'Thread' : 'Post';
 	$stickyHtml = '';
 	$lockedHtml = '';
@@ -819,7 +819,10 @@ function manageModeratePost($post) {
 			<legend>Moderating No.' . $post['id'] . '</legend>
 			<fieldset>
 				<legend>Action</legend>
-				<table border="0" cellspacing="0" cellpadding="0" width="100%">
+				<table border="0" cellspacing="0" cellpadding="0" width="100%">' .
+					$stickyHtml .
+					$lockedHtml .
+					$endlessHtml . '
 					<tr>
 						<td align="right" width="50%;">
 							<form method="get" action="?">
@@ -830,15 +833,22 @@ function manageModeratePost($post) {
 							</form>
 						</td>
 						<td><small>' . $deleteInfo . '</small></td>
-					</tr>' .
-					$stickyHtml .
-					$lockedHtml .
-					$endlessHtml . '
+					</tr>
 					<tr>
 						<td align="right" width="50%;">
 							<form method="get" action="?">
 								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="bans" value="' . $post['ip'] . '">
+								<input type="hidden" name="delall" value="' . $ip . '">
+								<input type="submit" value="Delete all" class="managebutton" style="width: 50%;">
+							</form>
+						</td>
+						<td><small>This will delete all posts and threads from ip ' . $ip . '</small></td>
+					</tr>
+					<tr>
+						<td align="right" width="50%;">
+							<form method="get" action="?">
+								<input type="hidden" name="manage" value="">
+								<input type="hidden" name="bans" value="' . $ip . '">
 								<input type="submit" value="Ban Poster"' . $banDisabled .
 									' class="managebutton" style="width: 50%;">
 							</form>

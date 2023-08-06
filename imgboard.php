@@ -1127,7 +1127,7 @@ elseif (isset($_GET['manage'])) {
 			}
 		}
 
-		/* ==[ Delete posts or threads ]=================================================================== */
+		/* ==[ Delete post or thread ]===================================================================== */
 
 		if (isset($_GET['delete'])) {
 			$post = getPost($_GET['delete']);
@@ -1142,12 +1142,25 @@ elseif (isset($_GET['manage'])) {
 				} else {
 					modLog('Deleted thread №' . $post['id'] . '.', '0', 'Black');
 				}
-				$text .= manageInfo('Post No.' . $post['id'] . ' deleted.');
+				$text .= manageInfo('Post No.' . $post['id'] . ' are deleted.');
 			} else {
 				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 			}
 		}
 
+		/* ==[ Delete all posts from ip ]================================================================== */
+
+		if (isset($_GET['delall'])) {
+			$ip = $_GET['delall'];
+			$posts = getPostsByIP($ip);
+			$txt = '';
+			foreach ($posts as $post) {
+				deletePost($post['id']);
+				$txt .= $post['id'] . (next($posts) ? ', ' : '');
+			}
+			rebuildIndexPages();
+			$text .= manageInfo('Posts from ip ' . $ip . ' are deleted:<br>No.' . $txt . '.');
+		}
 		/* ==[ Delete/hide images ]======================================================================== */
 
 		elseif (isset($_GET['delete-img']) && isset($_GET['delete-img-mod']) && isset($_GET['action'])) {
