@@ -563,7 +563,7 @@ function getEmbed($url) {
 // Delete old posts in endless threads
 function trimThreadPostsCount($id) {
 	$postOP = getPost($id);
-	if($postOP && intval($postOP['endless']) == 1) {
+	if ($postOP && intval($postOP['endless']) == 1) {
 		$posts = getThreadPosts($id, false);
 		$overLimit = count($posts) - ATOM_THREAD_LIMIT + 1;
 		if ($overLimit > 0) {
@@ -615,6 +615,12 @@ function checkAccessRights() {
 		) {
 			$access = 'janitor';
 		}
+	}
+	if ($access == 'disabled') {
+		setcookie('atom_access', '', time() - 3600, '/' . ATOM_BOARD . '/');
+		unset($_COOKIE['atom_access']);
+	} else {
+		setcookie('atom_access', '1', time() + 2592000, '/' . ATOM_BOARD . '/');
 	}
 	return $access;
 }

@@ -19,8 +19,8 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023061900">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023061100"></script>' .
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023080800">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023080800"></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -86,11 +86,12 @@ function supportedFileTypes() {
 }
 
 function buildPostForm($parent, $isRawPost = false) {
-	global $atom_hidefieldsop, $atom_hidefields, $atom_uploads, $atom_embeds;
+	global $access, $atom_hidefieldsop, $atom_hidefields, $atom_uploads, $atom_embeds;
 	$isOnPage = $parent == ATOM_NEWTHREAD;
 	$hideFields = $isOnPage ? $atom_hidefieldsop : $atom_hidefields;
 	$postformExtra = array('name' => '', 'email' => '', 'subject' => '', 'footer' => '');
-	$inputSubmit = '<input type="submit" value="' . ($isOnPage ? 'New thread' : 'Reply') . '" accesskey="z">';
+	$inputSubmit = '<input type="submit" value="' .
+		($isRawPost ? 'New post' : ($isOnPage ? 'New thread' : 'Reply')) . '" accesskey="z">';
 	if ($isRawPost || !in_array('subject', $hideFields)) {
 		$postformExtra['subject'] = $inputSubmit;
 	} elseif (!in_array('email', $hideFields)) {
@@ -147,11 +148,9 @@ function buildPostForm($parent, $isRawPost = false) {
 				' (new thread) or ' . ATOM_FILE_MAXW . 'x' . ATOM_FILE_MAXH . ' (reply)'
 			) . ' will be thumbnailed.</li>';
 	}
-	$getUniquePostersCountHtml = '';
-	$getUniquePostersCount = getUniquePostersCount();
-	if ($getUniquePostersCount > 0) {
-		$getUniquePostersCountHtml = '<li>Currently ' . $getUniquePostersCount . ' unique users.</li>';
-	}
+	$uniquePostersCount = getUniquePostersCount();
+	$uniquePosters = $uniquePostersCount > 0 ?
+		'<li>Currently ' . $uniquePostersCount . ' unique users.</li>' : '';
 
 	// Build postform
 	return '<div class="postarea">
@@ -167,10 +166,9 @@ function buildPostForm($parent, $isRawPost = false) {
 						<td class="postblock"></td>
 						<td>
 							<input type="checkbox" name="rawpost" checked style="margin: 0 auto;">
-							<span style="font: 12px sans-serif;">Add
-								<span style="color: red;">## Admin</span> or
-								<span style="color: purple;">## Mod</span> mark
-							</span>
+							<span style="font: 12px sans-serif;">Add <span style="color: ' .
+								($access == 'admin' ? 'red' : 'purple') . ';">## ' . ucfirst($access) .
+								'</span> mark and use raw HTML message</span>
 						</td>
 					</tr>
 					<tr>
@@ -271,7 +269,7 @@ function buildPostForm($parent, $isRawPost = false) {
 								' . $fileTypesHtml . '
 								' . $maxFileSizeRulesHtml . '
 								' . $thumbnailsHtml . '
-								' . $getUniquePostersCountHtml . '
+								' . $uniquePosters . '
 							</ul>
 						</td>
 					</tr>' .
@@ -428,8 +426,8 @@ function buildPost($post, $res, $isModPanel = false) {
 	// Start post building
 	$omitted = $post['omitted'];
 	$likes = $post['likes'];
-	$replyBtn = ($isOp && $res == ATOM_INDEXPAGE ? '<a class="link-button" href="res/' .
-		$id . '.html">Reply</a>' : '');
+	$replyBtn = ($isOp && $res == ATOM_INDEXPAGE ? '&nbsp;<a class="link-button" href="res/' .
+		$id . '.html" title="Reply to thread №' . $id . '">Reply</a>' : '');
 	$countryCode = geoip_country_code_by_name($post['ip']);
 	return PHP_EOL . ($isOp ? '
 			<div class="oppost" id="op' . $id . '">' : '
@@ -445,12 +443,12 @@ function buildPost($post, $res, $isModPanel = false) {
 				</label>
 				<span class="reflink">' . ($res == ATOM_RESPAGE ? '
 					<a href="' . $thrId . '.html#' . $id . '" onclick="highlightPost(' . $id .
-						');" title="Click to link to this post">No.</a>' .
+						');" title="Click to link to this post">№</a>' .
 					'<a href="' . $thrId . '.html#q' . $id . '" onclick="quotePost(' . $id .
 						');" title="Click to reply to this post">' .
 						$id . '</a>' : '
 					<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $id .
-						'" title="Click to link to this post">No.</a>' .
+						'" title="Click to link to this post">№</a>' .
 					'<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#q' . $id .
 						'" title="Click to reply to this post">' . $id . '</a>') .
 					($post['stickied'] == 1 ? '
@@ -470,7 +468,9 @@ function buildPost($post, $res, $isModPanel = false) {
 						</span>
 						<span class="like-counter">' . ($likes ? $likes : '') . '</span>
 					</span>' : '') . '
-				</span>&nbsp;' . $replyBtn . '
+				</span><a class="link-button button-manage" target="_blank" href="/' . ATOM_BOARD .
+					'/imgboard.php?manage=&moderate=' . $id . '" title="Manage post №' . $id . '">!</a>' .
+				$replyBtn . '
 				<br>' .
 				($isModPanel && $hasImages ? '
 				<form method="get" action="?">
@@ -498,7 +498,7 @@ function buildPost($post, $res, $isModPanel = false) {
 			(!$isOp ? '</td></tr></tbody></table>' : '</div>' .
 			($res == ATOM_INDEXPAGE && $omitted > 0 ? '
 			<div class="omittedposts">' . $omitted . ' ' .
-				plural('post', $omitted) . ' omitted. Click ' . $replyBtn . ' to view.
+				plural('post', $omitted) . ' omitted. Click' . $replyBtn . ' to view.
 			</div>' : ''));
 }
 
@@ -747,10 +747,10 @@ function manageModeratePost($post) {
 	$isOp = $post['parent'] == ATOM_NEWTHREAD;
 	$deleteInfo = $isOp ? 'This will delete the entire thread below.' : 'This will delete the post below.';
 	$ban = banByIP($ip);
-	$banDisabled = !$ban && ($access == 'admin' || $access == 'moderator') ? '' : ' disabled';
+	$isMod = $access == 'admin' || $access == 'moderator';
+	$banDisabled = $ban || !$isMod ? ' disabled' : '';
 	$banInfo = $ban ? ' A ban record already exists for ' . $ip :
-		($access == 'admin' || $access == 'moderator' ?
-			'IP address: ' . $ip : 'Only an administrator may ban an IP address.');
+		($isMod ? 'IP address: ' . $ip : 'Only an administrator may ban an IP address.');
 	$postOrThread = $isOp ? 'Thread' : 'Post';
 	$stickyHtml = '';
 	$lockedHtml = '';
@@ -816,7 +816,7 @@ function manageModeratePost($post) {
 		$postHtml = buildPost($post, ATOM_INDEXPAGE, true);
 	}
 	return '<fieldset>
-			<legend>Moderating No.' . $post['id'] . '</legend>
+			<legend>Moderating №' . $post['id'] . '</legend>
 			<fieldset>
 				<legend>Action</legend>
 				<table border="0" cellspacing="0" cellpadding="0" width="100%">' .
@@ -912,8 +912,10 @@ function manageStatus() {
 		}
 	}
 	$postHtml = '';
-	$posts = getLatestPosts(true, 20);
+	$recentCount = 0;
+	$posts = getLatestPosts(true, 100);
 	foreach ($posts as $post) {
+		$recentCount++;
 		$postHtml .= ($postHtml != '' ? '
 					<tr><td colspan="2"><hr></td></tr>' : '') . '
 					<tr>
@@ -928,6 +930,8 @@ function manageStatus() {
 						</td>
 					</tr>';
 	}
+	$uniquePostersCount = getUniquePostersCount();
+	$uniquePosters = $uniquePostersCount > 0 ? $uniquePostersCount . ' unique users' : '';
 	return ($access == 'admin' && ATOM_DBMODE == 'mysql' && function_exists('mysqli_connect') ?
 		'<fieldset>
 			<legend>Notice</legend>
@@ -941,7 +945,7 @@ function manageStatus() {
 				<legend>Info</legend>
 				<table border="0" cellspacing="0" cellpadding="0" width="100%"><tbody><tr>
 					<td>' . $threads . ' ' . plural('thread', $threads) . ', ' .
-							$bans . ' ' . plural('ban', $bans) . '</td>' .
+							$bans . ' ' . plural('ban', $bans) . ', ' . $uniquePosters . '</td>' .
 					($access == 'admin' ? '
 					<td valign="top" align="right">
 						<form method="get" action="?">
@@ -960,7 +964,7 @@ function manageStatus() {
 				</table>
 			</fieldset>' : '') . '
 			<fieldset>
-				<legend>Recent posts</legend>
+				<legend>Recent ' . $recentCount . ' posts</legend>
 				<table border="0" cellspacing="0" cellpadding="0" width="100%">' .
 					$postHtml . '
 				</table>

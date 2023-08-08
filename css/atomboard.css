@@ -100,6 +100,14 @@ hr {
 	font-style: italic;
 }
 
+body:not(.access-enabled) .button-manage {
+	display: none;
+}
+
+.button-manage {
+	margin-left: 4px;
+}
+
 .catalog-block {
 	overflow: hidden;
 	vertical-align: top;
@@ -173,6 +181,13 @@ del {
 	display: block;
 }
 
+.oppost .link-button, .reply .link-button {
+	height: 14px;
+	padding: 0 4px 2px 4px;
+	vertical-align: 1px;
+	margin-top: -1px;
+}
+
 .poster-country {
 	height: 14px;
 	vertical-align: -2px;
@@ -185,6 +200,10 @@ del {
 
 .postername-admin {
 	color: #ff5050;
+}
+
+.postername-mod {
+	color: #a000a0;
 }
 
 .postertrip {
@@ -407,9 +426,11 @@ video.thumb {
 .link-button {
 	display: inline-block;
 	padding: 1px 4px 2px 4px;
+	min-width: 8px;
 	background-image: linear-gradient(to bottom, #c9d4e6, #577dae);
 	color: #fff !important;
 	border-radius: 3px;
+	text-align: center;
 	font-weight: bold;
 	font-size: 13px;
 }

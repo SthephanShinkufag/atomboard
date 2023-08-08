@@ -26,7 +26,7 @@ if (function_exists('ob_get_level')) {
 // Generating info messages
 function fancyDie($message) {
 	die('<head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023061900">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023080800">
 </head>
 <body align="center">
 	<br>
@@ -97,8 +97,8 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 
 	// Check for access role [admin/moderator/janitor/disabled]
 	$access = checkAccessRights();
-	$noAccess = $access == 'disabled';
-	if ($noAccess) {
+	$hasAccess = $access != 'disabled';
+	if (!$hasAccess) {
 
 		// Check for recaptcha
 		if (ATOM_CAPTCHA == 'recaptcha') {
@@ -192,7 +192,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 
 	// Initialize default post fields
 	$post = newPost($parentId);
-	if ($post['parent'] != ATOM_NEWTHREAD && $noAccess) {
+	if ($post['parent'] != ATOM_NEWTHREAD && !$hasAccess) {
 		$parentPost = getPost($post['parent']);
 		if ($parentPost['locked']) {
 			fancyDie('Posting in this thread is currently disabled.<br>Thread is locked.');
@@ -264,18 +264,10 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	}
 
 	// Get message with markup and >>links
-	$rawPostText = '';
-	if ($rawPost || !in_array('message', $hideFields)) {
+	if (!in_array('message', $hideFields)) {
 		$post['message'] = $_POST['message'];
-
-		// Treat message as raw HTML
-		if ($rawPost) {
-			$rawPostText = $access == 'admin' ? ' <span style="color: red;">## Admin</span>' :
-				' <span style="color: purple;">## Mod</span>';
-		}
-
 		// Markup text formatting
-		else {
+		if (!$rawPost) {
 			$msg = escapeHTML(rtrim($post['message']));
 			if (ATOM_WORDBREAK > 0) {
 				$msg = preg_replace(
@@ -375,7 +367,6 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 				);
 			}
 			$post['message'] = $msg;
-			// $post['message'] = $msg . '<br>';
 		}
 	}
 
@@ -388,7 +379,18 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 	$postName = $post['name'];
 	$postTripcode = $post['tripcode'];
 	$postEmail = $post['email'];
-	$posterUID = '';
+	$postNameBlock = '<span class="postername' .
+		($hasAccess && $postName != '' ?
+			($access == 'admin' ? ' postername-admin' : ' postername-mod') : '') . '">' .
+		($postName == '' && $postTripcode == '' ? ATOM_POSTERNAME : $postName) .
+		($postTripcode != '' ? '</span><span class="postertrip">!' . $postTripcode : '') . '</span>';
+	if($hasAccess && !($postName == '' && $postTripcode == '')) {
+		$postNameBlock .= ' <span class="' . (
+			// $access == 'admin' ? 'postername-admin">## Admin' :
+			($access == 'moderator' ? 'postername-mod">## Mod' :
+			($access == 'janitor' ? 'postername-mod">## Janitor' : ''))
+		) . '</span>';
+	}
 	if (ATOM_POSTERUID) {
 		$hash = substr(md5($post['ip'] . intval($post['parent']) . ATOM_TRIPSEED), 0, 8);
 		$hashint = hexdec('0x' . $hash);
@@ -396,23 +398,16 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		$green = $hashint >> 16 & 255;
 		$blue = $hashint >> 8 & 255;
 		$isBlack = 0.299 * $red + 0.587 * $green + 0.114 * $blue > 125;
-		$posterUID = ' <span class="posteruid" data-uid="' . $hash . '" style="background-color: rgb(' .
+		$postNameBlock .=  ' <span class="posteruid" data-uid="' . $hash . '" style="background-color: rgb(' .
 			$red . ', ' . $green . ', ' . $blue . '); color: ' .
 			($isBlack ? 'black' : 'white') . ';">' . $hash . '</span>';
 	}
-	$postNameBlock = '<span class="postername' .
-		(checkAccessRights() != 'disabled' && $postName != '' ? ' postername-admin' : '') . '">';
-	$postNameBlock .= $postName == '' && $postTripcode == '' ? ATOM_POSTERNAME : $postName;
-	if ($postTripcode != '') {
-		$postNameBlock .= '</span><span class="postertrip">!' . $postTripcode;
-	}
-	$postNameBlock .= '</span>' . $posterUID;
 	$lowEmail = strtolower($postEmail);
 	if ($postEmail != '' && $lowEmail != 'noko') {
 		$postNameBlock = '<a href="mailto:' . $postEmail . '"' .
 			($lowEmail == 'sage' ? ' class="sage"' : '') . '>' . $postNameBlock . '</a>';
 	}
-	$post['nameblock'] = $postNameBlock . $rawPostText . ' ' . date('d.m.y D H:i:s', time());
+	$post['nameblock'] = $postNameBlock . ' ' . date('d.m.y D H:i:s', time());
 
 	/* ==[ Embed URL upload ]============================================================================== */
 
@@ -722,7 +717,7 @@ if (!isset($_GET['delete']) && !isset($_GET['manage']) && (
 		}
 	}
 
-	if ($noAccess && (($post['file0'] != '' && ATOM_REQMOD == 'files') || ATOM_REQMOD == 'all')) {
+	if (!$hasAccess && (($post['file0'] != '' && ATOM_REQMOD == 'files') || ATOM_REQMOD == 'all')) {
 		$post['moderated'] = '0';
 		echo 'Your ' . ($post['parent'] == ATOM_NEWTHREAD ? 'thread' : 'post') .
 			' will be shown <b>once it has been approved</b>.<br>';
@@ -1079,7 +1074,7 @@ elseif (isset($_GET['manage'])) {
 			}
 		}
 
-		if($access != 'janitor') {
+		if ($access != 'janitor') {
 
 			/* ==[ Show ban form and list of bans ]======================================================== */
 
@@ -1142,7 +1137,7 @@ elseif (isset($_GET['manage'])) {
 				} else {
 					modLog('Deleted thread №' . $post['id'] . '.', '0', 'Black');
 				}
-				$text .= manageInfo('Post No.' . $post['id'] . ' are deleted.');
+				$text .= manageInfo('Post №' . $post['id'] . ' are deleted.');
 			} else {
 				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 			}
@@ -1159,7 +1154,7 @@ elseif (isset($_GET['manage'])) {
 				$txt .= $post['id'] . (next($posts) ? ', ' : '');
 			}
 			rebuildIndexPages();
-			$text .= manageInfo('Posts from ip ' . $ip . ' are deleted:<br>No.' . $txt . '.');
+			$text .= manageInfo('Posts from ip ' . $ip . ' are deleted:<br>№' . $txt . '.');
 		}
 		/* ==[ Delete/hide images ]======================================================================== */
 
@@ -1170,7 +1165,7 @@ elseif (isset($_GET['manage'])) {
 					deletePostImages($post, $_GET['delete-img-mod']);
 					$isOp = $post['parent'] == ATOM_NEWTHREAD;
 					rebuildThread($isOp ? $post['id'] : $post['parent']);
-					$text .= manageInfo('Selected images from post No.' .
+					$text .= manageInfo('Selected images from post №' .
 						$post['id'] . ' are deleted.');
 					modLog('Deleted image(s) of ' .
 						($isOp ? 'op-post in thread №' . $post['id'] :
@@ -1184,7 +1179,7 @@ elseif (isset($_GET['manage'])) {
 					hidePostImages($post, $_GET['delete-img-mod']);
 					$isOp = $post['parent'] == ATOM_NEWTHREAD;
 					rebuildThread($isOp ? $post['id'] : $post['parent']);
-					$text .= manageInfo('Thumbnails for selected images from post No.' .
+					$text .= manageInfo('Thumbnails for selected images from post №' .
 						$post['id'] . ' are changed.');
 					modLog('Hidden thumbnail(s) of ' .
 						($isOp ? 'op-post in thread №' . $post['id'] :
@@ -1205,7 +1200,7 @@ elseif (isset($_GET['manage'])) {
 				editPostMessage($post['id'], $newMessage);
 				$isOp = $post['parent'] == ATOM_NEWTHREAD;
 				rebuildThread($isOp ? $post['id'] : $post['parent']);
-				$text .= manageInfo('Message in post No.' . $post['id'] . ' changed.');
+				$text .= manageInfo('Message in post №' . $post['id'] . ' changed.');
 				modLog('Edited message of ' .
 					($isOp ? 'op-post in thread №' . $post['id'] :
 						'post №' . $post['id'] . ' in thread №' . $post['parent']) . '.', '0', 'Black');
@@ -1230,7 +1225,7 @@ elseif (isset($_GET['manage'])) {
 						trimThreadPostsCount($threadId);
 					}
 					rebuildThread($threadId);
-					$text .= manageInfo('Post No.' . $post['id'] . ' approved.');
+					$text .= manageInfo('Post №' . $post['id'] . ' approved.');
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 				}
@@ -1263,7 +1258,7 @@ elseif (isset($_GET['manage'])) {
 					toggleStickyThread($post['id'], $isStickied);
 					rebuildThread($post['id']);
 					$stickiedText = $isStickied == 1 ? 'stickied' : 'un-stickied';
-					$text .= manageInfo('Thread No.' . $post['id'] . ' is ' . $stickiedText . '.');
+					$text .= manageInfo('Thread №' . $post['id'] . ' is ' . $stickiedText . '.');
 					modLog(ucfirst($stickiedText) . ' thread №' . $post['id'] . '.', '0', 'Black');
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
@@ -1283,7 +1278,7 @@ elseif (isset($_GET['manage'])) {
 					toggleLockThread($post['id'], $isLocked);
 					rebuildThread($post['id']);
 					$lockedText = $isLocked == 1 ? 'locked' : 'un-locked';
-					$text .= manageInfo('Thread No.' . $post['id'] . ' is ' . $lockedText . '.');
+					$text .= manageInfo('Thread №' . $post['id'] . ' is ' . $lockedText . '.');
 					modLog(ucfirst($lockedText) . ' thread №' . $post['id'] . '.', '0', 'Black');
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
@@ -1303,7 +1298,7 @@ elseif (isset($_GET['manage'])) {
 					toggleEndlessThread($post['id'], $isEndless);
 					rebuildThread($post['id']);
 					$endlessText = $isEndless == 1 ? 'made endless' : 'made non-endless';
-					$text .= manageInfo('Thread No.' . $post['id'] . ' is ' . $endlessText . '.');
+					$text .= manageInfo('Thread №' . $post['id'] . ' is ' . $endlessText . '.');
 					modLog(ucfirst($endlessText) . ' thread №' . $post['id'] . '.', '0', 'Black');
 				} else {
 					fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
