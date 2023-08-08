@@ -36,7 +36,7 @@ if (ATOM_DBDRIVER === 'pgsql') {
 }
 
 if (!$posts_exists) {
-	$dbh->exec($posts_sql);
+	$dbh->exec($postsQuery);
 }
 
 // Create the bans table if it does not exist
@@ -48,7 +48,7 @@ if (ATOM_DBDRIVER === 'pgsql') {
 	$bans_exists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
 }
 if (!$bans_exists) {
-	$dbh->exec($bans_sql);
+	$dbh->exec($bansQuery);
 }
 
 // Create the likes table if it does not exist
@@ -60,7 +60,7 @@ if (ATOM_DBDRIVER === 'pgsql') {
 	$likes_exists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
 }
 if (!$likes_exists) {
-	$dbh->exec($likes_sql);
+	$dbh->exec($likesQuery);
 }
 
 // Create the modlog table if it does not exist
@@ -73,7 +73,7 @@ if (ATOM_DBDRIVER === 'pgsql') {
 }
 
 if (!$modlog_exists) {
-	$dbh->exec($modlog_sql);
+	$dbh->exec($modlogQuery);
 }
 
 function pdoQuery($sql, $params = false) {

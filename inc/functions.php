@@ -6,7 +6,7 @@ if (!defined('ATOM_BOARD')) {
 /* ==[ Queries for creatsng new tables ]=================================================================== */
 
 if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
-	$posts_sql = 'CREATE TABLE "' . ATOM_DBPOSTS . '" (
+	$postsQuery = 'CREATE TABLE "' . ATOM_DBPOSTS . '" (
 		"id" bigserial NOT NULL,
 		"parent" integer NOT NULL,
 		"timestamp" integer NOT NULL,
@@ -71,7 +71,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 	CREATE INDEX ON "' . ATOM_DBPOSTS . '"("stickied");
 	CREATE INDEX ON "' . ATOM_DBPOSTS . '"("moderated");';
 
-	$bans_sql = 'CREATE TABLE "' . ATOM_DBBANS . '" (
+	$bansQuery = 'CREATE TABLE "' . ATOM_DBBANS . '" (
 		"id" bigserial NOT NULL,
 		"ip" varchar(39) NOT NULL,
 		"timestamp" integer NOT NULL,
@@ -81,7 +81,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 	);
 	CREATE INDEX ON "' . ATOM_DBBANS . '"("ip");';
 
-	$likes_sql = 'CREATE TABLE "' . ATOM_DBLIKES . '" (
+	$likesQuery = 'CREATE TABLE "' . ATOM_DBLIKES . '" (
 		"id" bigserial NOT NULL,
 		"ip" varchar(39) NOT NULL,
 		"board" varchar(16) NOT NULL,
@@ -91,7 +91,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 	);
 	CREATE INDEX ON "' . ATOM_DBLIKES . '"("ip");';
 
-	$modlog_sql = 'CREATE TABLE "' . ATOM_DBMODLOG . '" (
+	$modlogQuery = 'CREATE TABLE "' . ATOM_DBMODLOG . '" (
 		"id" bigserial NOT NULL,
 		"timestamp" integer NOT NULL,
 		"boardname" varchar(255) NOT NULL,
@@ -103,7 +103,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 	CREATE INDEX ON "' . ATOM_DBMODLOG . '"("boardname");';
 
 } else {
-	$posts_sql = "CREATE TABLE `" . ATOM_DBPOSTS . "` (
+	$postsQuery = "CREATE TABLE `" . ATOM_DBPOSTS . "` (
 		`id` mediumint(7) unsigned NOT NULL auto_increment,
 		`parent` mediumint(7) unsigned NOT NULL,
 		`timestamp` int(20) NOT NULL,
@@ -168,7 +168,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		KEY `stickied` (`stickied`)
 	)";
 
-	$bans_sql = "CREATE TABLE `" . ATOM_DBBANS . "` (
+	$bansQuery = "CREATE TABLE `" . ATOM_DBBANS . "` (
 		`id` mediumint(7) unsigned NOT NULL auto_increment,
 		`ip` varchar(39) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 		`timestamp` int(20) NOT NULL,
@@ -178,7 +178,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		KEY `ip` (`ip`)
 	)";
 
-	$likes_sql = "CREATE TABLE `" . ATOM_DBLIKES . "` (
+	$likesQuery = "CREATE TABLE `" . ATOM_DBLIKES . "` (
 		`id` mediumint(7) unsigned NOT NULL auto_increment,
 		`ip` varchar(39) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 		`board` varchar(16) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
@@ -187,7 +187,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		PRIMARY KEY (`id`)
 	)";
 
-	$modlog_sql = "CREATE TABLE `" . ATOM_DBMODLOG . "` (
+	$modlogQuery = "CREATE TABLE `" . ATOM_DBMODLOG . "` (
 		`id` mediumint(7) unsigned NOT NULL auto_increment,
 		`timestamp` int(20) NOT NULL,
 		`boardname` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
@@ -289,10 +289,14 @@ function newPost($parent) {
 		'endless' => '0');
 }
 
+function isOp($post) {
+	return $post['parent'] == ATOM_NEWTHREAD;
+}
+
 /* ==[ Images/video files ]================================================================================ */
 
 function deletePostImagesFiles($post, $imgList = array()) {
-	if (($imgList) && (count($imgList) <= ATOM_FILES_COUNT)) {
+	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT)) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
 			if (!isEmbed($post['file' . $index . '_hex']) && $post['file' . $index] != '') {
@@ -303,15 +307,15 @@ function deletePostImagesFiles($post, $imgList = array()) {
 				@unlink('thumb/' . $thumbName);
 			}
 		}
-	} else {
-		for ($index = 0; $index < ATOM_FILES_COUNT; $index++) {
-			if (!isEmbed($post['file' . $index . '_hex']) && $post['file' . $index] != '') {
-				@unlink('src/' . $post['file' . $index]);
-			}
-			$thumbName = $post['thumb' . $index];
-			if ($thumbName != '' && $thumbName != 'spoiler.png') {
-				@unlink('thumb/' . $thumbName);
-			}
+		return;
+	}
+	for ($index = 0; $index < ATOM_FILES_COUNT; $index++) {
+		if (!isEmbed($post['file' . $index . '_hex']) && $post['file' . $index] != '') {
+			@unlink('src/' . $post['file' . $index]);
+		}
+		$thumbName = $post['thumb' . $index];
+		if ($thumbName != '' && $thumbName != 'spoiler.png') {
+			@unlink('thumb/' . $thumbName);
 		}
 	}
 }
@@ -492,48 +496,46 @@ function addVideoOverlay($thumb_location) {
 	if (!file_exists('icons/video_overlay.png')) {
 		return;
 	}
-	if (ATOM_FILE_THUMBDRIVER == 'gd') {
-		if (substr($thumb_location, -4) == ".jpg") {
-			$thumbnail = imagecreatefromjpeg($thumb_location);
-		} else {
-			$thumbnail = imagecreatefrompng($thumb_location);
-		}
-		list($width, $height, $type, $attr) = getimagesize($thumb_location);
-		$overlay_play = imagecreatefrompng('icons/video_overlay.png');
-		imagealphablending($overlay_play, false);
-		imagesavealpha($overlay_play, true);
-		list(
-			$overlay_width,
-			$overlay_height,
-			$overlay_type,
-			$overlay_attr
-		) = getimagesize('icons/video_overlay.png');
-		if (substr($thumb_location, -4) == ".png") {
-			imagecolortransparent($thumbnail, imagecolorallocatealpha($thumbnail, 0, 0, 0, 127));
-			imagealphablending($thumbnail, true);
-			imagesavealpha($thumbnail, true);
-		}
-		imagecopy(
-			$thumbnail,
-			$overlay_play,
-			($width / 2) - ($overlay_width / 2),
-			($height / 2) - ($overlay_height / 2),
-			0,
-			0,
-			$overlay_width,
-			$overlay_height
-		);
-		if (substr($thumb_location, -4) == ".jpg") {
-			imagejpeg($thumbnail, $thumb_location);
-		} else {
-			imagepng($thumbnail, $thumb_location);
-		}
-	} else { // imagemagick
+	if (ATOM_FILE_THUMBDRIVER == 'imagemagick') {
 		$discard = '';
 		$exit_status = 1;
 		exec('convert ' . $thumb_location .
 			' icons/video_overlay.png -gravity center -composite -quality 75 ' .
 			$thumb_location, $discard, $exit_status);
+		return;
+	}
+	// gd
+	$thumbnail = substr($thumb_location, -4) == '.jpg' ? imagecreatefromjpeg($thumb_location) :
+		imagecreatefrompng($thumb_location);
+	list($width, $height, $type, $attr) = getimagesize($thumb_location);
+	$overlay_play = imagecreatefrompng('icons/video_overlay.png');
+	imagealphablending($overlay_play, false);
+	imagesavealpha($overlay_play, true);
+	list(
+		$overlay_width,
+		$overlay_height,
+		$overlay_type,
+		$overlay_attr
+	) = getimagesize('icons/video_overlay.png');
+	if (substr($thumb_location, -4) == ".png") {
+		imagecolortransparent($thumbnail, imagecolorallocatealpha($thumbnail, 0, 0, 0, 127));
+		imagealphablending($thumbnail, true);
+		imagesavealpha($thumbnail, true);
+	}
+	imagecopy(
+		$thumbnail,
+		$overlay_play,
+		($width / 2) - ($overlay_width / 2),
+		($height / 2) - ($overlay_height / 2),
+		0,
+		0,
+		$overlay_width,
+		$overlay_height
+	);
+	if (substr($thumb_location, -4) == ".jpg") {
+		imagejpeg($thumbnail, $thumb_location);
+	} else {
+		imagepng($thumbnail, $thumb_location);
 	}
 }
 
@@ -563,7 +565,7 @@ function getEmbed($url) {
 // Delete old posts in endless threads
 function trimThreadPostsCount($id) {
 	$postOP = getPost($id);
-	if ($postOP && intval($postOP['endless']) == 1) {
+	if($postOP && intval($postOP['endless']) == 1) {
 		$posts = getThreadPosts($id, false);
 		$overLimit = count($posts) - ATOM_THREAD_LIMIT + 1;
 		if ($overLimit > 0) {
@@ -572,6 +574,10 @@ function trimThreadPostsCount($id) {
 			}
 		}
 	}
+}
+
+function getThreadId($post) {
+	return $post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent'];
 }
 
 /* ==[ Posting ]=========================================================================================== */
@@ -616,7 +622,7 @@ function checkAccessRights() {
 			$access = 'janitor';
 		}
 	}
-	if ($access == 'disabled') {
+	if($access == 'disabled') {
 		setcookie('atom_access', '', time() - 3600, '/' . ATOM_BOARD . '/');
 		unset($_COOKIE['atom_access']);
 	} else {
@@ -629,7 +635,7 @@ function isRawPost() {
 	return isset($_POST['rawpost']) && checkAccessRights() != 'disabled';
 }
 
-/* ==[ File redaing/writing ]============================================================================== */
+/* ==[ File reading/writing ]============================================================================== */
 
 function url_get_contents($url) {
 	if (!function_exists('curl_init')) {

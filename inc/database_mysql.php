@@ -19,22 +19,22 @@ mysql_query("SET NAMES 'utf8'");
 
 // Create the posts table if it does not exist
 if (mysql_num_rows(mysql_query("SHOW TABLES LIKE '" . ATOM_DBPOSTS . "'")) == 0) {
-	mysql_query($posts_sql);
+	mysql_query($postsQuery);
 }
 
 // Create the bans table if it does not exist
 if (mysql_num_rows(mysql_query("SHOW TABLES LIKE '" . ATOM_DBBANS . "'")) == 0) {
-	mysql_query($bans_sql);
+	mysql_query($bansQuery);
 }
 
 // Create the likes table if it does not exist
 if (mysql_num_rows(mysql_query("SHOW TABLES LIKE '" . ATOM_DBLIKES . "'")) == 0) {
-	mysql_query($likes_sql);
+	mysql_query($likesQuery);
 }
 
 // Create the modlog table if it does not exist
 if (mysql_num_rows(mysql_query("SHOW TABLES LIKE '" . ATOM_DBMODLOG . "'")) == 0) {
-	mysql_query($modlog_sql);
+	mysql_query($modlogQuery);
 }
 
 /* ==[ Posts ]============================================================================================= */

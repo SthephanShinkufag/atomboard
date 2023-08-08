@@ -161,8 +161,7 @@ function sendLike(likeEl, num) {
 
 var selectedText = '';
 document.addEventListener('DOMContentLoaded', function() {
-	var access = getCookie('atom_access');
-	if(access === '1') {
+	if(getCookie('atom_access') === '1') {
 		document.body.classList.add('access-enabled');
 	}
 	var replyPassw = $id('newpostpassword');

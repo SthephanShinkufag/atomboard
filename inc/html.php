@@ -86,7 +86,7 @@ function supportedFileTypes() {
 }
 
 function buildPostForm($parent, $isRawPost = false) {
-	global $access, $atom_hidefieldsop, $atom_hidefields, $atom_uploads, $atom_embeds;
+	global $atom_hidefieldsop, $atom_hidefields, $atom_uploads, $atom_embeds;
 	$isOnPage = $parent == ATOM_NEWTHREAD;
 	$hideFields = $isOnPage ? $atom_hidefieldsop : $atom_hidefields;
 	$postformExtra = array('name' => '', 'email' => '', 'subject' => '', 'footer' => '');
@@ -166,9 +166,7 @@ function buildPostForm($parent, $isRawPost = false) {
 						<td class="postblock"></td>
 						<td>
 							<input type="checkbox" name="rawpost" checked style="margin: 0 auto;">
-							<span style="font: 12px sans-serif;">Add <span style="color: ' .
-								($access == 'admin' ? 'red' : 'purple') . ';">## ' . ucfirst($access) .
-								'</span> mark and use raw HTML message</span>
+							<span style="font: 12px sans-serif;">Write message as raw HTML</span>
 						</td>
 					</tr>
 					<tr>
@@ -303,24 +301,22 @@ function buildPostBacklinks($id, $thrId) {
 			continue;
 		}
 		$post = getPost($reply['id']);
-		$isOp = $post['parent'] == ATOM_NEWTHREAD;
 		$str .= ($str != '' ? ', ' : '') . (!$post ? '&gt;&gt;' . $reply['id'] :
-			'<a class="' . ($isOp ? 'refop' : 'refreply') . '" href="/' . ATOM_BOARD . '/res/' .
-				($isOp ? $post['id'] : $post['parent']) . '.html#' . $reply['id'] . '">&gt;&gt;' .
-				$reply['id'] . '</a>');
+			'<a class="' . (isOp($post) ? 'refop' : 'refreply') . '" href="/' . ATOM_BOARD . '/res/' .
+				getThreadId($post) . '.html#' . $reply['id'] . '">&gt;&gt;' . $reply['id'] . '</a>');
 	}
 	return $str != '' ? '<div class="backlinks">' . $str . '</div>' : '';
 }
 
 function buildPost($post, $res, $isModPanel = false) {
-	$isOp = $post['parent'] == ATOM_NEWTHREAD;
-	$id = $post['id'];
-	$thrId = $isOp ? $id : $post['parent'];
 	if (!isset($post['omitted'])) {
 		$post['omitted'] = 0;
 	}
 
 	// Build post file
+	$id = $post['id'];
+	$thrId = getThreadId($post);
+	$isOp = isOp($post);
 	$filehtml = '';
 	$hasImages = false;
 	$imagesCount = 0;
@@ -618,8 +614,15 @@ function manageInfo($text) {
 	return '<div class="manageinfo">' . $text . '</div>';
 }
 
-function managePage($text, $onload = '') {
-	global $returnlink, $access, $atom_janitors;
+function managePage($text, $action = '') {
+	global $access, $atom_janitors;
+	$onload = '';
+	switch ($action) {
+	case 'bans': $onload = ' onload="document.atomboard.ip.focus();"'; break;
+	case 'login': $onload = ' onload="document.atomboard.managepassword.focus();"'; break;
+	case 'moderate': $onload = ' onload="document.atomboard.moderate.focus();"'; break;
+	case 'rawpost': $onload = ' onload="document.postform.parent.focus();"'; break;
+	}
 	return pageHeader() . '<body' . $onload . '>' .
 		pageWrapper(ATOM_BOARD_DESCRIPTION, true) .
 		'<hr>
@@ -642,15 +645,6 @@ function managePage($text, $onload = '') {
 		' . $text . '
 		<hr>' .
 	pageFooter(true);
-}
-
-function manageOnLoad($page) {
-	switch ($page) {
-	case 'login':    return ' onload="document.atomboard.managepassword.focus();"';
-	case 'moderate': return ' onload="document.atomboard.moderate.focus();"';
-	case 'rawpost':  return ' onload="document.postform.parent.focus();"';
-	case 'bans':     return ' onload="document.atomboard.ip.focus();"';
-	}
 }
 
 function manageLoginForm() {
@@ -743,8 +737,9 @@ function manageModeratePostForm() {
 
 function manageModeratePost($post) {
 	global $access;
+	$id = $post['id'];
 	$ip = $post['ip'];
-	$isOp = $post['parent'] == ATOM_NEWTHREAD;
+	$isOp = isOp($post);
 	$deleteInfo = $isOp ? 'This will delete the entire thread below.' : 'This will delete the post below.';
 	$ban = banByIP($ip);
 	$isMod = $access == 'admin' || $access == 'moderator';
@@ -762,7 +757,7 @@ function manageModeratePost($post) {
 						<td align="right" width="50%;">
 							<form method="get" action="?">
 								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="sticky" value="' . $post['id'] . '">
+								<input type="hidden" name="sticky" value="' . $id . '">
 								<input type="hidden" name="setsticky" value="' . ($isStickied ? 0 : 1) . '">
 								<button type="submit" class="managebutton" style="width: 50%;">
 									<img src="/' . ATOM_BOARD . '/icons/sticky.png" width="16" height="16" style="vertical-align: -3px;">
@@ -780,7 +775,7 @@ function manageModeratePost($post) {
 						<td align="right" width="50%;">
 							<form method="get" action="?">
 								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="locked" value="' . $post['id'] . '">
+								<input type="hidden" name="locked" value="' . $id . '">
 								<input type="hidden" name="setlocked" value="' . ($isLocked ? 0 : 1) . '">
 								<button type="submit" class="managebutton" style="width: 50%;">
 									<img src="/' . ATOM_BOARD . '/icons/locked.png" width="11" height="16" style="vertical-align: -3px;">
@@ -796,7 +791,7 @@ function manageModeratePost($post) {
 						<td align="right" width="50%;">
 							<form method="get" action="?">
 								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="endless" value="' . $post['id'] . '">
+								<input type="hidden" name="endless" value="' . $id . '">
 								<input type="hidden" name="setendless" value="' . ($isEndless ? 0 : 1) . '">
 								<button type="submit" class="managebutton" style="width: 50%;">
 									<img src="/' . ATOM_BOARD . '/icons/endless.png" width="16" height="16" style="vertical-align: -3px;">
@@ -808,7 +803,7 @@ function manageModeratePost($post) {
 							' endless mode for this thread.</small></td>
 					</tr>';
 		$postHtml = '';
-		$posts = getThreadPosts($post['id']);
+		$posts = getThreadPosts($id, false);
 		foreach ($posts as $postTemp) {
 			$postHtml .= buildPost($postTemp, ATOM_INDEXPAGE, true);
 		}
@@ -816,7 +811,7 @@ function manageModeratePost($post) {
 		$postHtml = buildPost($post, ATOM_INDEXPAGE, true);
 	}
 	return '<fieldset>
-			<legend>Moderating №' . $post['id'] . '</legend>
+			<legend>Moderating №' . $id . '</legend>
 			<fieldset>
 				<legend>Action</legend>
 				<table border="0" cellspacing="0" cellpadding="0" width="100%">' .
@@ -827,7 +822,7 @@ function manageModeratePost($post) {
 						<td align="right" width="50%;">
 							<form method="get" action="?">
 								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="delete" value="' . $post['id'] . '">
+								<input type="hidden" name="delete" value="' . $id . '">
 								<input type="submit" value="Delete ' . $postOrThread .
 									'" class="managebutton" style="width: 50%;">
 							</form>
@@ -882,14 +877,16 @@ function manageStatus() {
 					<td valign="top" align="right">
 						<table border="0">
 							<tr>
-								<td>
+								<td align="right">
 									<form method="get" action="?">
 										<input type="hidden" name="manage" value="">
 										<input type="hidden" name="approve" value="' . $id . '">
 										<input type="submit" value="Approve" class="managebutton">
 									</form>
 								</td>
-								<td>
+							</tr>
+							<tr>
+								<td align="right">
 									<form method="get" action="?">
 										<input type="hidden" name="manage" value="">
 										<input type="hidden" name="moderate" value="' . $id . '">
@@ -898,7 +895,7 @@ function manageStatus() {
 								</td>
 							</tr>
 							<tr>
-								<td align="right" colspan="2">
+								<td align="right">
 									<form method="get" action="?">
 										<input type="hidden" name="manage" value="">
 										<input type="hidden" name="delete" value="' . $id . '">
@@ -977,17 +974,14 @@ function manageStatus() {
 
 function buildCatalogPage() {
 	$catalogHTML = '';
-	$numOfReplies = 0;
-	$OPuserName = '';
-	$OPpostSubject = '';
-	$OPpostMessage = '';
-	$OPpostID = '';
 	$thumb = 'icons/noimage.png';
 	$thumb_width = ATOM_FILE_MAXW;
 	$thumb_height = ATOM_FILE_MAXH;
 	$OPposts = getThreads();
 	foreach ($OPposts as $post) {
-		$numOfReplies = getThreadPostsCount($post['id']);
+		$id = $post['id'];
+		$numOfReplies = getThreadPostsCount($id);
+		$OPpostMessage = '';
 		if (function_exists('mb_substr') && extension_loaded('mbstring')) {
 			$OPpostMessage = tidy_repair_string(
 				mb_substr($post['message'], 0, 160, 'UTF-8'),
@@ -1001,7 +995,6 @@ function buildCatalogPage() {
 		}
 		$OPpostSubject = $post['subject'];
 		$OPuserName = $post['name'] != '' ? $post['name'] : ATOM_POSTERNAME;
-		$OPpostID = $post['id'];
 		if ($post['thumb0'] != '' && $post['thumb0_width'] > 0 && $post['thumb0_height'] > 0) {
 			$thumb = 'thumb/' . $post['thumb0'];
 			$thumb_width = $post['thumb0_width'];
@@ -1013,7 +1006,7 @@ function buildCatalogPage() {
 		}
 		$catalogHTML .= '
 			<div class="catalog-block">
-				<a href="res/' . $OPpostID . '.html">
+				<a href="res/' . $id . '.html">
 					<img src="' . $thumb . '" width="' . $thumb_width . '" height="' . $thumb_height . '" />
 				</a>
 				<br>

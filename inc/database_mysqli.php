@@ -11,34 +11,34 @@ $link = @mysqli_connect(ATOM_DBHOST, ATOM_DBUSERNAME, ATOM_DBPASSWORD);
 if (!$link) {
 	fancyDie("Could not connect to database: " .
 		((is_object($link)) ? mysqli_error($link) :
-			(($link_error = mysqli_connect_error()) ? $link_error : '(unknown error)')));
+			(($linkError = mysqli_connect_error()) ? $linkError : '(unknown error)')));
 }
 $db_selected = @mysqli_query($link, "USE " . constant('ATOM_DBNAME'));
 if (!$db_selected) {
 	fancyDie("Could not select database: " .
 		((is_object($link)) ? mysqli_error($link) :
-			(($link_error = mysqli_connect_error()) ? $link_error : '(unknown error')));
+			(($linkError = mysqli_connect_error()) ? $linkError : '(unknown error')));
 }
 mysqli_query($link, "SET NAMES 'utf8'");
 
 // Create the posts table if it does not exist
 if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBPOSTS . "'")) == 0) {
-	mysqli_query($link, $posts_sql);
+	mysqli_query($link, $postsQuery);
 }
 
 // Create the bans table if it does not exist
 if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBBANS . "'")) == 0) {
-	mysqli_query($link, $bans_sql);
+	mysqli_query($link, $bansQuery);
 }
 
 // Create the likes table if it does not exist
 if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBLIKES . "'")) == 0) {
-	mysqli_query($link, $likes_sql);
+	mysqli_query($link, $likesQuery);
 }
 
 // Create the modlog table if it does not exist
 if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBMODLOG . "'")) == 0) {
-	mysqli_query($link, $modlog_sql);
+	mysqli_query($link, $modlogQuery);
 }
 
 function mysqli_result($res, $row, $field = 0) {
