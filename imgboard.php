@@ -556,7 +556,7 @@ function postingRequest() {
 
 	/* --------[ Post submission check ]-------- */
 
-	global $access;
+	global $access, $atom_embeds, $atom_hidefields, $atom_hidefieldsop, $atom_uploads;
 	$hasAccess = $access != 'disabled';
 
 	if (!$hasAccess) {
@@ -572,7 +572,7 @@ function postingRequest() {
 				$failed_captcha = false;
 			}
 			if ($failed_captcha) {
-				$captcha_error = 'Failed CAPTCHA.';
+				$captchaError = 'Failed CAPTCHA.';
 				$errCodes = $resp->getErrorCodes();
 				$errReason = '';
 				if (count($errCodes) == 1) {
@@ -580,26 +580,26 @@ function postingRequest() {
 					$errReason = $errCodes[0];
 				}
 				if ($errReason == 'missing-input-response') {
-					$captcha_error .= ' Please click the checkbox labeled "I\'m not a robot".';
+					$captchaError .= ' Please click the checkbox labeled "I\'m not a robot".';
 				} else {
-					$captcha_error .= ' Reason:';
+					$captchaError .= ' Reason:';
 					foreach ($errCodes as $error) {
-						$captcha_error .= '<br>' . $error;
+						$captchaError .= '<br>' . $error;
 					}
 				}
-				fancyDie($captcha_error);
+				fancyDie($captchaError);
 			}
 		}
 
 		// Check for simple captcha
 		elseif (ATOM_CAPTCHA) {
 			$captcha = isset($_POST['captcha']) ? strtolower(trim($_POST['captcha'])) : '';
-			$captcha_solution = isset($_SESSION['atom_captcha']) ?
-				strtolower(trim($_SESSION['atom_captcha'])) : '';
 			if ($captcha == '') {
 				fancyDie('Please enter the CAPTCHA text.');
 			}
-			if ($captcha != $captcha_solution) {
+			if ($captcha != (isset($_SESSION['atom_captcha']) ?
+				strtolower(trim($_SESSION['atom_captcha'])) : '')
+			) {
 				fancyDie('Incorrect CAPTCHA text entered, please try again.<br>' .
 					'Click the image to retrieve a new CAPTCHA.');
 			}
@@ -1204,6 +1204,7 @@ function postingRequest() {
 /* ==[ Deletion request ]================================================================================== */
 
 function deletionRequest() {
+	global $access;
 	if (!isset($_POST['delete'])) {
 		fancyDie('Tick the box next to a post and click "Delete" to delete it.');
 	}
@@ -1215,7 +1216,6 @@ function deletionRequest() {
 		fancyDie('Sorry, an invalid post identifier was sent.<br>' .
 			'Please go back, refresh the page, and try again.');
 	}
-	global $access;
 	if ($access != 'disabled' && $_POST['password'] == '') {
 		// Redirect to post moderation page
 		die('<meta http-equiv="refresh" content="0;url=' . basename($_SERVER['PHP_SELF']) .
