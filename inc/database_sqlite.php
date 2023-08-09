@@ -270,7 +270,7 @@ function getPostsByImageHex($hex) {
 	return $posts;
 }
 
-function getLatestPosts($moderated = true, $limit) {
+function getLatestPosts($moderated, $limit) {
 	$posts = array();
 	$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
 		"SELECT * FROM " . ATOM_DBPOSTS . "

@@ -201,7 +201,7 @@ function getPostsByImageHex($hex) {
 	return $posts;
 }
 
-function getLatestPosts($moderated = true, $limit) {
+function getLatestPosts($moderated, $limit) {
 	global $link;
 	$posts = array();
 	$result = mysqli_query($link,

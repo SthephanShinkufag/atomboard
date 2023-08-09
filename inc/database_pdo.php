@@ -248,7 +248,7 @@ function getPostsByImageHex($hex) {
 	return $posts;
 }
 
-function getLatestPosts($moderated = true, $limit) {
+function getLatestPosts($moderated, $limit) {
 	$posts = array();
 	$results = pdoQuery(
 		"SELECT * FROM " . ATOM_DBPOSTS . "

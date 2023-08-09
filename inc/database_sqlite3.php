@@ -273,7 +273,7 @@ function getPostsByImageHex($hex) {
 	return $posts;
 }
 
-function getLatestPosts($moderated = true, $limit) {
+function getLatestPosts($moderated, $limit) {
 	global $db;
 	$posts = array();
 	$result = $db->query(

@@ -3,6 +3,9 @@ if (!defined('ATOM_BOARD')) {
 	die('');
 }
 
+require 'vendor/autoload.php';
+use GeoIp2\Database\Reader;
+
 /* ==[ Page elements ]===================================================================================== */
 
 function pageHeader() {
@@ -424,7 +427,15 @@ function buildPost($post, $res, $isModPanel = false) {
 	$likes = $post['likes'];
 	$replyBtn = ($isOp && $res == ATOM_INDEXPAGE ? '&nbsp;<a class="link-button" href="res/' .
 		$id . '.html" title="Reply to thread №' . $id . '">Reply</a>' : '');
-	$countryCode = geoip_country_code_by_name($post['ip']);
+
+    $reader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
+
+    try {
+        $countryCode = $reader->country($post['ip'])->isoCode;
+    } catch (\GeoIp2\Exception\AddressNotFoundException) {
+        $countryCode = 'ANON';
+    }
+
 	return PHP_EOL . ($isOp ? '
 			<div class="oppost" id="op' . $id . '">' : '
 			<table border="0"><tbody><tr><td class="reply" id="reply' . $id . '">') . '

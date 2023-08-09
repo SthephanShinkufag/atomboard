@@ -1197,7 +1197,7 @@ function postingRequest() {
 	if ($slowRedirect) {
 		die('<meta http-equiv="refresh" content="3; url=' . $redirectPath . '">');
 	}
-	header('Location: ' . $redirectPath, true, 307);
+	header('Location: ' . $redirectPath, true, 303);
 	exit();
 }
 

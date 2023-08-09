@@ -246,7 +246,7 @@ function getPostsByImageHex($hex) {
 	return convertPostsToSQLStyle($GLOBALS['db']->selectWhere(POSTS_FILE, $compClause, 1));
 }
 
-function getLatestPosts($moderated = true, $count) {
+function getLatestPosts($moderated, $count) {
 	return convertPostsToSQLStyle($GLOBALS['db']->selectWhere(
 		POSTS_FILE,
 		NULL,
