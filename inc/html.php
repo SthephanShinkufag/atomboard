@@ -431,7 +431,8 @@ function buildPost($post, $res, $isModPanel = false) {
     $reader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
 
     try {
-        $countryCode = $reader->country($post['ip'])->isoCode;
+        $record = $reader->country($post['ip']);
+        $countryCode = $record->country->isoCode;
     } catch (\GeoIp2\Exception\AddressNotFoundException) {
         $countryCode = 'ANON';
     }
