@@ -14,7 +14,7 @@ if (function_exists('ob_get_level')) {
 
 function fancyDie($message) {
 	die('<head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023080800">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023081500">
 </head>
 <body align="center">
 	<br>
@@ -527,8 +527,8 @@ function managementRequest() {
 
 	/* --------[ Raw post sending ]-------- */
 
-	if (isset($_GET['rawpost'])) {
-		die(managePage(buildPostForm(0, true), 'rawpost'));
+	if (isset($_GET['staffPost'])) {
+		die(managePage(buildPostForm(0, true), 'staffPost'));
 	}
 
 	/* --------[ Log out ]-------- */
@@ -661,10 +661,10 @@ function postingRequest() {
 
 	$hideFields = $isOp ? $atom_hidefieldsop : $atom_hidefields;
 	$post['ip'] = $_SERVER['REMOTE_ADDR'];
-	$rawPost = isRawPost();
+	$staffPost = isstaffPost();
 
 	// Get name/tripcode
-	if ($rawPost || !in_array('name', $hideFields)) {
+	if ($staffPost || !in_array('name', $hideFields)) {
 		$postName = $_POST['name'];
 		if (preg_match('/(#|!)(.*)/', $postName, $regs)) {
 			$cap = $regs[2];
@@ -714,12 +714,12 @@ function postingRequest() {
 	}
 
 	// Get email
-	if ($rawPost || !in_array('email', $hideFields)) {
+	if ($staffPost || !in_array('email', $hideFields)) {
 		$post['email'] = escapeHTML(str_replace('"', '&quot;', substr($_POST['email'], 0, 75)));
 	}
 
 	// Get subject
-	if ($rawPost || !in_array('subject', $hideFields)) {
+	if ($staffPost || !in_array('subject', $hideFields)) {
 		$post['subject'] = escapeHTML(substr($_POST['subject'], 0, 75));
 	}
 
@@ -727,7 +727,7 @@ function postingRequest() {
 	if (!in_array('message', $hideFields)) {
 		$post['message'] = $_POST['message'];
 		// Markup text formatting
-		if (!$rawPost) {
+		if (!$staffPost) {
 			$msg = escapeHTML(rtrim($post['message']));
 			if (ATOM_WORDBREAK > 0) {
 				$msg = preg_replace(
@@ -828,7 +828,7 @@ function postingRequest() {
 	}
 
 	// Get password
-	if ($rawPost || !in_array('password', $hideFields)) {
+	if ($staffPost || !in_array('password', $hideFields)) {
 		$post['password'] = $_POST['password'] != '' ? md5(md5($_POST['password'])) : '';
 	}
 
@@ -870,7 +870,7 @@ function postingRequest() {
 
 	if (isset($_POST['embed']) &&
 		trim($_POST['embed']) != '' &&
-		($rawPost || !in_array('embed', $hideFields))
+		($staffPost || !in_array('embed', $hideFields))
 	) {
 		if (isset($_FILES['file']) && $_FILES['file']['name'][0] != '') {
 			fancyDie('Embedding a URL and uploading a file at the same time is not supported.');
@@ -885,23 +885,18 @@ function postingRequest() {
 				(implode('/', array_keys($atom_embeds))) . ' URLs are supported.');
 		}
 		$post['file0_hex'] = $service;
-		$tempFile = time() . substr(microtime(), 2, 3) . '-0';
-		$fileLocation = 'thumb/' . $tempFile;
+		$fileName = time() . substr(microtime(), 2, 3) . '-0';
+		$fileLocation = 'thumb/' . $fileName;
 		file_put_contents($fileLocation, url_get_contents($embed['thumbnail_url']));
 		$fileInfo = getimagesize($fileLocation);
-		$fileMime = mime_content_type($fileLocation);
 		$post['image0_width'] = $fileInfo[0];
 		$post['image0_height'] = $fileInfo[1];
-		if ($fileMime == 'image/jpeg') {
-			$post['thumb0'] = $tempFile . '.jpg';
-		} elseif ($fileMime == 'image/png') {
-			$post['thumb0'] = $tempFile . '.png';
-		} elseif ($fileMime == 'image/gif') {
-			$post['thumb0'] = $tempFile . '.gif';
-		} elseif ($fileMime == 'image/webp') {
-			$post['thumb0'] = $tempFile . '.webp';
-		} else {
-			fancyDie('Error while processing audio/video.');
+		switch(mime_content_type($fileLocation)) {
+		case 'image/jpeg': $post['thumb0'] = $fileName . '.jpg'; break;
+		case 'image/png': $post['thumb0'] = $fileName . '.png'; break;
+		case 'image/gif': $post['thumb0'] = $fileName . '.gif'; break;
+		case 'image/webp': $post['thumb0'] = $fileName . '.webp'; break;
+		default: fancyDie('Error while processing audio/video.');
 		}
 		$thumbLocation = 'thumb/' . $post['thumb0'];
 		list($thumbMaxWidth, $thumbMaxHeight) = getThumbnailDimensions($post, '0');
@@ -917,20 +912,23 @@ function postingRequest() {
 		$post['thumb0_width'] = $thumbInfo[0];
 		$post['thumb0_height'] = $thumbInfo[1];
 		$post['file0_original'] = escapeHTML($embed['title']);
-		$post['file0'] = str_ireplace(array('src="https://', 'src="http://'), 'src="//', $embed['html']);
+		$embedHtml = $embed['html'];
+		if($service == 'YouTube.com') {
+			$embedHtml = preg_replace('/width="\d+"/', 'width="' . $fileInfo[0] . '"', $embedHtml);
+			$embedHtml = preg_replace('/height="\d+"/', 'height="' . $fileInfo[1] . '"', $embedHtml);
+		}
+		$post['file0'] = str_ireplace(array('src="https://', 'src="http://'), 'src="//', $embedHtml);
 	}
 
 	/* --------[ Images upload ]-------- */
 
-	elseif (isset($_FILES['file']) &&
-		($rawPost || !in_array('file', $hideFields)) &&
-		$_FILES['file']['tmp_name'][0]
+	elseif (isset($_FILES['file']) && $_FILES['file']['name'][0] != '' &&
+		($staffPost || !in_array('file', $hideFields))
 	) {
 		$filesCount = 0;
-		$currentFileBytes = 0;
-		$allFilesBytes = 0;
+		$fileBytes = 0;
 		foreach ($_FILES['file']['error'] as $index => $error) {
-			if (!$_FILES['file']['tmp_name'][$index] || $filesCount >= ATOM_FILES_COUNT) {
+			if ($filesCount >= ATOM_FILES_COUNT) {
 				continue;
 			}
 
@@ -958,16 +956,9 @@ function postingRequest() {
 			}
 
 			// Check for bytes size restriction
-			$currentFileBytes = filesize($_FILES['file']['tmp_name'][$index]);
-			$allFilesBytes += $currentFileBytes;
-			if ((ATOM_FILE_MAXKB > 0) && ($currentFileBytes > (ATOM_FILE_MAXKB * 1024))) {
+			$fileBytes = filesize($_FILES['file']['tmp_name'][$index]);
+			if ((ATOM_FILE_MAXKB > 0) && ($fileBytes > (ATOM_FILE_MAXKB * 1024))) {
 				fancyDie('That file is larger than ' . ATOM_FILE_MAXKBDESC . '.');
-			}
-			if ((ATOM_FILE_MAXKB > 0) && ($allFilesBytes > (ATOM_FILE_MAXKB * 1024))) {
-				// silently drop all remained files if comulative size is getting more than ATOM_FILE_MAXKB.
-				// or uncomment fancyDie to get error message and lost post.
-				// fancyDie('Size of all files is larger than ' . ATOM_FILE_MAXKBDESC . '.');
-				continue;
 			}
 
 			// Get post image fields
@@ -1136,10 +1127,10 @@ function postingRequest() {
 
 	if ($post['file0'] == '') {
 		$allowed = '';
-		if (!empty($atom_uploads) && ($rawPost || !in_array('file', $hideFields))) {
+		if (!empty($atom_uploads) && ($staffPost || !in_array('file', $hideFields))) {
 			$allowed = 'file';
 		}
-		if (!empty($atom_embeds) && ($rawPost || !in_array('embed', $hideFields))) {
+		if (!empty($atom_embeds) && ($staffPost || !in_array('embed', $hideFields))) {
 			if ($allowed != '') {
 				$allowed .= ' or ';
 			}
@@ -1148,7 +1139,7 @@ function postingRequest() {
 		if (isOp($post) && $allowed != '' && !ATOM_NOFILEOK) {
 			fancyDie('A ' . $allowed . ' is required to start a thread.');
 		}
-		if (!$rawPost && str_replace('<br>', '', $post['message']) == '') {
+		if (!$staffPost && str_replace('<br>', '', $post['message']) == '') {
 			$dieMsg = '';
 			if (!in_array('message', $hideFields)) {
 				$dieMsg .= 'enter a message ' . ($allowed != '' ? ' and/or ' : '');

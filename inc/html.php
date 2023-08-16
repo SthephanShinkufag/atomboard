@@ -22,8 +22,8 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023080800">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023080800"></script>' .
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023081500">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023081500"></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -88,14 +88,14 @@ function supportedFileTypes() {
 	return 'Supported file type' . (count($atom_uploads) != 1 ? 's are ' : ' is ') . $typesFormatted . '.';
 }
 
-function buildPostForm($parent, $isRawPost = false) {
+function buildPostForm($parent, $isstaffPost = false) {
 	global $atom_hidefieldsop, $atom_hidefields, $atom_uploads, $atom_embeds;
 	$isOnPage = $parent == ATOM_NEWTHREAD;
 	$hideFields = $isOnPage ? $atom_hidefieldsop : $atom_hidefields;
 	$postformExtra = array('name' => '', 'email' => '', 'subject' => '', 'footer' => '');
 	$inputSubmit = '<input type="submit" value="' .
-		($isRawPost ? 'New post' : ($isOnPage ? 'New thread' : 'Reply')) . '" accesskey="z">';
-	if ($isRawPost || !in_array('subject', $hideFields)) {
+		($isstaffPost ? 'New post' : ($isOnPage ? 'New thread' : 'Reply')) . '" accesskey="z">';
+	if ($isstaffPost || !in_array('subject', $hideFields)) {
 		$postformExtra['subject'] = $inputSubmit;
 	} elseif (!in_array('email', $hideFields)) {
 		$postformExtra['email'] = $inputSubmit;
@@ -111,7 +111,7 @@ function buildPostForm($parent, $isRawPost = false) {
 	$fileTypesHtml = '';
 	$fileInputHtml = '';
 	$embedInputHtml = '';
-	if (!empty($atom_uploads) && ($isRawPost || !in_array('file', $hideFields))) {
+	if (!empty($atom_uploads) && ($isstaffPost || !in_array('file', $hideFields))) {
 		if (ATOM_FILE_MAXKB > 0) {
 			$maxFileSizeInputHtml = '<input type="hidden" name="MAX_FILE_SIZE" value="' .
 				strval(ATOM_FILE_MAXKB * 1024) . '">';
@@ -126,7 +126,7 @@ function buildPostForm($parent, $isRawPost = false) {
 						</td>
 					</tr>';
 	}
-	if (!empty($atom_embeds) && ($isRawPost || !in_array('embed', $hideFields))) {
+	if (!empty($atom_embeds) && ($isstaffPost || !in_array('embed', $hideFields))) {
 		$embedInputHtml = '<tr>
 						<td class="postblock"></td>
 						<td>
@@ -160,15 +160,15 @@ function buildPostForm($parent, $isRawPost = false) {
 			<form name="postform" id="postform" action="/' . ATOM_BOARD .
 				'/imgboard.php" method="post" enctype="multipart/form-data">
 			' . $maxFileSizeInputHtml .
-			(!$isRawPost ? '
+			(!$isstaffPost ? '
 			<input type="hidden" name="parent" value="' . $parent . '">' : '') . '
 			<table class="postform-table reply">
 				<tbody>' . (
-					$isRawPost ? '
+					$isstaffPost ? '
 					<tr>
 						<td class="postblock"></td>
 						<td>
-							<input type="checkbox" name="rawpost" checked style="margin: 0 auto;">
+							<input type="checkbox" name="staffPost" checked style="margin: 0 auto;">
 							<span style="font: 12px sans-serif;">Write message as raw HTML</span>
 						</td>
 					</tr>
@@ -179,7 +179,7 @@ function buildPostForm($parent, $isRawPost = false) {
 						</td>
 					</tr>' : ''
 				) . (
-					$isRawPost || !in_array('name', $hideFields) ? '
+					$isstaffPost || !in_array('name', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
 						<td>
@@ -188,7 +188,7 @@ function buildPostForm($parent, $isRawPost = false) {
 						</td>
 					</tr>' : ''
 				) . (
-					$isRawPost || !in_array('email', $hideFields) ? '
+					$isstaffPost || !in_array('email', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
 						<td>
@@ -197,7 +197,7 @@ function buildPostForm($parent, $isRawPost = false) {
 						</td>
 					</tr>' : ''
 				) . (
-					$isRawPost || !in_array('subject', $hideFields) ? '
+					$isstaffPost || !in_array('subject', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
 						<td style="display: flex;">
@@ -206,7 +206,7 @@ function buildPostForm($parent, $isRawPost = false) {
 						</td>
 					</tr>' : ''
 				) . (
-					$isRawPost || !in_array('message', $hideFields) ? '
+					$isstaffPost || !in_array('message', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
 						<td id="markup-buttons">
@@ -255,7 +255,7 @@ function buildPostForm($parent, $isRawPost = false) {
 					' . $fileInputHtml . '
 					' . $embedInputHtml .
 				(
-					$isRawPost || !in_array('password', $hideFields) ? '
+					$isstaffPost || !in_array('password', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
 						<td>
@@ -378,18 +378,18 @@ function buildPost($post, $res, $isModPanel = false) {
 						' . $filesize . '
 					</span>
 					<div id="thumbfile' . $id . $index . '">' .
-						($post['thumb' . $index] != '' /* If a file have a thumbnail */ ? '
+						($post['thumb' . $index] != '' /* If a video has a thumbnail */ ? '
 						' . $thumblink . '
-							<img src="/' . ATOM_BOARD . '/thumb/' . $post['thumb' . $index] . '"' .
-							($isVideo ? ' style="border: 1px dashed #5d5d5d;" ' : '') .
-							' alt="' . $id . $index . '" class="thumb" id="thumbnail' . $id . $index.
+							<img src="/' . ATOM_BOARD . '/thumb/' . $post['thumb' . $index] .
+							'" alt="' . $id . $index . '" class="thumb' . ($isVideo ? ' thumb-video' : '') .
+							'" id="thumbnail' . $id . $index.
 							'" width="' . $post['thumb' . $index . '_width'] .
 							'" height="' . $post['thumb' . $index . '_height'] . '">
 						</a>' :
-						($isVideo /* If a video file doesn't have a thumbnail */ ? '
+						($isVideo /* If a video has no thumbnail */ ? '
 						' . $thumblink . '
 							<video src="' . $directLink . '" alt="' . $id . $index .
-							'" class="thumb" id="thumbnail' . $id . $index. '"></video>
+							'" class="thumb thumb-video" id="thumbnail' . $id . $index. '"></video>
 						</a>' : '')) . '
 					</div>' . ($expandHtml == '' ? '' : '
 					<div id="expand' . $id . $index . '" style="display: none;">
@@ -422,20 +422,20 @@ function buildPost($post, $res, $isModPanel = false) {
 		}
 	}
 
+	// Country flags
+	$reader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
+	try {
+		$record = $reader->country($post['ip']);
+		$countryCode = $record->country->isoCode;
+	} catch (\GeoIp2\Exception\AddressNotFoundException) {
+		$countryCode = 'ANON';
+	}
+
 	// Start post building
 	$omitted = $post['omitted'];
 	$likes = $post['likes'];
 	$replyBtn = ($isOp && $res == ATOM_INDEXPAGE ? '&nbsp;<a class="link-button" href="res/' .
 		$id . '.html" title="Reply to thread №' . $id . '">Reply</a>' : '');
-
-    $reader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
-
-    try {
-        $record = $reader->country($post['ip']);
-        $countryCode = $record->country->isoCode;
-    } catch (\GeoIp2\Exception\AddressNotFoundException) {
-        $countryCode = 'ANON';
-    }
 
 	return PHP_EOL . ($isOp ? '
 			<div class="oppost" id="op' . $id . '">' : '
@@ -633,7 +633,7 @@ function managePage($text, $action = '') {
 	case 'bans': $onload = ' onload="document.atomboard.ip.focus();"'; break;
 	case 'login': $onload = ' onload="document.atomboard.managepassword.focus();"'; break;
 	case 'moderate': $onload = ' onload="document.atomboard.moderate.focus();"'; break;
-	case 'rawpost': $onload = ' onload="document.postform.parent.focus();"'; break;
+	case 'staffPost': $onload = ' onload="document.postform.parent.focus();"'; break;
 	}
 	return pageHeader() . '<body' . $onload . '>' .
 		pageWrapper(ATOM_BOARD_DESCRIPTION, true) .
@@ -647,7 +647,7 @@ function managePage($text, $action = '') {
 			(count($atom_janitors) != 0 && $access == 'janitor' ? '
 			<a class="link-button" href="/' . ATOM_BOARD . '/janitorlog.html">JanitorLog</a>' : '') . '
 			<a class="link-button" href="?manage&moderate">Moderate Post</a>
-			<a class="link-button" href="?manage&rawpost">Raw Post</a>' .
+			<a class="link-button" href="?manage&staffPost">Raw Post</a>' .
 			($access == 'admin' ? '
 			<a class="link-button" href="?manage&rebuildall">Rebuild All</a>' : '') .
 			($access == 'admin' && ATOM_DBMIGRATE ? '

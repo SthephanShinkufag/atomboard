@@ -525,8 +525,8 @@ function addVideoOverlay($thumb_location) {
 	imagecopy(
 		$thumbnail,
 		$overlay_play,
-		($width / 2) - ($overlay_width / 2),
-		($height / 2) - ($overlay_height / 2),
+		intval($width / 2) - intval($overlay_width / 2),
+		intval($height / 2) - intval($overlay_height / 2),
 		0,
 		0,
 		$overlay_width,
@@ -631,8 +631,8 @@ function checkAccessRights() {
 	return $access;
 }
 
-function isRawPost() {
-	return isset($_POST['rawpost']) && checkAccessRights() != 'disabled';
+function isstaffPost() {
+	return isset($_POST['staffPost']) && checkAccessRights() != 'disabled';
 }
 
 /* ==[ File reading/writing ]============================================================================== */

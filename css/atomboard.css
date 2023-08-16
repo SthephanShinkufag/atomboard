@@ -304,6 +304,14 @@ pre + br {
 	min-width: 450px;
 }
 
+.thumb-video {
+	border-left: 5px dashed #555;
+	border-right: 5px dashed #555;
+	background-color: inherit;
+	max-width: 230px;
+	max-height: 230px;
+}
+
 .thumbnailmsg {
 	font-size: small;
 	color: #800000;
@@ -316,14 +324,6 @@ pre + br {
 .unkfunc {
 	background: inherit;
 	color: #789922;
-}
-
-video.thumb {
-	border-left: 5px dashed #555;
-	border-right: 5px dashed #555;
-	background-color: inherit;
-	max-width: 230px;
-	max-height: 230px;
 }
 
 /* ==[ Postform ]========================================================================================== */
