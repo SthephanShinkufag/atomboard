@@ -925,40 +925,45 @@ function postingRequest() {
 	elseif (isset($_FILES['file']) && $_FILES['file']['name'][0] != '' &&
 		($staffPost || !in_array('file', $hideFields))
 	) {
+		$fileIdx = 0;
 		$filesCount = 0;
 		$fileBytes = 0;
 		foreach ($_FILES['file']['error'] as $index => $error) {
-			if ($filesCount >= ATOM_FILES_COUNT) {
+			$fileIdx++;
+			if ($filesCount >= ATOM_FILES_COUNT || $fileIdx > 1 && $error == UPLOAD_ERR_NO_FILE) {
 				continue;
 			}
 
 			// Check for upload errors
+			$fileIdxTxt = 'File №' . $fileIdx;
 			switch ($error) {
 			case UPLOAD_ERR_OK: break;
 			case UPLOAD_ERR_FORM_SIZE:
-				fancyDie('That file is larger than ' . ATOM_FILE_MAXKBDESC . '.');
+				fancyDie($fileIdxTxt . ' is larger than ' . ATOM_FILE_MAXKBDESC . '.');
 				break;
 			case UPLOAD_ERR_INI_SIZE:
-				fancyDie('The uploaded file exceeds the upload_max_filesize directive (' .
+				fancyDie($fileIdxTxt . ' exceeds the upload_max_filesize directive (' .
 					ini_get('upload_max_filesize') . ') in php.ini.');
 				break;
-			case UPLOAD_ERR_PARTIAL: fancyDie('The uploaded file was only partially uploaded.'); break;
+			case UPLOAD_ERR_PARTIAL: fancyDie($fileIdxTxt . ' was only partially uploaded.'); break;
 			case UPLOAD_ERR_NO_FILE: fancyDie('No file was uploaded.'); break;
 			case UPLOAD_ERR_NO_TMP_DIR: fancyDie('Missing a temporary folder.'); break;
-			case UPLOAD_ERR_CANT_WRITE: fancyDie('Failed to write file to disk.'); break;
-			case UPLOAD_ERR_EXTENSION: fancyDie('Unable to save the uploaded file. Extension error'); break;
-			default: fancyDie('Unable to save the uploaded file.');
+			case UPLOAD_ERR_CANT_WRITE: fancyDie('Failed to write ' . $fileIdxTxt . ' to disk.'); break;
+			case UPLOAD_ERR_EXTENSION:
+				fancyDie('Unable to save the uploaded ' . $fileIdxTxt . '. Extension error.');
+				break;
+			default: fancyDie('Unable to save the uploaded ' . $fileIdxTxt . '.');
 			}
 			if (!is_file($_FILES['file']['tmp_name'][$index]) ||
 				!is_readable($_FILES['file']['tmp_name'][$index])
 			) {
-				fancyDie('File transfer failure.<br>Please retry the submission.');
+				fancyDie($fileIdxTxt . ' transfer failure.<br>Please retry the submission.');
 			}
 
 			// Check for bytes size restriction
 			$fileBytes = filesize($_FILES['file']['tmp_name'][$index]);
 			if ((ATOM_FILE_MAXKB > 0) && ($fileBytes > (ATOM_FILE_MAXKB * 1024))) {
-				fancyDie('That file is larger than ' . ATOM_FILE_MAXKBDESC . '.');
+				fancyDie($fileIdxTxt . ' is larger than ' . ATOM_FILE_MAXKBDESC . '.');
 			}
 
 			// Get post image fields
@@ -987,7 +992,8 @@ function postingRequest() {
 				$hexMatches = getPostsByImageHex($hex);
 				if (count($hexMatches) > 0) {
 					foreach ($hexMatches as $hexMatch) {
-						fancyDie('Duplicate file uploaded.<br>That file has already been posted <a href="' .
+						fancyDie('Duplicate ' . $fileIdxTxt .
+							' uploaded.<br>That file has already been posted <a href="' .
 							'res/' . getThreadId($hexMatch) . '.html#' . $hexMatch['id'] . '">here</a>.');
 					}
 				}
@@ -999,8 +1005,8 @@ function postingRequest() {
 				$fileMime = strtolower(array_pop($fileMimeSplit));
 			} else {
 				if (!@getimagesize($_FILES['file']['tmp_name'][$index])) {
-					fancyDie('Failed to read the MIME type and size of the uploaded file.<br>' .
-						'Please retry the submission.');
+					fancyDie('Failed to read the MIME type and size of the uploaded ' .
+						$fileIdxTxt . '.<br>' . 'Please retry the submission.');
 				}
 				$fileInfo = getimagesize($_FILES['file']['tmp_name'][$index]);
 				$fileMime = mime_content_type($_FILES['file']['tmp_name'][$index]);
@@ -1016,11 +1022,11 @@ function postingRequest() {
 
 			// Upload file
 			if (!move_uploaded_file($_FILES['file']['tmp_name'][$index], $fileLocation)) {
-				fancyDie('Could not copy uploaded file.');
+				fancyDie('Could not copy uploaded ' . $fileIdxTxt . '.');
 			}
 			if ($_FILES['file']['size'][$index] != filesize($fileLocation)) {
 				@unlink($fileLocation);
-				fancyDie('File transfer failure.<br>Please go back and try again.');
+				fancyDie($fileIdxTxt . ' transfer failure.<br>Please go back and try again.');
 			}
 
 			// Get video info and its thumbnail
@@ -1048,7 +1054,7 @@ function postingRequest() {
 					) {
 						@unlink($fileLocation);
 						@unlink('thumb/' . $post['thumb' . $index]);
-						fancyDie('Sorry, your video appears to be corrupt.');
+						fancyDie('Sorry, your video ' . $fileIdxTxt . ' appears to be corrupt.');
 					}
 					if (ATOM_VIDEO_OVERLAY) {
 						addVideoOverlay('thumb/' . $post['thumb' . $index]);
@@ -1084,7 +1090,7 @@ function postingRequest() {
 				$post['thumb' . $index] = $fileName . 's.' . array_pop($thumbFileSplit);
 				if (!copy($atom_uploads[$fileMime][1], 'thumb/' . $post['thumb' . $index])) {
 					@unlink($fileLocation);
-					fancyDie('Could not create thumbnail.');
+					fancyDie('Could not create thumbnail for ' . $fileIdxTxt . '.');
 				}
 				if ($fileMime == 'application/x-shockwave-flash') {
 					ATOM_VIDEO_OVERLAY ? addVideoOverlay('thumb/' . $post['thumb' . $index]):'';
@@ -1108,7 +1114,7 @@ function postingRequest() {
 					$thumbMaxHeight)
 				) {
 					@unlink($fileLocation);
-					fancyDie('Could not create thumbnail.');
+					fancyDie('Could not create thumbnail for ' . $fileIdxTxt . '.');
 				}
 			}
 
