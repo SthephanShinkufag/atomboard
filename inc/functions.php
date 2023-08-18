@@ -422,7 +422,7 @@ function createThumbnail($file_location, $thumb_location, $new_w, $new_h) {
 		if (preg_match("/jpg|jpeg/", $system[0])) {
 			$src_img = imagecreatefromjpeg($file_location);
 		} elseif (preg_match("/png/", $system[0])) {
-			$src_img = imagecreatefrompng($file_location);
+			$src_img = @imagecreatefrompng($file_location);
 		} elseif (preg_match("/gif/", $system[0])) {
 			$src_img = imagecreatefromgif ($file_location);
 		} elseif (preg_match("/webp/", $system[0])) {
