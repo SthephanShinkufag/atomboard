@@ -6,13 +6,13 @@
 /* ==[ Board description and customization ]=============================================================== */
 // Unique identifier for this board using only letters and numbers
 define('ATOM_BOARD', '');
-// Description displayed at the top of every page
+// Description displayed at the top of pages
 define('ATOM_BOARD_DESCRIPTION', '');
 // Name of the index page
 define('ATOM_INDEX', 'index.html');
 // Timezone (see https://secure.php.net/manual/en/timezones.php - e.g. 'America/Los_Angeles')
 define('ATOM_TIMEZONE', 'UTC');
-// Specify your code on the top of index pages
+// Specify your code at the top of pages
 define('ATOM_HTML_TOP_INFO', '');
 // Specify your navigation links to be added at the top and the bottom of the page
 define('ATOM_HTML_NAVIGATION', '
@@ -38,7 +38,7 @@ $atom_janitors = array(
 	// 'Janitor3' => 'Password3'
 );
 // Require moderation before displaying posts:
-// files / all (see README for instructions, only MySQL is supported)  ['' to disable]
+// files / all (see README for instructions, only MySQL is supported) ['' to disable]
 define('ATOM_REQMOD', '');
 
 /* ==[ Database ]========================================================================================== */
@@ -75,7 +75,7 @@ define('ATOM_DBNAME', '');
 // The following only apply when ATOM_DBMODE is set to 'pdo' (see README for instructions)
 // PDO driver to use: 'mysql', 'pgsql', 'sqlite'
 define('ATOM_DBDRIVER', 'mysql');
-// Enter a custom DSN to override all of the connection/driver settings above  (see README for instructions)
+// Enter a custom DSN to override all of the connection/driver settings above (see README for instructions)
 // When changing this, you should still set ATOM_DBDRIVER appropriately
 // If you're using PDO with a MySQL or pgSQL database, you should leave this blank
 define('ATOM_DBDSN', '');
@@ -176,5 +176,5 @@ define('ATOM_FILE_MAXH', 230); // Height
 define('ATOM_CAPTCHA', 'simple');
 // The following only apply when ATOM_CAPTCHA is set to recaptcha
 // For API keys visit https://www.google.com/recaptcha
-define('ATOM_RECAPTCHA_SITE', '');   // Site key
+define('ATOM_RECAPTCHA_SITE', ''); // Site key
 define('ATOM_RECAPTCHA_SECRET', ''); // Secret key
