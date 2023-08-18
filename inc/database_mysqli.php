@@ -19,7 +19,7 @@ if (!$db_selected) {
 		((is_object($link)) ? mysqli_error($link) :
 			(($linkError = mysqli_connect_error()) ? $linkError : '(unknown error')));
 }
-mysqli_query($link, "SET NAMES 'utf8'");
+mysqli_query($link, "SET NAMES 'utf8mb4'");
 
 // Create the posts table if it does not exist
 if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBPOSTS . "'")) == 0) {

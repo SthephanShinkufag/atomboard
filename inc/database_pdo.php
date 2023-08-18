@@ -18,10 +18,11 @@ if (ATOM_DBDRIVER === 'pgsql') {
 } else {
 	$options = array(PDO::ATTR_PERSISTENT => true,
 		PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-		PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8');
+		PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4');
 }
 try {
 	$dbh = new PDO($dsn, ATOM_DBUSERNAME, ATOM_DBPASSWORD, $options);
+	$dbh->exec('SET NAMES utf8mb4');
 } catch (PDOException $e) {
 	fancyDie("Failed to connect to the database: " . $e->getMessage());
 }

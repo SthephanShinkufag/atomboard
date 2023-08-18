@@ -105,7 +105,7 @@ function managementRequest() {
 				(($linkError = mysqli_connect_error()) ? $linkError : '(unknown error)')
 			));
 		}
-		mysqli_set_charset($link, 'utf8');
+		mysqli_set_charset($link, 'utf8mb4');
 		if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBPOSTS . "'")) != 0) {
 			fancyDie('Posts table (' . ATOM_DBPOSTS . ') already exists!<br>' .
 				'Please DROP this table and try again.');
