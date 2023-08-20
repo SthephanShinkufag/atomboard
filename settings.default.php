@@ -54,6 +54,8 @@ define('ATOM_DBMODLOG', ATOM_BOARD . '_modlog');
 define('ATOM_DBBANS', 'bans');
 // Likes table name in database (use the same likes table across boards for global likes)
 define('ATOM_DBLIKES', 'likes');
+// Database for dirty ip lookups
+define('ATOM_DBIPLOOKUPS', 'iplookups');
 // Enable database migration tool (see README for instructions)
 define('ATOM_DBMIGRATE', false);
 
@@ -79,6 +81,20 @@ define('ATOM_DBDRIVER', 'mysql');
 // When changing this, you should still set ATOM_DBDRIVER appropriately
 // If you're using PDO with a MySQL or pgSQL database, you should leave this blank
 define('ATOM_DBDSN', '');
+
+/* ==[ Dirty Ip Lookups ]==================================================================================== */
+// Ip lookups, using ipregistry.co. Set ATOM_IPLOOKUPS_KEY to '' to disable, othwerise provide a key.
+define('ATOM_IPLOOKUPS_KEY', '');
+// Block abusive IPs
+define('ATOM_IPLOOKUPS_BLOCK_ABUSER', true);
+// Block IPs under cloud providers
+define('ATOM_IPLOOKUPS_BLOCK_VPS', true);
+// Block IPs under proxy
+define('ATOM_IPLOOKUPS_BLOCK_PROXY', true);
+// Block IPs under TOR network
+define('ATOM_IPLOOKUPS_BLOCK_TOR', true);
+// Block IPs under VPN
+define('ATOM_IPLOOKUPS_BLOCK_VPN', true);
 
 /* ==[ Posts ]============================================================================================= */
 // Default poster names

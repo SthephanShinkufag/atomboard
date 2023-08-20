@@ -178,6 +178,16 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		KEY `ip` (`ip`)
 	)";
 
+	$ipLookupsQuery = "CREATE TABLE `" . ATOM_DBIPLOOKUPS . "` (
+        `ip` varchar(39) NOT NULL,
+        `abuser` int NOT NULL DEFAULT '0',
+        `vps` int NOT NULL DEFAULT '0',
+        `proxy` int NOT NULL DEFAULT '0',
+        `tor` int NOT NULL DEFAULT '0',
+        `vpn` int NOT NULL DEFAULT '0',
+        PRIMARY KEY (`ip`)
+	)";
+
 	$likesQuery = "CREATE TABLE `" . ATOM_DBLIKES . "` (
 		`id` mediumint(7) unsigned NOT NULL auto_increment,
 		`ip` varchar(39) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -661,4 +671,53 @@ function writePage($filename, $contents) {
 		unlink($tempfile);
 	}
 	chmod($filename, 0664); /* it was created 0600 */
+}
+
+function lookupDirtyIp($ip) {
+    if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY) {
+        // Check for dirty ip
+        $ipLookup = lookupByIP($ip);
+
+        if ($ipLookup) {
+            $ipLookupAbuser = $ipLookup['abuser'];
+            $ipLookupVps = $ipLookup['vps'];
+            $ipLookupProxy = $ipLookup['proxy'];
+            $ipLookupTor = $ipLookup['tor'];
+            $ipLookupVpn = $ipLookup['vpn'];
+        } else {
+            try {
+                $json = json_decode(file_get_contents(
+                    'https://api.ipregistry.co/' . $ip . '?key=' . ATOM_IPLOOKUPS_KEY));
+
+                $ipLookupSecurity = $json->security;
+
+                $ipLookupAbuser = (int)($ipLookupSecurity->is_abuser ||
+                    $ipLookupSecurity->is_threat || $ipLookupSecurity->is_attacker);
+                $ipLookupVps = (int)($ipLookupSecurity->is_cloud_provider);
+                $ipLookupProxy = (int)($ipLookupSecurity->is_proxy);
+                $ipLookupTor = (int)($ipLookupSecurity->is_tor || $ipLookupSecurity->is_tor_exit);
+                $ipLookupVpn = (int)($ipLookupSecurity->is_vpn);
+
+                storeLookupResult($ip, $ipLookupAbuser, $ipLookupVps,
+                    $ipLookupProxy, $ipLookupTor, $ipLookupVpn);
+
+            } catch (Exception $e) {
+                $ipLookupAbuser = false;
+                $ipLookupVps = false;
+                $ipLookupProxy = false;
+                $ipLookupTor = false;
+                $ipLookupVpn = false;
+            }
+        }
+
+        if (
+            (ATOM_IPLOOKUPS_BLOCK_ABUSER && $ipLookupAbuser) ||
+            (ATOM_IPLOOKUPS_BLOCK_VPS && $ipLookupVps) ||
+            (ATOM_IPLOOKUPS_BLOCK_PROXY && $ipLookupProxy) ||
+            (ATOM_IPLOOKUPS_BLOCK_TOR && $ipLookupTor) ||
+            (ATOM_IPLOOKUPS_BLOCK_VPN && $ipLookupVpn)
+        ) {
+            fancyDie('Your IP address has been blacklisted due to abuse.');
+        }
+    }
 }
