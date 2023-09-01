@@ -1081,8 +1081,7 @@ function postingRequest() {
 				'image/pjpeg',
 				'image/png',
 				'image/gif',
-				'image/webp',
-				'application/x-shockwave-flash'))
+				'image/webp'))
 			) {
 				$fileInfo = getimagesize($fileLocation);
 				$post['image' . $index . '_width'] = $fileInfo[0];
@@ -1096,9 +1095,6 @@ function postingRequest() {
 				if (!copy($atom_uploads[$fileMime][1], 'thumb/' . $post['thumb' . $index])) {
 					@unlink($fileLocation);
 					fancyDie('Could not create thumbnail for ' . $fileIdxTxt . '.');
-				}
-				if ($fileMime == 'application/x-shockwave-flash') {
-					ATOM_VIDEO_OVERLAY ? addVideoOverlay('thumb/' . $post['thumb' . $index]):'';
 				}
 			}
 

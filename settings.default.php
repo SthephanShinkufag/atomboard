@@ -139,8 +139,8 @@ $atom_hidefields = array();
 
 /* ==[ Upload mime types ]================================================================================= */
 // Empty array to disable
-// Format: MIME type => (extension, optional thumbnail)
-// WebM upload requires mediainfo and ffmpegthumbnailer (see README for instructions)
+// Format: MIME type => (extension, optional thumbnail extensiion)
+// Video thumbnails require mediainfo and ffmpegthumbnailer (see README for instructions)
 $atom_uploads = array(
 	'image/jpeg' => array('jpg'),
 	'image/pjpeg' => array('jpg'),
@@ -169,10 +169,11 @@ define('ATOM_FILE_MAXKB', 20480);
 define('ATOM_FILE_MAXKBDESC', '20 MB');
 // Maximum number of uploaded files (up to 4)
 define('ATOM_FILES_COUNT', 4);
-// Add overlay image over video and embedded files
-define('ATOM_VIDEO_OVERLAY', false);
 // Thumbnail method to use: 'gd', 'imagemagick' (see README for instructions)
 define('ATOM_FILE_THUMBDRIVER', 'gd');
+// Add icons/video_overlay.png play icon over video and embedded thumbnails
+// Rquires mediainfo and ffmpegthumbnailer (see README for instructions)
+define('ATOM_VIDEO_OVERLAY', true);
 // Allow the creation of new threads without uploading a file
 define('ATOM_NOFILEOK', false);
 // Allow duplicate files
