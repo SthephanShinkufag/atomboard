@@ -41,6 +41,11 @@ if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBMODLOG . "
 	mysqli_query($link, $modlogQuery);
 }
 
+// Create the ip lookups table if it does not exist
+if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBIPLOOKUPS . "'")) == 0) {
+	mysqli_query($link, $ipLookupsQuery);
+}
+
 function mysqli_result($res, $row, $field = 0) {
 	$res->data_seek($row);
 	$datarow = $res->fetch_array();
@@ -415,6 +420,37 @@ function bumpThread($id) {
 		"UPDATE `" . ATOM_DBPOSTS . "`
 		SET `bumped` = " . time() . "
 		WHERE `id` = " . $id . " LIMIT 1");
+}
+
+/* ==[ Dirty IP lookups ]===================================================================================== */
+
+function lookupByIP($ip) {
+    global $link;
+	$result = mysqli_query($link,
+		"SELECT * FROM " . ATOM_DBIPLOOKUPS . "
+		WHERE ip = '" .  mysql_real_escape_string($ip) . "' LIMIT 1",
+		array($ip));
+	if ($result) {
+		while ($ban = mysqli_fetch_assoc($result)) {
+			return $ban;
+		}
+	}
+}
+
+function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
+    global $link;
+	mysqli_query($link,
+		"INSERT INTO `" . ATOM_DBIPLOOKUPS . "`
+		(ip, abuser, vps, proxy, tor, vpn)
+		VALUES (
+			'" . mysql_real_escape_string($ip) . "',
+			'" . mysql_real_escape_string($abuser) . "',
+			'" . mysql_real_escape_string($vps) . "',
+			'" . mysql_real_escape_string($proxy) . "',
+			'" . mysql_real_escape_string($tor) . "',
+			'" . mysql_real_escape_string($vpn) . "'
+		)");
+	return mysqli_insert_id($link);
 }
 
 /* ==[ Bans ]============================================================================================== */

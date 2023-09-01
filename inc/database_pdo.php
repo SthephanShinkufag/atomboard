@@ -77,6 +77,19 @@ if (!$modlog_exists) {
 	$dbh->exec($modlogQuery);
 }
 
+// Create the modlog table if it does not exist
+if (ATOM_DBDRIVER === 'pgsql') {
+	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(ATOM_DBIPLOOKUPS);
+	$iplookups_exists = $dbh->query($query)->fetchColumn() != 0;
+} else {
+	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBIPLOOKUPS));
+	$iplookups_exists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+}
+
+if (!$iplookups_exists) {
+	$dbh->exec($ipLookupsQuery);
+}
+
 function pdoQuery($sql, $params = false) {
 	global $dbh;
 	if ($params) {
@@ -457,6 +470,26 @@ function bumpThread($id) {
 		SET bumped = ?
 		WHERE id = ?",
 		array($now, $id));
+}
+
+/* ==[ Dirty IP lookups ]===================================================================================== */
+
+function lookupByIP($ip) {
+	$result = pdoQuery(
+		"SELECT * FROM " . ATOM_DBIPLOOKUPS . "
+		WHERE ip = ? LIMIT 1",
+		array($ip));
+	return $result->fetch(PDO::FETCH_ASSOC);
+}
+
+function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
+	global $dbh;
+	$stm = $dbh->prepare(
+		"INSERT INTO " . ATOM_DBIPLOOKUPS . "
+		(ip, abuser, vps, proxy, tor, vpn)
+		VALUES (?, ?, ?, ?, ?, ?)");
+	$stm->execute(array($ip, $abuser, $vps, $proxy, $tor, $vpn));
+	return $dbh->lastInsertId();
 }
 
 /* ==[ Bans ]============================================================================================== */

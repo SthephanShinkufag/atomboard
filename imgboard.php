@@ -608,6 +608,9 @@ function postingRequest() {
 			unset($_SESSION['atom_captcha']);
 		}
 
+		// Check for dirty ip (using external service)
+		lookupDirtyIp($_SERVER['REMOTE_ADDR']);
+
 		// Check for ban
 		$ban = banByIP($_SERVER['REMOTE_ADDR']);
 		if ($ban) {
