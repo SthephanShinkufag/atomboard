@@ -344,9 +344,9 @@ function buildPost($post, $res, $isModPanel = false) {
 			$expandHtml = rawurlencode('<video ' .
 				($fWidth > 0 && $fHeight > 0 ? 'width="' . $fWidth . '" height="' . $fHeight . '"' :
 					'width="500"') .
-				'style="position: static;' .
-				' pointer-events: inherit; display: inline; max-width: 100%; max-height: 100%;"' .
-				' controls autoplay loop><source src="' . $directLink . '"></source></video>');
+				'style="position: static; pointer-events: inherit; display: inline; height: auto;' .
+				' max-width: 100%; max-height: 100%;" controls autoplay loop><source src="' .
+				$directLink . '"></source></video>');
 		} elseif (in_array($fExt, array('jpg', 'png', 'gif', 'webp'))) {
 			$expandHtml = rawurlencode('<a href="' . $directLink . '"' . $expandClick . '><img src="/' .
 				ATOM_BOARD . '/src/' . $fName . '" width="' . $fWidth .
