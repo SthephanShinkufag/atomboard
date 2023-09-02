@@ -701,6 +701,7 @@ function manageBansTable() {
 	$text = '';
 	$getAllBans = getAllBans();
 	if (count($getAllBans) > 0) {
+		$reader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
 		$text .= '
 		<table id="ban-table"><tbody>
 			<tr>
@@ -713,8 +714,21 @@ function manageBansTable() {
 		foreach ($getAllBans as $ban) {
 			$expire = $ban['expire'] > 0 ? date('d.m.Y D H:i:s', $ban['expire']) : 'Does not expire';
 			$reason = $ban['reason'] == '' ? '&nbsp;' : htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8');
+			$validIP = filter_var($ban['ip'], FILTER_VALIDATE_IP);
+			if($validIP) {
+				try {
+					$record = $reader->country($validIP);
+					$countryCode = $record->country->isoCode;
+				} catch (\GeoIp2\Exception\AddressNotFoundException) {
+					$countryCode = 'ANON';
+				}
+			}
+			if(!$countryCode) {
+				$countryCode = 'ANON';
+			}
 			$text .= '<tr>
-				<td>' . $ban['ip'] . '</td>
+				<td><img class="poster-country" title="' . $countryCode . '" src="/' . ATOM_BOARD .
+						'/icons/flag-icons/' . $countryCode . '.png"> ' . $ban['ip'] . '</td>
 				<td>' . date('d.m.Y D H:i:s', $ban['timestamp']) . '</td>
 				<td>' . $expire . '</td><td>' . $reason . '</td>
 				<td><a href="?manage&bans&lift=' . $ban['id'] . '">lift</a></td>
