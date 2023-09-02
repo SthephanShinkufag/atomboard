@@ -2,7 +2,6 @@
 if (!defined('ATOM_BOARD')) {
 	die('');
 }
-
 if(ATOM_GEOIP == 'geoip2') {
 	require 'vendor/autoload.php';
 }
@@ -311,6 +310,25 @@ function buildPostBacklinks($id, $thrId) {
 				getThreadId($post) . '.html#' . $reply['id'] . '">&gt;&gt;' . $reply['id'] . '</a>');
 	}
 	return $str != '' ? '<div class="backlinks">' . $str . '</div>' : '';
+}
+
+function checkGeoIP($ip) {
+	$countryCode = 'ANON';
+	$validIP = filter_var($ip, FILTER_VALIDATE_IP);
+	if ($validIP) {
+		if(ATOM_GEOIP == 'geoip2') {
+			$reader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
+			try {
+				$record = $reader->country($validIP);
+				$countryCode = $record->country->isoCode;
+			} catch (\GeoIp2\Exception\AddressNotFoundException $e) {
+				$countryCode = 'ANON';
+			}
+		} else if(ATOM_GEOIP == 'geoip') {
+			$countryCode = geoip_country_code_by_name($validIP);
+		}
+	}
+	return $countryCode ? $countryCode : 'ANON';
 }
 
 function buildPost($post, $res, $isModPanel = false) {

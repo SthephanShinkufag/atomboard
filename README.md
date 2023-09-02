@@ -75,15 +75,15 @@ Installing
       - Moderate posts by visiting the management panel.
     - To allow thumbnails generation for video and embedded files:
       - Ensure your web host is running Linux or FreeBSD.
-      - Install [mediainfo](https://mediaarea.net/en/MediaInfo) and [ffmpegthumbnailer](https://code.google.com/p/ffmpegthumbnailer/). On Ubuntu, run `sudo apt-get install mediainfo ffmpegthumbnailer`. On FreeBSD run `pkg install mediainfo ffmpegthumbnailer`.
+      - Install [mediainfo](https://mediaarea.net/en/MediaInfo) and [ffmpegthumbnailer](https://code.google.com/p/ffmpegthumbnailer/). On Ubuntu, run `sudo apt-get install mediainfo ffmpegthumbnailer`. On FreeBSD, run `pkg install mediainfo ffmpegthumbnailer`.
     - To remove the play icon from WebM/MP4/MOV thumbnails, delete or rename `icons/video_overlay.png` or set `ATOM_VIDEO_OVERLAY` to false.
     - To use ImageMagick instead of GD when creating thumbnails:
       - Install ImageMagick and ensure that the `convert` command is available.
       - Set `ATOM_FILE_THUMBDRIVER` to `imagemagick`.
       - **Note:** GIF files will have animated thumbnails, which will often have large file sizes.
     - To show contry flags for posters:
-      - Run `sudo apt-get install geoip geoip-dev`
-      - [Download](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data) `GeoLite2-Country.mmdb` library, copy to `/usr/share/GeoIP/GeoLite2-Country.mmdb`
+      - On Ubuntu, run `sudo apt-get install geoip geoip-dev`. On FreeBSD, run `pkg install geoip geoip-dev`.
+      - If using geoip2, [download](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data) `GeoLite2-Country.mmdb` library, copy to `/usr/share/GeoIP/GeoLite2-Country.mmdb`
  6. [CHMOD](https://en.wikipedia.org/wiki/Chmod) write permissions to these directories:
     - `./` (the directory containing atomboard)
     - `./src/`

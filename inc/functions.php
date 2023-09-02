@@ -645,25 +645,6 @@ function isstaffPost() {
 	return isset($_POST['staffPost']) && checkAccessRights() != 'disabled';
 }
 
-function checkGeoIP($ip) {
-	$countryCode = 'ANON';
-	$validIP = filter_var($ip, FILTER_VALIDATE_IP);
-	if ($validIP) {
-		if(ATOM_GEOIP == 'geoip2') {
-			$reader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
-			try {
-				$record = $reader->country($validIP);
-				$countryCode = $record->country->isoCode;
-			} catch (\GeoIp2\Exception\AddressNotFoundException $e) {
-				$countryCode = 'ANON';
-			}
-		} else if(ATOM_GEOIP == 'geoip') {
-			$countryCode = geoip_country_code_by_name($validIP);
-		}
-	}
-	return $countryCode ? $countryCode : 'ANON';
-}
-
 /* ==[ File reading/writing ]============================================================================== */
 
 function url_get_contents($url) {
