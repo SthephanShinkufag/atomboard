@@ -70,6 +70,16 @@ define('BAN_TIMESTAMP', 2);
 define('BAN_EXPIRE', 3);
 define('BAN_REASON', 4);
 
+# IP lookup database structure
+define('IPLOOKUP_FILE', '.iplookup');
+define('IPLOOKUP_ID', 0);
+define('IPLOOKUP_IP', 1);
+define('IPLOOKUP_ABUSER', 2);
+define('IPLOOKUP_VPS', 3);
+define('IPLOOKUP_PROXY', 4);
+define('IPLOOKUP_TOR', 5);
+define('IPLOOKUP_VPN', 6);
+
 # Likes database structure
 define('LIKES_FILE', '.likes');
 define('LIKES_ID', 0);
@@ -235,6 +245,14 @@ function getPostEntry($id) {
 
 function getPost($id) {
 	return convertPostsToSQLStyle(getPostEntry($id), true);
+}
+
+function getPostsByIP($ip) {
+	return convertPostsToSQLStyle($GLOBALS['db']->selectWhere(
+		POSTS_FILE,
+		new SimpleWhereClause(POST_IP, '=', $ip, STRING_COMPARISON),
+		-1,
+		new OrderBy(POST_TIMESTAMP, DESCENDING, INTEGER_COMPARISON)));
 }
 
 function getPostsByImageHex($hex) {
@@ -446,6 +464,25 @@ function bumpThread($id) {
 			$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post);
 		}
 	}
+}
+
+/* ==[ Dirty IP lookups ]================================================================================== */
+
+function lookupByIP($ip) {
+	return convertPostsToSQLStyle($GLOBALS['db']->selectWhere(
+		IPLOOKUP_FILE,
+		new SimpleWhereClause(IPLOOKUP_IP, '=', $ip, STRING_COMPARISON)));
+}
+
+function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
+	$lookup = array();
+	$lookup[IPLOOKUP_IP] = $ip;
+	$lookup[IPLOOKUP_ABUSER] = $abuser;
+	$lookup[IPLOOKUP_VPS] = $vps;
+	$lookup[IPLOOKUP_PROXY] = $proxy;
+	$lookup[IPLOOKUP_TOR] = $tor;
+	$lookup[IPLOOKUP_VPN] = $vpn;
+	$GLOBALS['db']->insertWithAutoId(IPLOOKUP_FILE, IPLOOKUP_ID, $lookup);
 }
 
 /* ==[ Bans ]============================================================================================== */

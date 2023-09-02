@@ -30,15 +30,15 @@ $atom_moderators = array(
 	// 'Mod2' => 'Password2',
 	// 'Mod3' => 'Password3'
 );
-// Janitors only have access to delete (and moderate if ATOM_REQMOD is set) posts
+// Janitors only have access to delete posts (and moderate if ATOM_REQMOD is set)
 // If the array is not empty, the janitorlog.html will be generated
 $atom_janitors = array(
 	// 'Janitor1' => 'Password1',
 	// 'Janitor2' => 'Password2',
 	// 'Janitor3' => 'Password3'
 );
-// Require moderation before displaying posts:
-// files / all (see README for instructions, only MySQL is supported) ['' to disable]
+// Require moderation before displaying posts
+// Values: 'files', 'all' (see README for instructions, only MySQL is supported), '' to disable
 define('ATOM_REQMOD', '');
 
 /* ==[ Database ]========================================================================================== */
@@ -54,14 +54,13 @@ define('ATOM_DBMODLOG', ATOM_BOARD . '_modlog');
 define('ATOM_DBBANS', 'bans');
 // Likes table name in database (use the same likes table across boards for global likes)
 define('ATOM_DBLIKES', 'likes');
-// Database for dirty ip lookups
+// Database for dirty IP lookups
 define('ATOM_DBIPLOOKUPS', 'iplookups');
 // Enable database migration tool (see README for instructions)
 define('ATOM_DBMIGRATE', false);
 
 /* ==[ Database configuration - MySQL / pgSQL ]============================================================ */
-// The following only apply when ATOM_DBMODE is set to mysql,
-// mysqli or pdo with default (blank) ATOM_DBDSN
+// The following only apply when ATOM_DBMODE is set to 'mysql', 'mysqli' or 'pdo' with ATOM_DBDSN = ''
 // Hostname
 define('ATOM_DBHOST', 'localhost');
 // Port (set to 0 if you are using a UNIX socket as the host)
@@ -82,8 +81,8 @@ define('ATOM_DBDRIVER', 'mysql');
 // If you're using PDO with a MySQL or pgSQL database, you should leave this blank
 define('ATOM_DBDSN', '');
 
-/* ==[ Dirty Ip Lookups ]==================================================================================== */
-// Ip lookups, using ipregistry.co. Set ATOM_IPLOOKUPS_KEY to '' to disable, othwerise provide a key.
+/* ==[ Dirty IP Lookups ]================================================================================== */
+// IP lookups, using ipregistry.co. Set ATOM_IPLOOKUPS_KEY to '' to disable, othwerise provide a key
 define('ATOM_IPLOOKUPS_KEY', '');
 // Block abusive IPs
 define('ATOM_IPLOOKUPS_BLOCK_ABUSER', true);
@@ -99,6 +98,9 @@ define('ATOM_IPLOOKUPS_BLOCK_VPN', true);
 /* ==[ Posts ]============================================================================================= */
 // Default poster names
 define('ATOM_POSTERNAME', 'Anonymous');
+// Geolocation - identification of the country by IP
+// Values: 'geoip', 'geoip2', '' to disable (see README for instructions)
+define('ATOM_GEOIP', '');
 // Unique ID's based on IP
 define('ATOM_POSTERUID', false);
 // Tripcode seed - Must not change once set!
@@ -108,7 +110,7 @@ define('ATOM_TRIPSEED', '');
 define('ATOM_LIKES', true);
 // Display reflinks to replies that reference a post
 define('ATOM_BACKLINKS', true);
-// Words longer than this many characters will be broken apart [0 to disable]
+// Words longer than this many characters will be broken apart, 0 to disable
 define('ATOM_WORDBREAK', 0);
 
 /* ==[ Index page and threads ]============================================================================ */
@@ -116,18 +118,18 @@ define('ATOM_WORDBREAK', 0);
 define('ATOM_THREADSPERPAGE', 10);
 // Amount of posts previewed on index pages
 define('ATOM_PREVIEWREPLIES', 5);
-// Amount of text lines to truncate posts on index pages [0 to disable]
+// Amount of text lines to truncate posts on index pages, 0 to disable
 define('ATOM_TRUNC_LINES', 10);
-// Text size in bytes to truncate posts on index pages [0 to disable]
+// Text size in bytes to truncate posts on index pages, 0 to disable
 define('ATOM_TRUNC_SIZE', 1536);
-// Oldest threads are discarded when the thread count passes this limit [0 to disable]
+// Oldest threads are discarded when the thread count passes this limit, 0 to disable
 define('ATOM_MAXTHREADS', 100);
-// Maximum posts before a thread stops bumping [0 to disable]
+// Maximum posts before a thread stops bumping, 0 to disable
 // For endless mode: if the number of posts in a thread exceeds this value, old posts will be deleted
 define('ATOM_THREAD_LIMIT', 500);
 
 /* ==[ Reply form and posting ]============================================================================ */
-// Delay (in seconds) between posts from the same IP address to help control flooding [0 to disable]
+// Delay (in seconds) between posts from the same IP address to help control flooding, 0 to disable
 define('ATOM_POSTING_DELAY', 20);
 // Redirect to thread after posting
 define('ATOM_ALWAYSNOKO', true);
@@ -138,7 +140,7 @@ $atom_hidefieldsop = array();
 $atom_hidefields = array();
 
 /* ==[ Upload mime types ]================================================================================= */
-// Empty array to disable
+// Empty array() to disable
 // Format: MIME type => (extension, optional thumbnail extensiion)
 // Video thumbnails require mediainfo and ffmpegthumbnailer (see README for instructions)
 $atom_uploads = array(
@@ -155,7 +157,7 @@ $atom_uploads = array(
 );
 
 /* ==[ Embed APIs ]======================================================================================== */
-// Empty array to disable
+// Empty array() to disable
 $atom_embeds = array(
 	'SoundCloud.com' => 'https://soundcloud.com/oembed?format=json&url=ATOM_EMBED',
 	'Vimeo.com'      => 'https://vimeo.com/api/oembed.json?url=ATOM_EMBED',
@@ -163,7 +165,7 @@ $atom_embeds = array(
 );
 
 /* ==[ File control ]====================================================================================== */
-// Maximum file size in kilobytes [0 to disable]
+// Maximum file size in kilobytes, 0 to disable
 define('ATOM_FILE_MAXKB', 20480);
 // Human-readable representation of the maximum file size
 define('ATOM_FILE_MAXKBDESC', '20 MB');
@@ -172,7 +174,7 @@ define('ATOM_FILES_COUNT', 4);
 // Thumbnail method to use: 'gd', 'imagemagick' (see README for instructions)
 define('ATOM_FILE_THUMBDRIVER', 'gd');
 // Add icons/video_overlay.png play icon over video and embedded thumbnails
-// Rquires mediainfo and ffmpegthumbnailer (see README for instructions)
+// Requires mediainfo and ffmpegthumbnailer (see README for instructions)
 define('ATOM_VIDEO_OVERLAY', true);
 // Allow the creation of new threads without uploading a file
 define('ATOM_NOFILEOK', false);
@@ -188,8 +190,8 @@ define('ATOM_FILE_MAXW', 230); // Width
 define('ATOM_FILE_MAXH', 230); // Height
 
 /* ==[ Captcha ]=========================================================================================== */
-// Reduce spam by requiring users to pass a CAPTCHA when posting: 'simple', 'recaptcha'
-// (click Rebuild All in the management panel after enabling) ['' to disable]
+// Requiring users to pass a CAPTCHA when posting: 'simple', 'recaptcha', '' to disable
+// Click [Rebuild All] in the management panel after enabling
 define('ATOM_CAPTCHA', 'simple');
 // The following only apply when ATOM_CAPTCHA is set to recaptcha
 // For API keys visit https://www.google.com/recaptcha

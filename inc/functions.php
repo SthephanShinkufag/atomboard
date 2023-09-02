@@ -179,13 +179,13 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 	)";
 
 	$ipLookupsQuery = "CREATE TABLE `" . ATOM_DBIPLOOKUPS . "` (
-        `ip` varchar(39) NOT NULL,
-        `abuser` int NOT NULL DEFAULT '0',
-        `vps` int NOT NULL DEFAULT '0',
-        `proxy` int NOT NULL DEFAULT '0',
-        `tor` int NOT NULL DEFAULT '0',
-        `vpn` int NOT NULL DEFAULT '0',
-        PRIMARY KEY (`ip`)
+		`ip` varchar(39) NOT NULL,
+		`abuser` int NOT NULL DEFAULT '0',
+		`vps` int NOT NULL DEFAULT '0',
+		`proxy` int NOT NULL DEFAULT '0',
+		`tor` int NOT NULL DEFAULT '0',
+		`vpn` int NOT NULL DEFAULT '0',
+		PRIMARY KEY (`ip`)
 	)";
 
 	$likesQuery = "CREATE TABLE `" . ATOM_DBLIKES . "` (
@@ -575,7 +575,7 @@ function getEmbed($url) {
 // Delete old posts in endless threads
 function trimThreadPostsCount($id) {
 	$postOP = getPost($id);
-	if($postOP && intval($postOP['endless']) == 1) {
+	if ($postOP && intval($postOP['endless']) == 1) {
 		$posts = getThreadPosts($id, false);
 		$overLimit = count($posts) - ATOM_THREAD_LIMIT + 1;
 		if ($overLimit > 0) {
@@ -632,7 +632,7 @@ function checkAccessRights() {
 			$access = 'janitor';
 		}
 	}
-	if($access == 'disabled') {
+	if ($access == 'disabled') {
 		setcookie('atom_access', '', time() - 3600, '/' . ATOM_BOARD . '/');
 		unset($_COOKIE['atom_access']);
 	} else {
@@ -643,6 +643,25 @@ function checkAccessRights() {
 
 function isstaffPost() {
 	return isset($_POST['staffPost']) && checkAccessRights() != 'disabled';
+}
+
+function checkGeoIP($ip) {
+	$countryCode = 'ANON';
+	$validIP = filter_var($ip, FILTER_VALIDATE_IP);
+	if ($validIP) {
+		if(ATOM_GEOIP == 'geoip2') {
+			$reader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
+			try {
+				$record = $reader->country($validIP);
+				$countryCode = $record->country->isoCode;
+			} catch (\GeoIp2\Exception\AddressNotFoundException $e) {
+				$countryCode = 'ANON';
+			}
+		} else if(ATOM_GEOIP == 'geoip') {
+			$countryCode = geoip_country_code_by_name($validIP);
+		}
+	}
+	return $countryCode ? $countryCode : 'ANON';
 }
 
 /* ==[ File reading/writing ]============================================================================== */
@@ -671,53 +690,4 @@ function writePage($filename, $contents) {
 		unlink($tempfile);
 	}
 	chmod($filename, 0664); /* it was created 0600 */
-}
-
-function lookupDirtyIp($ip) {
-    if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY) {
-        // Check for dirty ip
-        $ipLookup = lookupByIP($ip);
-
-        if ($ipLookup) {
-            $ipLookupAbuser = $ipLookup['abuser'];
-            $ipLookupVps = $ipLookup['vps'];
-            $ipLookupProxy = $ipLookup['proxy'];
-            $ipLookupTor = $ipLookup['tor'];
-            $ipLookupVpn = $ipLookup['vpn'];
-        } else {
-            try {
-                $json = json_decode(file_get_contents(
-                    'https://api.ipregistry.co/' . $ip . '?key=' . ATOM_IPLOOKUPS_KEY));
-
-                $ipLookupSecurity = $json->security;
-
-                $ipLookupAbuser = (int)($ipLookupSecurity->is_abuser ||
-                    $ipLookupSecurity->is_threat || $ipLookupSecurity->is_attacker);
-                $ipLookupVps = (int)($ipLookupSecurity->is_cloud_provider);
-                $ipLookupProxy = (int)($ipLookupSecurity->is_proxy);
-                $ipLookupTor = (int)($ipLookupSecurity->is_tor || $ipLookupSecurity->is_tor_exit);
-                $ipLookupVpn = (int)($ipLookupSecurity->is_vpn);
-
-                storeLookupResult($ip, $ipLookupAbuser, $ipLookupVps,
-                    $ipLookupProxy, $ipLookupTor, $ipLookupVpn);
-
-            } catch (Exception $e) {
-                $ipLookupAbuser = false;
-                $ipLookupVps = false;
-                $ipLookupProxy = false;
-                $ipLookupTor = false;
-                $ipLookupVpn = false;
-            }
-        }
-
-        if (
-            (ATOM_IPLOOKUPS_BLOCK_ABUSER && $ipLookupAbuser) ||
-            (ATOM_IPLOOKUPS_BLOCK_VPS && $ipLookupVps) ||
-            (ATOM_IPLOOKUPS_BLOCK_PROXY && $ipLookupProxy) ||
-            (ATOM_IPLOOKUPS_BLOCK_TOR && $ipLookupTor) ||
-            (ATOM_IPLOOKUPS_BLOCK_VPN && $ipLookupVpn)
-        ) {
-            fancyDie('Your IP address has been blacklisted due to abuse.');
-        }
-    }
 }

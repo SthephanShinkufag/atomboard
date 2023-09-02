@@ -254,6 +254,18 @@ function getPost($id) {
 	}
 }
 
+function getPostsByIP($ip) {
+	$posts = array();
+	$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
+		"SELECT * FROM " . ATOM_DBPOSTS . "
+		WHERE ip = '" . sqlite_escape_string($ip) . "'
+		ORDER BY timestamp DESC"), SQLITE_ASSOC);
+	foreach ($result as $post) {
+		$posts[] = $post;
+	}
+	return $posts;
+}
+
 function getPostsByImageHex($hex) {
 	$posts = array();
 	$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
@@ -447,6 +459,32 @@ function bumpThread($id) {
 		WHERE id = " . $id);
 }
 
+/* ==[ Dirty IP lookups ]================================================================================== */
+
+function lookupByIP($ip) {
+	$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
+		"SELECT * FROM " . ATOM_DBIPLOOKUPS . "
+		WHERE ip = '" . sqlite_escape_string($ip) . "' LIMIT 1"), SQLITE_ASSOC);
+	foreach ($result as $ban) {
+		return $ban;
+	}
+}
+
+function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
+	sqlite_query($GLOBALS['db'],
+		"INSERT INTO `" . ATOM_DBIPLOOKUPS . "`
+		(ip, abuser, vps, proxy, tor, vpn)
+		VALUES (
+			'" . sqlite_escape_string($ip) . "',
+			'" . sqlite_escape_string($abuser) . "',
+			'" . sqlite_escape_string($vps) . "',
+			'" . sqlite_escape_string($proxy) . "',
+			'" . sqlite_escape_string($tor) . "',
+			'" . sqlite_escape_string($vpn) . "'
+		)");
+	return sqlite_last_insert_rowid($GLOBALS['db']);
+}
+
 /* ==[ Bans ]============================================================================================== */
 
 function banByID($id) {
@@ -548,7 +586,7 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 			$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
 				"SELECT timestamp, username, action, color FROM " . ATOM_DBMODLOG . "
 				WHERE boardname = '" . ATOM_BOARD . "'
-				ORDER BY timestamp DESC LIMIT 100"));
+				ORDER BY timestamp DESC LIMIT 100"), SQLITE_ASSOC);
 			foreach ($result as $row) {
 				$records[] = $row;
 			}
@@ -558,7 +596,7 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 				WHERE boardname = '" . ATOM_BOARD . "'
 					AND timestamp >= " . $periodStartDate . "
 					AND timestamp <= " . $periodEndDate . "
-				ORDER BY timestamp DESC"));
+				ORDER BY timestamp DESC"), SQLITE_ASSOC);
 			foreach ($result as $row) {
 				$records[] = $row;
 			}
@@ -569,7 +607,7 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 			"SELECT timestamp, action FROM `" . ATOM_DBMODLOG . "`
 			WHERE boardname = '" . ATOM_BOARD . "'
 				AND private = '0'
-			ORDER BY timestamp DESC LIMIT 100"));
+			ORDER BY timestamp DESC LIMIT 100"), SQLITE_ASSOC);
 		foreach ($result as $row) {
 			$records[] = $row;
 		}
@@ -592,5 +630,5 @@ function modLog($action, $private = '1', $color = 'Black') {
 			'" . sqlite_escape_string($action) . "',
 			'" . $color . "',
 			'" . $private . "'
-		)"));
+		)"), SQLITE_ASSOC);
 }

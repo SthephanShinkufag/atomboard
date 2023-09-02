@@ -422,13 +422,13 @@ function bumpThread($id) {
 		WHERE `id` = " . $id . " LIMIT 1");
 }
 
-/* ==[ Dirty IP lookups ]===================================================================================== */
+/* ==[ Dirty IP lookups ]================================================================================== */
 
 function lookupByIP($ip) {
-    global $link;
+	global $link;
 	$result = mysqli_query($link,
 		"SELECT * FROM " . ATOM_DBIPLOOKUPS . "
-		WHERE ip = '" .  mysql_real_escape_string($ip) . "' LIMIT 1",
+		WHERE ip = '" . mysql_real_escape_string($ip) . "' LIMIT 1",
 		array($ip));
 	if ($result) {
 		while ($ban = mysqli_fetch_assoc($result)) {
@@ -438,7 +438,7 @@ function lookupByIP($ip) {
 }
 
 function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
-    global $link;
+	global $link;
 	mysqli_query($link,
 		"INSERT INTO `" . ATOM_DBIPLOOKUPS . "`
 		(ip, abuser, vps, proxy, tor, vpn)

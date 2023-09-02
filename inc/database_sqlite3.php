@@ -257,6 +257,19 @@ function getPost($id) {
 	}
 }
 
+function getPostsByIP($ip) {
+	global $db;
+	$posts = array();
+	$result = $db->query(
+		"SELECT * FROM " . ATOM_DBPOSTS . "
+		WHERE ip = '" . $db->escapeString($ip) . "'
+		ORDER BY timestamp DESC");
+	while ($post = $result->fetchArray()) {
+		$posts[] = $post;
+	}
+	return $posts;
+}
+
 function getPostsByImageHex($hex) {
 	global $db;
 	$posts = array();
@@ -464,6 +477,36 @@ function bumpThread($id) {
 		"UPDATE " . ATOM_DBPOSTS . "
 		SET bumped = " . time() . "
 		WHERE id = " . $id);
+}
+
+/* ==[ Dirty IP lookups ]================================================================================== */
+
+function lookupByIP($ip) {
+	global $db;
+	$result = $db->query(
+		"SELECT * FROM " . ATOM_DBIPLOOKUPS . "
+		WHERE ip = '" . $db->escapeString($ip) . "' LIMIT 1");
+	if($result) {
+		while ($ban = $result->fetchArray()) {
+			return $ban;
+		}
+	}
+}
+
+function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
+	global $db;
+	$db->exec(
+		"INSERT INTO `" . ATOM_DBIPLOOKUPS . "`
+		(ip, abuser, vps, proxy, tor, vpn)
+		VALUES (
+			'" . $db->escapeString($ip) . "',
+			'" . $db->escapeString($abuser) . "',
+			'" . $db->escapeString($vps) . "',
+			'" . $db->escapeString($proxy) . "',
+			'" . $db->escapeString($tor) . "',
+			'" . $db->escapeString($vpn) . "'
+		)");
+	return $db->lastInsertRowID();
 }
 
 /* ==[ Bans ]============================================================================================== */

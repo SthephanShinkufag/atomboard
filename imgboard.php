@@ -382,7 +382,7 @@ function managementRequest() {
 			$thrId = $post['parent'];
 			deletePost($id);
 			$deletedPosts .= $id . (next($posts) ? ', ' : '');
-			if(!isOp($post) && !in_array($thrId, $updThreads)) {
+			if (!isOp($post) && !in_array($thrId, $updThreads)) {
 				$updThreads[] = $thrId;
 			}
 		}
@@ -608,11 +608,51 @@ function postingRequest() {
 			unset($_SESSION['atom_captcha']);
 		}
 
-		// Check for dirty ip (using external service)
-		lookupDirtyIp($_SERVER['REMOTE_ADDR']);
+		// Check for dirty ip using external service - ipregistry.co
+		$ip = $_SERVER['REMOTE_ADDR'];
+		if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY) {
+			$ipLookup = lookupByIP($ip);
+			if ($ipLookup) {
+				$ipLookupAbuser = $ipLookup['abuser'];
+				$ipLookupVps = $ipLookup['vps'];
+				$ipLookupProxy = $ipLookup['proxy'];
+				$ipLookupTor = $ipLookup['tor'];
+				$ipLookupVpn = $ipLookup['vpn'];
+			} else {
+				try {
+					$json = json_decode(file_get_contents(
+						'https://api.ipregistry.co/' . $ip . '?key=' . ATOM_IPLOOKUPS_KEY));
+					$ipLookupSecurity = $json->security;
+					$ipLookupAbuser = (int)($ipLookupSecurity->is_abuser ||
+						$ipLookupSecurity->is_threat || $ipLookupSecurity->is_attacker);
+					$ipLookupVps = (int)($ipLookupSecurity->is_cloud_provider);
+					$ipLookupProxy = (int)($ipLookupSecurity->is_proxy);
+					$ipLookupTor = (int)($ipLookupSecurity->is_tor || $ipLookupSecurity->is_tor_exit);
+					$ipLookupVpn = (int)($ipLookupSecurity->is_vpn);
+					storeLookupResult($ip, $ipLookupAbuser, $ipLookupVps,
+						$ipLookupProxy, $ipLookupTor, $ipLookupVpn);
+				} catch (Exception $e) {
+					$ipLookupAbuser = false;
+					$ipLookupVps = false;
+					$ipLookupProxy = false;
+					$ipLookupTor = false;
+					$ipLookupVpn = false;
+				}
+			}
+			if (
+				ATOM_IPLOOKUPS_BLOCK_ABUSER && $ipLookupAbuser ||
+				ATOM_IPLOOKUPS_BLOCK_VPS && $ipLookupVps ||
+				ATOM_IPLOOKUPS_BLOCK_PROXY && $ipLookupProxy ||
+				ATOM_IPLOOKUPS_BLOCK_TOR && $ipLookupTor ||
+				ATOM_IPLOOKUPS_BLOCK_VPN && $ipLookupVpn
+			) {
+				fancyDie('Your IP address ' . $ip .
+					' is not allowed to post due to abuse (proxy, Tor, VPN, VPS).');
+			}
+		}
 
 		// Check for ban
-		$ban = banByIP($_SERVER['REMOTE_ADDR']);
+		$ban = banByIP($ip);
 		if ($ban) {
 			if ($ban['expire'] == 0 || $ban['expire'] > time()) {
 				$expire = $ban['expire'] > 0 ?
@@ -823,8 +863,8 @@ function postingRequest() {
 					'<br>',
 					preg_replace_callback('/<a(.*?)href="([^"]*?)"(.*?)>(.*?)<\/a>/', function($matches) {
 						return '<a' . $matches[1] . 'href="' .
-							str_replace(ATOM_WORDBREAK_IDENTIFIER, '', $matches[2]) . '"' . $matches[3] . '>' .
-							str_replace(ATOM_WORDBREAK_IDENTIFIER, '<br>', $matches[4]) . '</a>';
+							str_replace(ATOM_WORDBREAK_IDENTIFIER, '', $matches[2]) . '"' . $matches[3] .
+							'>' . str_replace(ATOM_WORDBREAK_IDENTIFIER, '<br>', $matches[4]) . '</a>';
 					}, msg)
 				);
 			}
@@ -846,7 +886,7 @@ function postingRequest() {
 			($access == 'admin' ? ' postername-admin' : ' postername-mod') : '') . '">' .
 		($postName == '' && $postTripcode == '' ? ATOM_POSTERNAME : $postName) .
 		($postTripcode != '' ? '</span><span class="postertrip">!' . $postTripcode : '') . '</span>';
-	if($hasAccess && !($postName == '' && $postTripcode == '')) {
+	if ($hasAccess && !($postName == '' && $postTripcode == '')) {
 		switch($access) {
 		case 'admin': $postNameBlock .= ' <span class="postername-admin">## Admin</span>'; break;
 		case 'janitor': $postNameBlock .= ' <span class="postername-mod">## Janitor</span>'; break;
@@ -860,7 +900,7 @@ function postingRequest() {
 		$green = $hashint >> 16 & 255;
 		$blue = $hashint >> 8 & 255;
 		$isBlack = 0.299 * $red + 0.587 * $green + 0.114 * $blue > 125;
-		$postNameBlock .=  ' <span class="posteruid" data-uid="' . $hash . '" style="background-color: rgb(' .
+		$postNameBlock .= ' <span class="posteruid" data-uid="' . $hash . '" style="background-color: rgb(' .
 			$red . ', ' . $green . ', ' . $blue . '); color: ' .
 			($isBlack ? 'black' : 'white') . ';">' . $hash . '</span>';
 	}
@@ -918,7 +958,7 @@ function postingRequest() {
 		$post['thumb0_height'] = $thumbInfo[1];
 		$post['file0_original'] = escapeHTML($embed['title']);
 		$embedHtml = $embed['html'];
-		if($service == 'YouTube.com') {
+		if ($service == 'YouTube.com') {
 			$embedHtml = preg_replace('/width="\d+"/', 'width="' . $fileInfo[0] . '"', $embedHtml);
 			$embedHtml = preg_replace('/height="\d+"/', 'height="' . $fileInfo[1] . '"', $embedHtml);
 		}
