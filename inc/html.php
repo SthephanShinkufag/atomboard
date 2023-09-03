@@ -869,7 +869,7 @@ function manageModeratePost($post) {
 							<form method="get" action="?">
 								<input type="hidden" name="manage" value="">
 								<input type="hidden" name="delall" value="' . $ip . '">
-								<input type="submit" value="Delete all" class="managebutton" style="width: 50%;">
+								<input type="submit" value="Delete all" class="managebutton" style="width: 50%;" onclick="return confirm(\'Are you sure to delete all from ' . $ip . '?\')">
 							</form>
 						</td>
 						<td><small>This will delete all posts and threads from ip ' . $ip . '</small></td>

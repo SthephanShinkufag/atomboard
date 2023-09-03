@@ -10,13 +10,13 @@ if (!function_exists('mysqli_connect')) {
 $link = @mysqli_connect(ATOM_DBHOST, ATOM_DBUSERNAME, ATOM_DBPASSWORD);
 if (!$link) {
 	fancyDie("Could not connect to database: " .
-		((is_object($link)) ? mysqli_error($link) :
+		(is_object($link) ? mysqli_error($link) :
 			(($linkError = mysqli_connect_error()) ? $linkError : '(unknown error)')));
 }
 $db_selected = @mysqli_query($link, "USE " . constant('ATOM_DBNAME'));
 if (!$db_selected) {
 	fancyDie("Could not select database: " .
-		((is_object($link)) ? mysqli_error($link) :
+		(is_object($link) ? mysqli_error($link) :
 			(($linkError = mysqli_connect_error()) ? $linkError : '(unknown error')));
 }
 mysqli_query($link, "SET NAMES 'utf8mb4'");
