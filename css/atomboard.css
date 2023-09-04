@@ -41,8 +41,8 @@ html[data-theme="Dark"] {
 	--highlighted-background: #2b2f40;
 	--highlighted-border: #6464ff;
 	--hr-color: #718bbd;
-	--html-background: #000;
-	--html-color: #e6e6e6;
+	--html-background: #15202b;
+	--html-color: #ccc;
 	--inputs-background: #1b1d20;
 	--inputs-border: 1px solid #424242;
 	--inputs-color: #fff;
@@ -55,8 +55,8 @@ html[data-theme="Dark"] {
 	--postername-color: #ffcb50;
 	--pre-background: rgba(255,255,255,0.2);
 	--pre-color: #fff;
-	--reply-background: #111;
-	--reply-border: #424242;
+	--reply-background: #192734;
+	--reply-border: #25323d;
 	--reply-color: #e6e6e6;
 }
 
