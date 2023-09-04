@@ -16,7 +16,7 @@
 	--inputs-background: #fff;
 	--inputs-border: 1px solid #808080;
 	--inputs-color: #000;
-	--link: #0f73c8;
+	--link-color: #0f73c8;
 	--link-button-background: linear-gradient(to bottom, #c9d4e6, #577dae);
 	--link-hover: #dd0000;
 	--navigation-background: linear-gradient(to top, #c1d3fb, #375a88);
@@ -46,7 +46,7 @@ html[data-theme="Dark"] {
 	--inputs-background: #1b1d20;
 	--inputs-border: 1px solid #424242;
 	--inputs-color: #fff;
-	--link: #89c2ff;
+	--link-color: #89c2ff;
 	--link-button-background: linear-gradient(to bottom, #8c9bb5, #1d4e8c);
 	--link-hover: #ed88fb;
 	--navigation-background: linear-gradient(to bottom, #729eff, #152b4a);
