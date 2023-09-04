@@ -636,7 +636,7 @@ function checkAccessRights() {
 		setcookie('atom_access', '', time() - 3600, '/' . ATOM_BOARD . '/');
 		unset($_COOKIE['atom_access']);
 	} else {
-		setcookie('atom_access', '1', time() + 2592000, '/' . ATOM_BOARD . '/');
+		setcookie('atom_access', '1', time() + 2592000, '/' . ATOM_BOARD . '/'); // 30 days
 	}
 	return $access;
 }

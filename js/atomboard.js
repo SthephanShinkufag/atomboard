@@ -1,4 +1,9 @@
 var highlightedUID = null;
+var selectedText = '';
+var settings = {};
+var defaultSettings = {
+	themeStyle: 'Dark'
+};
 
 function $q(path, rootEl) {
 	return (rootEl || document.body).querySelector(path);
@@ -17,13 +22,6 @@ function getCookie(name) {
 	return parts.length === 2 ? parts.pop().split(";").shift() : null;
 }
 
-function unhighlightPosts() {
-	var els = $Q('.highlighted');
-	for (var i = 0, len = els.length; i < len; ++i) {
-		els[i].classList.remove('highlighted');
-	}
-}
-
 function highlightPost(num) {
 	unhighlightPosts();
 	var post = $id('reply' + num) || $id('op' + num);
@@ -31,6 +29,13 @@ function highlightPost(num) {
 		post.classList.add('highlighted');
 	}
 	return false;
+}
+
+function unhighlightPosts() {
+	var els = $Q('.highlighted');
+	for (var i = 0, len = els.length; i < len; ++i) {
+		els[i].classList.remove('highlighted');
+	}
 }
 
 function quotePost(num) {
@@ -159,11 +164,38 @@ function sendLike(likeEl, num) {
 	xhr.send();
 }
 
-var selectedText = '';
-document.addEventListener('DOMContentLoaded', function() {
+function setThemeStyle(el) {
+	var selectorValue = el.value;
+	var els = $Q('.select-style');
+	for (var i = 0, len = els.length; i < len; ++i) {
+		els[i].value = selectorValue;
+	}
+	document.documentElement.dataset.theme = settings.themeStyle = selectorValue;
+	saveSettings();
+}
+
+function saveSettings() {
+	localStorage.atomSettings = JSON.stringify(settings);
+}
+
+function initAfterDom() {
+	// Navigate to post if hash available
+	var hash = window.location.hash;
+	if (hash) {
+		var hashMatch = hash.match(/^#q([0-9]+)$/i);
+		if (hashMatch && hashMatch[1]) {
+			quotePost(hashMatch[1]);
+		} else if ((hashMatch = hash.match(/^#([0-9]+)$/i)) && hashMatch[1]) {
+			highlightPost(hashMatch[1]);
+		}
+	}
+
+	// Enable posts moderation buttons
 	if(getCookie('atom_access') === '1') {
 		document.body.classList.add('access-enabled');
 	}
+
+	// Set passwords for post form and deletion form
 	var replyPassw = $id('newpostpassword');
 	var deletePassw = $id('deletepostpassword');
 	if (replyPassw) {
@@ -178,29 +210,30 @@ document.addEventListener('DOMContentLoaded', function() {
 				'; path=/; expires=' + expiration.toGMTString();
 		};
 	}
-	var password = getCookie('atom_password');
-	if (password) {
+	var storedPassw = getCookie('atom_password');
+	if (storedPassw) {
 		if (replyPassw) {
-			replyPassw.value = password;
+			replyPassw.value = storedPassw;
 		}
 		if (deletePassw) {
-			deletePassw.value = password;
+			deletePassw.value = storedPassw;
 		}
 	}
-	var hash = window.location.hash;
-	if (hash) {
-		var hashMatch = hash.match(/^#q([0-9]+)$/i);
-		if (hashMatch && hashMatch[1]) {
-			quotePost(hashMatch[1]);
-		} else if ((hashMatch = hash.match(/^#([0-9]+)$/i)) && hashMatch[1]) {
-			highlightPost(hashMatch[1]);
-		}
+
+	// Set theme style selectors
+	var els = $Q('.select-style');
+	for (var i = 0, len = els.length; i < len; ++i) {
+		els[i].value = settings.themeStyle;
 	}
+
+	// Add events to markup buttons
 	var markupBtns = $id('markup-buttons');
 	if (markupBtns) {
 		markupBtns.addEventListener('click', markupEvents);
 		$id('markup-quote').addEventListener('mouseover', markupEvents);
 	}
+
+	// Highlight posts bu clicking on user ID
 	var handleEvent = function(e) {
 		var targetEl = e.target;
 		if (targetEl.classList.contains('posteruid')) {
@@ -229,11 +262,32 @@ document.addEventListener('DOMContentLoaded', function() {
 	};
 	document.body.addEventListener('click', handleEvent, true);
 	document.body.addEventListener('mouseover', handleEvent, true);
-});
+}
 
-window.addEventListener('load', function() {
-	var isDollchan = !!$id('de-main');
-	if (isDollchan) {
-		$id('markup-buttons').style.display = 'none';
+function main() {
+	// Settings initialization
+	try {
+		settings = JSON.parse(localStorage.atomSettings);
+	} catch(err) {
+		saveSettings();
 	}
-});
+	
+	// Set theme style
+	if(!settings.themeStyle) {
+		settings.themeStyle = defaultSettings.themeStyle;
+		saveSettings();
+	}
+	document.documentElement.dataset.theme = settings.themeStyle;
+
+	// Do stuff after DOM loading
+	document.addEventListener('DOMContentLoaded', initAfterDom);
+
+	// Check for Dollchan Extension and disable markup buttons
+	window.addEventListener('load', function() {
+		if (!!$id('de-main')) {
+			$id('markup-buttons').style.display = 'none';
+		}
+	});
+}
+
+main();

@@ -23,8 +23,8 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023081800">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023081800"></script>' .
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023090400">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023090400"></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -37,6 +37,10 @@ function pageWrapper($description, $needReturn) {
 		<div id="navigation-top" class="navigation">' . ATOM_HTML_NAVIGATION . '
 			<a class="navigation-link" href="/' . ATOM_BOARD . '/catalog.html" title="Go to catalog">Catalog</a>
 			<a class="navigation-link" href="/' . ATOM_BOARD . '/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
+			<select class="select-style navigation-link" onchange="setThemeStyle(this);">
+				<option value="Dark" selected>Dark</option>
+				<option value="Light">Light</option>
+			</select>
 		</div>
 		<div class="description">' . $description . '</div>
 		<hr>
@@ -63,6 +67,10 @@ function pageFooter($needReturn) {
 		<div id="navigation-bottom" class="navigation"> ' . ATOM_HTML_NAVIGATION . '
 			<a class="navigation-link" href="/' . ATOM_BOARD . '/catalog.html" title="Go to catalog">Catalog</a>
 			<a class="navigation-link" href="/' . ATOM_BOARD . '/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
+			<select class="select-style navigation-link" onchange="setThemeStyle(this);">
+				<option value="Dark" selected>Dark</option>
+				<option value="Light">Light</option>
+			</select>
 		</div>
 	</div>
 	<div id="svg-icons" style="height: 0; width: 0; overflow: hidden;">
