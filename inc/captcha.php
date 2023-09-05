@@ -6,7 +6,6 @@
  * @license GPLv3
  * @link    http://code.google.com/p/cool-php-captcha
  * @version 0.3
- *
  */
 
 session_start();
@@ -14,62 +13,48 @@ putenv('GDFONTPATH=' . realpath(dirname(__FILE__)) . '/fonts/');
 $captcha = new SimpleCaptcha();
 $captcha->CreateImage();
 
-/**
- * SimpleCaptcha class
- *
- */
 class SimpleCaptcha {
-	/** Width of the image */
+	// Width of the image
 	public $width = 175;
 
-	/** Height of the image */
+	// Height of the image
 	public $height = 55;
 
-	/** Dictionary word file (empty for random text) */
+	// Dictionary word file (empty for random text)
 	public $wordsFile = '';
 
-	/**
-	 * Path for resource files (fonts, words, etc.)
-	 *
-	 * "resources" by default. For security reasons, is better move this
-	 * directory to another location outside the web server
-	 *
-	 */
+	// Path for resource files (fonts, words, etc.) by default.
+	// For security reasons, is better move this directory to another location outside the web server
 	public $resourcesPath = './fonts';
 
-	/** Min word length (for non-dictionary random text generation) */
+	// Min word length (for non-dictionary random text generation)
 	public $minWordLength = 4;
 
-	/**
-	 * Max word length (for non-dictionary random text generation)
-	 *
-	 * Used for dictionary words indicating the word-length
-	 * for font-size modification purposes
-	 */
-	public $maxWordLength = 6;
+	// Max word length (for non-dictionary random text generation)
+	// Used for dictionary words indicating the word-length for font-size modification purposes
+	public $maxWordLength = 7;
 
-	/** Sessionname to store the original text */
+	// Sessionname to store the original text
 	public $session_var = 'atom_captcha';
 
-	/** Background color in RGB-array */
-	public $backgroundColor = array(254, 254, 254);
+	// Background color in RGB-array
+	public $backgroundColor = array(128, 128, 128);
 
-	/** Foreground colors in RGB-array */
+	// Foreground colors in RGB-array
 	public $colors = array(
 		array(27, 78, 181), // blue
 		array(22, 163, 35), // green
 		array(214, 36, 7),  // red
 	);
 
-	/** Shadow color in RGB-array or null */
-	public $shadowColor = array(0, 0, 0);
+	// Shadow color in RGB-array or null
+	public $shadowColor = array(254, 254, 254);
 
-	/** Horizontal line through the text */
-	public $lineWidth = 3;
+	// Horizontal line through the text
+	public $lineWidth = 2;
 
 	/**
 	 * Font configuration
-	 *
 	 * - font: TTF file
 	 * - spacing: relative pixel space between character
 	 * - minSize: min font size
@@ -77,45 +62,41 @@ class SimpleCaptcha {
 	 */
 	public $fonts = array(
 		'Roboto-Regular' => array(
-			'spacing' => 0,
-			'minSize' => 27,
-			'maxSize' => 27,
+			'spacing' => 1,
+			'minSize' => 24,
+			'maxSize' => 32,
 			'font' => 'roboto_regular.ttf'),
 		'Roboto-Bold' => array(
-			'spacing' => 0,
-			'minSize' => 27,
-			'maxSize' => 27,
+			'spacing' => 1,
+			'minSize' => 24,
+			'maxSize' => 32,
 			'font' => 'roboto_bold.ttf')
 	);
 
-	/** Wave configuration in X and Y axes */
+	// Wave configuration in X and Y axes
 	public $Yperiod = 12;
 	public $Yamplitude = 14;
 	public $Xperiod = 11;
 	public $Xamplitude = 5;
 
-	/** letter rotation clockwise */
+	// letter rotation clockwise
 	public $maxRotation = 8;
 
-	/**
-	 * Internal image size factor (for better image quality)
-	 * 1: low, 2: medium, 3: high
-	 */
+	// Internal image size factor (for better image quality)
+	// 1: low, 2: medium, 3: high
 	public $scale = 3;
 
-	/**
-	 * Blur effect for better image quality (but slower image processing).
-	 * Better image results with scale=3
-	 */
+	// Blur effect for better image quality (but slower image processing).
+	// Better image results with scale=3
 	public $blur = true;
 
-	/** Debug? */
+	// Debug?
 	public $debug = false;
 
-	/** Image format: jpeg or png */
+	// Image format: jpeg or png
 	public $imageFormat = 'png';
 
-	/** GD image */
+	// GD image
 	public $im;
 
 	public function __construct($config = array()) {
@@ -124,17 +105,17 @@ class SimpleCaptcha {
 	public function CreateImage() {
 		$ini = microtime(true);
 
-		/** Initialization */
+		// Initialization
 		$this->ImageAllocate();
 
-		/** Text insertion */
+		// Text insertion
 		$text = $this->GetCaptchaText();
 		$fontcfg = $this->fonts[array_rand($this->fonts)];
 		$this->WriteText($text, $fontcfg);
 
 		$_SESSION[$this->session_var] = $text;
 
-		/** Transformations */
+		// Transformations
 		if (!empty($this->lineWidth)) {
 			$this->WriteLine();
 		}
@@ -151,14 +132,12 @@ class SimpleCaptcha {
 			);
 		}
 
-		/** Output */
+		// Output
 		$this->WriteImage();
 		$this->Cleanup();
 	}
 
-	/**
-	 * Creates the image resources
-	 */
+	// Creates the image resources
 	protected function ImageAllocate() {
 		// Cleanup
 		if (!empty($this->im)) {
@@ -195,11 +174,7 @@ class SimpleCaptcha {
 		}
 	}
 
-	/**
-	 * Text generation
-	 *
-	 * @return string Text
-	 */
+	// Text generation
 	protected function GetCaptchaText() {
 		$text = $this->GetDictionaryCaptchaText();
 		if (!$text) {
@@ -208,11 +183,7 @@ class SimpleCaptcha {
 		return $text;
 	}
 
-	/**
-	 * Random text generation
-	 *
-	 * @return string Text
-	 */
+	// Random text generation
 	protected function GetRandomCaptchaText($length = null) {
 		if (empty($length)) {
 			$length = rand($this->minWordLength, $this->maxWordLength);
@@ -234,12 +205,7 @@ class SimpleCaptcha {
 		return $text;
 	}
 
-	/**
-	 * Random dictionary word generation
-	 *
-	 * @param boolean $extended Add extended "fake" words
-	 * @return string Word
-	 */
+	// Random dictionary word generation
 	function GetDictionaryCaptchaText($extended = false) {
 		if (empty($this->wordsFile)) {
 			return false;
@@ -268,7 +234,7 @@ class SimpleCaptcha {
 		$text = trim(fgets($fp));
 		fclose($fp);
 
-		/** Change random volcals */
+		// Change random volcals
 		if ($extended) {
 			$text = preg_split('//', $text, -1, PREG_SPLIT_NO_EMPTY);
 			$vocals = array('a', 'e', 'i', 'o', 'u');
@@ -283,9 +249,7 @@ class SimpleCaptcha {
 		return $text;
 	}
 
-	/**
-	 * Horizontal line insertion
-	 */
+	// Horizontal line insertion
 	protected function WriteLine() {
 		$x1 = $this->width * $this->scale * .15;
 		$x2 = $this->textFinalX;
@@ -298,9 +262,7 @@ class SimpleCaptcha {
 		}
 	}
 
-	/**
-	 * Text insertion
-	 */
+	// Text insertion
 	protected function WriteText($text, $fontcfg = array()) {
 		if (empty($fontcfg)) {
 			// Select the font configuration
@@ -309,7 +271,7 @@ class SimpleCaptcha {
 
 		$fontfile = realpath(dirname(__FILE__)) . '/' . $this->resourcesPath . '/' . $fontcfg['font'];
 
-		/** Increase font-size for shortest words: 9% for each glyph missing */
+		// Increase font-size for shortest words: 9% for each glyph missing
 		$lettersMissing = $this->maxWordLength - strlen($text);
 		$fontSizefactor = 1 + ($lettersMissing * 0.09);
 
@@ -336,9 +298,7 @@ class SimpleCaptcha {
 		$this->textFinalX = $x;
 	}
 
-	/**
-	 * Wave filter
-	 */
+	// Wave filter
 	protected function WaveImage() {
 		// X-axis wave generation
 		$xp = $this->scale * $this->Xperiod * rand(1, 3);
@@ -359,11 +319,8 @@ class SimpleCaptcha {
 		}
 	}
 
-	/**
-	 * Reduce the image to the final size
-	 */
+	// Reduce the image to the final size
 	protected function ReduceImage() {
-		// Reduzco el tama�o de la imagen
 		$imResampled = imagecreatetruecolor($this->width, $this->height);
 		imagecopyresampled($imResampled, $this->im,
 			0, 0, 0, 0,
@@ -374,9 +331,7 @@ class SimpleCaptcha {
 		$this->im = $imResampled;
 	}
 
-	/**
-	 * File generation
-	 */
+	// File generation
 	protected function WriteImage() {
 		if ($this->imageFormat == 'png' && function_exists('imagepng')) {
 			imagealphablending($this->im, true);
@@ -391,9 +346,7 @@ class SimpleCaptcha {
 		}
 	}
 
-	/**
-	 * Cleanup
-	 */
+	// Cleanup
 	protected function Cleanup() {
 		imagedestroy($this->im);
 	}

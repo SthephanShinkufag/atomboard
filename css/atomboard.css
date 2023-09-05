@@ -1,67 +1,89 @@
 /* ==[Main rules]========================================================================================== */
 
 :root {
-	--button-background: #e9e9ed;
-	--button-background-hover: #f1f1f1;
-	--catalog-block-background: #ddd;
+	--button-bg: #e9e9ed;
+	--button-bg-active: #acacac;
+	--button-bg-hover: #f1f1f1;
+	--catalog-block-bg: #ddd;
 	--catalog-block-border: #ccc;
 	--catalog-block-color: #34343f;
-	--code-background: rgba(27,31,35,0.07);
+	--code-bg: rgba(27,31,35,0.07);
 	--code-color: #000;
 	--description-color: #71819f;
+	--fieldset-border: #9f9f9f;
 	--filititle-color: #506a81;
-	--highlighted-background: #dde0ec;
+	--focus: #4d87c4;
+	--highlighted-bg: #dde0ec;
 	--highlighted-border: #00f;
 	--hr-color: #8ab2ff;
-	--html-background: #eee;
+	--html-bg: #eee;
 	--html-color: #34343f;
-	--inputs-background: #fff;
+	--inputs-bg: #fff;
 	--inputs-border: 1px solid #808080;
 	--inputs-color: #000;
 	--link-color: #0f73c8;
-	--link-button-background: linear-gradient(to bottom, #c9d4e6, #577dae);
+	--link-button-bg: linear-gradient(to bottom, #c9d4e6, #577dae);
+	--link-button-bg-active: #435e82;
+	--link-button-bg-hover: #5f83bb;
+	--link-button-color: #fff;
 	--link-hover: #dd0000;
-	--navigation-background: linear-gradient(to top, #c1d3fb, #375a88);
+	--navigation-bg: linear-gradient(to top, #c1d3fb, #375a88);
 	--navigation-link-border: #c0ccd7;
+	--poster-opacity: 1;
 	--postername-admin-color: #ff5050;
 	--postername-color: #438ad7;
-	--pre-background: rgba(255,255,255,0.4);
+	--pre-bg: rgba(255,255,255,0.4);
 	--pre-color: inherit;
-	--reply-background: #ddd;
+	--reply-bg: #ddd;
 	--reply-border: #ccc;
 	--reply-color: #34343f;
+	--table-border: #8a97a4;
+	--table-th-bg: #b0e0e6;
 }
 
 html[data-theme="Dark"] {
-	--button-background: #2f3846;
-	--button-background-hover: #33445e;
-	--catalog-block-background: #111;
+	--button-bg: #2f3846;
+	--button-bg-active: #16222d;
+	--button-bg-hover: #33445e;
+	--catalog-block-bg: #111;
 	--catalog-block-border: #424242;
 	--catalog-block-color: #e6e6e6;
-	--code-background: rgba(255, 255, 255, 0.2);
+	--code-bg: rgba(255, 255, 255, 0.2);
 	--code-color: #fff;
 	--description-color: #a3c1fb;
+	--fieldset-border: #62707b;
 	--filititle-color: #41a6ff;
-	--highlighted-background: #2b2f40;
+	--focus: #8173bf;
+	--highlighted-bg: #2b2f40;
 	--highlighted-border: #6464ff;
 	--hr-color: #718bbd;
-	--html-background: #15202b;
+	--html-bg: #15202b;
 	--html-color: #ccc;
-	--inputs-background: #16222d;
+	--inputs-bg: #16222d;
 	--inputs-border: 1px solid #38444d;
 	--inputs-color: #ccc;
 	--link-color: #89c2ff;
-	--link-button-background: linear-gradient(to bottom, #596375, #153864);
+	--link-button-bg: linear-gradient(to bottom, #596375, #153864);
+	--link-button-bg-active: #223a57;
+	--link-button-bg-hover: #45689f;
+	--link-button-color: #e0e0e0;
 	--link-hover: #ed88fb;
-	--navigation-background: linear-gradient(to bottom, #5070b5, #0f2037);
+	--navigation-bg: linear-gradient(to bottom, #5070b5, #0f2037);
 	--navigation-link-border: #002b60;
+	--poster-opacity: .9;
 	--postername-admin-color: #e950ff;
 	--postername-color: #ffcb50;
-	--pre-background: rgba(255,255,255,0.2);
+	--pre-bg: rgba(255,255,255,0.2);
 	--pre-color: #fff;
-	--reply-background: #192734;
+	--reply-bg: #192734;
 	--reply-border: #25323d;
 	--reply-color: #e6e6e6;
+	--table-border: #445766;
+	--table-th-bg: #173051;
+}
+
+:focus-visible {
+	outline: 2px solid var(--focus);
 }
 
 a {
@@ -78,28 +100,13 @@ a:hover {
 	margin-top: 6px;
 }
 
-#ban-table {
-	border-collapse: collapse;
-}
-
-#ban-table > tbody > tr > td {
-	padding: 1px 3px;
-	border: 1px solid black;
-}
-
-#ban-table > tbody > tr > th {
-	padding: 3px;
-	background: #b0e0e6;
-	border: 1px solid black;
-}
-
 body {
 	margin: 0;
 	text-align: center;
 }
 
 body, html {
-	background: var(--html-background);
+	background: var(--html-bg);
 	color:  var(--html-color);
 	font: 14px Helvetica, Arial, sans-serif;
 }
@@ -124,23 +131,14 @@ hr {
 }
 
 input[type="password"], input[type="text"], textarea {
-	background-color: var(--inputs-background);
+	background-color: var(--inputs-bg);
 	color: var(--inputs-color);
 	border: var(--inputs-border);
 	border-radius: 3px;
 }
 
-button, input[type="submit"] {
-	padding: 2px 2px 2px 3px;
-	background-color: var(--button-background);
-	color: var(--inputs-color);
-	border: var(--inputs-border);
-	border-radius: 3px;
-	cursor: pointer;
-}
-
-button:hover, input[type="submit"]:hover {
-	background-color: var(--button-background-hover);
+fieldset {
+	border: 1px solid var(--fieldset-border);
 }
 
 .footer {
@@ -163,6 +161,21 @@ button:hover, input[type="submit"]:hover {
 	padding: 2px;
 	color: #fff;
 	width: 100%;
+}
+
+.table {
+	border-collapse: collapse;
+}
+
+.table > tbody > tr > td {
+	padding: 1px 3px;
+	border: 1px solid var(--table-border);
+}
+
+.table > tbody > tr > th {
+	padding: 3px;
+	background: var(--table-th-bg);
+	border: 1px solid var(--table-border);
 }
 
 .userdelete {
@@ -205,7 +218,7 @@ body:not(.access-enabled) .button-manage {
 	text-align: center;
 	margin: 3px;
 	padding-top: 6px;
-	background: var(--catalog-block-background);
+	background: var(--catalog-block-bg);
 	color: var(--catalog-block-color);
 	border: 1px solid var(--catalog-block-border);
 	border-radius: 8px;
@@ -214,7 +227,7 @@ body:not(.access-enabled) .button-manage {
 code {
 	padding: 0.2em 0.4em;
 	margin: 0;
-	background-color: var(--code-background);
+	background-color: var(--code-bg);
 	color: var(--code-color);
 	border-radius: 3px;
 	font-size: 85%;
@@ -275,6 +288,7 @@ del {
 .poster-country {
 	height: 14px;
 	vertical-align: -2px;
+	opacity: var(--poster-opacity);
 }
 
 .postername {
@@ -297,6 +311,7 @@ del {
 .posteruid {
 	padding: 0 3px;
 	border-radius: 7px;
+	opacity: var(--poster-opacity);
 	cursor: pointer;
 }
 
@@ -307,7 +322,7 @@ pre {
 	max-width: 1150px;
 	border: 1px dotted #808080;
 	border-radius: 4px;
-	background: var(--pre-background);
+	background: var(--pre-bg);
 	color: var(--pre-color);
 	font-size: 85%;
 	line-height: 1.45;
@@ -337,7 +352,7 @@ pre + br {
 }
 
 .reply {
-	background: var(--reply-background);
+	background: var(--reply-bg);
 	color: var(--reply-color);
 	border: 1px solid var(--reply-border);
 	max-width: calc(100vw - 255px);
@@ -347,7 +362,7 @@ pre + br {
 
 .highlighted { /* important to be after .reply */
 	border: 1px solid var(--highlighted-border);
-	background-color: var(--highlighted-background);
+	background-color: var(--highlighted-bg);
 }
 
 .reply > .backlinks {
@@ -479,41 +494,31 @@ pre + br {
 	padding-left: 0;
 }
 
-/* ==[ Like post button ]================================================================================== */
+/* ==[ Links and buttons ]================================================================================= */
 
-.like-container {
-	height: 16px;
+button, input[type="submit"] {
+	padding: 2px 2px 2px 3px;
+	background-color: var(--button-bg);
+	color: var(--inputs-color);
+	border: var(--inputs-border);
+	border-radius: 3px;
 	cursor: pointer;
 }
 
-.like-counter {
-	vertical-align: top;
-	color: #ff5b9c;
+button:hover, input[type="submit"]:hover {
+	background-color: var(--button-bg-hover);
 }
 
-.like-disabled {
-	color: #bac1c8;
+button:active, input[type="submit"]:active {
+	background-color: var(--button-bg-active);
 }
-
-.like-enabled {
-	color: #ff8cb9;
-}
-
-.like-icon > svg {
-	width: 12px;
-	height: 12px;
-	margin-top: 1px;
-	fill: currentColor;
-}
-
-/* ==[ Links and buttons ]================================================================================= */
 
 .link-button {
 	display: inline-block;
 	padding: 1px 4px 2px 4px;
 	min-width: 8px;
-	background-image: var(--link-button-background);
-	color: #fff !important;
+	background-image: var(--link-button-bg);
+	color: var(--link-button-color) !important;
 	border-radius: 3px;
 	text-align: center;
 	font-weight: bold;
@@ -521,14 +526,18 @@ pre + br {
 }
 
 .link-button:hover {
-	background: #5f83bb;
+	background: var(--link-button-bg-hover);
+}
+
+.link-button:active {
+	background: var(--link-button-bg-active);
 }
 
 .navigation {
 	display: flex;
 	justify-content: center;
 	flex-wrap: wrap;
-	background-image: var(--navigation-background);
+	background-image: var(--navigation-bg);
 }
 
 #navigation-bottom {
@@ -539,7 +548,7 @@ pre + br {
 	margin: -1px 0 0 -1px;
 	padding: 2px 8px 4px 8px;
 	border: 1px solid var(--navigation-link-border);
-	color: #fff !important;
+	color: var(--link-button-color) !important;
 	font-size: 13px;
 	font-weight: bold;
 }
@@ -565,6 +574,33 @@ pre + br {
 	background: none;
 	font: bold 13px Helvetica, Arial, sans-serif;
 	cursor: pointer;
+}
+
+/* ==[ Like post button ]================================================================================== */
+
+.like-container {
+	height: 16px;
+	cursor: pointer;
+}
+
+.like-counter {
+	vertical-align: top;
+	color: #ff5b9c;
+}
+
+.like-disabled {
+	color: #bac1c8;
+}
+
+.like-enabled {
+	color: #ff8cb9;
+}
+
+.like-icon > svg {
+	width: 12px;
+	height: 12px;
+	margin-top: 1px;
+	fill: currentColor;
 }
 
 /* ==[ Mobile devices ]==================================================================================== */

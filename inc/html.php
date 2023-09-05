@@ -730,7 +730,7 @@ function manageBansTable() {
 			$geoipReader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
 		}
 		$text .= '
-		<table id="ban-table"><tbody>
+		<table class="table"><tbody>
 			<tr>
 				<th>IP-address</th>
 				<th>Set at</th>
@@ -1103,7 +1103,7 @@ function generateModLogTable($isModerators = false, $fromtime = '0', $totime = '
 	$recordsCount = count($records);
 	if ($recordsCount > 0) {
 		$text .= ($isModerators ? 'Total Records: ' . $recordsCount : '') . '
-		<table id="ban-table"><tbody>
+		<table class="table"><tbody>
 			<tr>
 				<th>Date / Time:</th>' .
 				($isModerators ? '
@@ -1112,7 +1112,8 @@ function generateModLogTable($isModerators = false, $fromtime = '0', $totime = '
 			</tr>';
 		foreach ($records as $record) {
 			$action = $record['action'];
-			$text .= '<tr' . ($isModerators ? ' style="color: ' . $record['color'] . '"' : '') . '>
+			$text .= '<tr' . ($isModerators ? ' style="color: ' .
+				($record['color'] != 'Black' ? $record['color'] : '') . '"' : '') . '>
 				<td>' . date('d.m.y D H:i:s', $record['timestamp']) . '</td>' .
 				($isModerators ? '
 				<td>' . $record['username'] . '</td>' : '') . '
