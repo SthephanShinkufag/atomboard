@@ -63,12 +63,12 @@ class SimpleCaptcha {
 	public $fonts = array(
 		'Roboto-Regular' => array(
 			'spacing' => 1,
-			'minSize' => 24,
+			'minSize' => 22,
 			'maxSize' => 32,
 			'font' => 'roboto_regular.ttf'),
 		'Roboto-Bold' => array(
 			'spacing' => 1,
-			'minSize' => 24,
+			'minSize' => 22,
 			'maxSize' => 32,
 			'font' => 'roboto_bold.ttf')
 	);
@@ -253,11 +253,11 @@ class SimpleCaptcha {
 	protected function WriteLine() {
 		$x1 = $this->width * $this->scale * .15;
 		$x2 = $this->textFinalX;
-		$y1 = rand($this->height * $this->scale * .40, $this->height * $this->scale * .65);
-		$y2 = rand($this->height * $this->scale * .40, $this->height * $this->scale * .65);
+		$y1 = rand($this->height * $this->scale * .35, $this->height * $this->scale * .65);
+		$y2 = rand($this->height * $this->scale * .35, $this->height * $this->scale * .65);
 		$width = $this->lineWidth / 2 * $this->scale;
 
-		for ($i = $width * -1; $i <= $width; $i++) {
+		for ($i = -$width; $i <= $width; $i++) {
 			imageline($this->im, $x1, $y1 + $i, $x2, $y2 + $i, $this->GdFgColor);
 		}
 	}

@@ -4,16 +4,13 @@
 	--button-bg: #e9e9ed;
 	--button-bg-active: #acacac;
 	--button-bg-hover: #f1f1f1;
-	--catalog-block-bg: #ddd;
-	--catalog-block-border: #ccc;
-	--catalog-block-color: #34343f;
 	--code-bg: rgba(27,31,35,0.07);
 	--code-color: #000;
 	--description-color: #71819f;
 	--fieldset-border: #9f9f9f;
 	--filititle-color: #506a81;
 	--focus: #4d87c4;
-	--highlighted-bg: #dde0ec;
+	--highlighted-bg: #d4daf0;
 	--highlighted-border: #00f;
 	--hr-bg: linear-gradient(90deg, #eee, #7a95c1, #eee);
 	--html-bg: #eee;
@@ -45,9 +42,6 @@ html[data-theme="Dark"] {
 	--button-bg: #2f3846;
 	--button-bg-active: #16222d;
 	--button-bg-hover: #33445e;
-	--catalog-block-bg: #111;
-	--catalog-block-border: #424242;
-	--catalog-block-color: #e6e6e6;
 	--code-bg: rgba(255, 255, 255, 0.2);
 	--code-color: #fff;
 	--description-color: #a3c1fb;
@@ -217,9 +211,9 @@ body:not(.access-enabled) .button-manage {
 	text-align: center;
 	margin: 3px;
 	padding-top: 6px;
-	background: var(--catalog-block-bg);
-	color: var(--catalog-block-color);
-	border: 1px solid var(--catalog-block-border);
+	background: var(--reply-bg);
+	color: var(--reply-color);
+	border: 1px solid var(--reply-border);
 	border-radius: 8px;
 }
 
@@ -308,8 +302,9 @@ del {
 }
 
 .posteruid {
-	padding: 0 3px;
+	padding: 0 4px;
 	border-radius: 7px;
+	font: bold 13px Arial;
 	opacity: var(--poster-opacity);
 	cursor: pointer;
 }
