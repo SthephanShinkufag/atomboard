@@ -15,7 +15,7 @@
 	--focus: #4d87c4;
 	--highlighted-bg: #dde0ec;
 	--highlighted-border: #00f;
-	--hr-color: #8ab2ff;
+	--hr-bg: linear-gradient(90deg, #eee, #7a95c1, #eee);
 	--html-bg: #eee;
 	--html-color: #34343f;
 	--inputs-bg: #fff;
@@ -56,7 +56,7 @@ html[data-theme="Dark"] {
 	--focus: #8173bf;
 	--highlighted-bg: #2b2f40;
 	--highlighted-border: #6464ff;
-	--hr-color: #718bbd;
+	--hr-bg: linear-gradient(90deg, #15202b, #607ba6, #15202b);
 	--html-bg: #15202b;
 	--html-color: #ccc;
 	--inputs-bg: #16222d;
@@ -124,10 +124,9 @@ body, html {
 hr {
 	margin: 10px 0;
 	clear: both;
-	border-top: 1px solid var(--hr-color);
-	border-bottom: none;
-	border-left: none;
-	border-right: none;
+	border: none;
+	background-image: var(--hr-bg);
+	height: 2px;
 }
 
 input[type="password"], input[type="text"], textarea {
@@ -497,7 +496,7 @@ pre + br {
 /* ==[ Links and buttons ]================================================================================= */
 
 button, input[type="submit"] {
-	padding: 2px 2px 2px 3px;
+	padding: 2px 4px;
 	background-color: var(--button-bg);
 	color: var(--inputs-color);
 	border: var(--inputs-border);
@@ -515,7 +514,7 @@ button:active, input[type="submit"]:active {
 
 .link-button {
 	display: inline-block;
-	padding: 1px 4px 2px 4px;
+	padding: 2px 4px;
 	min-width: 8px;
 	background-image: var(--link-button-bg);
 	color: var(--link-button-color) !important;
