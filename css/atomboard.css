@@ -27,7 +27,6 @@
 	--navigation-bg: linear-gradient(to top, #c1d3fb, #375a88);
 	--navigation-link-border: #c0ccd7;
 	--poster-opacity: 1;
-	--postername-admin-color: #ff5050;
 	--postername-color: #438ad7;
 	--pre-bg: rgba(255,255,255,0.4);
 	--pre-color: inherit;
@@ -65,7 +64,6 @@ html[data-theme="Dark"] {
 	--navigation-bg: linear-gradient(to bottom, #5070b5, #0f2037);
 	--navigation-link-border: #002b60;
 	--poster-opacity: .9;
-	--postername-admin-color: #e950ff;
 	--postername-color: #ffcb50;
 	--pre-bg: rgba(255,255,255,0.2);
 	--pre-color: #fff;
@@ -290,7 +288,7 @@ del {
 }
 
 .postername-admin {
-	color: var(--postername-admin-color);
+	color: #ff5050;
 }
 
 .postername-mod {
