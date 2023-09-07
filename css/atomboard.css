@@ -282,7 +282,7 @@ del {
 
 .postername {
 	color: var(--postername-color);
-	font: bold 13px Verdana, Arial, sans-serif;
+	font: bold 13px Arial;
 }
 
 .postername-admin {
@@ -298,8 +298,8 @@ del {
 }
 
 .posteruid {
-	padding: 0 4px;
-	border-radius: 7px;
+	padding: 0 3px;
+	border-radius: 6px;
 	font: bold 13px Arial;
 	opacity: var(--poster-opacity);
 	cursor: pointer;

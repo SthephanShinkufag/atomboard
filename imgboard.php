@@ -1,7 +1,7 @@
 <?php
 // Uncomment to show debugging errors
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// error_reporting(E_ALL);
+// ini_set('display_errors', 1);
 
 session_start();
 setcookie(session_name(), session_id(), time() + 2592000);
@@ -979,7 +979,6 @@ function postingRequest() {
 	) {
 		$fileIdx = 0;
 		$filesCount = 0;
-		$fileBytes = 0;
 		foreach ($_FILES['file']['error'] as $index => $error) {
 			$fileIdx++;
 			if ($filesCount >= ATOM_FILES_COUNT || $fileIdx > 1 && $error == UPLOAD_ERR_NO_FILE) {
@@ -1006,22 +1005,20 @@ function postingRequest() {
 				break;
 			default: fancyDie('Unable to save the uploaded ' . $fileIdxTxt . '.');
 			}
-			if (!is_file($_FILES['file']['tmp_name'][$index]) ||
-				!is_readable($_FILES['file']['tmp_name'][$index])
-			) {
+			$file = $_FILES['file']['tmp_name'][$index];
+			if (!is_file($file) || !is_readable($file)) {
 				fancyDie($fileIdxTxt . ' transfer failure.<br>Please retry the submission.');
 			}
 
 			// Check for bytes size restriction
-			$fileBytes = filesize($_FILES['file']['tmp_name'][$index]);
-			if ((ATOM_FILE_MAXKB > 0) && ($fileBytes > (ATOM_FILE_MAXKB * 1024))) {
+			if (ATOM_FILE_MAXKB > 0 && filesize($file) > ATOM_FILE_MAXKB * 1024) {
 				fancyDie($fileIdxTxt . ' is larger than ' . ATOM_FILE_MAXKBDESC . '.');
 			}
 
 			// Get post image fields
 			$post['file' . $index . '_original'] = trim(
 				htmlentities(substr(basename($_FILES['file']['name'][$index]), 0, 50), ENT_QUOTES, 'UTF-8'));
-			$post['file' . $index . '_hex'] = md5_file($_FILES['file']['tmp_name'][$index]);
+			$post['file' . $index . '_hex'] = md5_file($file);
 			$post['file' . $index . '_size'] = $_FILES['file']['size'][$index];
 
 			// Convert file bytes
@@ -1032,9 +1029,9 @@ function postingRequest() {
 			} elseif ($bytesLen <= 6) {
 				$fileBytes = sprintf("%0.2fKB", $fileBytes / 1024);
 			} elseif ($bytesLen <= 9) {
-				$fileBytes = sprintf("%0.2fMB", $fileBytes / 1024 / 1024);
+				$fileBytes = sprintf("%0.2fMB", $fileBytes / 1048576);
 			} else {
-				$fileBytes = sprintf("%0.2fGB", $fileBytes / 1024 / 1024 / 1024);
+				$fileBytes = sprintf("%0.2fGB", $fileBytes / 1073741824);
 			}
 			$post['file' . $index . '_size_formatted'] = $fileBytes;
 
@@ -1052,16 +1049,15 @@ function postingRequest() {
 			}
 
 			// Check for supported file types
-			$fileMimeSplit = explode(' ', trim(mime_content_type($_FILES['file']['tmp_name'][$index])));
+			$fileMimeSplit = explode(' ', trim(mime_content_type($file)));
 			if (count($fileMimeSplit) > 0) {
 				$fileMime = strtolower(array_pop($fileMimeSplit));
 			} else {
-				if (!@getimagesize($_FILES['file']['tmp_name'][$index])) {
+				if (!@getimagesize($file)) {
 					fancyDie('Failed to read the MIME type and size of the uploaded ' .
 						$fileIdxTxt . '.<br>' . 'Please retry the submission.');
 				}
-				$fileInfo = getimagesize($_FILES['file']['tmp_name'][$index]);
-				$fileMime = mime_content_type($_FILES['file']['tmp_name'][$index]);
+				$fileMime = mime_content_type($file);
 			}
 			if (empty($fileMime) || !isset($atom_uploads[$fileMime])) {
 				fancyDie(supportedFileTypes());
@@ -1073,7 +1069,7 @@ function postingRequest() {
 			$fileLocation = 'src/' . $post['file' . $index];
 
 			// Upload file
-			if (!move_uploaded_file($_FILES['file']['tmp_name'][$index], $fileLocation)) {
+			if (!move_uploaded_file($file, $fileLocation)) {
 				fancyDie('Could not copy uploaded ' . $fileIdxTxt . '.');
 			}
 			if ($_FILES['file']['size'][$index] != filesize($fileLocation)) {
@@ -1087,11 +1083,11 @@ function postingRequest() {
 				$fileMime == 'video/mp4' ||
 				$fileMime == 'video/quicktime'
 			) {
-				$post['image' . $index . '_width'] = max(0, intval(shell_exec(
+				$videoWidth = $post['image' . $index . '_width'] = max(0, intval(shell_exec(
 					'mediainfo --Inform="Video;%Width%" ' . $fileLocation)));
-				$post['image' . $index . '_height'] = max(0, intval(shell_exec(
+				$videoHeight = $post['image' . $index . '_height'] = max(0, intval(shell_exec(
 					'mediainfo --Inform="Video;%Height%" ' . $fileLocation)));
-				if ($post['image' . $index . '_width'] > 0 && $post['image' . $index . '_height'] > 0) {
+				if ($videoWidth > 0 && $videoHeight > 0) {
 					list($thumbMaxWidth, $thumbMaxHeight) = getThumbnailDimensions($post, $index);
 					$post['thumb' . $index] = $fileName . 's.jpg';
 					shell_exec('ffmpegthumbnailer -t 1 -s ' . max($thumbMaxWidth, $thumbMaxHeight) .
@@ -1099,10 +1095,8 @@ function postingRequest() {
 					$thumbInfo = getimagesize('thumb/' . $post['thumb' . $index]);
 					$post['thumb' . $index . '_width'] = $thumbInfo[0];
 					$post['thumb' . $index . '_height'] = $thumbInfo[1];
-					if ($post['thumb' . $index . '_width'] <= 0 ||
-						$post['image' . $index . '_width'] > 32766 ||
-						$post['thumb' . $index . '_height'] <= 0 ||
-						$post['image' . $index . '_height'] > 32766
+					if ($post['thumb' . $index . '_width'] <= 0 || $videoWidth > 32766 ||
+						$post['thumb' . $index . '_height'] <= 0 || $videoHeight > 32766
 					) {
 						@unlink($fileLocation);
 						@unlink('thumb/' . $post['thumb' . $index]);
@@ -1130,7 +1124,7 @@ function postingRequest() {
 				'image/gif',
 				'image/webp'))
 			) {
-				$fileInfo = getimagesize($fileLocation);
+				$fileInfo = @getimagesize($fileLocation);
 				$post['image' . $index . '_width'] = $fileInfo[0];
 				$post['image' . $index . '_height'] = $fileInfo[1];
 			}
@@ -1159,8 +1153,8 @@ function postingRequest() {
 					$fileLocation,
 					'thumb/' . $post['thumb' . $index],
 					$thumbMaxWidth,
-					$thumbMaxHeight)
-				) {
+					$thumbMaxHeight
+				)) {
 					@unlink($fileLocation);
 					fancyDie('Could not create thumbnail for ' . $fileIdxTxt . '.');
 				}
@@ -1168,7 +1162,7 @@ function postingRequest() {
 
 			// Get thumbnail info
 			if ($post['thumb' . $index] != '') {
-				$thumbInfo = getimagesize('thumb/' . $post['thumb' . $index]);
+				$thumbInfo = @getimagesize('thumb/' . $post['thumb' . $index]);
 				$post['thumb' . $index . '_width'] = $thumbInfo[0];
 				$post['thumb' . $index . '_height'] = $thumbInfo[1];
 			}
