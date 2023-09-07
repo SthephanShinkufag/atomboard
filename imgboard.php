@@ -896,28 +896,20 @@ function postingRequest() {
 	if (ATOM_UNIQUEID) {
 		$uidHash = substr(md5($post['ip'] . intval($post['parent']) . ATOM_TRIPSEED), 0, 8);
 		$uidHashInt = hexdec('0x' . $uidHash);
-		$uidName = '';
+		$uidName = $uidHash;
 		if(ATOM_UNIQUENAME) {
 			global $firstNames, $lastNames;
 			srand($uidHashInt);
 			$firstNamesLen = count($firstNames);
-			if($firstNamesLen) {
-				$uidName = $firstNames[rand() % $firstNamesLen];
-			}
 			$lastNamesLen = count($lastNames);
-			if($lastNamesLen) {
-				$uidName .= ($uidName ? ' ' : '') . $lastNames[rand() % $lastNamesLen]; 
-			}
-		} else {
-			$uidName = $uidHash;
+			$uidName = ($firstNamesLen ? $firstNames[rand() % $firstNamesLen] : '') .
+				($lastNamesLen ? (($firstNamesLen ? ' ' : '') . $lastNames[rand() % $lastNamesLen]) : '');
 		}
-
-		$hue = 2*pi() * ($uidHashInt/0xFFFFFF);
+		$hue = 2 * pi() * ($uidHashInt / 0xFFFFFF);
 		$saturation = '100%';
-		$lightness = '15%';
-
-		$postNameBlock .= ' <span class="posteruid" data-uid="' . $uidHash .
-			'" style="color: hsl(' . $hue . ', ' . $saturation . ', ' . $lightness . ');">' . $uidName . '</span>';
+		$lightness = '25%';
+		$postNameBlock .= ' <span class="posteruid" data-uid="' . $uidHash . '" style="color: hsl(' .
+			$hue . ', ' . $saturation . ', ' . $lightness . ');">' . $uidName . '</span>';
 	}
 	$lowEmail = strtolower($postEmail);
 	if ($postEmail != '' && $lowEmail != 'noko') {
