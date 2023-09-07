@@ -911,13 +911,13 @@ function postingRequest() {
 		} else {
 			$uidName = $uidHash;
 		}
-		$red = $uidHashInt >> 24 & 255;
-		$green = $uidHashInt >> 16 & 255;
-		$blue = $uidHashInt >> 8 & 255;
-		$isBlack = 0.299 * $red + 0.587 * $green + 0.114 * $blue > 125;
+
+		$hue = 2*pi() * ($uidHashInt/0xFFFFFF);
+		$saturation = '100%';
+		$lightness = '15%';
+
 		$postNameBlock .= ' <span class="posteruid" data-uid="' . $uidHash .
-			'" style="background-color: rgb(' . $red . ', ' . $green . ', ' . $blue . '); color: ' .
-			($isBlack ? 'black' : 'white') . ';">' . $uidName . '</span>';
+			'" style="color: hsl(' . $hue . ', ' . $saturation . ', ' . $lightness . ');">' . $uidName . '</span>';
 	}
 	$lowEmail = strtolower($postEmail);
 	if ($postEmail != '' && $lowEmail != 'noko') {

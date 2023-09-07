@@ -70,6 +70,7 @@ html[data-theme="Dark"] {
 	--reply-border: #25323d;
 	--table-border: #445766;
 	--table-th-bg: #173051;
+	--posteruid-filter: invert(100%);
 }
 
 :focus-visible {
@@ -302,6 +303,7 @@ del {
 	font: bold 13px Arial;
 	opacity: var(--poster-opacity);
 	cursor: pointer;
+	filter: var(--posteruid-filter);
 }
 
 pre {
