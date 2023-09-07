@@ -239,7 +239,7 @@ function initAfterDom() {
 		if (targetEl.classList.contains('posteruid')) {
 			if (e.type === 'click') {
 				unhighlightPosts();
-				var uid = targetEl.textContent;
+				var uid = targetEl.dataset.uid;
 				if (highlightedUID === uid) {
 					highlightedUID = null;
 					e.preventDefault();

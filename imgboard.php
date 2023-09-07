@@ -16,7 +16,7 @@ if (function_exists('ob_get_level')) {
 
 function fancyDie($message) {
 	die('<head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023090700">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023090701">
 </head>
 <body align="center">
 	<br>
@@ -879,47 +879,45 @@ function postingRequest() {
 
 	// Get Nameblock
 	$postName = $post['name'];
-	if (ATOM_POSTERUID || ATOM_GENERATED_NAME) {
-		$uidHash = substr(md5($post['ip'] . intval($post['parent']) . ATOM_TRIPSEED), 0, 8);
-		$uidHashInt = hexdec('0x' . $uidHash);
-	}
-	$isGeneratedName = false;
-	if (ATOM_GENERATED_NAME && !$postName) {
-		global $firstNames, $lastNames;
-		srand($uidHashInt);
-		$firstNamesLen = count($firstNames);
-		if($firstNamesLen) {
-			$postName = $firstNames[rand() % $firstNamesLen];
-		}
-		$lastNamesLen = count($lastNames);
-		if($lastNamesLen) {
-			$postName .= ($postName ? ' ' : '') . $lastNames[rand() % $lastNamesLen]; 
-		}
-		$isGeneratedName = $postName != '';
-	}
 	$postTripcode = $post['tripcode'];
 	$postEmail = $post['email'];
 	$postNameBlock = '<span class="postername' .
-		($hasAccess && $postName ?
-			($isGeneratedName ? '' : ($access == 'admin' ? ' postername-admin' : ' postername-mod')) : '') .
+		($hasAccess && $postName ? ($access == 'admin' ? ' postername-admin' : ' postername-mod') : '') .
 		'">' .
 		(!$postName && !$postTripcode ? ATOM_POSTERNAME : $postName) .
 		($postTripcode != '' ? '</span><span class="postertrip">!' . $postTripcode : '') . '</span>';
-	if ($hasAccess && ($postName && !$isGeneratedName || $postTripcode)) {
+	if ($hasAccess && ($postName || $postTripcode)) {
 		switch($access) {
 		case 'admin': $postNameBlock .= ' <span class="postername-admin">## Admin</span>'; break;
 		case 'janitor': $postNameBlock .= ' <span class="postername-mod">## Janitor</span>'; break;
 		case 'moderator': $postNameBlock .= ' <span class="postername-mod">## Mod</span>'; break;
 		}
 	}
-	if (ATOM_POSTERUID) {
+	if (ATOM_UNIQUEID) {
+		$uidHash = substr(md5($post['ip'] . intval($post['parent']) . ATOM_TRIPSEED), 0, 8);
+		$uidHashInt = hexdec('0x' . $uidHash);
+		$uidName = '';
+		if(ATOM_UNIQUENAME) {
+			global $firstNames, $lastNames;
+			srand($uidHashInt);
+			$firstNamesLen = count($firstNames);
+			if($firstNamesLen) {
+				$uidName = $firstNames[rand() % $firstNamesLen];
+			}
+			$lastNamesLen = count($lastNames);
+			if($lastNamesLen) {
+				$uidName .= ($uidName ? ' ' : '') . $lastNames[rand() % $lastNamesLen]; 
+			}
+		} else {
+			$uidName = $uidHash;
+		}
 		$red = $uidHashInt >> 24 & 255;
 		$green = $uidHashInt >> 16 & 255;
 		$blue = $uidHashInt >> 8 & 255;
 		$isBlack = 0.299 * $red + 0.587 * $green + 0.114 * $blue > 125;
 		$postNameBlock .= ' <span class="posteruid" data-uid="' . $uidHash .
 			'" style="background-color: rgb(' . $red . ', ' . $green . ', ' . $blue . '); color: ' .
-			($isBlack ? 'black' : 'white') . ';">' . $uidHash . '</span>';
+			($isBlack ? 'black' : 'white') . ';">' . $uidName . '</span>';
 	}
 	$lowEmail = strtolower($postEmail);
 	if ($postEmail != '' && $lowEmail != 'noko') {
@@ -1335,9 +1333,9 @@ if (in_array(ATOM_DBMODE, array('flatfile', 'mysql', 'mysqli', 'sqlite', 'sqlite
 foreach ($includes as $include) {
 	include $include;
 }
-if (ATOM_GENERATED_NAME) {
-	include 'inc/usernames/' . ATOM_GENERATED_NAME . '/firstnames.php';
-	include 'inc/usernames/' . ATOM_GENERATED_NAME . '/lastnames.php';
+if (ATOM_UNIQUENAME) {
+	include 'inc/usernames/' . ATOM_UNIQUENAME . '/firstnames.php';
+	include 'inc/usernames/' . ATOM_UNIQUENAME . '/lastnames.php';
 }
 if (ATOM_TIMEZONE != '') {
 	date_default_timezone_set(ATOM_TIMEZONE);

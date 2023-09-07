@@ -102,12 +102,12 @@ define('ATOM_POSTERNAME', 'Anonymous');
 // Values: 'geoip', 'geoip2', '' to disable (see README for instructions)
 define('ATOM_GEOIP', '');
 // Unique ID's based on IP
-define('ATOM_POSTERUID', false);
-// Generate unique poster names based on IP
-// values: 'ua', 'custom', '' to disable
-// First names array is in inc/usernames/ATOM_GENERATED_NAME/firstnames.php
-// Last names array is in inc/usernames/ATOM_GENERATED_NAME/lastnames.php
-define('ATOM_GENERATED_NAME', '');
+define('ATOM_UNIQUEID', false);
+// Generate unique poster names instead of ID's. Requires ATOM_UNIQUEID = true.
+// Values: 'ua', 'custom', '' to disable
+// First names array is in inc/usernames/ATOM_UNIQUENAME/firstnames.php
+// Last names array is in inc/usernames/ATOM_UNIQUENAME/lastnames.php
+define('ATOM_UNIQUENAME', '');
 // Tripcode seed - Must not change once set!
 // Enter some random text (salt used when generating secure tripcodes and poster id's)
 define('ATOM_TRIPSEED', '');
