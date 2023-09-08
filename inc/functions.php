@@ -81,6 +81,19 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 	);
 	CREATE INDEX ON "' . ATOM_DBBANS . '"("ip");';
 
+	$passQuery = 'CREATE TABLE "' . ATOM_DBPASS . '" (
+		"id" varchar(64) NOT NULL,
+		"issued" integer NOT NULL,
+		"expires" integer NOT NULL,
+		"blocked_till" integer NOT NULL DEFAULT 0,
+		"blocked_reason" text,
+		"meta" text NOT NULL,
+		"last_used" integer NOT NULL DEFAULT 0,
+		"last_used_ip" varchar(64),
+		PRIMARY KEY ("id")
+	);
+	CREATE INDEX ON "' . ATOM_DBPASS . '"("ip");';
+
 	$likesQuery = 'CREATE TABLE "' . ATOM_DBLIKES . '" (
 		"id" bigserial NOT NULL,
 		"ip" varchar(39) NOT NULL,
@@ -176,6 +189,18 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		`reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
 		PRIMARY KEY (`id`),
 		KEY `ip` (`ip`)
+	)";
+
+	$passQuery = "CREATE TABLE `" . ATOM_DBPASS . "` (
+		`id` varchar(64) NOT NULL,
+		`issued` int(20) NOT NULL,
+		`expires` int(20) NOT NULL,
+		`blocked_till` int(20) NOT NULL DEFAULT 0,
+		`blocked_reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+		`meta` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+		`last_used` int(20) NOT NULL DEFAULT 0,
+		`last_used_ip` varchar(64),
+		PRIMARY KEY (`id`)
 	)";
 
 	$ipLookupsQuery = "CREATE TABLE `" . ATOM_DBIPLOOKUPS . "` (
@@ -671,4 +696,18 @@ function writePage($filename, $contents) {
 		unlink($tempfile);
 	}
 	chmod($filename, 0664); /* it was created 0600 */
+}
+
+/* ==[ Pass codes ]============================================================================== */
+
+function isPassExpired($pass) {
+    return time() > $pass['expires'];
+}
+
+function isPassBlocked($pass) {
+    if ($pass['blocked_till'] > time()) {
+        return $pass['blocked_reason'];
+    } else {
+        return null;
+    }
 }

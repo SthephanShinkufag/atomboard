@@ -24,7 +24,7 @@ function pageHeader() {
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
 	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023090701">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023090701"></script>' .
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023090902"></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -36,6 +36,7 @@ function pageWrapper($description, $needReturn) {
 	<div class="wrapper">
 		<div id="navigation-top" class="navigation">' . ATOM_HTML_NAVIGATION . '
 			<a class="navigation-link" href="/' . ATOM_BOARD . '/catalog.html" title="Go to catalog">Catalog</a>
+			<a class="navigation-link" href="/' . ATOM_BOARD . '/' . basename($_SERVER['PHP_SELF']) . '?passcode">Passcode</a>
 			<a class="navigation-link" href="/' . ATOM_BOARD . '/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
 			<select class="select-style navigation-link" onchange="setThemeStyle(this);">
 				<option value="Dark" selected>Dark</option>
@@ -237,7 +238,7 @@ function buildPostForm($parent, $isstaffPost = false) {
 					</tr>' : ''
 				) . (
 					ATOM_CAPTCHA ? '
-					<tr>
+					<tr id="captchablock">
 						<td class="postblock"></td>
 						<td>' . (ATOM_CAPTCHA === 'recaptcha' ? '
 							<div style="min-height: 80px;">
@@ -259,6 +260,11 @@ function buildPostForm($parent, $isstaffPost = false) {
 							<input type="text" class="postform-input" name="captcha" id="captcha" placeholder="Captcha" accesskey="c" autocomplete="off">
 							<img id="captchaimage" src="/' . ATOM_BOARD . '/inc/captcha.php" width="175" height="55" alt="CAPTCHA" onclick="reloadCaptcha();">
 						') . '</td>
+					</tr><tr id="validcaptchablock" style="display: none">
+						<td class="postblock"></td>
+						<td>
+							No captcha: you are a passcode user. <a href="/' . ATOM_BOARD . '/imgboard.php?passcode&logout">Log Out.</a>
+						</td>
 					</tr>' : ''
 				) . '
 					' . $fileInputHtml . '
@@ -659,6 +665,9 @@ function managePage($text, $action = '') {
 	case 'login': $onload = ' onload="document.atomboard.managepassword.focus();"'; break;
 	case 'moderate': $onload = ' onload="document.atomboard.moderate.focus();"'; break;
 	case 'staffPost': $onload = ' onload="document.postform.parent.focus();"'; break;
+	case 'managepasscode': $onload = ' onload="document.atomboard.meta.focus();"'; break;
+	case 'blockpasscode': $onload = ' onload="document.atomboard.block_reason.focus();"'; break;
+	case 'passcode': $onload = ' onload="document.atomboard.passcode.focus();"'; break;
 	}
 	return pageHeader() . '<body' . $onload . '>' .
 		pageWrapper(ATOM_BOARD_DESCRIPTION, true) .
@@ -668,12 +677,14 @@ function managePage($text, $action = '') {
 			<a class="link-button" href="?manage">Status</a>' .
 			($access == 'admin' || $access == 'moderator' ? '
 			<a class="link-button" href="?manage&bans">Bans</a>
-			<a class="link-button" href="?manage&modlog">ModLog</a>' : '') .
+			<a class="link-button" href="?manage&modlog">ModLog</a>
+			<a class="link-button" href="?manage&passcodes=block">Block Passcode</a>' : '') .
 			(count($atom_janitors) != 0 && $access == 'janitor' ? '
 			<a class="link-button" href="/' . ATOM_BOARD . '/janitorlog.html">JanitorLog</a>' : '') . '
 			<a class="link-button" href="?manage&moderate">Moderate Post</a>
 			<a class="link-button" href="?manage&staffPost">Raw Post</a>' .
 			($access == 'admin' ? '
+			<a class="link-button" href="?manage&passcodes=manage">Manage Passcodes</a>
 			<a class="link-button" href="?manage&rebuildall">Rebuild All</a>' : '') .
 			($access == 'admin' && ATOM_DBMIGRATE ? '
 			<a class="link-button" href="?manage&dbmigrate"><b>Migrate Database</b></a>' : '') . '
@@ -695,6 +706,76 @@ function manageLoginForm() {
 			</fieldset>
 		</form>
 		<br>';
+}
+
+function passLoginForm($action = '') {
+    if ($action == 'login') {
+        return '<form id="atomboard" name="atomboard" method="post" action="?passcode">
+                <fieldset>
+                    <legend align="center">Enter passcode</legend>
+                    <div class="login">
+                        <input type="text" id="passcode" name="passcode"><br>
+                        <input type="submit" value="Use Passcode" class="managebutton">
+                    </div>
+                </fieldset>
+            </form>
+            <br>';
+    }
+    if ($action == 'valid') {
+        return '<div align="center">You are already using a valid passcode. <a href="/' . ATOM_BOARD .
+                    '/imgboard.php?passcode&logout">Log Out.</a></div><br>';
+    }
+}
+
+function buildPasscodesForm($action = '') {
+    if ($action == 'manage') {
+        return '<form id="atomboard" name="atomboard" method="post" action="?manage&issuepasscode">
+            <fieldset>
+                <legend>Issue a new passcode</legend>
+                <input type="submit" value="Submit" class="managebutton">
+                <br>
+                <label for="expires">Pass code duration (sec):</label>
+                <input type="text" name="expires" id="expires" value="31536000">&nbsp;&nbsp;
+                <small>[
+                    <a href="#" onclick="document.atomboard.expires.value=\'2592000\'; return false;">30d</a> |
+                    <a href="#" onclick="document.atomboard.expires.value=\'15780000\'; return false;">6m</a> |
+                    <a href="#" onclick="document.atomboard.expires.value=\'31536000\'; return false;">1y</a>
+                ]</small><br>
+                <label for="meta">Meta (related info):&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+                <input type="text" name="meta" id="meta">&nbsp;&nbsp;<small>optional</small>
+            </fieldset>
+            </form><br>';
+    } else if ($action == 'block') {
+        $pass = '';
+        if (isset($_GET['passcode'])) {
+           $pass = $_GET['passcode'];
+        }
+        return '
+            <form id="atomboard" name="atomboard" method="post" action="?manage&blockpasscode">
+            <fieldset>
+                <legend>Block A Passcode</legend>
+                <label for="id">Passcode:</label>
+                <input type="text" name="id" id="id" value="' . $pass . '">
+                <input type="submit" value="Submit" class="managebutton">
+                <br>
+                <label for="expires">Block duration (sec):</label>
+                <input type="text" name="block_till" id="block_till" value="604800">&nbsp;&nbsp;
+                <small>[
+                    <a href="#" onclick="document.atomboard.block_till.value=\'3600\'; return false;">1hr</a> |
+                    <a href="#" onclick="document.atomboard.block_till.value=\'86400\'; return false;">1d</a> |
+                    <a href="#" onclick="document.atomboard.block_till.value=\'172800\'; return false;">2d</a> |
+                    <a href="#" onclick="document.atomboard.block_till.value=\'604800\'; return false;">1w</a> |
+                    <a href="#" onclick="document.atomboard.block_till.value=\'1209600\'; return false;">2w</a> |
+                    <a href="#" onclick="document.atomboard.block_till.value=\'2592000\'; return false;">30d</a> |
+                    <a href="#" onclick="document.atomboard.block_till.value=\'0\'; return false;">unblock</a>
+                ]</small><br>
+                <label for="block_reason">Block reason:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+                <input type="text" name="block_reason" id="block_reason"></small>
+            </fieldset>
+            </form><br>';
+    } else {
+        return 'Unknown action.';
+    }
 }
 
 function manageBanForm() {
@@ -782,6 +863,7 @@ function manageModeratePost($post) {
 	global $access;
 	$id = $post['id'];
 	$ip = $post['ip'];
+	$passcode = $post['pass'];
 	$isOp = isOp($post);
 	$deleteInfo = $isOp ? 'This will delete the entire thread below.' : 'This will delete the post below.';
 	$ban = banByIP($ip);
@@ -789,6 +871,7 @@ function manageModeratePost($post) {
 	$banDisabled = $ban || !$isMod ? ' disabled' : '';
 	$banInfo = $ban ? ' A ban record already exists for ' . $ip :
 		($isMod ? 'IP address: ' . $ip : 'Only an administrator may ban an IP address.');
+	$passInfo = $passcode ? ('Passcode: ' . $passcode): '';
 	$postOrThread = $isOp ? 'Thread' : 'Post';
 	$stickyHtml = '';
 	$lockedHtml = '';
@@ -893,6 +976,17 @@ function manageModeratePost($post) {
 						</td>
 						<td><small>' . $banInfo . '</small></td>
 					</tr>
+					' . ($passcode ? '<tr>
+						<td align="right" width="50%;">
+							<form method="get" action="?">
+								<input type="hidden" name="manage" value="">
+								<input type="hidden" name="passcode" value="' . $passcode . '">
+								<input type="hidden" name="passcodes" value="block">
+								<input type="submit" value="Block passcode" class="managebutton" style="width: 50%;">
+							</form>
+						</td>
+						<td><small>' . $passInfo . '</small></td>
+					</tr>' : '') .'
 				</table>
 			</fieldset>
 			<fieldset>

@@ -61,6 +61,7 @@ define('POST_LIKES', 52);
 define('POST_STICKIED', 53);
 define('POST_LOCKED', 54);
 define('POST_ENDLESS', 55);
+define('POST_PASS', 56);
 
 # Bans database structure
 define('BANS_FILE', '.bans');
@@ -113,6 +114,7 @@ function convertPostsToSQLStyle($posts, $isSinglePost = false) {
 		$post['timestamp']            = $oldpost[POST_TIMESTAMP];
 		$post['bumped']               = $oldpost[POST_BUMPED];
 		$post['ip']                   = $oldpost[POST_IP];
+		$post['pass']                 = $oldpost[POST_PASS];
 		$post['name']                 = $oldpost[POST_NAME];
 		$post['tripcode']             = $oldpost[POST_TRIPCODE];
 		$post['email']                = $oldpost[POST_EMAIL];

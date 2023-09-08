@@ -54,6 +54,8 @@ define('ATOM_DBMODLOG', ATOM_BOARD . '_modlog');
 define('ATOM_DBBANS', 'bans');
 // Likes table name in database (use the same likes table across boards for global likes)
 define('ATOM_DBLIKES', 'likes');
+// Passcodes table name in database (use the same likes table across boards for global passcodes)
+define('ATOM_DBPASS', 'pass');
 // Database for dirty IP lookups
 define('ATOM_DBIPLOOKUPS', 'iplookups');
 // Enable database migration tool (see README for instructions)
@@ -80,6 +82,12 @@ define('ATOM_DBDRIVER', 'mysql');
 // When changing this, you should still set ATOM_DBDRIVER appropriately
 // If you're using PDO with a MySQL or pgSQL database, you should leave this blank
 define('ATOM_DBDSN', '');
+
+/* ==[ Passcodes ]========================================================================================= */
+// Enable passcode system
+define('ATOM_PASSCODES_ENABLED', false);
+// Number of seconds a single passcode can be used by single ip (second posting from different ip will be denied)
+define('ATOM_PASSCODES_USE_LIMIT', 900);
 
 /* ==[ Dirty IP Lookups ]================================================================================== */
 // IP lookups, using ipregistry.co. Set ATOM_IPLOOKUPS_KEY to '' to disable, othwerise provide a key
