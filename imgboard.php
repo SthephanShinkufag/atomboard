@@ -615,7 +615,16 @@ function passcodeRequest() {
         $_SESSION['passcode'] = $pass_id;
 		die(managePage(manageInfo('You have logged in. You may post without entering the captcha.')));
     } else {
-        if (isset($_GET['logout'])) {
+        if (isset($_GET['check'])) {
+            if (isset($_SESSION['passcode'])) {
+                $pass = passByID($_SESSION['passcode']);
+                if ($pass && !isPassExpired($pass) && !isPassBlocked($pass)) {
+                    die("OK");
+                }
+            }
+            http_response_code(403);
+            die("INVALID");
+        } else if (isset($_GET['logout'])) {
             $_SESSION['passcode'] = '';
 		    setcookie('passcode', '', -1, '/' . ATOM_BOARD . '/');
 		    die(managePage(manageInfo('You have logged out.')));
