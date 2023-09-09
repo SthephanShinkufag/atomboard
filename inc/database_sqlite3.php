@@ -74,6 +74,7 @@ if (!$result->fetchArray()) {
 		stickied INTEGER NOT NULL DEFAULT '0',
 		locked INTEGER NOT NULL DEFAULT '0',
 		endless INTEGER NOT NULL DEFAULT '0'
+		pass TEXT
 	)");
 }
 
@@ -186,7 +187,8 @@ function insertPost($post) {
 			likes,
 			stickied,
 			locked,
-			endless
+			endless,
+			pass
 		) VALUES (
 			" . $post['parent'] . ",
 			" . time() . ",
@@ -242,7 +244,8 @@ function insertPost($post) {
 			" . $post['likes'] . ",
 			" . $post['stickied'] . ",
 			" . $post['locked'] . ",
-			" . $post['endless'] . "
+			" . $post['endless'] . ",
+			" . $db->escapeString($post['pass']) . "
 		)");
 	return $db->lastInsertRowID();
 }

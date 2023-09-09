@@ -72,7 +72,8 @@ if (sqlite_num_rows($result) == 0) {
 		likes INTEGER NOT NULL DEFAULT '0',
 		stickied INTEGER NOT NULL DEFAULT '0',
 		locked INTEGER NOT NULL DEFAULT '0',
-		endless INTEGER NOT NULL DEFAULT '0'
+		endless INTEGER NOT NULL DEFAULT '0',
+		pass TEXT
 	)");
 }
 
@@ -184,7 +185,8 @@ function insertPost($post) {
 			likes,
 			stickied,
 			locked,
-			endless
+			endless,
+			pass
 		) VALUES (
 			" . $post['parent'] . ",
 			" . time() . ",
@@ -240,7 +242,8 @@ function insertPost($post) {
 			" . $post['likes'] . ",
 			" . $post['stickied'] . ",
 			" . $post['locked'] . ",
-			" . $post['endless'] . "
+			" . $post['endless'] . ",
+			" . $post['pass'] . "
 		)");
 	return sqlite_last_insert_rowid($GLOBALS['db']);
 }

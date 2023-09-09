@@ -251,14 +251,14 @@ class SimpleCaptcha {
 
 	// Horizontal line insertion
 	protected function WriteLine() {
-		$x1 = $this->width * $this->scale * .15;
+		$x1 = intval($this->width * $this->scale * .15);
 		$x2 = $this->textFinalX;
-		$y1 = rand($this->height * $this->scale * .35, $this->height * $this->scale * .65);
-		$y2 = rand($this->height * $this->scale * .35, $this->height * $this->scale * .65);
+		$y1 = rand(intval($this->height * $this->scale * .35), intval($this->height * $this->scale * .65));
+		$y2 = rand(intval($this->height * $this->scale * .35), intval($this->height * $this->scale * .65));
 		$width = $this->lineWidth / 2 * $this->scale;
 
 		for ($i = -$width; $i <= $width; $i++) {
-			imageline($this->im, $x1, $y1 + $i, $x2, $y2 + $i, $this->GdFgColor);
+			imageline($this->im, $x1, intval($y1 + $i), $x2, intval($y2 + $i), $this->GdFgColor);
 		}
 	}
 
@@ -305,7 +305,7 @@ class SimpleCaptcha {
 		$k = rand(0, 100);
 		for ($i = 0; $i < ($this->width * $this->scale); $i++) {
 			imagecopy($this->im, $this->im,
-				$i - 1, sin($k + $i / $xp) * ($this->scale * $this->Xamplitude),
+				$i - 1, intval(sin($k + $i / $xp) * ($this->scale * $this->Xamplitude)),
 				$i, 0, 1, $this->height * $this->scale);
 		}
 
@@ -314,7 +314,7 @@ class SimpleCaptcha {
 		$yp = $this->scale * $this->Yperiod * rand(1, 2);
 		for ($i = 0; $i < ($this->height * $this->scale); $i++) {
 			imagecopy($this->im, $this->im,
-				sin($k + $i / $yp) * ($this->scale * $this->Yamplitude), $i - 1,
+				intval(sin($k + $i / $yp) * ($this->scale * $this->Yamplitude)), $i - 1,
 				0, $i, $this->width * $this->scale, 1);
 		}
 	}

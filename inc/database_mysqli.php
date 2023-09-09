@@ -31,6 +31,11 @@ if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBBANS . "'"
 	mysqli_query($link, $bansQuery);
 }
 
+// Create the bans table if it does not exist
+if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBPASS . "'")) == 0) {
+	mysqli_query($link, $passQuery);
+}
+
 // Create the likes table if it does not exist
 if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBLIKES . "'")) == 0) {
 	mysqli_query($link, $likesQuery);
@@ -113,7 +118,8 @@ function insertPost($post) {
 			`moderated`,
 			`stickied`,
 			`locked`,
-			`endless`
+			`endless`,
+			`pass`
 		) VALUES (
 			" . $post['parent'] . ",
 			" . time() . ",
@@ -170,7 +176,8 @@ function insertPost($post) {
 			" . $post['moderated'] . ",
 			" . $post['stickied'] . ",
 			" . $post['locked'] . ",
-			" . $post['endless'] . "
+			" . $post['endless'] . ",
+			" . mysqli_real_escape_string($link, $post['pass']) . "
 		)");
 	return mysqli_insert_id($link);
 }
@@ -428,7 +435,7 @@ function lookupByIP($ip) {
 	global $link;
 	$result = mysqli_query($link,
 		"SELECT * FROM " . ATOM_DBIPLOOKUPS . "
-		WHERE ip = '" . mysql_real_escape_string($ip) . "' LIMIT 1",
+		WHERE ip = '" . mysqli_real_escape_string($ip) . "' LIMIT 1",
 		array($ip));
 	if ($result) {
 		while ($ban = mysqli_fetch_assoc($result)) {
@@ -443,12 +450,12 @@ function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
 		"INSERT INTO `" . ATOM_DBIPLOOKUPS . "`
 		(ip, abuser, vps, proxy, tor, vpn)
 		VALUES (
-			'" . mysql_real_escape_string($ip) . "',
-			'" . mysql_real_escape_string($abuser) . "',
-			'" . mysql_real_escape_string($vps) . "',
-			'" . mysql_real_escape_string($proxy) . "',
-			'" . mysql_real_escape_string($tor) . "',
-			'" . mysql_real_escape_string($vpn) . "'
+			'" . mysqli_real_escape_string($ip) . "',
+			'" . mysqli_real_escape_string($abuser) . "',
+			'" . mysqli_real_escape_string($vps) . "',
+			'" . mysqli_real_escape_string($proxy) . "',
+			'" . mysqli_real_escape_string($tor) . "',
+			'" . mysqli_real_escape_string($vpn) . "'
 		)");
 	return mysqli_insert_id($link);
 }
@@ -526,6 +533,74 @@ function clearExpiredBans() {
 				WHERE `id` = " . $ban['id'] . " LIMIT 1");
 		}
 	}
+}
+
+/* ==[ Passcodes ]============================================================================================== */
+
+function passByID($id) {
+	global $link;
+	$result = mysqli_query($link,
+		"SELECT * FROM `" . ATOM_DBPASS . "`
+		WHERE `id` = '" . mysqli_real_escape_string($link, $id) . "' LIMIT 1");
+	if ($result) {
+		while ($ban = mysqli_fetch_assoc($result)) {
+			return $ban;
+		}
+	}
+}
+
+function blockPass($pass_id, $block_till, $block_reason) {
+	global $link;
+	$blocked_till = time() + $block_till;
+	
+	mysqli_query($link,
+		"UPDATE " . ATOM_DBPASS . "
+		SET `blocked_till` = '" . intval($blocked_till) . "', 
+		    `blocked_reason` = '" . mysqli_real_escape_string($link, $block_reason) . "'
+		WHERE `id` = '" . mysqli_real_escape_string($link, $pass_id) . "'");
+}
+
+function usePass($pass_id, $ip) {
+	global $link;
+	mysqli_query($link,
+		"UPDATE " . ATOM_DBPASS . "
+		SET `last_used` = '" . time() . "',
+		    `last_used_ip` = '" . mysqli_real_escape_string($link, $ip) . "'
+		WHERE `id` = '" . mysqli_real_escape_string($link, $pass_id) . "'");
+}
+
+function unblockPass($pass_id) {
+	global $link;
+	mysqli_query($link,
+		"UPDATE " . ATOM_DBPASS . "
+		SET `blocked_till` = 0, 
+		    `blocked_reason` = ''
+		WHERE `id` = '" . mysqli_real_escape_string($link, $pass_id) . "'");
+}
+
+function insertPass($expires, $meta) {
+	global $link;
+    $pass_id = bin2hex(random_bytes(32));
+
+	mysqli_query($link,
+		"INSERT INTO `" . ATOM_DBPASS . "`
+		(`id`, `issued`, `expires`, `blocked_till`, `meta`)
+		VALUES (
+			'" . mysqli_real_escape_string($link, $pass_id) . "',
+			" . time() . ",
+			'" . intval(time() + $expires) . "',
+			'0',
+			'" . mysqli_real_escape_string($link, $meta) . "'
+		)");
+
+	return $pass_id;
+}
+
+function deletePass($id) {
+	global $link;
+	mysqli_query($link,
+		"DELETE FROM `" . ATOM_DBPASS . "`
+		WHERE `id` = " . mysqli_real_escape_string($link, $id) . " LIMIT 1");
 }
 
 /* ==[ Likes ]============================================================================================= */

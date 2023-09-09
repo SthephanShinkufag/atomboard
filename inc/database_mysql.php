@@ -27,6 +27,11 @@ if (mysql_num_rows(mysql_query("SHOW TABLES LIKE '" . ATOM_DBBANS . "'")) == 0) 
 	mysql_query($bansQuery);
 }
 
+// Create the pass table if it does not exist
+if (mysql_num_rows(mysql_query("SHOW TABLES LIKE '" . ATOM_DBPASS . "'")) == 0) {
+	mysql_query($passQuery);
+}
+
 // Create the likes table if it does not exist
 if (mysql_num_rows(mysql_query("SHOW TABLES LIKE '" . ATOM_DBLIKES . "'")) == 0) {
 	mysql_query($likesQuery);
@@ -102,7 +107,8 @@ function insertPost($post) {
 			`moderated`,
 			`stickied`,
 			`locked`,
-			`endless`
+			`endless`,
+			`pass`
 		) VALUES (
 			" . $post['parent'] . ",
 			" . time() . ",
@@ -159,7 +165,8 @@ function insertPost($post) {
 			" . $post['moderated'] . ",
 			" . $post['stickied'] . ",
 			" . $post['locked'] . ",
-			" . $post['endless'] . "
+			" . $post['endless'] . ",
+			" . mysql_real_escape_string($post['pass']) . "
 		)");
 	return mysql_insert_id();
 }
@@ -486,6 +493,68 @@ function clearExpiredBans() {
 				WHERE `id` = " . $ban['id'] . " LIMIT 1");
 		}
 	}
+}
+
+/* ==[ Passcodes ]============================================================================================== */
+
+function passByID($id) {
+	$result = mysql_query(
+		"SELECT * FROM `" . ATOM_DBPASS . "`
+		WHERE `id` = '" . mysql_real_escape_string($id) . "' LIMIT 1");
+	if ($result) {
+		while ($ban = mysql_fetch_assoc($result)) {
+			return $ban;
+		}
+	}
+}
+
+function blockPass($pass_id, $block_till, $block_reason) {
+	$blocked_till = time() + $block_till;
+
+	mysql_query(
+		"UPDATE " . ATOM_DBPASS . "
+		SET `blocked_till` = '" . intval($blocked_till) . "',
+		    `blocked_reason` = '" . mysql_real_escape_string($block_reason) . "'
+		WHERE `id` = '" . mysql_real_escape_string($pass_id) . "'");
+}
+
+function usePass($pass_id, $ip) {
+	mysql_query(
+		"UPDATE " . ATOM_DBPASS . "
+		SET `last_used` = '" . time() . "',
+		    `last_used_ip` = '" . mysql_real_escape_string($ip) . "'
+		WHERE `id` = '" . mysql_real_escape_string($pass_id) . "'");
+}
+
+function unblockPass($pass_id) {
+	mysql_query(
+		"UPDATE " . ATOM_DBPASS . "
+		SET `blocked_till` = 0,
+		    `blocked_reason` = ''
+		WHERE `id` = '" . mysql_real_escape_string($pass_id) . "'");
+}
+
+function insertPass($expires, $meta) {
+    $pass_id = bin2hex(random_bytes(32));
+
+	mysql_query(
+		"INSERT INTO `" . ATOM_DBPASS . "`
+		(`id`, `issued`, `expires`, `blocked_till`, `meta`)
+		VALUES (
+			'" . mysql_real_escape_string($pass_id) . "',
+			" . time() . ",
+			'" . intval(time() + $expires) . "',
+			'0',
+			'" . mysql_real_escape_string($meta) . "'
+		)");
+
+	return $pass_id;
+}
+
+function deletePass($id) {
+	mysql_query(
+		"DELETE FROM `" . ATOM_DBPASS . "`
+		WHERE `id` = " . mysql_real_escape_string($id) . " LIMIT 1");
 }
 
 /* ==[ Likes ]============================================================================================= */

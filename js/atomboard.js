@@ -194,6 +194,11 @@ function initAfterDom() {
 	if(getCookie('atom_access') === '1') {
 		document.body.classList.add('access-enabled');
 	}
+	// Enable posts moderation buttons
+	if(getCookie('passcode') === '1') {
+		document.getElementById('captchablock').style.display = 'none';
+		document.getElementById('validcaptchablock').style.display = '';
+	}
 
 	// Set passwords for post form and deletion form
 	var replyPassw = $id('newpostpassword');
