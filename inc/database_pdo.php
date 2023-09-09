@@ -586,14 +586,14 @@ function insertPass($expires, $meta) {
 	return $pass_id;
 }
 
-function blockPass($pass_id, $block_till, $block_reason) {
+function blockPass($pass_number, $block_till, $block_reason) {
 	global $dbh;
 	$blocked_till = time() + $block_till;
 	$stm = $dbh->prepare(
 		"UPDATE " . ATOM_DBPASS . "
 		SET `blocked_till` = ?, `blocked_reason` = ?
-		WHERE `id` = ?");
-	$stm->execute(array($blocked_till, $block_reason, $pass_id));
+		WHERE `number` = ?");
+	$stm->execute(array($blocked_till, $block_reason, $pass_number));
 }
 
 function usePass($pass_id, $ip) {
@@ -605,13 +605,13 @@ function usePass($pass_id, $ip) {
 	$stm->execute(array(time(), $ip, $pass_id));
 }
 
-function unblockPass($pass_id) {
+function unblockPass($pass_number) {
 	global $dbh;
 	$stm = $dbh->prepare(
 		"UPDATE " . ATOM_DBPASS . "
 		SET `blocked_till` = 0, `blocked_reason` = ''
-		WHERE `id` = ?");
-	$stm->execute(array($pass_id));
+		WHERE `number` = ?");
+	$stm->execute(array($pass_number));
 }
 
 function deletePass($id) {

@@ -64,6 +64,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		"stickied" smallint NOT NULL default \'0\',
 		"locked" smallint NOT NULL default \'0\',
 		"endless" smallint NOT NULL default \'0\',
+		"pass" smallint NOT NULL default \'0\',
 		PRIMARY KEY ("id")
 	);
 	CREATE INDEX ON "' . ATOM_DBPOSTS . '"("parent");
@@ -82,6 +83,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 	CREATE INDEX ON "' . ATOM_DBBANS . '"("ip");';
 
 	$passQuery = 'CREATE TABLE "' . ATOM_DBPASS . '" (
+	    "number" bigserial NOT NULL,
 		"id" varchar(64) NOT NULL,
 		"issued" integer NOT NULL,
 		"expires" integer NOT NULL,
@@ -90,9 +92,11 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		"meta" text NOT NULL,
 		"last_used" integer NOT NULL DEFAULT 0,
 		"last_used_ip" varchar(64),
-		PRIMARY KEY ("id")
+		PRIMARY KEY ("number"),
+		KEY("id")
 	);
-	CREATE INDEX ON "' . ATOM_DBPASS . '"("ip");';
+	CREATE INDEX ON "' . ATOM_DBPASS . '"("number");
+	CREATE INDEX ON "' . ATOM_DBPASS . '"("id");';
 
 	$likesQuery = 'CREATE TABLE "' . ATOM_DBLIKES . '" (
 		"id" bigserial NOT NULL,
@@ -192,6 +196,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 	)";
 
 	$passQuery = "CREATE TABLE `" . ATOM_DBPASS . "` (
+		`number` mediumint(7) unsigned NOT NULL auto_increment,
 		`id` varchar(64) NOT NULL,
 		`issued` int(20) NOT NULL,
 		`expires` int(20) NOT NULL,
@@ -200,7 +205,8 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		`meta` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
 		`last_used` int(20) NOT NULL DEFAULT 0,
 		`last_used_ip` varchar(64),
-		PRIMARY KEY (`id`)
+		PRIMARY KEY (`number`),
+		KEY(`id`)
 	)";
 
 	$ipLookupsQuery = "CREATE TABLE `" . ATOM_DBIPLOOKUPS . "` (

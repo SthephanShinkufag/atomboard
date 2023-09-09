@@ -863,7 +863,7 @@ function manageModeratePost($post) {
 	global $access;
 	$id = $post['id'];
 	$ip = $post['ip'];
-	$passcode = $post['pass'];
+	$passcodeNumber = $post['pass'];
 	$isOp = isOp($post);
 	$deleteInfo = $isOp ? 'This will delete the entire thread below.' : 'This will delete the post below.';
 	$ban = banByIP($ip);
@@ -871,7 +871,7 @@ function manageModeratePost($post) {
 	$banDisabled = $ban || !$isMod ? ' disabled' : '';
 	$banInfo = $ban ? ' A ban record already exists for ' . $ip :
 		($isMod ? 'IP address: ' . $ip : 'Only an administrator may ban an IP address.');
-	$passInfo = $passcode ? ('Passcode: ' . $passcode): '';
+	$passInfo = $passcodeNumber ? ('Passcode: ' . $passcodeNumber): '';
 	$postOrThread = $isOp ? 'Thread' : 'Post';
 	$stickyHtml = '';
 	$lockedHtml = '';
@@ -976,11 +976,11 @@ function manageModeratePost($post) {
 						</td>
 						<td><small>' . $banInfo . '</small></td>
 					</tr>
-					' . ($passcode ? '<tr>
+					' . ($passcodeNumber ? '<tr>
 						<td align="right" width="50%;">
 							<form method="get" action="?">
 								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="passcode" value="' . $passcode . '">
+								<input type="hidden" name="passcode" value="' . $passcodeNumber . '">
 								<input type="hidden" name="passcodes" value="block">
 								<input type="submit" value="Block passcode" class="managebutton" style="width: 50%;">
 							</form>

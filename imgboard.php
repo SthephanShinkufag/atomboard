@@ -349,14 +349,14 @@ function managementRequest() {
 
 	if (ATOM_PASSCODES_ENABLED && isset($_GET['blockpasscode']) && $access != 'janitor') {
 		if (isset($_POST['block_till']) && isset($_POST['id']) && isset($_POST['block_reason'])) {
-		    $pass = $_POST['id'];
+		    $passcodeNumber = intval($_POST['id']);
 		    $block_till = intval($_POST['block_till']);
 		    if ($block_till) {
-                blockPass($pass, $block_till, $_POST['block_reason']);
-                die(managePage(manageInfo('Pass ' . $pass . ' has been blocked')));
+                blockPass($passcodeNumber, $block_till, $_POST['block_reason']);
+                die(managePage(manageInfo('Pass ' . $passcodeNumber . ' has been blocked')));
 		    } else {
-                unblockPass($pass);
-                die(managePage(manageInfo('Pass ' . $pass . ' has been unblocked')));
+                unblockPass($passcodeNumber);
+                die(managePage(manageInfo('Pass ' . $passcodeNumber . ' has been unblocked')));
 		    }
 		}
 	}
@@ -677,7 +677,7 @@ function postingRequest() {
 		            }
 		        }
 
-                $valid_passcode = $_SESSION['passcode'];
+                $valid_passcode = $pass['number'];
                 usePass($pass['id'], $ip);
             }
         }
