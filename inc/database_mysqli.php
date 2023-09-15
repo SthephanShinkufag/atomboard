@@ -177,7 +177,7 @@ function insertPost($post) {
 			" . $post['stickied'] . ",
 			" . $post['locked'] . ",
 			" . $post['endless'] . ",
-			" . mysqli_real_escape_string($link, $post['pass']) . "
+			" . intval($post['pass']) . "
 		)");
 	return mysqli_insert_id($link);
 }
@@ -549,7 +549,7 @@ function passByID($id) {
 	}
 }
 
-function blockPass($pass_id, $block_till, $block_reason) {
+function blockPass($pass_number, $block_till, $block_reason) {
 	global $link;
 	$blocked_till = time() + $block_till;
 	
@@ -557,7 +557,7 @@ function blockPass($pass_id, $block_till, $block_reason) {
 		"UPDATE " . ATOM_DBPASS . "
 		SET `blocked_till` = '" . intval($blocked_till) . "', 
 		    `blocked_reason` = '" . mysqli_real_escape_string($link, $block_reason) . "'
-		WHERE `id` = '" . mysqli_real_escape_string($link, $pass_id) . "'");
+		WHERE `number` = '" . intval($pass_number) . "'");
 }
 
 function usePass($pass_id, $ip) {
@@ -569,13 +569,13 @@ function usePass($pass_id, $ip) {
 		WHERE `id` = '" . mysqli_real_escape_string($link, $pass_id) . "'");
 }
 
-function unblockPass($pass_id) {
+function unblockPass($pass_number) {
 	global $link;
 	mysqli_query($link,
 		"UPDATE " . ATOM_DBPASS . "
 		SET `blocked_till` = 0, 
 		    `blocked_reason` = ''
-		WHERE `id` = '" . mysqli_real_escape_string($link, $pass_id) . "'");
+		WHERE `number` = '" . intval($pass_number) . "'");
 }
 
 function insertPass($expires, $meta) {

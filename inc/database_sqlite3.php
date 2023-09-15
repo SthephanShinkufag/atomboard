@@ -245,7 +245,7 @@ function insertPost($post) {
 			" . $post['stickied'] . ",
 			" . $post['locked'] . ",
 			" . $post['endless'] . ",
-			" . $db->escapeString($post['pass']) . "
+			" . intval($post['pass']) . "
 		)");
 	return $db->lastInsertRowID();
 }
