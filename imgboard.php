@@ -1,7 +1,7 @@
 <?php
 // Uncomment to show debugging errors
-// error_reporting(E_ALL);
-// ini_set('display_errors', 1);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 session_start();
 setcookie(session_name(), session_id(), time() + 2592000);
@@ -16,13 +16,13 @@ if (function_exists('ob_get_level')) {
 
 function fancyDie($message) {
 	die('<head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023090701">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023091600">
 </head>
 <body align="center">
 	<br>
 	<div class="reply" style="display: inline-block; font-size: 1.25em;">' . $message . '</div>
 	<br><br>
-	- <a href="./">Click here to go back</a> -
+	- <a href="javascript: window.history.go(-1);">Click here to go back</a> -
 </body>');
 }
 
@@ -31,6 +31,7 @@ function fancyDie($message) {
 function managementRequest() {
 	global $access;
 	$isAdmin = $access == 'admin';
+	$isJanitor = $access == 'janitor';
 
 	/* --------[ Show login form ]-------- */
 
@@ -308,7 +309,7 @@ function managementRequest() {
 
 	/* --------[ Show ban form and list of bans ]-------- */
 
-	if (isset($_GET['bans']) && $access != 'janitor') {
+	if (isset($_GET['bans']) && !$isJanitor) {
 		clearExpiredBans();
 		$text = '';
 		if (isset($_POST['ip'])) {
@@ -334,36 +335,43 @@ function managementRequest() {
 		die(managePage(manageBanForm() . manageBansTable(), 'bans'));
 	}
 
+	/* --------[ Show passcodes form ]-------- */
+
+	if (ATOM_PASSCODES_ENABLED && isset($_GET['passcodes']) && !$isJanitor) {
+		if ($_GET['passcodes'] == 'manage') {
+			die(managePage(buildPasscodesForm(), 'passcode_manage'));
+		} else  if ($_GET['passcodes'] == 'block') {
+			die(managePage(buildPasscodesForm(), 'passcode_block'));
+		}
+	}
+
 	/* --------[ Issue a new passcode ]-------- */
 
-	if (ATOM_PASSCODES_ENABLED && isset($_GET['issuepasscode']) && $access == 'admin') {
-		if (isset($_POST['expires'])) {
-			if ($_POST['expires'] != '') {
-				$pass = insertPass($_POST['expires'], $_POST['meta']);
-				die(managePage(manageInfo('New pass issued: ' . $pass)));
-			}
+	if (ATOM_PASSCODES_ENABLED && isset($_GET['issuepasscode']) && $isAdmin) {
+		if (isset($_POST['expires']) && $_POST['expires'] != '') {
+			die(managePage(manageInfo('New pass issued: ' . insertPass($_POST['expires'], $_POST['meta']))));
 		}
 	}
 
 	/* --------[ Block a passcode ]-------- */
 
-	if (ATOM_PASSCODES_ENABLED && isset($_GET['blockpasscode']) && $access != 'janitor') {
+	if (ATOM_PASSCODES_ENABLED && isset($_GET['managepasscode']) && !$isJanitor) {
 		if (isset($_POST['block_till']) && isset($_POST['id']) && isset($_POST['block_reason'])) {
-		    $passcodeNumber = intval($_POST['id']);
-		    $block_till = intval($_POST['block_till']);
-		    if ($block_till) {
-                blockPass($passcodeNumber, $block_till, $_POST['block_reason']);
-                die(managePage(manageInfo('Pass ' . $passcodeNumber . ' has been blocked')));
-		    } else {
-                unblockPass($passcodeNumber);
-                die(managePage(manageInfo('Pass ' . $passcodeNumber . ' has been unblocked')));
-		    }
+			$passcodeNum = intval($_POST['id']);
+			$blockTill = intval($_POST['block_till']);
+			if ($blockTill) {
+				blockPass($passcodeNum, $blockTill, $_POST['block_reason']);
+				die(managePage(manageInfo('Pass ' . $passcodeNum . ' has been blocked')));
+			} else {
+				unblockPass($passcodeNum);
+				die(managePage(manageInfo('Pass ' . $passcodeNum . ' has been unblocked')));
+			}
 		}
 	}
 
 	/* --------[ Show moderation log ]-------- */
 
-	if (isset($_GET['modlog']) && $access != 'janitor') {
+	if (isset($_GET['modlog']) && !$isJanitor) {
 		$fromtime = 0;
 		$totime = 0;
 		if (isset($_POST['from']) && isset($_POST['to'])) {
@@ -561,16 +569,6 @@ function managementRequest() {
 		die(managePage(buildPostForm(0, true), 'staffPost'));
 	}
 
-	/* --------[ Raw post sending ]-------- */
-
-	if (ATOM_PASSCODES_ENABLED && isset($_GET['passcodes'])) {
-	    if ($_GET['passcodes'] == 'manage') {
-		    die(managePage(buildPasscodesForm('manage'), 'managepasscode'));
-	    } else  if ($_GET['passcodes'] == 'block') {
-		    die(managePage(buildPasscodesForm('block'), 'blockpasscode'));
-	    }
-	}
-
 	/* --------[ Log out ]-------- */
 
 	if (isset($_GET['logout'])) {
@@ -587,57 +585,62 @@ function managementRequest() {
 	die(managePage(manageStatus()));
 }
 
-/* ==[ Passcode requests ]================================================================================== */
+/* ==[ Passcode requests ]================================================================================= */
 
 function passcodeRequest() {
-    if (isset($_POST['passcode'])) {
-        $pass_id = $_POST['passcode'];
-        $pass = passByID($pass_id);
-        if (!$pass) {
+	// Check passcode entered in passcode login form
+	if (isset($_POST['passcode'])) {
+		$passId = $_POST['passcode'];
+		$pass = passByID($passId);
+		if (!$pass) {
 			die(managePage('<p><b>Warning!</b></p>' .
 				'<p>Unable to log in with that passcode. It may be expired.</p>'));
-        }
-
-        $now = time();
-        $blocked = isPassBlocked($pass);
-        if (isPassExpired($pass)) {
-            $_SESSION['passcode'] = '';
+		}
+		$blocked = isPassBlocked($pass);
+		if (isPassExpired($pass)) {
+			$_SESSION['passcode'] = '';
 			die(managePage('<p><b>Cound not log in the passcode!</b></p>' .
 				'<p>That passcode has expired</p>'));
-        } else if ($blocked) {
-            $_SESSION['passcode'] = '';
+		} else if ($blocked) {
+			$_SESSION['passcode'] = '';
 			die(managePage('<p><b>Could not log in the provided pass code: It has been blocked till ' .
-			    date('d.m.y D H:i:s', $pass['blocked_till']) . '.</b></p>' .
+				date('d.m.y D H:i:s', $pass['blocked_till']) . '.</b></p>' .
 				'<p>Reason: ' . $blocked . '</p>'));
-        }
-
+		}
 		setcookie('passcode', '1', $pass['expires'], '/' . ATOM_BOARD . '/');
-        $_SESSION['passcode'] = $pass_id;
+		$_SESSION['passcode'] = $passId;
 		die(managePage(manageInfo('You have logged in. You may post without entering the captcha.')));
-    } else {
-        if (isset($_GET['check'])) {
-            if (isset($_SESSION['passcode'])) {
-                $pass = passByID($_SESSION['passcode']);
-                if ($pass && !isPassExpired($pass) && !isPassBlocked($pass)) {
-                    die("OK");
-                }
-            }
-            http_response_code(403);
-            die("INVALID");
-        } else if (isset($_GET['logout'])) {
-            $_SESSION['passcode'] = '';
-		    setcookie('passcode', '', -1, '/' . ATOM_BOARD . '/');
-		    die(managePage(manageInfo('You have logged out.')));
-        } else {
-            if (isset($_SESSION['passcode'])) {
-                $pass = passByID($_SESSION['passcode']);
-                if ($pass && !isPassExpired($pass) && !isPassBlocked($pass)) {
-                    die(managePage(passLoginForm('valid'), 'passcode'));
-                }
-            }
-            die(managePage(passLoginForm('login'), 'passcode'));
-        }
-    }
+	}
+
+	// Check passcode status by imgboard.php?passcode&check
+	if (isset($_GET['check'])) {
+		if (isset($_SESSION['passcode'])) {
+			$pass = passByID($_SESSION['passcode']);
+			if ($pass && !isPassExpired($pass) && !isPassBlocked($pass)) {
+				die('OK');
+			}
+		}
+		http_response_code(403);
+		die('INVALID');
+	}
+
+	// Logout from passcode
+	if (isset($_GET['logout'])) {
+		$_SESSION['passcode'] = '';
+		setcookie('passcode', '', -1, '/' . ATOM_BOARD . '/');
+		die(managePage(manageInfo('You have logged out.')));
+	}
+
+	// Check if passcode already has effect now
+	if (isset($_SESSION['passcode'])) {
+		$pass = passByID($_SESSION['passcode']);
+		if ($pass && !isPassExpired($pass) && !isPassBlocked($pass)) {
+			die(managePage(passLoginForm('valid')));
+		}
+	}
+
+	// Show passcode login form
+	die(managePage(passLoginForm('login'), 'passcode'));
 }
 
 /* ==[ Posting requests ]================================================================================== */
@@ -651,52 +654,52 @@ function postingRequest() {
 
 	global $access, $atom_embeds, $atom_hidefields, $atom_hidefieldsop, $atom_uploads;
 	$hasAccess = $access != 'disabled';
-    $valid_passcode = false;
+	$validPasscode = 0;
 
-    if (ATOM_PASSCODES_ENABLED && isset($_SESSION['passcode']) && $_SESSION['passcode'] != '') {
-        $pass = passByID($_SESSION['passcode']);
-        if ((!$pass) || isPassExpired($pass)) {
-            $_SESSION['passcode'] = '';
-		    setcookie('passcode', '', -1, '/' . ATOM_BOARD . '/');
-            fancyDie('Your passcode has expired. Please issue a new passcode to continue.');
-        } else {
-            $pass_blocked = isPassBlocked($pass);
-            if ($pass_blocked) {
-                fancyDie('Your passcode has been blocked till ' .
-                    date('d.m.y D H:i:s', $pass['blocked_till']) . '. ' .
-                    'Reason: ' . $pass_blocked . '. Please log in again after the block expires.');
-            } else {
-		        $ip = $_SERVER['REMOTE_ADDR'];
-		        $now = time();
-
-                $check_till = $pass['last_used'] + ATOM_PASSCODES_USE_LIMIT;
-		        if ($check_till > $now) {
-		            if ($pass['last_used_ip'] != $ip) {
-		                fancyDie('Your passcode has been used recently by another ip. Please wait till ' .
-		                    date('d.m.y D H:i:s', $check_till));
-		            }
-		        }
-
-                $valid_passcode = $pass['number'];
-                usePass($pass['id'], $ip);
-            }
-        }
-    }
+	if (ATOM_PASSCODES_ENABLED && isset($_SESSION['passcode']) && $_SESSION['passcode'] != '') {
+		$pass = passByID($_SESSION['passcode']);
+		if (!$pass || isPassExpired($pass)) {
+			$_SESSION['passcode'] = '';
+			setcookie('passcode', '', -1, '/' . ATOM_BOARD . '/');
+			fancyDie('Your passcode has expired. Please issue a new passcode to continue.');
+		} else {
+			$passBlocked = isPassBlocked($pass);
+			if ($passBlocked) {
+				fancyDie('Your passcode has been blocked till ' .
+					date('d.m.y D H:i:s', $pass['blocked_till']) . '. ' .
+					'Reason: ' . $passBlocked . '. Please log in again after the block expires.');
+			} else {
+				$ip = $_SERVER['REMOTE_ADDR'];
+				$now = time();
+				$checkTill = $pass['last_used'] + ATOM_PASSCODES_USE_LIMIT;
+				if ($checkTill > $now) {
+					if ($pass['last_used_ip'] != $ip) {
+						fancyDie('Your passcode has been used recently by another ip. Please wait till ' .
+							date('d.m.y D H:i:s', $checkTill));
+					}
+				}
+				$validPasscode = $pass['number'];
+				usePass($pass['id'], $ip); // Update passcode info (last used ip)
+			}
+		}
+	}
 
 	if (!$hasAccess) {
+		if ($validPasscode) {
+			// Passcode enabled - do nothing
+		}
+
 		// Check for recaptcha
-		if ($valid_passcode) {
-		    // do nothing
-		} elseif (ATOM_CAPTCHA == 'recaptcha') {
+		elseif (ATOM_CAPTCHA == 'recaptcha') {
 			require_once 'inc/recaptcha/autoload.php';
 			$captcha = isset($_POST['g-recaptcha-response']) ? $_POST['g-recaptcha-response'] : '';
-			$failed_captcha = true;
+			$failedCaptcha = true;
 			$recaptcha = new \ReCaptcha\ReCaptcha(ATOM_RECAPTCHA_SECRET);
 			$resp = $recaptcha->verify($captcha, $_SERVER['REMOTE_ADDR']);
 			if ($resp->isSuccess()) {
-				$failed_captcha = false;
+				$failedCaptcha = false;
 			}
-			if ($failed_captcha) {
+			if ($failedCaptcha) {
 				$captchaError = 'Failed CAPTCHA.';
 				$errCodes = $resp->getErrorCodes();
 				$errReason = '';
@@ -733,7 +736,7 @@ function postingRequest() {
 
 		// Check for dirty ip using external service - ipregistry.co
 		$ip = $_SERVER['REMOTE_ADDR'];
-		if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY && (!$valid_passcode)) {
+		if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY && !$validPasscode) {
 			$ipLookup = lookupByIP($ip);
 			if ($ipLookup) {
 				$ipLookupAbuser = $ipLookup['abuser'];
@@ -829,7 +832,7 @@ function postingRequest() {
 
 	$hideFields = $isOp ? $atom_hidefieldsop : $atom_hidefields;
 	$post['ip'] = $_SERVER['REMOTE_ADDR'];
-	$post['pass'] = $valid_passcode;
+	$post['pass'] = $validPasscode;
 	$staffPost = isstaffPost();
 
 	// Get name/tripcode
@@ -837,26 +840,25 @@ function postingRequest() {
 		$postName = $_POST['name'];
 		if (preg_match('/(#|!)(.*)/', $postName, $regs)) {
 			$cap = $regs[2];
-			$cap_full = '#' . $regs[2];
 			if (function_exists('mb_convert_encoding')) {
-				$recoded_cap = mb_convert_encoding($cap, 'SJIS', 'UTF-8');
-				if ($recoded_cap != '') {
-					$cap = $recoded_cap;
+				$recodedCap = mb_convert_encoding($cap, 'SJIS', 'UTF-8');
+				if ($recodedCap != '') {
+					$cap = $recodedCap;
 				}
 			}
 			if (strpos($postName, '#') === false) {
-				$cap_delimiter = '!';
+				$capDelimiter = '!';
 			} elseif (strpos($postName, '!') === false) {
-				$cap_delimiter = '#';
+				$capDelimiter = '#';
 			} else {
-				$cap_delimiter = strpos($postName, '#') < strpos($postName, '!') ? '#' : '!';
+				$capDelimiter = strpos($postName, '#') < strpos($postName, '!') ? '#' : '!';
 			}
-			if (preg_match('/(.*)(' . $cap_delimiter . ')(.*)/', $cap, $regs_secure)) {
-				$cap = $regs_secure[1];
-				$cap_secure = $regs_secure[3];
-				$is_secure_trip = true;
+			if (preg_match('/(.*)(' . $capDelimiter . ')(.*)/', $cap, $regsSecure)) {
+				$cap = $regsSecure[1];
+				$capSecure = $regsSecure[3];
+				$isSecureTrip = true;
 			} else {
-				$is_secure_trip = false;
+				$isSecureTrip = false;
 			}
 			$postTripcode = '';
 			if ($cap != '') {
@@ -867,13 +869,13 @@ function postingRequest() {
 				$salt = strtr($salt, ':;<=>?@[\\]^_`', 'ABCDEFGabcdef');
 				$postTripcode = substr(crypt($cap, $salt), -10);
 			}
-			if ($is_secure_trip) {
+			if ($isSecureTrip) {
 				if ($cap != '') {
 					$postTripcode .= '!';
 				}
-				$postTripcode .= '!' . substr(md5($cap_secure . ATOM_TRIPSEED), 2, 10);
+				$postTripcode .= '!' . substr(md5($capSecure . ATOM_TRIPSEED), 2, 10);
 			}
-			$post['name'] = preg_replace('/(' . $cap_delimiter . ')(.*)/', '', $postName);
+			$post['name'] = preg_replace('/(' . $capDelimiter . ')(.*)/', '', $postName);
 			$post['tripcode'] = $postTripcode;
 		} else {
 			$post['name'] = $postName;
@@ -1018,10 +1020,11 @@ function postingRequest() {
 		}
 	}
 	if (ATOM_UNIQUEID) {
-	    $uidHash = substr(md5($post['pass'] ? $post['pass'] : $post['ip'] . intval($post['parent']) . ATOM_TRIPSEED), 0, 8);
+		$uidHash = substr(md5($post['pass'] ? $post['pass'] :
+			$post['ip'] . intval($post['parent']) . ATOM_TRIPSEED), 0, 8);
 		$uidHashInt = hexdec('0x' . $uidHash);
 		$uidName = $uidHash;
-		if(ATOM_UNIQUENAME) {
+		if (ATOM_UNIQUENAME) {
 			global $firstNames, $lastNames;
 			srand($uidHashInt);
 			$firstNamesLen = count($firstNames);

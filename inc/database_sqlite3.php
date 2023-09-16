@@ -489,7 +489,7 @@ function lookupByIP($ip) {
 	$result = $db->query(
 		"SELECT * FROM " . ATOM_DBIPLOOKUPS . "
 		WHERE ip = '" . $db->escapeString($ip) . "' LIMIT 1");
-	if($result) {
+	if ($result) {
 		while ($ban = $result->fetchArray()) {
 			return $ban;
 		}

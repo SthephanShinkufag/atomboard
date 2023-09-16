@@ -11,8 +11,8 @@ $link = mysql_connect(ATOM_DBHOST, ATOM_DBUSERNAME, ATOM_DBPASSWORD);
 if (!$link) {
 	fancyDie("Could not connect to database: " . mysql_error());
 }
-$db_selected = mysql_select_db(ATOM_DBNAME, $link);
-if (!$db_selected) {
+$dbSelected = mysql_select_db(ATOM_DBNAME, $link);
+if (!$dbSelected) {
 	fancyDie("Could not select database: " . mysql_error());
 }
 mysql_query("SET NAMES 'utf8mb4'");
@@ -495,66 +495,76 @@ function clearExpiredBans() {
 	}
 }
 
-/* ==[ Passcodes ]============================================================================================== */
+/* ==[ Passcodes ]========================================================================================= */
 
-function passByID($id) {
+function passByID($passId) {
 	$result = mysql_query(
 		"SELECT * FROM `" . ATOM_DBPASS . "`
-		WHERE `id` = '" . mysql_real_escape_string($id) . "' LIMIT 1");
+		WHERE `id` = '" . mysql_real_escape_string($passId) . "' LIMIT 1");
 	if ($result) {
-		while ($ban = mysql_fetch_assoc($result)) {
-			return $ban;
+		while ($pass = mysql_fetch_assoc($result)) {
+			return $pass;
 		}
 	}
 }
 
-function blockPass($pass_number, $block_till, $block_reason) {
-	$blocked_till = time() + $block_till;
-
-	mysql_query(
-		"UPDATE " . ATOM_DBPASS . "
-		SET `blocked_till` = '" . intval($blocked_till) . "',
-		    `blocked_reason` = '" . mysql_real_escape_string($block_reason) . "'
-		WHERE `number` = '" . intval($pass_number) . "'");
-}
-
-function usePass($pass_id, $ip) {
-	mysql_query(
-		"UPDATE " . ATOM_DBPASS . "
-		SET `last_used` = '" . time() . "',
-		    `last_used_ip` = '" . mysql_real_escape_string($ip) . "'
-		WHERE `id` = '" . mysql_real_escape_string($pass_id) . "'");
-}
-
-function unblockPass($pass_number) {
-	mysql_query(
-		"UPDATE " . ATOM_DBPASS . "
-		SET `blocked_till` = 0,
-		    `blocked_reason` = ''
-		WHERE `number` = '" . intval($pass_number) . "'");
+function getAllPasscodes() {
+	$passcodes = array();
+	$result = mysql_query(
+		"SELECT * FROM `" . ATOM_DBPASS . "`
+		ORDER BY `number` DESC");
+	if ($result) {
+		while ($pass = mysql_fetch_assoc($result)) {
+			$passcodes[] = $pass;
+		}
+	}
+	return $passcodes;
 }
 
 function insertPass($expires, $meta) {
-    $pass_id = bin2hex(random_bytes(32));
-
+	$passId = bin2hex(random_bytes(32));
+	$now = time();
 	mysql_query(
 		"INSERT INTO `" . ATOM_DBPASS . "`
 		(`id`, `issued`, `expires`, `blocked_till`, `meta`)
 		VALUES (
-			'" . mysql_real_escape_string($pass_id) . "',
-			" . time() . ",
-			'" . intval(time() + $expires) . "',
+			'" . mysql_real_escape_string($passId) . "',
+			" . $now . ",
+			'" . intval($now + $expires) . "',
 			'0',
 			'" . mysql_real_escape_string($meta) . "'
 		)");
-
-	return $pass_id;
+	return $passId;
 }
 
-function deletePass($id) {
+function usePass($passId, $ip) {
+	mysql_query(
+		"UPDATE " . ATOM_DBPASS . "
+		SET `last_used` = '" . time() . "',
+			`last_used_ip` = '" . mysql_real_escape_string($ip) . "'
+		WHERE `id` = '" . mysql_real_escape_string($passId) . "'");
+}
+
+function blockPass($passNum, $blockTill, $blockReason) {
+	mysql_query(
+		"UPDATE " . ATOM_DBPASS . "
+		SET `blocked_till` = '" . intval(time() + $blockTill) . "',
+			`blocked_reason` = '" . mysql_real_escape_string($blockReason) . "'
+		WHERE `number` = '" . intval($passNum) . "'");
+}
+
+function unblockPass($passNum) {
+	mysql_query(
+		"UPDATE " . ATOM_DBPASS . "
+		SET `blocked_till` = 0,
+			`blocked_reason` = ''
+		WHERE `number` = '" . intval($passNum) . "'");
+}
+
+function deletePass($passId) {
 	mysql_query(
 		"DELETE FROM `" . ATOM_DBPASS . "`
-		WHERE `id` = " . mysql_real_escape_string($id) . " LIMIT 1");
+		WHERE `id` = " . mysql_real_escape_string($passId) . " LIMIT 1");
 }
 
 /* ==[ Likes ]============================================================================================= */

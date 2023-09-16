@@ -64,7 +64,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		"stickied" smallint NOT NULL default \'0\',
 		"locked" smallint NOT NULL default \'0\',
 		"endless" smallint NOT NULL default \'0\',
-		"pass" smallint NOT NULL default \'0\',
+		"pass" bigserial NOT NULL default \'0\',
 		PRIMARY KEY ("id")
 	);
 	CREATE INDEX ON "' . ATOM_DBPOSTS . '"("parent");
@@ -83,7 +83,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 	CREATE INDEX ON "' . ATOM_DBBANS . '"("ip");';
 
 	$passQuery = 'CREATE TABLE "' . ATOM_DBPASS . '" (
-	    "number" bigserial NOT NULL,
+		"number" bigserial NOT NULL,
 		"id" varchar(64) NOT NULL,
 		"issued" integer NOT NULL,
 		"expires" integer NOT NULL,
@@ -92,8 +92,8 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		"meta" text NOT NULL,
 		"last_used" integer NOT NULL DEFAULT 0,
 		"last_used_ip" varchar(64),
-		PRIMARY KEY ("number"),
-		KEY("id")
+		PRIMARY KEY("number")
+			 KEY("id")
 	);
 	CREATE INDEX ON "' . ATOM_DBPASS . '"("number");
 	CREATE INDEX ON "' . ATOM_DBPASS . '"("id");';
@@ -178,11 +178,12 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		`stickied` tinyint(1) NOT NULL default '0',
 		`locked` tinyint(1) NOT NULL default '0',
 		`endless` tinyint(1) NOT NULL default '0',
+		`pass` mediumint(7) unsigned NOT NULL default '0',
 		PRIMARY KEY (`id`),
-		KEY `parent` (`parent`),
-		KEY `bumped` (`bumped`),
-		KEY `moderated` (`moderated`),
-		KEY `stickied` (`stickied`)
+			KEY `parent`(`parent`),
+			KEY `bumped`(`bumped`),
+			KEY `moderated`(`moderated`),
+			KEY `stickied`(`stickied`)
 	)";
 
 	$bansQuery = "CREATE TABLE `" . ATOM_DBBANS . "` (
@@ -192,7 +193,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		`expire` int(20) NOT NULL,
 		`reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
 		PRIMARY KEY (`id`),
-		KEY `ip` (`ip`)
+			KEY `ip`(`ip`)
 	)";
 
 	$passQuery = "CREATE TABLE `" . ATOM_DBPASS . "` (
@@ -206,7 +207,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		`last_used` int(20) NOT NULL DEFAULT 0,
 		`last_used_ip` varchar(64),
 		PRIMARY KEY (`number`),
-		KEY(`id`)
+			KEY `id`(`id`)
 	)";
 
 	$ipLookupsQuery = "CREATE TABLE `" . ATOM_DBIPLOOKUPS . "` (
@@ -704,16 +705,16 @@ function writePage($filename, $contents) {
 	chmod($filename, 0664); /* it was created 0600 */
 }
 
-/* ==[ Pass codes ]============================================================================== */
+/* ==[ Pass codes ]======================================================================================== */
 
 function isPassExpired($pass) {
-    return time() > $pass['expires'];
+	return time() > $pass['expires'];
 }
 
 function isPassBlocked($pass) {
-    if ($pass['blocked_till'] > time()) {
-        return $pass['blocked_reason'];
-    } else {
-        return null;
-    }
+	if ($pass['blocked_till'] > time()) {
+		return $pass['blocked_reason'];
+	} else {
+		return null;
+	}
 }

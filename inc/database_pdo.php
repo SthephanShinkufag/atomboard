@@ -30,75 +30,76 @@ try {
 // Create the posts table if it does not exist
 if (ATOM_DBDRIVER === 'pgsql') {
 	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(ATOM_DBPOSTS);
-	$posts_exists = $dbh->query($query)->fetchColumn() != 0;
+	$isPostsExists = $dbh->query($query)->fetchColumn() != 0;
 } else {
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBPOSTS));
-	$posts_exists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$isPostsExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
 }
 
-if (!$posts_exists) {
+if (!$isPostsExists) {
 	$dbh->exec($postsQuery);
 }
 
 // Create the bans table if it does not exist
 if (ATOM_DBDRIVER === 'pgsql') {
 	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(ATOM_DBBANS);
-	$bans_exists = $dbh->query($query)->fetchColumn() != 0;
+	$isBansExists = $dbh->query($query)->fetchColumn() != 0;
 } else {
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBBANS));
-	$bans_exists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$isBansExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
 }
-if (!$bans_exists) {
+if (!$isBansExists) {
 	$dbh->exec($bansQuery);
 }
 
 // Create the pass table if it does not exist
 if (ATOM_DBDRIVER === 'pgsql') {
 	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(ATOM_DBPASS);
-	$pass_exists = $dbh->query($query)->fetchColumn() != 0;
+	$isPassExists = $dbh->query($query)->fetchColumn() != 0;
 } else {
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBPASS));
-	$pass_exists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$isPassExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
 }
-if (!$pass_exists) {
+if (!$isPassExists) {
 	$dbh->exec($passQuery);
 }
 
 // Create the likes table if it does not exist
 if (ATOM_DBDRIVER === 'pgsql') {
 	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(ATOM_DBLIKES);
-	$likes_exists = $dbh->query($query)->fetchColumn() != 0;
+	$isLikesExists = $dbh->query($query)->fetchColumn() != 0;
 } else {
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBLIKES));
-	$likes_exists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$isLikesExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
 }
-if (!$likes_exists) {
+if (!$isLikesExists) {
 	$dbh->exec($likesQuery);
 }
 
 // Create the modlog table if it does not exist
 if (ATOM_DBDRIVER === 'pgsql') {
 	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(ATOM_DBMODLOG);
-	$modlog_exists = $dbh->query($query)->fetchColumn() != 0;
+	$isModlogExists = $dbh->query($query)->fetchColumn() != 0;
 } else {
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBMODLOG));
-	$modlog_exists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$isModlogExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
 }
 
-if (!$modlog_exists) {
+if (!$isModlogExists) {
 	$dbh->exec($modlogQuery);
 }
 
 // Create the modlog table if it does not exist
 if (ATOM_DBDRIVER === 'pgsql') {
-	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(ATOM_DBIPLOOKUPS);
-	$iplookups_exists = $dbh->query($query)->fetchColumn() != 0;
+	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
+		$dbh->quote(ATOM_DBIPLOOKUPS);
+	$isIplookupExists = $dbh->query($query)->fetchColumn() != 0;
 } else {
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBIPLOOKUPS));
-	$iplookups_exists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$isIplookupExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
 }
 
-if (!$iplookups_exists) {
+if (!$isIplookupExists) {
 	$dbh->exec($ipLookupsQuery);
 }
 
@@ -561,64 +562,71 @@ function clearExpiredBans() {
 		array($now));
 }
 
-/* ==[ Passcodes ]============================================================================================== */
+/* ==[ Passcodes ]========================================================================================= */
 
-function passByID($id) {
-    $result = pdoQuery(
+function passByID($passId) {
+	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBPASS . "
 		WHERE id = ?",
-		array($id));
+		array($passId));
 	return $result->fetch(PDO::FETCH_ASSOC);
 }
 
-function insertPass($expires, $meta) {
-    $pass_id = bin2hex(random_bytes(32));
+function getAllPasscodes() {
+	$passcodes = array();
+	$results = pdoQuery(
+		"SELECT * FROM " . ATOM_DBPASS . "
+		ORDER BY number ASC");
+	while ($pass = $results->fetch(PDO::FETCH_ASSOC)) {
+		$passcodes[] = $pass;
+	}
+	return $passcodes;
+}
 
+function insertPass($expires, $meta) {
 	global $dbh;
+	$passId = bin2hex(random_bytes(32));
 	$now = time();
-	$expires = time() + $expires;
 	$stm = $dbh->prepare(
 		"INSERT INTO " . ATOM_DBPASS . "
 		(`id`, `issued`, `expires`, `blocked_till`, `meta`)
 		VALUES (?, ?, ?, ?, ?)");
-	$stm->execute(array($pass_id, $now, $expires, 0, $meta));
-
-	return $pass_id;
+	$stm->execute(array($passId, $now, $now + $expires, 0, $meta));
+	return $passId;
 }
 
-function blockPass($pass_number, $block_till, $block_reason) {
-	global $dbh;
-	$blocked_till = time() + $block_till;
-	$stm = $dbh->prepare(
-		"UPDATE " . ATOM_DBPASS . "
-		SET `blocked_till` = ?, `blocked_reason` = ?
-		WHERE `number` = ?");
-	$stm->execute(array($blocked_till, $block_reason, $pass_number));
-}
-
-function usePass($pass_id, $ip) {
+function usePass($passId, $ip) {
 	global $dbh;
 	$stm = $dbh->prepare(
 		"UPDATE " . ATOM_DBPASS . "
 		SET `last_used` = ?, `last_used_ip` = ?
 		WHERE `id` = ?");
-	$stm->execute(array(time(), $ip, $pass_id));
+	$stm->execute(array(time(), $ip, $passId));
 }
 
-function unblockPass($pass_number) {
+function blockPass($passNum, $blockTill, $blockReason) {
+	global $dbh;
+	$stm = $dbh->prepare(
+		"UPDATE " . ATOM_DBPASS . "
+		SET `blocked_till` = ?, `blocked_reason` = ?
+		WHERE `number` = ?");
+	$stm->execute(array(time() + $blockTill, $blockReason, $passNum));
+}
+
+function unblockPass($passNum) {
 	global $dbh;
 	$stm = $dbh->prepare(
 		"UPDATE " . ATOM_DBPASS . "
 		SET `blocked_till` = 0, `blocked_reason` = ''
 		WHERE `number` = ?");
-	$stm->execute(array($pass_number));
+	$stm->execute(array($passNum));
 }
 
-function deletePass($id) {
+function deletePass($passId) {
 	pdoQuery(
 		"DELETE FROM " . ATOM_DBPASS . "
 		WHERE id = ?",
-		array($id));
+		array($passId));
 }
 
 /* ==[ Likes ]============================================================================================= */
