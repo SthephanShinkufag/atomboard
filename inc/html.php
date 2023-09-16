@@ -715,7 +715,7 @@ function passLoginForm($action = '') {
                 <fieldset>
                     <legend align="center">Enter passcode</legend>
                     <div class="login">
-                        <input type="text" id="passcode" name="passcode"><br>
+                        <input type="text" style="width: 400px; padding: 4px; margin: 4px;" id="passcode" name="passcode"><br>
                         <input type="submit" value="Use Passcode" class="managebutton">
                     </div>
                 </fieldset>
