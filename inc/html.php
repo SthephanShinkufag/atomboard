@@ -67,6 +67,7 @@ function pageFooter($needReturn) {
 		</div>
 		<div id="navigation-bottom" class="navigation"> ' . ATOM_HTML_NAVIGATION . '
 			<a class="navigation-link" href="/' . ATOM_BOARD . '/catalog.html" title="Go to catalog">Catalog</a>
+			<a class="navigation-link" href="/' . ATOM_BOARD . '/' . basename($_SERVER['PHP_SELF']) . '?passcode">Passcode</a>
 			<a class="navigation-link" href="/' . ATOM_BOARD . '/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
 			<select class="select-style navigation-link" onchange="setThemeStyle(this);">
 				<option value="Dark" selected>Dark</option>
