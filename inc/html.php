@@ -80,6 +80,8 @@ function pageFooter($needReturn) {
 			<a class="navigation-link" href="/' . ATOM_BOARD .
 				'/catalog.html" title="Go to catalog">Catalog</a>
 			<a class="navigation-link" href="/' . ATOM_BOARD .
+				'/' . basename($_SERVER['PHP_SELF']) . '?passcode">Passcode</a>
+			<a class="navigation-link" href="/' . ATOM_BOARD .
 				'/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
 			<select class="select-style navigation-link" onchange="setThemeStyle(this);">
 				<option value="Dark" selected>Dark</option>
@@ -730,7 +732,8 @@ function passLoginForm($action = '') {
 			<fieldset>
 				<legend align="center">Enter passcode</legend>
 				<div class="login">
-					<input type="text" id="passcode" name="passcode"><br>
+					<input type="text" id="passcode" name="passcode"' .
+						'style="width: 400px; padding: 4px; margin: 4px;" ><br>
 					<input type="submit" value="Use Passcode" class="managebutton">
 				</div>
 			</fieldset>
