@@ -2,7 +2,7 @@
 if (!defined('ATOM_BOARD')) {
 	die('');
 }
-if(ATOM_GEOIP == 'geoip2') {
+if (ATOM_GEOIP == 'geoip2') {
 	require 'vendor/autoload.php';
 }
 use GeoIp2\Database\Reader;
@@ -23,8 +23,8 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023090701">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023090902"></script>' .
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023091600">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023091600"></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -35,9 +35,12 @@ function pageWrapper($description, $needReturn) {
 	return '
 	<div class="wrapper">
 		<div id="navigation-top" class="navigation">' . ATOM_HTML_NAVIGATION . '
-			<a class="navigation-link" href="/' . ATOM_BOARD . '/catalog.html" title="Go to catalog">Catalog</a>
-			<a class="navigation-link" href="/' . ATOM_BOARD . '/' . basename($_SERVER['PHP_SELF']) . '?passcode">Passcode</a>
-			<a class="navigation-link" href="/' . ATOM_BOARD . '/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
+			<a class="navigation-link" href="/' . ATOM_BOARD .
+				'/catalog.html" title="Go to catalog">Catalog</a>
+			<a class="navigation-link" href="/' . ATOM_BOARD .
+				'/' . basename($_SERVER['PHP_SELF']) . '?passcode">Passcode</a>
+			<a class="navigation-link" href="/' . ATOM_BOARD .
+				'/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
 			<select class="select-style navigation-link" onchange="setThemeStyle(this);">
 				<option value="Dark" selected>Dark</option>
 				<option value="Light">Light</option>
@@ -47,8 +50,10 @@ function pageWrapper($description, $needReturn) {
 		<hr>
 		<div id="panel-top" class="panel">' .
 			($needReturn ? '
-			<a class="link-button" href="/' . ATOM_BOARD . '/" title="Return to board">Return</a>' : '') . '
-			<a class="link-button" href="#" title="Navigate to bottom" onclick="window.scroll(0, document.body.scrollHeight); return false;">To bottom</a>
+			<a class="link-button" href="javascript: window.history.go(-1);"' .
+				' title="Return to board">Return</a>' : '') . '
+			<a class="link-button" href="#" title="Navigate to bottom"' .
+				' onclick="window.scroll(0, document.body.scrollHeight); return false;">To bottom</a>
 		</div>
 		';
 }
@@ -57,18 +62,27 @@ function pageFooter($needReturn) {
 	return '
 		<div id="panel-bottom" class="panel">' .
 			($needReturn ? '
-			<a class="link-button" href="/' . ATOM_BOARD . '/" title="Return to board">Return</a>' : '') . '
-			<a class="link-button" href="#" title="Navigate to top" onclick="window.scroll(0, 0); return false;">To top</a>
+			<a class="link-button" href="javascript: window.history.go(-1);"' .
+				' title="Return to board">Return</a>' : '') . '
+			<a class="link-button" href="#" title="Navigate to top"' .
+				' onclick="window.scroll(0, 0); return false;">To top</a>
 		</div>
 		<hr>
 		<div class="footer">
-			<div>We are not responsible for the content posted on this site. Any information posted here is the responsibility of the user who uploaded it.<br>The content on the site is intended for persons over 18 years of age.</div>
+			<div>
+				We are not responsible for the content posted on this site.
+				Any information posted here is the responsibility of the user who uploaded it.<br>
+				The content on the site is intended for persons over 18 years of age.
+			</div>
 			- <a href="https://github.com/SthephanShinkufag/atomboard">atomboard</a> -
 		</div>
 		<div id="navigation-bottom" class="navigation"> ' . ATOM_HTML_NAVIGATION . '
-			<a class="navigation-link" href="/' . ATOM_BOARD . '/catalog.html" title="Go to catalog">Catalog</a>
-			<a class="navigation-link" href="/' . ATOM_BOARD . '/' . basename($_SERVER['PHP_SELF']) . '?passcode">Passcode</a>
-			<a class="navigation-link" href="/' . ATOM_BOARD . '/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
+			<a class="navigation-link" href="/' . ATOM_BOARD .
+				'/catalog.html" title="Go to catalog">Catalog</a>
+			<a class="navigation-link" href="/' . ATOM_BOARD .
+				'/' . basename($_SERVER['PHP_SELF']) . '?passcode">Passcode</a>
+			<a class="navigation-link" href="/' . ATOM_BOARD .
+				'/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
 			<select class="select-style navigation-link" onchange="setThemeStyle(this);">
 				<option value="Dark" selected>Dark</option>
 				<option value="Light">Light</option>
@@ -78,7 +92,8 @@ function pageFooter($needReturn) {
 	<div id="svg-icons" style="height: 0; width: 0; overflow: hidden;">
 		<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 			<symbol viewBox="0 0 16 16" id="symbol-like">
-				<path d="M14.8 1.6l-.3-.3C13-.5 10.4-.4 8.9 1.4l-.9 1-.9-1C5.6-.4 3-.4 1.5 1.4l-.3.3C-.4 3.5-.4 6.3 1.1 8.1l1 1.1L8 16l5.9-6.8 1-1.2c1.5-1.8 1.5-4.6-.1-6.4z"/>
+				<path d="M14.8 1.6l-.3-.3C13-.5 10.4-.4 8.9 1.4l-.9 1-.9-1C5.6-.4 3-.4 1.5 1.4l-.3.3C-.4' .
+					' 3.5-.4 6.3 1.1 8.1l1 1.1L8 16l5.9-6.8 1-1.2c1.5-1.8 1.5-4.6-.1-6.4z"/>
 			</symbol>
 		</svg>
 	</div>
@@ -132,17 +147,14 @@ function buildPostForm($parent, $isstaffPost = false) {
 		$fileTypesHtml = '<li>' . supportedFileTypes() . '</li>';
 		$fileInputHtml = '<tr>
 						<td class="postblock"></td>
-						<td>
-							<input type="file" name="file[]" size="35" accesskey="f" multiple>
-						</td>
+						<td><input type="file" name="file[]" size="35" accesskey="f" multiple></td>
 					</tr>';
 	}
 	if (!empty($atom_embeds) && ($isstaffPost || !in_array('embed', $hideFields))) {
 		$embedInputHtml = '<tr>
 						<td class="postblock"></td>
-						<td>
-							<input type="text" class="postform-input" name="embed" placeholder="YouTube URL" accesskey="x" autocomplete="off">
-						</td>
+						<td><input type="text" class="postform-input" name="embed"' .
+							' placeholder="YouTube URL" accesskey="x" autocomplete="off"></td>
 					</tr>';
 	}
 	$reqModHtml = '';
@@ -170,11 +182,10 @@ function buildPostForm($parent, $isstaffPost = false) {
 	return '<div class="postarea">
 			<form name="postform" id="postform" action="/' . ATOM_BOARD .
 				'/imgboard.php" method="post" enctype="multipart/form-data">
-			' . $maxFileSizeInputHtml .
+				' . $maxFileSizeInputHtml .
 			(!$isstaffPost ? '
-			<input type="hidden" name="parent" value="' . $parent . '">' : '') . '
-			<table class="postform-table reply">
-				<tbody>' . (
+				<input type="hidden" name="parent" value="' . $parent . '">' : '') . '
+				<table class="postform-table reply"><tbody>' . (
 					$isstaffPost ? '
 					<tr>
 						<td class="postblock"></td>
@@ -185,16 +196,16 @@ function buildPostForm($parent, $isstaffPost = false) {
 					</tr>
 					<tr>
 						<td class="postblock"></td>
-						<td>
-							<input type="text" class="postform-input" name="parent" placeholder="Reply to (0 = new thread)" maxlength="75" accesskey="t">
-						</td>
+						<td><input type="text" class="postform-input" name="parent" placeholder="' .
+							'Reply to (0 = new thread)" maxlength="75" accesskey="t"></td>
 					</tr>' : ''
 				) . (
 					$isstaffPost || !in_array('name', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
 						<td>
-							<input type="text" class="postform-input" name="name" placeholder="Name" maxlength="75" accesskey="n"> ' .
+							<input type="text" class="postform-input" name="name" placeholder="Name"' .
+								' maxlength="75" accesskey="n"> ' .
 							$postformExtra['name'] . '
 						</td>
 					</tr>' : ''
@@ -203,7 +214,8 @@ function buildPostForm($parent, $isstaffPost = false) {
 					<tr>
 						<td class="postblock"></td>
 						<td>
-							<input type="text" class="postform-input" name="email" placeholder="Mail" maxlength="75" accesskey="e"> ' .
+							<input type="text" class="postform-input" name="email" placeholder="Mail"' .
+								' maxlength="75" accesskey="e"> ' .
 							$postformExtra['email'] . '
 						</td>
 					</tr>' : ''
@@ -212,7 +224,8 @@ function buildPostForm($parent, $isstaffPost = false) {
 					<tr>
 						<td class="postblock"></td>
 						<td style="display: flex;">
-							<input type="text" class="postform-input" name="subject" placeholder="Subject" maxlength="75" accesskey="s" style="width: 100%" autocomplete="off"> ' .
+							<input type="text" class="postform-input" name="subject" placeholder="Subject"' .
+								' maxlength="75" accesskey="s" style="width: 100%" autocomplete="off"> ' .
 							$postformExtra['subject'] . '
 						</td>
 					</tr>' : ''
@@ -227,7 +240,8 @@ function buildPostForm($parent, $isstaffPost = false) {
 							<button class="markup-button" id="markup-strike" title="Strike">S</button>
 							<button class="markup-button" id="markup-spoiler" title="Spoiler">%</button>
 							<button class="markup-button" id="markup-code" title="Code">C</button>
-							<button class="markup-button" id="markup-quote" title="Select the text, then click to insert a quote">&gt;</button>
+							<button class="markup-button" id="markup-quote" title="' .
+								'Select the text, then click to insert a quote">&gt;</button>
 						</td>
 					</tr>
 					<tr>
@@ -243,28 +257,33 @@ function buildPostForm($parent, $isstaffPost = false) {
 						<td class="postblock"></td>
 						<td>' . (ATOM_CAPTCHA === 'recaptcha' ? '
 							<div style="min-height: 80px;">
-								<div id="g-recaptcha" class="g-recaptcha" data-sitekey="' . ATOM_RECAPTCHA_SITE . '"></div>
-								<noscript>
-									<div>
-										<div style="width: 302px; height: 422px; position: relative;">
-											<div style="width: 302px; height: 422px; position: absolute;">
-												<iframe src="https://www.google.com/recaptcha/api/fallback?k=' . ATOM_RECAPTCHA_SITE . '" frameborder="0" scrolling="no" style="width: 302px; height:422px; border-style: none;"></iframe>
-											</div>
-										</div>
-										<div style="width: 300px; height: 60px; border-style: none;bottom: 12px; left: 25px; margin: 0px; padding: 0px; right: 25px;background: #f9f9f9; border: 1px solid #c1c1c1; border-radius: 3px;">
-											<textarea id="g-recaptcha-response" name="g-recaptcha-response" class="g-recaptcha-response" style="width: 250px; height: 40px; border: 1px solid #c1c1c1; margin: 10px 25px; padding: 0px; resize: none;"></textarea>
+								<div id="g-recaptcha" class="g-recaptcha" data-sitekey="' .
+									ATOM_RECAPTCHA_SITE . '"></div>
+								<noscript><div>
+									<div style="width: 302px; height: 422px; position: relative;">
+										<div style="width: 302px; height: 422px; position: absolute;">
+											<iframe src="https://www.google.com/recaptcha/api/fallback?k=' .
+												ATOM_RECAPTCHA_SITE . '" frameborder="0" scrolling="no"' .
+												' style="width: 302px; height:422px; border-style: none;">
+											</iframe>
 										</div>
 									</div>
-								</noscript>
+									<div style="width: 300px; height: 60px; border-style: none; bottom: 12px; left: 25px; margin: 0px; padding: 0px; right: 25px; background: #f9f9f9; border: 1px solid #c1c1c1; border-radius: 3px;">
+										<textarea id="g-recaptcha-response" name="g-recaptcha-response" class="g-recaptcha-response" style="width: 250px; height: 40px; border: 1px solid #c1c1c1; margin: 10px 25px; padding: 0px; resize: none;"></textarea>
+									</div>
+								</div></noscript>
 							</div>
 						' : '
-							<input type="text" class="postform-input" name="captcha" id="captcha" placeholder="Captcha" accesskey="c" autocomplete="off">
-							<img id="captchaimage" src="/' . ATOM_BOARD . '/inc/captcha.php" width="175" height="55" alt="CAPTCHA" onclick="reloadCaptcha();">
+							<input type="text" class="postform-input" name="captcha" id="captcha"' .
+								' placeholder="Captcha" accesskey="c" autocomplete="off">
+							<img id="captchaimage" src="/' . ATOM_BOARD . '/inc/captcha.php"' .
+								' width="175" height="55" alt="CAPTCHA" onclick="reloadCaptcha();">
 						') . '</td>
 					</tr><tr id="validcaptchablock" style="display: none">
 						<td class="postblock"></td>
 						<td>
-							No captcha: you are a passcode user. <a href="/' . ATOM_BOARD . '/imgboard.php?passcode&logout">Log Out.</a>
+							No captcha: you are a passcode user. <a href="/' . ATOM_BOARD .
+								'/imgboard.php?passcode&logout">Log Out.</a>
 						</td>
 					</tr>' : ''
 				) . '
@@ -274,9 +293,8 @@ function buildPostForm($parent, $isstaffPost = false) {
 					$isstaffPost || !in_array('password', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
-						<td>
-							<input type="password" name="password" id="newpostpassword" size="8" accesskey="p">&nbsp;Deletion password
-						</td>
+						<td><input type="password" name="password" id="newpostpassword" size="8"' .
+							' accesskey="p">&nbsp;Deletion password</td>
 					</tr>' : ''
 				) . '
 					<tr>
@@ -300,8 +318,7 @@ function buildPostForm($parent, $isstaffPost = false) {
 					</tr>
 					' : ''
 				) . '
-				</tbody>
-			</table>
+				</tbody></table>
 			</form>
 		</div>';
 }
@@ -324,14 +341,15 @@ function buildPostBacklinks($id, $thrId) {
 			'<a class="' . (isOp($post) ? 'refop' : 'refreply') . '" href="/' . ATOM_BOARD . '/res/' .
 				getThreadId($post) . '.html#' . $reply['id'] . '">&gt;&gt;' . $reply['id'] . '</a>');
 	}
-	return $str != '' ? '<div class="backlinks">' . $str . '</div>' : '';
+	return $str != '' ? '
+				<div class="backlinks">' . $str . '</div>' : '';
 }
 
 function checkGeoIP($ip) {
 	$countryCode = 'ANON';
 	$validIP = filter_var($ip, FILTER_VALIDATE_IP);
 	if ($validIP) {
-		if(ATOM_GEOIP == 'geoip2') {
+		if (ATOM_GEOIP == 'geoip2') {
 			$reader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
 			try {
 				$record = $reader->country($validIP);
@@ -339,7 +357,7 @@ function checkGeoIP($ip) {
 			} catch (\GeoIp2\Exception\AddressNotFoundException $e) {
 				$countryCode = 'ANON';
 			}
-		} else if(ATOM_GEOIP == 'geoip') {
+		} else if (ATOM_GEOIP == 'geoip') {
 			$countryCode = geoip_country_code_by_name($validIP);
 		}
 	}
@@ -516,11 +534,11 @@ function buildPost($post, $res, $isModPanel = false) {
 				<form method="get" action="?">
 					<input type="hidden" name="manage" value="">
 					<input type="hidden" name="delete-img" value="' . $id . '">
-					<input type="submit" value="Delete/Hide selected images" class="managebutton"> Action:
-					<select name="action" class="managebutton">
-						<option value="delete" selected>Delete Image</option>
-						<option value="hide">Hide Thumbnail</option>
+					<select name="action" class="managebutton" style="margin-left: 20px;">
+						<option value="delete" selected>Delete images</option>
+						<option value="hide">Hide thumbnails</option>
 					</select>
+					<input type="submit" value="Apply to selected" class="managebutton">
 					<br>' : '') .
 					($imagesCount > 1 ? '<div class="images-container">' . $filehtml . '</div>' : $filehtml) .
 					($isModPanel && $hasImages ? '
@@ -532,10 +550,9 @@ function buildPost($post, $res, $isModPanel = false) {
 						<br>
 						<input type="submit" value="Edit" class="managebutton">
 					</form>' : $message) . '
-				</div>
-				' . buildPostBacklinks($id, $thrId) . '
-			' .
-			(!$isOp ? '</td></tr></tbody></table>' : '</div>' .
+				</div>' .
+				buildPostBacklinks($id, $thrId) . '
+			' . (!$isOp ? '</td></tr></tbody></table>' : '</div>' .
 			($res == ATOM_INDEXPAGE && $omitted > 0 ? '
 			<div class="omittedposts">' . $omitted . ' ' .
 				plural('post', $omitted) . ' omitted. Click' . $replyBtn . ' to view.
@@ -583,7 +600,8 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 			<input type="hidden" name="board" value="' . ATOM_BOARD . '">' .
 			$htmlPosts . '
 			<div class="userdelete">
-				Delete Post <input type="password" name="password" id="deletepostpassword" size="8" placeholder="Password">&nbsp;<input name="deletepost" value="Delete" type="submit">
+				Delete Post <input type="password" name="password" id="deletepostpassword" size="8"' .
+					' placeholder="Password">&nbsp;<input name="deletepost" value="Delete" type="submit">
 			</div>
 		</form>
 		<table>
@@ -662,13 +680,13 @@ function managePage($text, $action = '') {
 	global $access, $atom_janitors;
 	$onload = '';
 	switch ($action) {
-	case 'bans': $onload = ' onload="document.atomboard.ip.focus();"'; break;
-	case 'login': $onload = ' onload="document.atomboard.managepassword.focus();"'; break;
-	case 'moderate': $onload = ' onload="document.atomboard.moderate.focus();"'; break;
+	case 'bans': $onload = ' onload="document.form_bans.ip.focus();"'; break;
+	case 'login': $onload = ' onload="document.form_login_staff.managepassword.focus();"'; break;
+	case 'moderate': $onload = ' onload="document.form_moderate_post.moderate.focus();"'; break;
+	case 'passcode': $onload = ' onload="document.form_login_passcode.passcode.focus();"'; break;
+	case 'passcode_block': $onload = ' onload="document.form_passcode_manage.block_reason.focus();"'; break;
+	case 'passcode_manage': $onload = ' onload="document.form_passcode_new.meta.focus();"'; break;
 	case 'staffPost': $onload = ' onload="document.postform.parent.focus();"'; break;
-	case 'managepasscode': $onload = ' onload="document.atomboard.meta.focus();"'; break;
-	case 'blockpasscode': $onload = ' onload="document.atomboard.block_reason.focus();"'; break;
-	case 'passcode': $onload = ' onload="document.atomboard.passcode.focus();"'; break;
 	}
 	return pageHeader() . '<body' . $onload . '>' .
 		pageWrapper(ATOM_BOARD_DESCRIPTION, true) .
@@ -678,14 +696,13 @@ function managePage($text, $action = '') {
 			<a class="link-button" href="?manage">Status</a>' .
 			($access == 'admin' || $access == 'moderator' ? '
 			<a class="link-button" href="?manage&bans">Bans</a>
-			<a class="link-button" href="?manage&modlog">ModLog</a>
-			<a class="link-button" href="?manage&passcodes=block">Block Passcode</a>' : '') .
+			<a class="link-button" href="?manage&passcodes=manage">Passcodes</a>
+			<a class="link-button" href="?manage&modlog">ModLog</a>' : '') .
 			(count($atom_janitors) != 0 && $access == 'janitor' ? '
 			<a class="link-button" href="/' . ATOM_BOARD . '/janitorlog.html">JanitorLog</a>' : '') . '
 			<a class="link-button" href="?manage&moderate">Moderate Post</a>
 			<a class="link-button" href="?manage&staffPost">Raw Post</a>' .
 			($access == 'admin' ? '
-			<a class="link-button" href="?manage&passcodes=manage">Manage Passcodes</a>
 			<a class="link-button" href="?manage&rebuildall">Rebuild All</a>' : '') .
 			($access == 'admin' && ATOM_DBMIGRATE ? '
 			<a class="link-button" href="?manage&dbmigrate"><b>Migrate Database</b></a>' : '') . '
@@ -697,7 +714,7 @@ function managePage($text, $action = '') {
 }
 
 function manageLoginForm() {
-	return '<form id="atomboard" name="atomboard" method="post" action="?manage">
+	return '<form id="form_login_staff" name="form_login_staff" method="post" action="?manage">
 			<fieldset>
 				<legend align="center">Enter an administrator or moderator password</legend>
 				<div class="login">
@@ -710,105 +727,75 @@ function manageLoginForm() {
 }
 
 function passLoginForm($action = '') {
-    if ($action == 'login') {
-        return '<form id="atomboard" name="atomboard" method="post" action="?passcode">
-                <fieldset>
-                    <legend align="center">Enter passcode</legend>
-                    <div class="login">
-                        <input type="text" style="width: 400px; padding: 4px; margin: 4px;" id="passcode" name="passcode"><br>
-                        <input type="submit" value="Use Passcode" class="managebutton">
-                    </div>
-                </fieldset>
-            </form>
-            <br>';
-    }
-    if ($action == 'valid') {
-        return '<div align="center">You are already using a valid passcode. <a href="/' . ATOM_BOARD .
-                    '/imgboard.php?passcode&logout">Log Out.</a></div><br>';
-    }
-}
-
-function buildPasscodesForm($action = '') {
-    if ($action == 'manage') {
-        return '<form id="atomboard" name="atomboard" method="post" action="?manage&issuepasscode">
-            <fieldset>
-                <legend>Issue a new passcode</legend>
-                <input type="submit" value="Submit" class="managebutton">
-                <br>
-                <label for="expires">Pass code duration (sec):</label>
-                <input type="text" name="expires" id="expires" value="31536000">&nbsp;&nbsp;
-                <small>[
-                    <a href="#" onclick="document.atomboard.expires.value=\'2592000\'; return false;">30d</a> |
-                    <a href="#" onclick="document.atomboard.expires.value=\'15780000\'; return false;">6m</a> |
-                    <a href="#" onclick="document.atomboard.expires.value=\'31536000\'; return false;">1y</a>
-                ]</small><br>
-                <label for="meta">Meta (related info):&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
-                <input type="text" name="meta" id="meta">&nbsp;&nbsp;<small>optional</small>
-            </fieldset>
-            </form><br>';
-    } else if ($action == 'block') {
-        $pass = '';
-        if (isset($_GET['passcode'])) {
-           $pass = $_GET['passcode'];
-        }
-        return '
-            <form id="atomboard" name="atomboard" method="post" action="?manage&blockpasscode">
-            <fieldset>
-                <legend>Block A Passcode</legend>
-                <label for="id">Passcode:</label>
-                <input type="text" name="id" id="id" value="' . $pass . '">
-                <input type="submit" value="Submit" class="managebutton">
-                <br>
-                <label for="expires">Block duration (sec):</label>
-                <input type="text" name="block_till" id="block_till" value="604800">&nbsp;&nbsp;
-                <small>[
-                    <a href="#" onclick="document.atomboard.block_till.value=\'3600\'; return false;">1hr</a> |
-                    <a href="#" onclick="document.atomboard.block_till.value=\'86400\'; return false;">1d</a> |
-                    <a href="#" onclick="document.atomboard.block_till.value=\'172800\'; return false;">2d</a> |
-                    <a href="#" onclick="document.atomboard.block_till.value=\'604800\'; return false;">1w</a> |
-                    <a href="#" onclick="document.atomboard.block_till.value=\'1209600\'; return false;">2w</a> |
-                    <a href="#" onclick="document.atomboard.block_till.value=\'2592000\'; return false;">30d</a> |
-                    <a href="#" onclick="document.atomboard.block_till.value=\'0\'; return false;">unblock</a>
-                ]</small><br>
-                <label for="block_reason">Block reason:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
-                <input type="text" name="block_reason" id="block_reason"></small>
-            </fieldset>
-            </form><br>';
-    } else {
-        return 'Unknown action.';
-    }
+	if ($action == 'login') {
+		return '<form id="form_login_passcode" name="form_login_passcode" method="post" action="?passcode">
+			<fieldset>
+				<legend align="center">Enter passcode</legend>
+				<div class="login">
+					<input type="text" id="passcode" name="passcode"' .
+						'style="width: 400px; padding: 4px; margin: 4px;" ><br>
+					<input type="submit" value="Use Passcode" class="managebutton">
+				</div>
+			</fieldset>
+		</form>
+		<br>';
+	}
+	if ($action == 'valid') {
+		return '<div align="center">You are already using a valid passcode. <a href="/' . ATOM_BOARD .
+			'/imgboard.php?passcode&logout">Log Out.</a></div><br>';
+	}
 }
 
 function manageBanForm() {
-	return '<form id="atomboard" name="atomboard" method="post" action="?manage&bans">
-		<fieldset>
-			<legend>Ban an IP-address</legend>
-			<label for="ip">IP-address:</label>
-			<input type="text" name="ip" id="ip" value="' . $_GET['bans'] . '">
-			<input type="submit" value="Submit" class="managebutton">
-			<br>
-			<label for="expire">Expire (sec):</label>
-			<input type="text" name="expire" id="expire" value="0">&nbsp;&nbsp;
-			<small>[
-				<a href="#" onclick="document.atomboard.expire.value=\'3600\'; return false;">1hr</a> |
-				<a href="#" onclick="document.atomboard.expire.value=\'86400\'; return false;">1d</a> |
-				<a href="#" onclick="document.atomboard.expire.value=\'172800\'; return false;">2d</a> |
-				<a href="#" onclick="document.atomboard.expire.value=\'604800\'; return false;">1w</a> |
-				<a href="#" onclick="document.atomboard.expire.value=\'1209600\'; return false;">2w</a> |
-				<a href="#" onclick="document.atomboard.expire.value=\'2592000\'; return false;">30d</a> |
-				<a href="#" onclick="document.atomboard.expire.value=\'0\'; return false;">never</a>
-			]</small><br>
-			<label for="reason">Reason:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
-			<input type="text" name="reason" id="reason">&nbsp;&nbsp;<small>optional</small>
-		</fieldset>
-		</form><br>';
+	return '<form id="form_bans" name="form_bans" method="post" action="?manage&bans">
+			<fieldset>
+				<legend>Ban an IP-address</legend>
+				<table><tbody>
+					<tr>
+						<td><label for="ip">IP-address:</label></td>
+						<td><input type="text" name="ip" id="ip" value="' . $_GET['bans'] . '"></td>
+					</tr>
+					<tr>
+						<td><label for="expire">Expire (sec):</label></td>
+						<td>
+							<input type="text" name="expire" id="expire" value="0">
+							<small>[
+								<a href="#" onclick="document.form_bans.expire.value=' .
+									'\'3600\'; return false;">1hr</a> |
+								<a href="#" onclick="document.form_bans.expire.value=' .
+									'\'86400\'; return false;">1d</a> |
+								<a href="#" onclick="document.form_bans.expire.value=' .
+									'\'172800\'; return false;">2d</a> |
+								<a href="#" onclick="document.form_bans.expire.value=' .
+									'\'604800\'; return false;">1w</a> |
+								<a href="#" onclick="document.form_bans.expire.value=' .
+									'\'1209600\'; return false;">2w</a> |
+								<a href="#" onclick="document.form_bans.expire.value=' .
+									'\'2592000\'; return false;">30d</a> |
+								<a href="#" onclick="document.form_bans.expire.value=' .
+									'\'0\'; return false;">never</a>
+							]</small>
+						</td>
+					</tr>
+					<tr>
+						<td><label for="reason">Reason:</label></td>
+						<td><input type="text" name="reason" id="reason">&nbsp;<small>optional</small></td>
+					</tr>
+					<tr>
+						<td><input type="submit" value="Submit" class="managebutton"></td>
+						<td></td>
+					</tr>
+				</tbody></table>
+			</fieldset>
+		</form>
+		<br>';
 }
 
 function manageBansTable() {
 	$text = '';
 	$getAllBans = getAllBans();
 	if (count($getAllBans) > 0) {
-		if(ATOM_GEOIP == 'geoip2') {
+		if (ATOM_GEOIP == 'geoip2') {
 			$geoipReader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
 		}
 		$text .= '
@@ -824,7 +811,8 @@ function manageBansTable() {
 			$expire = $ban['expire'] > 0 ? date('d.m.Y D H:i:s', $ban['expire']) : 'Does not expire';
 			$reason = $ban['reason'] == '' ? '&nbsp;' : htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8');
 			$countryCode = checkGeoIP($ban['ip'], $geoipReader);
-			$text .= '<tr>
+			$text .= '
+			<tr>
 				<td>' . (ATOM_GEOIP ? '<img class="poster-country" title="' . $countryCode . '" src="/' .
 					ATOM_BOARD . '/icons/flag-icons/' . $countryCode . '.png"> ' : '') .
 					$ban['ip'] . '</td>
@@ -839,8 +827,138 @@ function manageBansTable() {
 	return $text;
 }
 
+
+function buildPasscodesForm() {
+	global $access;
+	$isAdmin = $access == 'admin';
+	$passHtml = '';
+	if($isAdmin) {
+		$passHtml .= '<form id="form_passcode_new" name="form_passcode_new" method="post"' .
+			' action="?manage&issuepasscode">
+			<fieldset>
+				<legend>Issue a new passcode</legend>
+				<table><tbody>
+					<tr>
+						<td><label for="expires">Passcode duration (sec):</label></td>
+						<td>
+							<input type="text" name="expires" id="expires" value="31536000">
+							<small>[
+								<a href="#" onclick="document.form_passcode_new.expires.value=' .
+									'\'2592000\'; return false;">30d</a> |
+								<a href="#" onclick="document.form_passcode_new.expires.value=' .
+									'\'15780000\'; return false;">6m</a> |
+								<a href="#" onclick="document.form_passcode_new.expires.value=' .
+									'\'31536000\'; return false;">1y</a>
+							]</small>
+						</td>
+					</tr>
+					<tr>
+						<td><label for="meta">Meta (related info):</label></td>
+						<td><input type="text" name="meta" id="meta">&nbsp;<small>optional</small></td>
+					</tr>
+					<tr>
+						<td><input type="submit" value="Submit" class="managebutton"></td>
+						<td></td>
+					</tr>
+				</tbody></table>
+			</fieldset>
+		</form>
+		<br>
+		';
+	}
+	$passHtml .= '<form id="form_passcode_manage" name="form_passcode_manage" method="post"' .
+			' action="?manage&managepasscode">
+			<fieldset>
+				<legend>Manage passcode</legend>
+				<table><tbody>
+					<tr>
+						<td><label for="id">Passcode number:</label></td>
+						<td>
+							<input type="text" name="id" id="id" value="' .
+								(isset($_GET['passcode']) ? $_GET['passcode'] : '') . '">
+						</td>
+					</tr>
+					<tr>
+						<td><label for="expires">Block duration (sec):</label></td>
+						<td>
+							<input type="text" name="block_till" id="block_till" value="604800">
+							<small>[
+								<a href="#" onclick="document.form_passcode_manage.block_till.value=' .
+									'\'3600\'; return false;">1hr</a> |
+								<a href="#" onclick="document.form_passcode_manage.block_till.value=' .
+									'\'86400\'; return false;">1d</a> |
+								<a href="#" onclick="document.form_passcode_manage.block_till.value=' .
+									'\'172800\'; return false;">2d</a> |
+								<a href="#" onclick="document.form_passcode_manage.block_till.value=' .
+									'\'604800\'; return false;">1w</a> |
+								<a href="#" onclick="document.form_passcode_manage.block_till.value=' .
+									'\'1209600\'; return false;">2w</a> |
+								<a href="#" onclick="document.form_passcode_manage.block_till.value=' .
+									'\'2592000\'; return false;">30d</a> |
+								<a href="#" onclick="document.form_passcode_manage.block_till.value=' .
+									'\'0\'; return false;">unblock</a>
+							]</small>
+						</td>
+					</tr>
+					<tr>
+						<td><label for="block_reason">Block reason:</label></td>
+						<td><input type="text" name="block_reason" id="block_reason"></small></td>
+					</tr>
+					<tr>
+						<td><input type="submit" value="Submit" class="managebutton"></td>
+						<td></td>
+					</tr>
+				</tbody></table>
+			</fieldset>
+		</form>
+		<br>
+		<table class="table"><tbody>
+			<tr>
+				<th>Number</th>' .
+				($isAdmin ? '
+				<th>ID</th>' : '') . '
+				<th>Meta</th>
+				<th>Set at</th>
+				<th>Expires</th>
+				<th>Blocked till</th>
+				<th>Blocked reason</th>
+				<th>Last used</th>
+				<th>Last used IP</th>
+			</tr>';
+	$passcodes = getAllPasscodes();
+	foreach ($passcodes as $pass) {
+		$passIp = $pass['last_used_ip'];
+		$countryIcon = '';
+		if($passIp) {
+			$countryCode = checkGeoIP($passIp,
+				ATOM_GEOIP == 'geoip2' ? new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL);
+			$countryIcon = '<img class="poster-country" title="' . $countryCode . '" src="/' . ATOM_BOARD .
+				'/icons/flag-icons/' . $countryCode . '.png">';
+		}
+		$passHtml .= '
+			<tr>
+				<td>' . $pass['number'] . '</td>' .
+				($isAdmin ? '
+				<td>' . $pass['id'] . '</td>' : '') . '
+				<td>' . $pass['meta'] . '</td>
+				<td>' . date('d.m.Y H:i:s', $pass['issued']) . '</td>
+				<td>' . date('d.m.Y H:i:s', $pass['expires']) . '</td>
+				<td>' . ($pass['blocked_till'] ?
+					date('d.m.Y H:i:s', $pass['blocked_till']) : '') . '</td>
+				<td>' . $pass['blocked_reason'] . '</td>
+				<td>' . ($pass['last_used'] ?
+					date('d.m.Y H:i:s', $pass['last_used']) : '') . '</td>
+				<td style="white-space: pre;">' .
+					($countryIcon ? $countryIcon . '&nbsp;' : '') . $passIp . '</td>
+			</tr>';
+	}
+	$passHtml .= '
+		</tbody></table>';
+	return $passHtml;
+}
+
 function manageModeratePostForm() {
-	return '<form id="atomboard" name="atomboard" method="get" action="?">
+	return '<form id="form_moderate_post" name="form_moderate_post" method="get" action="?">
 			<input type="hidden" name="manage" value="">
 			<fieldset>
 				<legend>Moderate a post</legend>
@@ -851,8 +969,10 @@ function manageModeratePostForm() {
 				</div>
 				<br>
 				<small>
-					<b>Tip:</b> While browsing the image board, you can easily moderate a post if you are logged in:<br>
-					Tick the box next to a post and click "Delete" at the bottom of the page with a blank password.
+					<b>Tip:</b>
+					While browsing the image board, you can easily moderate a post if you are logged in:<br>
+					Tick the box next to a post and click "Delete"
+					at the bottom of the page with a blank password.
 				</small>
 				<br>
 			</fieldset>
@@ -864,15 +984,10 @@ function manageModeratePost($post) {
 	global $access;
 	$id = $post['id'];
 	$ip = $post['ip'];
-	$passcodeNumber = $post['pass'];
+	$passcodeNum = $post['pass'];
 	$isOp = isOp($post);
-	$deleteInfo = $isOp ? 'This will delete the entire thread below.' : 'This will delete the post below.';
 	$ban = banByIP($ip);
 	$isMod = $access == 'admin' || $access == 'moderator';
-	$banDisabled = $ban || !$isMod ? ' disabled' : '';
-	$banInfo = $ban ? ' A ban record already exists for ' . $ip :
-		($isMod ? 'IP address: ' . $ip : 'Only an administrator may ban an IP address.');
-	$passInfo = $passcodeNumber ? ('Passcode: ' . $passcodeNumber): '';
 	$postOrThread = $isOp ? 'Thread' : 'Post';
 	$stickyHtml = '';
 	$lockedHtml = '';
@@ -886,8 +1001,9 @@ function manageModeratePost($post) {
 								<input type="hidden" name="manage" value="">
 								<input type="hidden" name="sticky" value="' . $id . '">
 								<input type="hidden" name="setsticky" value="' . ($isStickied ? 0 : 1) . '">
-								<button type="submit" class="managebutton" style="width: 50%;">
-									<img src="/' . ATOM_BOARD . '/icons/sticky.png" width="16" height="16" style="vertical-align: -3px;">
+								<button type="submit" class="managebutton-action">
+									<img src="/' . ATOM_BOARD .
+									'/icons/sticky.png" width="16" height="16" style="vertical-align: -3px;">
 									' . ($isStickied ? 'Unsticky' : 'Sticky') . ' thread
 								</button>
 							</form>
@@ -904,8 +1020,9 @@ function manageModeratePost($post) {
 								<input type="hidden" name="manage" value="">
 								<input type="hidden" name="locked" value="' . $id . '">
 								<input type="hidden" name="setlocked" value="' . ($isLocked ? 0 : 1) . '">
-								<button type="submit" class="managebutton" style="width: 50%;">
-									<img src="/' . ATOM_BOARD . '/icons/locked.png" width="11" height="16" style="vertical-align: -3px;">
+								<button type="submit" class="managebutton-action">
+									<img src="/' . ATOM_BOARD .
+									'/icons/locked.png" width="11" height="16" style="vertical-align: -3px;">
 									' . $lockedValue . ' thread
 								</button>
 							</form>
@@ -920,8 +1037,9 @@ function manageModeratePost($post) {
 								<input type="hidden" name="manage" value="">
 								<input type="hidden" name="endless" value="' . $id . '">
 								<input type="hidden" name="setendless" value="' . ($isEndless ? 0 : 1) . '">
-								<button type="submit" class="managebutton" style="width: 50%;">
-									<img src="/' . ATOM_BOARD . '/icons/endless.png" width="16" height="16" style="vertical-align: -3px;">
+								<button type="submit" class="managebutton-action">
+									<img src="/' . ATOM_BOARD .
+									'/icons/endless.png" width="16" height="16" style="vertical-align: -3px;">
 									Make ' . ($isEndless ? 'non-endless' : 'endless') . ' thread
 								</button>
 							</form>
@@ -950,18 +1068,21 @@ function manageModeratePost($post) {
 							<form method="get" action="?">
 								<input type="hidden" name="manage" value="">
 								<input type="hidden" name="delete" value="' . $id . '">
-								<input type="submit" value="Delete ' . $postOrThread .
-									'" class="managebutton" style="width: 50%;">
+								<input type="submit" class="managebutton-action" value="Delete ' .
+									$postOrThread . '">
 							</form>
 						</td>
-						<td><small>' . $deleteInfo . '</small></td>
+						<td><small>' . ($isOp ? 'This will delete the entire thread below.' :
+							'This will delete the post below.'
+						) . '</small></td>
 					</tr>
 					<tr>
 						<td align="right" width="50%;">
 							<form method="get" action="?">
 								<input type="hidden" name="manage" value="">
 								<input type="hidden" name="delall" value="' . $ip . '">
-								<input type="submit" value="Delete all" class="managebutton" style="width: 50%;" onclick="return confirm(\'Are you sure to delete all from ' . $ip . '?\')">
+								<input type="submit" class="managebutton-action" value="Delete all" onclick' .
+									'="return confirm(\'Are you sure to delete all from ' . $ip . '?\')">
 							</form>
 						</td>
 						<td><small>This will delete all posts and threads from ip ' . $ip . '</small></td>
@@ -971,22 +1092,26 @@ function manageModeratePost($post) {
 							<form method="get" action="?">
 								<input type="hidden" name="manage" value="">
 								<input type="hidden" name="bans" value="' . $ip . '">
-								<input type="submit" value="Ban Poster"' . $banDisabled .
-									' class="managebutton" style="width: 50%;">
+								<input type="submit" class="managebutton-action" value="Ban Poster"' .
+									($ban || !$isMod ? ' disabled' : '') . '>
 							</form>
 						</td>
-						<td><small>' . $banInfo . '</small></td>
+						<td><small>' . (
+							$ban ? ' A ban record already exists for ' . $ip : (
+							$isMod ? 'IP address: ' . $ip : 'Only an administrator may ban an IP address.'
+							)) . '</small></td>
 					</tr>
-					' . ($passcodeNumber ? '<tr>
+					' . ($passcodeNum ? '<tr>
 						<td align="right" width="50%;">
 							<form method="get" action="?">
 								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="passcode" value="' . $passcodeNumber . '">
+								<input type="hidden" name="passcode" value="' . $passcodeNum . '">
 								<input type="hidden" name="passcodes" value="block">
-								<input type="submit" value="Block passcode" class="managebutton" style="width: 50%;">
+								<input type="submit" class="managebutton-action" value="Manage passcode">
 							</form>
 						</td>
-						<td><small>' . $passInfo . '</small></td>
+						<td><small>' . ($passcodeNum ? ('Passcode number: ' . $passcodeNum): '') .
+							'</small></td>
 					</tr>' : '') .'
 				</table>
 			</fieldset>
@@ -1113,8 +1238,8 @@ function manageStatus() {
 function buildCatalogPage() {
 	$catalogHTML = '';
 	$thumb = 'icons/noimage.png';
-	$thumb_width = ATOM_FILE_MAXW;
-	$thumb_height = ATOM_FILE_MAXH;
+	$thumbWidth = ATOM_FILE_MAXW;
+	$thumbHeight = ATOM_FILE_MAXH;
 	$OPposts = getThreads();
 	foreach ($OPposts as $post) {
 		$id = $post['id'];
@@ -1135,17 +1260,17 @@ function buildCatalogPage() {
 		$OPuserName = $post['name'] != '' ? $post['name'] : ATOM_POSTERNAME;
 		if ($post['thumb0'] != '' && $post['thumb0_width'] > 0 && $post['thumb0_height'] > 0) {
 			$thumb = 'thumb/' . $post['thumb0'];
-			$thumb_width = $post['thumb0_width'];
-			$thumb_height = $post['thumb0_height'];
+			$thumbWidth = $post['thumb0_width'];
+			$thumbHeight = $post['thumb0_height'];
 		} else {
 			$thumb = 'icons/noimage.png';
-			$thumb_width = ATOM_FILE_MAXW;
-			$thumb_height = ATOM_FILE_MAXH;
+			$thumbWidth = ATOM_FILE_MAXW;
+			$thumbHeight = ATOM_FILE_MAXH;
 		}
 		$catalogHTML .= '
 			<div class="catalog-block">
 				<a href="res/' . $id . '.html">
-					<img src="' . $thumb . '" width="' . $thumb_width . '" height="' . $thumb_height . '" />
+					<img src="' . $thumb . '" width="' . $thumbWidth . '" height="' . $thumbHeight . '" />
 				</a>
 				<br>
 				<center>' .
@@ -1207,7 +1332,8 @@ function generateModLogTable($isModerators = false, $fromtime = '0', $totime = '
 			</tr>';
 		foreach ($records as $record) {
 			$action = $record['action'];
-			$text .= '<tr' . ($isModerators ? ' style="color: ' .
+			$text .= '
+			<tr' . ($isModerators ? ' style="color: ' .
 				($record['color'] != 'Black' ? $record['color'] : '') . '"' : '') . '>
 				<td>' . date('d.m.y D H:i:s', $record['timestamp']) . '</td>' .
 				($isModerators ? '

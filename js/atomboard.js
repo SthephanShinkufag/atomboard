@@ -190,14 +190,20 @@ function initAfterDom() {
 		}
 	}
 
-	// Enable posts moderation buttons
-	if(getCookie('atom_access') === '1') {
+	// Check and enable posts moderation buttons
+	if (getCookie('atom_access') === '1') {
 		document.body.classList.add('access-enabled');
 	}
-	// Enable posts moderation buttons
-	if(getCookie('passcode') === '1') {
-		document.getElementById('captchablock').style.display = 'none';
-		document.getElementById('validcaptchablock').style.display = '';
+	// Check and apply passcode
+	if (getCookie('passcode') === '1') {
+		var captchaEl = $id('captchablock');
+		if (captchaEl) {
+			captchaEl.style.display = 'none';
+		}
+		var validCaptchaEl = $id('validcaptchablock');
+		if (validCaptchaEl) {
+			validCaptchaEl.style.display = '';
+		}
 	}
 
 	// Set passwords for post form and deletion form
@@ -278,7 +284,7 @@ function main() {
 	}
 	
 	// Set theme style
-	if(!settings.themeStyle) {
+	if (!settings.themeStyle) {
 		settings.themeStyle = defaultSettings.themeStyle;
 		saveSettings();
 	}

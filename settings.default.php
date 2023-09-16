@@ -86,7 +86,8 @@ define('ATOM_DBDSN', '');
 /* ==[ Passcodes ]========================================================================================= */
 // Enable passcode system
 define('ATOM_PASSCODES_ENABLED', false);
-// Number of seconds a single passcode can be used by single ip (second posting from different ip will be denied)
+// Number of seconds a single passcode can be used by single IP
+// Second posting from different IP will be denied
 define('ATOM_PASSCODES_USE_LIMIT', 900);
 
 /* ==[ Dirty IP Lookups ]================================================================================== */
