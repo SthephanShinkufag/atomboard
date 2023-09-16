@@ -64,7 +64,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		"stickied" smallint NOT NULL default \'0\',
 		"locked" smallint NOT NULL default \'0\',
 		"endless" smallint NOT NULL default \'0\',
-		"pass" bigserial NOT NULL default \'0\',
+		"pass" smallint NOT NULL default \'0\',
 		PRIMARY KEY ("id")
 	);
 	CREATE INDEX ON "' . ATOM_DBPOSTS . '"("parent");
@@ -717,4 +717,9 @@ function isPassBlocked($pass) {
 	} else {
 		return null;
 	}
+}
+
+function clearPass() {
+	$_SESSION['passcode'] = '';
+	setcookie('passcode', '', -1, '/');
 }

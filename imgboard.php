@@ -598,16 +598,14 @@ function passcodeRequest() {
 		}
 		$blocked = isPassBlocked($pass);
 		if (isPassExpired($pass)) {
-			$_SESSION['passcode'] = '';
-			die(managePage('<p><b>Cound not log in the passcode!</b></p>' .
-				'<p>That passcode has expired</p>'));
+			clearPass();
+			die(managePage('<p><b>Cound not log in the passcode!</b></p><p>That passcode has expired</p>'));
 		} else if ($blocked) {
-			$_SESSION['passcode'] = '';
+			clearPass();
 			die(managePage('<p><b>Could not log in the provided pass code: It has been blocked till ' .
-				date('d.m.y D H:i:s', $pass['blocked_till']) . '.</b></p>' .
-				'<p>Reason: ' . $blocked . '</p>'));
+				date('d.m.y D H:i:s', $pass['blocked_till']) . '.</b></p><p>Reason: ' . $blocked . '</p>'));
 		}
-		setcookie('passcode', '1', $pass['expires'], '/' . ATOM_BOARD . '/');
+		setcookie('passcode', '1', $pass['expires'], '/');
 		$_SESSION['passcode'] = $passId;
 		die(managePage(manageInfo('You have logged in. You may post without entering the captcha.')));
 	}
@@ -626,8 +624,7 @@ function passcodeRequest() {
 
 	// Logout from passcode
 	if (isset($_GET['logout'])) {
-		$_SESSION['passcode'] = '';
-		setcookie('passcode', '', -1, '/' . ATOM_BOARD . '/');
+		clearPass();
 		die(managePage(manageInfo('You have logged out.')));
 	}
 
@@ -659,8 +656,7 @@ function postingRequest() {
 	if (ATOM_PASSCODES_ENABLED && isset($_SESSION['passcode']) && $_SESSION['passcode'] != '') {
 		$pass = passByID($_SESSION['passcode']);
 		if (!$pass || isPassExpired($pass)) {
-			$_SESSION['passcode'] = '';
-			setcookie('passcode', '', -1, '/' . ATOM_BOARD . '/');
+			clearPass();
 			fancyDie('Your passcode has expired. Please issue a new passcode to continue.');
 		} else {
 			$passBlocked = isPassBlocked($pass);
