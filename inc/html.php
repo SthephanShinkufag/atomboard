@@ -50,7 +50,7 @@ function pageWrapper($description, $needReturn) {
 		<hr>
 		<div id="panel-top" class="panel">' .
 			($needReturn ? '
-			<a class="link-button" href="javascript: window.history.go(-1);"' .
+			<a class="link-button" href="/' . ATOM_BOARD . '/"' .
 				' title="Return to board">Return</a>' : '') . '
 			<a class="link-button" href="#" title="Navigate to bottom"' .
 				' onclick="window.scroll(0, document.body.scrollHeight); return false;">To bottom</a>
@@ -62,7 +62,7 @@ function pageFooter($needReturn) {
 	return '
 		<div id="panel-bottom" class="panel">' .
 			($needReturn ? '
-			<a class="link-button" href="javascript: window.history.go(-1);"' .
+			<a class="link-button" href="/' . ATOM_BOARD . '/"' .
 				' title="Return to board">Return</a>' : '') . '
 			<a class="link-button" href="#" title="Navigate to top"' .
 				' onclick="window.scroll(0, 0); return false;">To top</a>

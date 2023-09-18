@@ -2,6 +2,7 @@
 // Uncomment to show debugging errors
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+ini_set('session.gc_maxlifetime', 2592000); // 30 days
 
 session_start();
 setcookie(session_name(), session_id(), time() + 2592000);
