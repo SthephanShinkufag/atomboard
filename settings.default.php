@@ -14,6 +14,8 @@ define('ATOM_INDEX', 'index.html');
 define('ATOM_TIMEZONE', 'UTC');
 // Specify your code at the top of pages
 define('ATOM_HTML_TOP_INFO', '');
+// Specify your code at the bottom of pages
+define('ATOM_HTML_BOTTOM_INFO', '');
 // Specify your navigation links to be added at the top and the bottom of the page
 define('ATOM_HTML_NAVIGATION', '
 			<a class="navigation-link" href="/" title="Main page">Home</a>

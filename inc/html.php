@@ -23,8 +23,8 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023091600">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023091600"></script>' .
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023091900">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023091900"></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -593,7 +593,9 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 	// Build page's body
 	return pageHeader() . '<body class="tinyib atomboard">' .
 		pageWrapper(ATOM_BOARD_DESCRIPTION, $isInThread) .
-		(ATOM_HTML_TOP_INFO ? ATOM_HTML_TOP_INFO . '<hr>' : '') .
+		(ATOM_HTML_TOP_INFO ? ATOM_HTML_TOP_INFO . '
+		<hr>
+		' : '') .
 		buildPostForm($parent) . '
 		<hr>
 		<form id="delform" action="/' . ATOM_BOARD . '/imgboard.php?delete" method="post">
@@ -611,6 +613,7 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 				</tr>
 			</tbody>
 		</table>' .
+		(ATOM_HTML_BOTTOM_INFO ? '<hr>' . ATOM_HTML_BOTTOM_INFO : '') .
 		pageFooter($isInThread);
 }
 

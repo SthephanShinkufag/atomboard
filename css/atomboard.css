@@ -565,7 +565,7 @@ button:active, input[type="submit"]:active {
 	clear: both;
 }
 
-#panel-top, #panel-adminbar {
+#panel-top, #panel-adminbar, #panel-bottom {
 	margin: 10px 0;
 }
 
