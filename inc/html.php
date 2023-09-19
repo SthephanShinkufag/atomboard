@@ -613,7 +613,9 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 				</tr>
 			</tbody>
 		</table>' .
-		(ATOM_HTML_BOTTOM_INFO ? '<hr>' . ATOM_HTML_BOTTOM_INFO : '') .
+		(ATOM_HTML_BOTTOM_INFO ? '
+		<hr>
+		' . ATOM_HTML_BOTTOM_INFO : '') .
 		pageFooter($isInThread);
 }
 
