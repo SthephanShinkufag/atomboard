@@ -13,15 +13,17 @@ define('ATOM_INDEX', 'index.html');
 // Timezone (see https://secure.php.net/manual/en/timezones.php - e.g. 'America/Los_Angeles')
 define('ATOM_TIMEZONE', 'UTC');
 // Specify your code at the top of pages
-define('ATOM_HTML_TOP_INFO', '');
+define('ATOM_HTML_INFO_TOP', '');
 // Specify your code at the bottom of pages
-define('ATOM_HTML_BOTTOM_INFO', '');
+define('ATOM_HTML_INFO_BOTTOM', '');
 // Specify your navigation links to be added at the top and the bottom of the page
 define('ATOM_HTML_NAVIGATION', '
 			<a class="navigation-link" href="/" title="Main page">Home</a>
 			<span class="navigation-separator"></span>
 			<a class="navigation-link" href="/' . ATOM_BOARD . '/" title="' . ATOM_BOARD_DESCRIPTION . '">' .
 				ATOM_BOARD . '</a>');
+// Default theme style. Values: 'Dark', 'Light'
+define('ATOM_THEME', 'Dark');
 
 /* ==[ Administration staff ]============================================================================== */
 // Administrator password. Administrator has full access to the board

@@ -16,14 +16,19 @@ if (function_exists('ob_get_level')) {
 /* ==[ Utils ]============================================================================================= */
 
 function fancyDie($message) {
-	die('<head>
+	die('<!DOCTYPE html>
+
+<html data-theme="' . ATOM_THEME . '">
+<head>
 	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023091900">
 </head>
 <body align="center">
 	<br>
-	<div class="reply" style="display: inline-block; font-size: 1.25em;">' . $message . '</div>
-	<br><br>
-	- <a href="javascript: window.history.go(-1);">Click here to go back</a> -
+	<div class="reply" style="display: inline-block; padding: 8px 20px; font-size: 1.25em;">' .
+		$message . '</div>
+	<br>
+	<hr>
+	<a class="link-button" href="javascript: window.history.go(-1);" title="Return to board">Return</a>
 </body>');
 }
 

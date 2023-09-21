@@ -12,7 +12,7 @@ use GeoIp2\Database\Reader;
 function pageHeader() {
 	return '<!DOCTYPE html>
 
-<html>
+<html data-theme="' . ATOM_THEME . '">
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8">
 	<meta http-equiv="cache-control" content="max-age=0">
@@ -593,7 +593,7 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 	// Build page's body
 	return pageHeader() . '<body class="tinyib atomboard">' .
 		pageWrapper(ATOM_BOARD_DESCRIPTION, $isInThread) .
-		(ATOM_HTML_TOP_INFO ? ATOM_HTML_TOP_INFO . '
+		(ATOM_HTML_INFO_TOP ? ATOM_HTML_INFO_TOP . '
 		<hr>
 		' : '') .
 		buildPostForm($parent) . '
@@ -613,9 +613,9 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 				</tr>
 			</tbody>
 		</table>' .
-		(ATOM_HTML_BOTTOM_INFO ? '
+		(ATOM_HTML_INFO_BOTTOM ? '
 		<hr>
-		' . ATOM_HTML_BOTTOM_INFO : '') .
+		' . ATOM_HTML_INFO_BOTTOM : '') .
 		pageFooter($isInThread);
 }
 

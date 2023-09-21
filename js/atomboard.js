@@ -1,9 +1,6 @@
 var highlightedUID = null;
 var selectedText = '';
 var settings = {};
-var defaultSettings = {
-	themeStyle: 'Dark'
-};
 
 function $q(path, rootEl) {
 	return (rootEl || document.body).querySelector(path);
@@ -285,7 +282,7 @@ function main() {
 	
 	// Set theme style
 	if (!settings.themeStyle) {
-		settings.themeStyle = defaultSettings.themeStyle;
+		settings.themeStyle = document.documentElement.dataset.theme;
 		saveSettings();
 	}
 	document.documentElement.dataset.theme = settings.themeStyle;

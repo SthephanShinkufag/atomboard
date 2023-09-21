@@ -1,40 +1,4 @@
-/* ==[Main rules]========================================================================================== */
-
-:root {
-	--button-bg: #e9e9ed;
-	--button-bg-active: #acacac;
-	--button-bg-hover: #f1f1f1;
-	--code-bg: rgba(27,31,35,0.07);
-	--code-color: #000;
-	--description-color: #71819f;
-	--fieldset-border: #9f9f9f;
-	--filititle-color: #506a81;
-	--focus: #4d87c4;
-	--highlighted-bg: #d4daf0;
-	--highlighted-border: #00f;
-	--hr-bg: linear-gradient(90deg, #eee, #7a95c1, #eee);
-	--html-bg: #eee;
-	--html-color: #34343f;
-	--inputs-bg: #fff;
-	--inputs-border: 1px solid #808080;
-	--inputs-color: #000;
-	--link-color: #0f73c8;
-	--link-button-bg: linear-gradient(to bottom, #c9d4e6, #577dae);
-	--link-button-bg-active: #435e82;
-	--link-button-bg-hover: #5f83bb;
-	--link-button-color: #fff;
-	--link-hover: #dd0000;
-	--navigation-bg: linear-gradient(to top, #c1d3fb, #375a88);
-	--navigation-link-border: #c0ccd7;
-	--poster-opacity: 1;
-	--postername-color: #438ad7;
-	--pre-bg: rgba(255,255,255,0.4);
-	--pre-color: inherit;
-	--reply-bg: #ddd;
-	--reply-border: #ccc;
-	--table-border: #8a97a4;
-	--table-th-bg: #b0e0e6;
-}
+/* ==[ Themes ]============================================================================================ */
 
 html[data-theme="Dark"] {
 	--button-bg: #2f3846;
@@ -72,6 +36,44 @@ html[data-theme="Dark"] {
 	--table-th-bg: #173051;
 	--posteruid-filter: invert(100%);
 }
+
+html[data-theme="Light"] {
+	--button-bg: #e9e9ed;
+	--button-bg-active: #acacac;
+	--button-bg-hover: #f1f1f1;
+	--code-bg: rgba(27,31,35,0.07);
+	--code-color: #000;
+	--description-color: #71819f;
+	--fieldset-border: #9f9f9f;
+	--filititle-color: #506a81;
+	--focus: #4d87c4;
+	--highlighted-bg: #d4daf0;
+	--highlighted-border: #00f;
+	--hr-bg: linear-gradient(90deg, #eee, #7a95c1, #eee);
+	--html-bg: #eee;
+	--html-color: #34343f;
+	--inputs-bg: #fff;
+	--inputs-border: 1px solid #808080;
+	--inputs-color: #000;
+	--link-color: #0f73c8;
+	--link-button-bg: linear-gradient(to bottom, #c9d4e6, #577dae);
+	--link-button-bg-active: #435e82;
+	--link-button-bg-hover: #5f83bb;
+	--link-button-color: #fff;
+	--link-hover: #dd0000;
+	--navigation-bg: linear-gradient(to top, #c1d3fb, #375a88);
+	--navigation-link-border: #c0ccd7;
+	--poster-opacity: 1;
+	--postername-color: #438ad7;
+	--pre-bg: rgba(255,255,255,0.4);
+	--pre-color: inherit;
+	--reply-bg: #ddd;
+	--reply-border: #ccc;
+	--table-border: #8a97a4;
+	--table-th-bg: #b0e0e6;
+}
+
+/* ==[ Common rules ]====================================================================================== */
 
 :focus-visible {
 	outline: 2px solid var(--focus);
@@ -222,20 +224,6 @@ body:not(.access-enabled) .button-manage {
 	border-radius: 8px;
 }
 
-code {
-	padding: 0.2em 0.4em;
-	margin: 0;
-	background-color: var(--code-bg);
-	color: var(--code-color);
-	border-radius: 3px;
-	font-size: 85%;
-}
-
-del {
-	-moz-text-decoration-color: red;
-	text-decoration-color: red;
-}
-
 #delform > table {
 	margin-bottom: 3px;
 }
@@ -315,24 +303,6 @@ del {
 	filter: var(--posteruid-filter);
 }
 
-pre {
-	padding: 5px 5px 4px 5px;
-	margin: 3px 0;
-	overflow-x: auto;
-	max-width: 1150px;
-	border: 1px dotted #808080;
-	border-radius: 4px;
-	background: var(--pre-bg);
-	color: var(--pre-color);
-	font-size: 85%;
-	line-height: 1.45;
-	clear: both;
-}
-
-pre + br {
-	display: none;
-}
-
 .reflink {
 	display: inline-flex;
 	font-weight: bold;
@@ -384,15 +354,6 @@ pre + br {
 	color: black;
 }
 
-.spoiler {
-	background: #bbb;
-	color: #bbb;
-}
-
-.spoiler:hover {
-	color: #333;
-}
-
 .thumb {
 	border: none;
 	float: left;
@@ -416,6 +377,49 @@ pre + br {
 	color: #800000;
 }
 
+/* ==[ Posts text formatting ]============================================================================= */
+
+code {
+	padding: 0.2em 0.4em;
+	margin: 0;
+	background-color: var(--code-bg);
+	color: var(--code-color);
+	border-radius: 3px;
+	font-size: 85%;
+}
+
+del {
+	-moz-text-decoration-color: red;
+	text-decoration-color: red;
+}
+
+pre {
+	padding: 5px 5px 4px 5px;
+	margin: 3px 0;
+	overflow-x: auto;
+	max-width: 1150px;
+	border: 1px dotted #808080;
+	border-radius: 4px;
+	background: var(--pre-bg);
+	color: var(--pre-color);
+	font-size: 85%;
+	line-height: 1.45;
+	clear: both;
+}
+
+pre + br {
+	display: none;
+}
+
+.spoiler {
+	background: #bbb;
+	color: #bbb;
+}
+
+.spoiler:hover {
+	color: #333;
+}
+
 .underline {
 	text-decoration: underline;
 }
@@ -423,6 +427,33 @@ pre + br {
 .unkfunc {
 	background: inherit;
 	color: #789922;
+}
+
+/* ==[ Like post button ]================================================================================== */
+
+.like-container {
+	height: 16px;
+	cursor: pointer;
+}
+
+.like-counter {
+	vertical-align: top;
+	color: #ff5b9c;
+}
+
+.like-disabled {
+	color: #bac1c8;
+}
+
+.like-enabled {
+	color: #ff8cb9;
+}
+
+.like-icon > svg {
+	width: 12px;
+	height: 12px;
+	margin-top: 1px;
+	fill: currentColor;
 }
 
 /* ==[ Postform ]========================================================================================== */
@@ -573,33 +604,6 @@ button:active, input[type="submit"]:active {
 	background: none;
 	font: bold 13px Helvetica, Arial, sans-serif;
 	cursor: pointer;
-}
-
-/* ==[ Like post button ]================================================================================== */
-
-.like-container {
-	height: 16px;
-	cursor: pointer;
-}
-
-.like-counter {
-	vertical-align: top;
-	color: #ff5b9c;
-}
-
-.like-disabled {
-	color: #bac1c8;
-}
-
-.like-enabled {
-	color: #ff8cb9;
-}
-
-.like-icon > svg {
-	width: 12px;
-	height: 12px;
-	margin-top: 1px;
-	fill: currentColor;
 }
 
 /* ==[ Mobile devices ]==================================================================================== */
