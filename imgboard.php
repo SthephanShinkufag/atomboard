@@ -1213,10 +1213,12 @@ function postingRequest() {
 				$fileMime == 'video/mp4' ||
 				$fileMime == 'video/quicktime'
 			) {
-				$videoWidth = $post['image' . $index . '_width'] = max(0, intval(shell_exec(
-					'mediainfo --Inform="Video;%Width%" ' . $fileLocation)));
-				$videoHeight = $post['image' . $index . '_height'] = max(0, intval(shell_exec(
-					'mediainfo --Inform="Video;%Height%" ' . $fileLocation)));
+				preg_match('/^%(\d+)%/',
+					shell_exec('mediainfo --Inform="Video;%%Width%%" ' . $fileLocation), $match);
+				$videoWidth = $post['image' . $index . '_width'] = max(0, intval($match[1]));
+				preg_match('/^%(\d+)%/',
+					shell_exec('mediainfo --Inform="Video;%%Height%%" ' . $fileLocation), $match);
+				$videoHeight = $post['image' . $index . '_height'] = max(0, intval($match[1]));
 				if ($videoWidth > 0 && $videoHeight > 0) {
 					list($thumbMaxWidth, $thumbMaxHeight) = getThumbnailDimensions($post, $index);
 					$post['thumb' . $index] = $fileName . 's.jpg';
