@@ -884,7 +884,7 @@ function postingRequest() {
 			$post['name'] = $postName;
 			$post['tripcode'] = '';
 		}
-		$post['name'] = escapeHTML(substr($post['name'], 0, 75));
+		$post['name'] = escapeHTML(mb_substr($post['name'], 0, 75));
 	}
 
 	// Get email
@@ -894,7 +894,7 @@ function postingRequest() {
 
 	// Get subject
 	if ($staffPost || !in_array('subject', $hideFields)) {
-		$post['subject'] = escapeHTML(substr($_POST['subject'], 0, 75));
+		$post['subject'] = escapeHTML(mb_substr($_POST['subject'], 0, 100));
 	}
 
 	// Get message with markup and >>links
@@ -1146,8 +1146,8 @@ function postingRequest() {
 			}
 
 			// Get post image fields
-			$post['file' . $index . '_original'] = trim(
-				htmlentities(substr(basename($_FILES['file']['name'][$index]), 0, 50), ENT_QUOTES, 'UTF-8'));
+			$post['file' . $index . '_original'] = trim(htmlentities(
+				mb_substr(basename($_FILES['file']['name'][$index]), 0, 50), ENT_QUOTES, 'UTF-8'));
 			$post['file' . $index . '_hex'] = md5_file($file);
 			$post['file' . $index . '_size'] = $_FILES['file']['size'][$index];
 
