@@ -85,7 +85,8 @@ $result = $db->query(
 if (!$result->fetchArray()) {
 	$db->exec("CREATE TABLE " . ATOM_DBBANS . " (
 		id INTEGER PRIMARY KEY,
-		ip TEXT NOT NULL,
+		ip_from INTEGER NOT NULL,
+		ip_to INTEGER NOT NULL,
 		timestamp TIMESTAMP NOT NULL,
 		expire TIMESTAMP NOT NULL,
 		reason TEXT NOT NULL
@@ -526,9 +527,10 @@ function banByID($id) {
 
 function banByIP($ip) {
 	global $db;
+    $ip = ip2long($ip);
 	$result = $db->query(
 		"SELECT * FROM " . ATOM_DBBANS . "
-		WHERE ip = '" . $db->escapeString($ip) . "' LIMIT 1");
+		WHERE '" . $db->escapeString($ip) . "' BETWEEN `ip_from` and `ip_to` LIMIT 1");
 	while ($ban = $result->fetchArray()) {
 		return $ban;
 	}
@@ -548,10 +550,15 @@ function getAllBans() {
 
 function insertBan($ban) {
 	global $db;
+    $range = cidr2ip($ban['ip']);
+    $range_from = $range[0];
+    $range_to = $range[1];
 	$db->exec(
 		"INSERT INTO " . ATOM_DBBANS . "
-		(ip, timestamp, expire, reason)
+		(ip_from, ip_to, timestamp, expire, reason)
 		VALUES (
+			'" . intval($range_from) . "',
+			'" . intval($range_to) . "',
 			'" . $db->escapeString($ban['ip']) . "',
 			" . time() . ",
 			'" . $db->escapeString($ban['expire']) . "',

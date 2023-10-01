@@ -758,7 +758,15 @@ function manageBanForm() {
 				<table><tbody>
 					<tr>
 						<td><label for="ip">IP-address:</label></td>
-						<td><input type="text" name="ip" id="ip" value="' . $_GET['bans'] . '"></td>
+						<td><input type="text" name="ip" id="ip" value="' . $_GET['bans'] . '">&nbsp;
+						<small>
+						<a href="#" onclick="document.form_bans.ip.value+=' .
+                            '\'/24\'; return false;">subnet /24</a> |
+                        <a href="#" onclick="document.form_bans.ip.value+=' .
+                            '\'/16\'; return false;">subnet /16</a> |
+                        CIDR format is supported
+                        </small>
+                        </td>
 					</tr>
 					<tr>
 						<td><label for="expire">Expire (sec):</label></td>
@@ -815,12 +823,12 @@ function manageBansTable() {
 		foreach ($getAllBans as $ban) {
 			$expire = $ban['expire'] > 0 ? date('d.m.Y D H:i:s', $ban['expire']) : 'Does not expire';
 			$reason = $ban['reason'] == '' ? '&nbsp;' : htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8');
-			$countryCode = checkGeoIP($ban['ip'], $geoipReader);
+			$countryCode = checkGeoIP($ban['ip_from'], $geoipReader);
 			$text .= '
 			<tr>
 				<td>' . (ATOM_GEOIP ? '<img class="poster-country" title="' . $countryCode . '" src="/' .
 					ATOM_BOARD . '/icons/flag-icons/' . $countryCode . '.png"> ' : '') .
-					$ban['ip'] . '</td>
+					ip2cidr($ban['ip_from'], $ban['ip_to']) . '</td>
 				<td>' . date('d.m.Y D H:i:s', $ban['timestamp']) . '</td>
 				<td>' . $expire . '</td><td>' . $reason . '</td>
 				<td><a href="?manage&bans&lift=' . $ban['id'] . '">lift</a></td>

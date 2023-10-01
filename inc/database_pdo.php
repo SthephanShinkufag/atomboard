@@ -518,9 +518,10 @@ function banByID($id) {
 }
 
 function banByIP($ip) {
+    $ip = ip2long($ip);
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBBANS . "
-		WHERE ip = ? LIMIT 1",
+		WHERE ? BETWEEN `ip_from` AND `ip_to` LIMIT 1",
 		array($ip));
 	return $result->fetch(PDO::FETCH_ASSOC);
 }
@@ -538,12 +539,15 @@ function getAllBans() {
 
 function insertBan($ban) {
 	global $dbh;
+    $range = cidr2ip($ban['ip']);
+    $range_from = $range[0];
+    $range_to = $range[1];
 	$now = time();
 	$stm = $dbh->prepare(
 		"INSERT INTO " . ATOM_DBBANS . "
-		(ip, timestamp, expire, reason)
-		VALUES (?, ?, ?, ?)");
-	$stm->execute(array($ban['ip'], $now, $ban['expire'], $ban['reason']));
+		(ip_from, ip_to, timestamp, expire, reason)
+		VALUES (?, ?, ?, ?, ?)");
+	$stm->execute(array($range_from, $range_to, $now, $ban['expire'], $ban['reason']));
 	return $dbh->lastInsertId();
 }
 

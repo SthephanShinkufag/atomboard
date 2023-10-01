@@ -84,7 +84,8 @@ $result = sqlite_query($db,
 if (sqlite_num_rows($result) == 0) {
 	sqlite_query($db, "CREATE TABLE " . ATOM_DBBANS . " (
 		id INTEGER PRIMARY KEY,
-		ip TEXT NOT NULL,
+		ip_from INTEGER NOT NULL,
+		ip_to INTEGER NOT NULL,
 		timestamp TIMESTAMP NOT NULL,
 		expire TIMESTAMP NOT NULL,
 		reason TEXT NOT NULL
@@ -500,9 +501,10 @@ function banByID($id) {
 }
 
 function banByIP($ip) {
+    $ip = ip2long($ip);
 	$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
 		"SELECT * FROM " . ATOM_DBBANS . "
-		WHERE ip = '" . sqlite_escape_string($ip) . "' LIMIT 1"), SQLITE_ASSOC);
+		WHERE '" . sqlite_escape_string($ip) . "' BETWEEN `ip_from` and `ip_to` LIMIT 1"), SQLITE_ASSOC);
 	foreach ($result as $ban) {
 		return $ban;
 	}
@@ -520,11 +522,15 @@ function getAllBans() {
 }
 
 function insertBan($ban) {
+    $range = cidr2ip($ban['ip']);
+    $range_from = $range[0];
+    $range_to = $range[1];
 	sqlite_query($GLOBALS['db'],
 		"INSERT INTO " . ATOM_DBBANS . "
-		(ip, timestamp, expire, reason)
+		(ip_from, ip_to, timestamp, expire, reason)
 		VALUES (
-			'" . sqlite_escape_string($ban['ip']) . "',
+			'" . intval($range_from) . "',
+			'" . intval($range_to) . "',
 			" . time() . ",
 			'" . sqlite_escape_string($ban['expire']) . "',
 			'" . sqlite_escape_string($ban['reason']) . "'
