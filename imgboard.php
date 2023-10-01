@@ -265,13 +265,15 @@ function managementRequest() {
 			mysqli_query($link,
 				'INSERT INTO `' . ATOM_DBBANS . "` (
 					`id`,
-					`ip`,
+					`ip_from`,
+					`ip_to`,
 					`timestamp`,
 					`expire`,
 					`reason`
 				) VALUES ('" .
 					mysqli_real_escape_string($link, $ban['id']) . "', '" .
-					mysqli_real_escape_string($link, $ban['ip']) . "', '" .
+					mysqli_real_escape_string($link, $ban['ip_from']) . "', '" .
+					mysqli_real_escape_string($link, $ban['ip_to']) . "', '" .
 					mysqli_real_escape_string($link, $ban['timestamp']) . "', '" .
 					mysqli_real_escape_string($link, $ban['expire']) . "', '" .
 					mysqli_real_escape_string($link, $ban['reason']) . "')");
@@ -321,7 +323,8 @@ function managementRequest() {
 		$text = '';
 		if (isset($_POST['ip'])) {
 			if ($_POST['ip'] != '') {
-				$banexists = banByIP($_POST['ip']);
+			    $ip_ar = cidr2ip($_POST['ip']);
+				$banexists = banByIP(long2ip($ip_ar[0]));
 				if ($banexists) {
 					fancyDie('Sorry, there is already a ban on record for that IP address.');
 				}
@@ -336,7 +339,7 @@ function managementRequest() {
 			$ban = banByID($_GET['lift']);
 			if ($ban) {
 				deleteBan($_GET['lift']);
-				$text .= manageInfo('Ban record lifted for ' . $ban['ip']);
+				$text .= manageInfo('Ban record lifted for ' . ip2cidr($ban['ip_from'], $ban['ip_to']));
 			}
 		}
 		die(managePage(manageBanForm() . manageBansTable(), 'bans'));
@@ -749,7 +752,7 @@ function postingRequest() {
 				$ipLookupVpn = $ipLookup['vpn'];
 			} else {
 				try {
-					$json = json_decode(file_get_contents(
+					$json = json_decode(url_get_contents(
 						'https://api.ipregistry.co/' . $ip . '?key=' . ATOM_IPLOOKUPS_KEY));
 					$ipLookupSecurity = $json->security;
 					$ipLookupAbuser = (int)($ipLookupSecurity->is_abuser ||
@@ -788,7 +791,7 @@ function postingRequest() {
 					'<br>This ban will expire ' . date('y.m.d D H:i:s', $ban['expire']) :
 					'<br>This ban is permanent and will not expire.';
 				$reason = $ban['reason'] == '' ? '' : '<br>Reason: ' . $ban['reason'];
-				fancyDie('Your IP address ' . $ban['ip'] .
+				fancyDie('Your IP address ' . $ip .
 					' has been banned from posting on this image board. ' . $expire . $reason);
 			} else {
 				clearExpiredBans();

@@ -66,10 +66,11 @@ define('POST_PASS', 56);
 # Bans database structure
 define('BANS_FILE', '.bans');
 define('BAN_ID', 0);
-define('BAN_IP', 1);
+define('BAN_IP_FROM', 1);
 define('BAN_TIMESTAMP', 2);
 define('BAN_EXPIRE', 3);
 define('BAN_REASON', 4);
+define('BAN_IP_TO', 5);
 
 # IP lookup database structure
 define('IPLOOKUP_FILE', '.iplookup');
@@ -494,7 +495,8 @@ function convertBansToSQLStyle($bans, $isSingleBan = false) {
 	foreach ($bans as $oldban) {
 		$ban = array(
 			'id' => $oldban[BAN_ID],
-			'ip' => $oldban[BAN_IP],
+			'ip_from' => $oldban[BAN_IP_FROM],
+			'ip_to' => $oldban[BAN_IP_TO],
 			'timestamp' => $oldban[BAN_TIMESTAMP],
 			'expire' => $oldban[BAN_EXPIRE],
 			'reason' => $oldban[BAN_REASON]);
@@ -515,9 +517,10 @@ function banByID($id) {
 }
 
 function banByIP($ip) {
+    $ip = ip2long($ip);
 	return convertBansToSQLStyle($GLOBALS['db']->selectWhere(
 		BANS_FILE,
-		new SimpleWhereClause(BAN_IP, '=', $ip, STRING_COMPARISON),
+		new SimpleWhereClause(BAN_IP_FROM, '=', $ip, STRING_COMPARISON),
 		1
 	), true);
 }
@@ -531,9 +534,14 @@ function getAllBans() {
 }
 
 function insertBan($ban) {
+    $range = cidr2ip($ban['ip']);
+    $range_from = $range[0];
+
 	$newban = array();
 	$newban[BAN_ID] = '0';
-	$newban[BAN_IP] = $ban['ip'];
+	// only single ip ban is supported
+	$newban[BAN_IP_FROM] = $range_from;
+	$newban[BAN_IP_TO] = $range_from;
 	$newban[BAN_TIMESTAMP] = time();
 	$newban[BAN_EXPIRE] = $ban['expire'];
 	$newban[BAN_REASON] = $ban['reason'];

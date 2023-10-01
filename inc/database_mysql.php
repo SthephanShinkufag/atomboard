@@ -440,9 +440,10 @@ function banByID($id) {
 }
 
 function banByIP($ip) {
+    $ip = ip2long($ip);
 	$result = mysql_query(
 		"SELECT * FROM `" . ATOM_DBBANS . "`
-		WHERE `ip` = '" . mysql_real_escape_string($ip) . "' LIMIT 1");
+		WHERE '" . intval($ip) . "' BETWEEN `ip_from` AND `ip_to` LIMIT 1");
 	if ($result) {
 		while ($ban = mysql_fetch_assoc($result)) {
 			return $ban;
@@ -464,11 +465,15 @@ function getAllBans() {
 }
 
 function insertBan($ban) {
+    $range = cidr2ip($ban['ip']);
+    $range_from = $range[0];
+    $range_to = $range[1];
 	mysql_query(
 		"INSERT INTO `" . ATOM_DBBANS . "`
-		(`ip`, `timestamp`, `expire`, `reason`)
+		(`ip_from`, `ip_to`, `timestamp`, `expire`, `reason`)
 		VALUES (
-			'" . mysql_real_escape_string($ban['ip']) . "',
+			'" . intval($range_from) . "',
+			'" . intval($range_to) . "',
 			" . time() . ",
 			'" . mysql_real_escape_string($ban['expire']) . "',
 			'" . mysql_real_escape_string($ban['reason']) . "'
