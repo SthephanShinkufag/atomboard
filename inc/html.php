@@ -759,14 +759,13 @@ function manageBanForm() {
 					<tr>
 						<td><label for="ip">IP-address:</label></td>
 						<td><input type="text" name="ip" id="ip" value="' . $_GET['bans'] . '">&nbsp;
-						<small>
-						<a href="#" onclick="document.form_bans.ip.value+=' .
-                            '\'/24\'; return false;">subnet /24</a> |
-                        <a href="#" onclick="document.form_bans.ip.value+=' .
-                            '\'/16\'; return false;">subnet /16</a> |
-                        CIDR format is supported
-                        </small>
-                        </td>
+						<small>[
+							<a href="#" onclick="document.form_bans.ip.value+=\'/24\'; return false;">
+								subnet /24</a> |
+							<a href="#" onclick="document.form_bans.ip.value+=\'/16\'; return false;">
+								subnet /16</a>
+						] CIDR format is supported</small>
+						</td>
 					</tr>
 					<tr>
 						<td><label for="expire">Expire (sec):</label></td>
@@ -823,7 +822,7 @@ function manageBansTable() {
 		foreach ($getAllBans as $ban) {
 			$expire = $ban['expire'] > 0 ? date('d.m.Y D H:i:s', $ban['expire']) : 'Does not expire';
 			$reason = $ban['reason'] == '' ? '&nbsp;' : htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8');
-			$countryCode = checkGeoIP($ban['ip_from'], $geoipReader);
+			$countryCode = checkGeoIP(long2ip($ban['ip_from']), $geoipReader);
 			$text .= '
 			<tr>
 				<td>' . (ATOM_GEOIP ? '<img class="poster-country" title="' . $countryCode . '" src="/' .

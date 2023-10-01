@@ -74,15 +74,15 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 
 	$bansQuery = 'CREATE TABLE "' . ATOM_DBBANS . '" (
 		"id" bigserial NOT NULL,
-		"ip_from" unsigned integer NOT NULL,
-		"ip_to" unsigned integer NOT NULL,
+		"ipFrom" unsigned integer NOT NULL,
+		"ipTo" unsigned integer NOT NULL,
 		"timestamp" integer NOT NULL,
 		"expire" integer NOT NULL,
 		"reason" text NOT NULL,
 		PRIMARY KEY ("id")
 	);
-	CREATE INDEX ON "' . ATOM_DBBANS . '"("ip_from");
-	CREATE INDEX ON "' . ATOM_DBBANS . '"("ip_to");';
+	CREATE INDEX ON "' . ATOM_DBBANS . '"("ipFrom");
+	CREATE INDEX ON "' . ATOM_DBBANS . '"("ipTo");';
 
 	$passQuery = 'CREATE TABLE "' . ATOM_DBPASS . '" (
 		"number" bigserial NOT NULL,
@@ -190,14 +190,14 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 
 	$bansQuery = "CREATE TABLE `" . ATOM_DBBANS . "` (
 		`id` mediumint(7) unsigned NOT NULL auto_increment,
-		`ip_from` bigint(20) NOT NULL,
-		`ip_to` bigint(20) NOT NULL,
+		`ipFrom` bigint(20) NOT NULL,
+		`ipTo` bigint(20) NOT NULL,
 		`timestamp` int(20) NOT NULL,
 		`expire` int(20) NOT NULL,
 		`reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
 		PRIMARY KEY (`id`),
-			KEY `ip_from`(`ip_from`),
-			KEY `ip_to`(`ip_to`)
+			KEY `ipFrom`(`ipFrom`),
+			KEY `ipTo`(`ipTo`)
 	)";
 
 	$passQuery = "CREATE TABLE `" . ATOM_DBPASS . "` (
@@ -728,33 +728,33 @@ function clearPass() {
 	setcookie('passcode', '', -1, '/');
 }
 
-function cidr2ip($cidr)
-{
-    $ip_arr = explode('/', $cidr);
-    if (count($ip_arr) == 1) {
-        $start = ip2long($ip_arr[0]);
-        return array($start, $start);
-    }
-    $start = ip2long($ip_arr[0]);
-    $nm = $ip_arr[1];
-    $num = pow(2, 32 - $nm);
-    // filter out incorrect cidr when least significant bits are specified
-    $bitmask = 0x100000000 - $num;
-    $start &= $bitmask;
-    $end = $start + $num - 1;
-    return array($start, $end);
+/* ==[ IP ]================================================================================================ */
+
+function cidr2ip($cidr) {
+	$ipArr = explode('/', $cidr);
+	if (count($ipArr) == 1) {
+		$start = ip2long($ipArr[0]);
+		return array($start, $start);
+	}
+	$start = ip2long($ipArr[0]);
+	$nm = $ipArr[1];
+	$num = pow(2, 32 - $nm);
+	// Filter out incorrect cidr when least significant bits are specified
+	$bitmask = 0x100000000 - $num;
+	$start &= $bitmask;
+	$end = $start + $num - 1;
+	return array($start, $end);
 }
 
-function ip2cidr($ip_from, $ip_to)
-{
-    if ($ip_to == $ip_from) {
-        return long2ip($ip_from);
-    }
-    $range = $ip_to - $ip_from + 1;
-    if ((($range-1) & $range) != 0) {
-        // not a power of two
-        return long2ip($ip_from) . '/???';
-    }
-    $b = 32 - log($range, 2);
-    return long2ip($ip_from) . '/' . $b;
+function ip2cidr($ipFrom, $ipTo) {
+	if ($ipTo == $ipFrom) {
+		return long2ip($ipFrom);
+	}
+	$range = $ipTo - $ipFrom + 1;
+	if ((($range - 1) & $range) != 0) {
+		// Not a power of two
+		return long2ip($ipFrom) . '/???';
+	}
+	$b = 32 - log($range, 2);
+	return long2ip($ipFrom) . '/' . $b;
 }

@@ -517,10 +517,9 @@ function banByID($id) {
 }
 
 function banByIP($ip) {
-    $ip = ip2long($ip);
 	return convertBansToSQLStyle($GLOBALS['db']->selectWhere(
 		BANS_FILE,
-		new SimpleWhereClause(BAN_IP_FROM, '=', $ip, STRING_COMPARISON),
+		new SimpleWhereClause(BAN_IP_FROM, '=', ip2long($ip), STRING_COMPARISON),
 		1
 	), true);
 }
@@ -534,14 +533,12 @@ function getAllBans() {
 }
 
 function insertBan($ban) {
-    $range = cidr2ip($ban['ip']);
-    $range_from = $range[0];
-
+	$rangeFrom = cidr2ip($ban['ip'])[0];
 	$newban = array();
 	$newban[BAN_ID] = '0';
-	// only single ip ban is supported
-	$newban[BAN_IP_FROM] = $range_from;
-	$newban[BAN_IP_TO] = $range_from;
+	// Only single ip ban is supported
+	$newban[BAN_IP_FROM] = $rangeFrom;
+	$newban[BAN_IP_TO] = $rangeFrom;
 	$newban[BAN_TIMESTAMP] = time();
 	$newban[BAN_EXPIRE] = $ban['expire'];
 	$newban[BAN_REASON] = $ban['reason'];

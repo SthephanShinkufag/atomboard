@@ -323,8 +323,8 @@ function managementRequest() {
 		$text = '';
 		if (isset($_POST['ip'])) {
 			if ($_POST['ip'] != '') {
-			    $ip_ar = cidr2ip($_POST['ip']);
-				$banexists = banByIP(long2ip($ip_ar[0]));
+				$ipArr = cidr2ip($_POST['ip']);
+				$banexists = banByIP(long2ip($ipArr[0]));
 				if ($banexists) {
 					fancyDie('Sorry, there is already a ban on record for that IP address.');
 				}
@@ -350,7 +350,7 @@ function managementRequest() {
 	if (ATOM_PASSCODES_ENABLED && isset($_GET['passcodes']) && !$isJanitor) {
 		if ($_GET['passcodes'] == 'manage') {
 			die(managePage(buildPasscodesForm(), 'passcode_manage'));
-		} else  if ($_GET['passcodes'] == 'block') {
+		} else if ($_GET['passcodes'] == 'block') {
 			die(managePage(buildPasscodesForm(), 'passcode_block'));
 		}
 	}
