@@ -785,7 +785,9 @@ function manageBanForm() {
 								<a href="#" onclick="document.form_bans.expire.value=' .
 									'\'2592000\'; return false;">30d</a> |
 								<a href="#" onclick="document.form_bans.expire.value=' .
-									'\'0\'; return false;">never</a>
+									'\'0\'; return false;">never</a> |
+								<a href="#" onclick="document.form_bans.expire.value=' .
+									'\'1\'; return false;">warning</a>
 							]</small>
 						</td>
 					</tr>
@@ -820,7 +822,15 @@ function manageBansTable() {
 				<th>&nbsp;</th>
 			</tr>';
 		foreach ($getAllBans as $ban) {
-			$expire = $ban['expire'] > 0 ? date('d.m.Y D H:i:s', $ban['expire']) : 'Does not expire';
+		    if ($ban['expire'] == 1) {
+		        $expire = 'Warning';
+		    } else {
+		        if ($ban['expire'] > 0) {
+		            $expire = date('d.m.Y D H:i:s', $ban['expire']);
+		        } else {
+			        $expire = 'Does not expire';
+		        }
+		    }
 			$reason = $ban['reason'] == '' ? '&nbsp;' : htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8');
 			$countryCode = checkGeoIP(long2ip($ban['ip_from']), $geoipReader);
 			$text .= '

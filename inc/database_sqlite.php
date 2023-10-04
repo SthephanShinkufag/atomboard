@@ -545,7 +545,7 @@ function deleteBan($id) {
 function clearExpiredBans() {
 	$result = sqlite_fetch_all(sqlite_query($GLOBALS['db'],
 		"SELECT * FROM " . ATOM_DBBANS . "
-		WHERE expire > 0 AND expire <= " . time()), SQLITE_ASSOC);
+		WHERE expire > 1 AND expire <= " . time()), SQLITE_ASSOC);
 	foreach ($result as $ban) {
 		sqlite_query($GLOBALS['db'],
 			"DELETE FROM " . ATOM_DBBANS . "

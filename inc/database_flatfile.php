@@ -551,7 +551,7 @@ function deleteBan($id) {
 
 function clearExpiredBans() {
 	$compClause = new AndWhereClause();
-	$compClause->add(new SimpleWhereClause(BAN_EXPIRE, '>', 0, INTEGER_COMPARISON));
+	$compClause->add(new SimpleWhereClause(BAN_EXPIRE, '>', 1, INTEGER_COMPARISON));
 	$compClause->add(new SimpleWhereClause(BAN_EXPIRE, '<=', time(), INTEGER_COMPARISON));
 	$bans = $GLOBALS['db']->selectWhere(BANS_FILE, $compClause, -1);
 	foreach ($bans as $ban) {
