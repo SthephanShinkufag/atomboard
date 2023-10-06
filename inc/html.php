@@ -285,6 +285,12 @@ function buildPostForm($parent, $isstaffPost = false) {
 							No captcha: you are a passcode user. <a href="/' . ATOM_BOARD .
 								'/imgboard.php?passcode&logout">Log Out.</a>
 						</td>
+					</tr><tr id="invalidcaptchablock" style="display: none">
+						<td class="postblock"></td>
+						<td>
+							Your pass code seems to be not valid. <a href="/' . ATOM_BOARD .
+								'/imgboard.php?passcode" target="_blank">Log In Again?</a>
+						</td>
 					</tr>' : ''
 				) . '
 					' . $fileInputHtml . '

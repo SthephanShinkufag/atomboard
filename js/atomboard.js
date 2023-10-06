@@ -193,14 +193,28 @@ function initAfterDom() {
 	}
 	// Check and apply passcode
 	if (getCookie('passcode') === '1') {
-		var captchaEl = $id('captchablock');
-		if (captchaEl) {
-			captchaEl.style.display = 'none';
+		var xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === XMLHttpRequest.DONE) {
+				if (xhr.responseText === "OK") {
+					var captchaEl = $id('captchablock');
+					if (captchaEl) {
+						captchaEl.style.display = 'none';
+					}
+					var validCaptchaEl = $id('validcaptchablock');
+					if (validCaptchaEl) {
+						validCaptchaEl.style.display = '';
+					}
+				} else {
+					var invalidCaptchaEl = $id('invalidcaptchablock');
+					if (invalidCaptchaEl) {
+						invalidCaptchaEl.style.display = '';
+					}
+				}
+			}
 		}
-		var validCaptchaEl = $id('validcaptchablock');
-		if (validCaptchaEl) {
-			validCaptchaEl.style.display = '';
-		}
+		xhr.open('GET', 'imgboard.php?passcode&check', true);
+		xhr.send(null);
 	}
 
 	// Set passwords for post form and deletion form
