@@ -213,7 +213,7 @@ function initAfterDom() {
 				}
 			}
 		}
-		xhr.open('GET', 'imgboard.php?passcode&check', true);
+		xhr.open('GET', window.location.href.split('/res/')[0] + '/imgboard.php?passcode&check', true);
 		xhr.send(null);
 	}
 
