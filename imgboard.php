@@ -330,14 +330,30 @@ function managementRequest() {
 				}
 				$ban = array();
 				$ban['ip'] = $_POST['ip'];
-				$ban['expire'] = $_POST['expire'] > 0 ? time() + $_POST['expire'] : 0;
+				if ($_POST['expire'] == 1) {
+				    // warning
+				    $expire = 1;
+				    $expire_type = 'warning';
+				} else if ($_POST['expire'] > 0) {
+				    $expire = time() + $_POST['expire'];
+				    $expire_type = 'regular ban';
+				} else {
+				    // permanent
+				    $expire = 0;
+				    $expire_type = 'permanent ban';
+				}
+				$ban['expire'] = $expire;
 				$ban['reason'] = $_POST['reason'];
 				insertBan($ban);
+				modLog('Ban record (' . $expire_type . ') added for ' . $ban['ip'] .
+				    ' by ' . $_SESSION['atom_user'], '0', 'Black');
 				$text .= manageInfo('Ban record added for ' . $ban['ip']);
 			}
 		} elseif (isset($_GET['lift'])) {
 			$ban = banByID($_GET['lift']);
 			if ($ban) {
+				modLog('Ban record lifted for ' . ip2cidr($ban['ip_from'], $ban['ip_to']) .
+				    ' by ' . $_SESSION['atom_user'], '0', 'Black');
 				deleteBan($_GET['lift']);
 				$text .= manageInfo('Ban record lifted for ' . ip2cidr($ban['ip_from'], $ban['ip_to']));
 			}
@@ -786,11 +802,17 @@ function postingRequest() {
 		// Check for ban
 		$ban = banByIP($ip);
 		if ($ban) {
-			if ($ban['expire'] == 0 || $ban['expire'] > time()) {
+			$reason = $ban['reason'] == '' ? '' : '<br>Reason: ' . $ban['reason'];
+			if ($ban['expire'] == 1) {
+				fancyDie('Your IP address ' . $ip .
+					' has been issued a warning.
+					<br>To continue posting, please read <a href="/' . ATOM_BOARD .
+					'/imgboard.php?banned">this page</a>.
+					<br>'. $reason);
+			} else if ($ban['expire'] == 0 || $ban['expire'] > time()) {
 				$expire = $ban['expire'] > 0 ?
 					'<br>This ban will expire ' . date('y.m.d D H:i:s', $ban['expire']) :
 					'<br>This ban is permanent and will not expire.';
-				$reason = $ban['reason'] == '' ? '' : '<br>Reason: ' . $ban['reason'];
 				fancyDie('Your IP address ' . $ip .
 					' has been banned from posting on this image board. ' . $expire . $reason);
 			} else {
@@ -1402,6 +1424,34 @@ function deletionRequest() {
 	fancyDie('Post deleted.');
 }
 
+/* ==[ Banned request ]================================================================================== */
+
+function bannedRequest() {
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $ban = banByIP($ip);
+
+    if ($ban) {
+        if ($ban['expire'] == 1) {
+            deleteBan($ban['id']);
+            fancyDie('Your IP address ' . $ip .
+                ' has been issued a warning:<br><br>' . $ban['reason'] .
+                '<br><br>Please make sure you have read and understood the rules.
+                <br>This warning has been automatically removed, you may continue posting now.');
+        } else if ($ban['expire'] == 0 || $ban['expire'] > time()) {
+            $reason = $ban['reason'] == '' ? '' : '<br>Reason: ' . $ban['reason'];
+            $expire = $ban['expire'] > 0 ?
+                '<br>This ban will expire ' . date('y.m.d D H:i:s', $ban['expire']) :
+                '<br>This ban is permanent and will not expire.';
+            fancyDie('Your IP address ' . $ip .
+                ' has been banned from posting on this image board. ' . $expire . $reason);
+        } else {
+            clearExpiredBans();
+        }
+    } else {
+        fancyDie('Your IP address ' . $ip . ' is not banned at this time.');
+    }
+}
+
 /* ==[ Like request ]====================================================================================== */
 
 function likeRequest() {
@@ -1468,6 +1518,9 @@ $access = checkAccessRights();
 // Requests processing
 if (isset($_GET['manage'])) {
 	managementRequest();
+}
+if (isset($_GET['banned'])) {
+	bannedRequest();
 }
 if (ATOM_PASSCODES_ENABLED && isset($_GET['passcode'])) {
 	passcodeRequest();

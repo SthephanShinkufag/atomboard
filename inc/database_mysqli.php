@@ -527,7 +527,7 @@ function clearExpiredBans() {
 	global $link;
 	$result = mysqli_query($link,
 		"SELECT * FROM `" . ATOM_DBBANS . "`
-		WHERE `expire` > 0 AND `expire` <= " . time());
+		WHERE `expire` > 1 AND `expire` <= " . time());
 	if ($result) {
 		while ($ban = mysqli_fetch_assoc($result)) {
 			mysqli_query($link,

@@ -487,7 +487,7 @@ function deleteBan($id) {
 function clearExpiredBans() {
 	$result = mysql_query(
 		"SELECT * FROM `" . ATOM_DBBANS . "`
-		WHERE `expire` > 0 AND `expire` <= " . time());
+		WHERE `expire` > 1 AND `expire` <= " . time());
 	if ($result) {
 		while ($ban = mysql_fetch_assoc($result)) {
 			mysql_query(

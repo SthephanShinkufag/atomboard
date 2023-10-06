@@ -559,7 +559,7 @@ function clearExpiredBans() {
 	$now = time();
 	pdoQuery(
 		"DELETE FROM " . ATOM_DBBANS . "
-		WHERE expire > 0 AND expire <= ?",
+		WHERE expire > 1 AND expire <= ?",
 		array($now));
 }
 

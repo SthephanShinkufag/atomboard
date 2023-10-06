@@ -575,7 +575,7 @@ function clearExpiredBans() {
 	global $db;
 	$result = $db->query(
 		"SELECT * FROM " . ATOM_DBBANS . "
-		WHERE expire > 0 AND expire <= " . time());
+		WHERE expire > 1 AND expire <= " . time());
 	while ($ban = $result->fetchArray()) {
 		$db->exec(
 			"DELETE FROM " . ATOM_DBBANS . "
