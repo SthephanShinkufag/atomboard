@@ -799,26 +799,35 @@ function postingRequest() {
 			}
 		}
 
-		// Check for ban
-		$ban = banByIP($ip);
-		if ($ban) {
-			$reason = $ban['reason'] == '' ? '' : '<br>Reason: ' . $ban['reason'];
-			if ($ban['expire'] == 1) {
-				fancyDie('Your IP address ' . $ip .
-					' has been issued a warning.
-					<br>To continue posting, please read <a href="/' . ATOM_BOARD .
-					'/imgboard.php?banned">this page</a>.
-					<br>'. $reason);
-			} else if ($ban['expire'] == 0 || $ban['expire'] > time()) {
-				$expire = $ban['expire'] > 0 ?
-					'<br>This ban will expire ' . date('y.m.d D H:i:s', $ban['expire']) :
-					'<br>This ban is permanent and will not expire.';
-				fancyDie('Your IP address ' . $ip .
-					' has been banned from posting on this image board. ' . $expire . $reason);
-			} else {
-				clearExpiredBans();
-			}
-		}
+        // Check for ban
+        $ban = banByIP($ip);
+        if ($ban) {
+            $direct_ban = $ban['ip_from'] == $ban['ip_to'];
+            // range bans do not affect passcode users
+            if ($direct_ban || (!$validPasscode)) {
+                $reason = $ban['reason'] == '' ? '' : '<br>Reason: ' . $ban['reason'];
+                if ($ban['expire'] == 1) {
+                    fancyDie('Your IP address ' . $ip .
+                        ' has been issued a warning.
+                        <br>To continue posting, please read <a href="/' . ATOM_BOARD .
+                        '/imgboard.php?banned">this page</a>.
+                        <br>'. $reason);
+                } else if ($ban['expire'] == 0 || $ban['expire'] > time()) {
+                    $expire = $ban['expire'] > 0 ?
+                        '<br>This ban will expire ' . date('y.m.d D H:i:s', $ban['expire']) :
+                        '<br>This ban is permanent and will not expire.';
+                    if (ATOM_PASSCODES_ENABLED && !$direct_ban) {
+                        $expire .= '<br><br>This is a range ban (if affects a whole subnet), ';
+                        $expire .= '<a href="/' . ATOM_BOARD .
+                        '/imgboard.php?passcode">passcode users</a> are not affected by subnet bans.';
+                    }
+                    fancyDie('Your IP address ' . $ip .
+                        ' has been banned from posting on this image board. ' . $expire . '<br>'. $reason);
+                } else {
+                    clearExpiredBans();
+                }
+            }
+        }
 
 		// Check for message size
 		if (strlen($_POST['message']) > 8000) {
