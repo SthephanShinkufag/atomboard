@@ -72,7 +72,7 @@ define('BAN_EXPIRE', 3);
 define('BAN_REASON', 4);
 define('BAN_IP_TO', 5);
 
-# IP lookup database structure
+# IP lookups database structure
 define('IPLOOKUP_FILE', '.iplookup');
 define('IPLOOKUP_ID', 0);
 define('IPLOOKUP_IP', 1);
@@ -469,25 +469,6 @@ function bumpThread($id) {
 	}
 }
 
-/* ==[ Dirty IP lookups ]================================================================================== */
-
-function lookupByIP($ip) {
-	return convertPostsToSQLStyle($GLOBALS['db']->selectWhere(
-		IPLOOKUP_FILE,
-		new SimpleWhereClause(IPLOOKUP_IP, '=', $ip, STRING_COMPARISON)));
-}
-
-function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
-	$lookup = array();
-	$lookup[IPLOOKUP_IP] = $ip;
-	$lookup[IPLOOKUP_ABUSER] = $abuser;
-	$lookup[IPLOOKUP_VPS] = $vps;
-	$lookup[IPLOOKUP_PROXY] = $proxy;
-	$lookup[IPLOOKUP_TOR] = $tor;
-	$lookup[IPLOOKUP_VPN] = $vpn;
-	$GLOBALS['db']->insertWithAutoId(IPLOOKUP_FILE, IPLOOKUP_ID, $lookup);
-}
-
 /* ==[ Bans ]============================================================================================== */
 
 function convertBansToSQLStyle($bans, $isSingleBan = false) {
@@ -559,6 +540,25 @@ function clearExpiredBans() {
 	}
 }
 
+/* ==[ Dirty IP lookups ]================================================================================== */
+
+function lookupByIP($ip) {
+	return convertPostsToSQLStyle($GLOBALS['db']->selectWhere(
+		IPLOOKUP_FILE,
+		new SimpleWhereClause(IPLOOKUP_IP, '=', $ip, STRING_COMPARISON)));
+}
+
+function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
+	$lookup = array();
+	$lookup[IPLOOKUP_IP] = $ip;
+	$lookup[IPLOOKUP_ABUSER] = $abuser;
+	$lookup[IPLOOKUP_VPS] = $vps;
+	$lookup[IPLOOKUP_PROXY] = $proxy;
+	$lookup[IPLOOKUP_TOR] = $tor;
+	$lookup[IPLOOKUP_VPN] = $vpn;
+	$GLOBALS['db']->insertWithAutoId(IPLOOKUP_FILE, IPLOOKUP_ID, $lookup);
+}
+
 /* ==[ Likes ]============================================================================================= */
 
 function convertLikesToSQLStyle($likes) {
@@ -582,7 +582,7 @@ function getAllLikes() {
 		new OrderBy(LIKES_ID, ASCENDING, INTEGER_COMPARISON)));
 }
 
-function toggleLikePost($id, $ip) {
+function toggleLike($id, $ip) {
 	$compClause = new AndWhereClause();
 	$compClause->add(new SimpleWhereClause(LIKES_IP, '=', $ip, STRING_COMPARISON));
 	$compClause->add(new SimpleWhereClause(LIKES_BOARD, '=', ATOM_BOARD, STRING_COMPARISON));

@@ -27,78 +27,56 @@ try {
 	fancyDie("Failed to connect to the database: " . $e->getMessage());
 }
 
-// Create the posts table if it does not exist
+// Creating tables that don't exist
 if (ATOM_DBDRIVER === 'pgsql') {
-	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(ATOM_DBPOSTS);
-	$isPostsExists = $dbh->query($query)->fetchColumn() != 0;
+	$isPostsExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
+		$dbh->quote(ATOM_DBPOSTS))->fetchColumn() != 0;
+	$isBansExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
+		$dbh->quote(ATOM_DBBANS))->fetchColumn() != 0;
+	$isIplookupExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
+		$dbh->quote(ATOM_DBIPLOOKUPS))->fetchColumn() != 0;
+	$isReportsExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
+		$dbh->quote(ATOM_DBREPORTS))->fetchColumn() != 0;
+	$isPassExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
+		$dbh->quote(ATOM_DBPASS))->fetchColumn() != 0;
+	$isLikesExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
+		$dbh->quote(ATOM_DBLIKES))->fetchColumn() != 0;
+	$isModlogExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
+		$dbh->quote(ATOM_DBMODLOG))->fetchColumn() != 0;
 } else {
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBPOSTS));
 	$isPostsExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
-}
-
-if (!$isPostsExists) {
-	$dbh->exec($postsQuery);
-}
-
-// Create the bans table if it does not exist
-if (ATOM_DBDRIVER === 'pgsql') {
-	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(ATOM_DBBANS);
-	$isBansExists = $dbh->query($query)->fetchColumn() != 0;
-} else {
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBBANS));
 	$isBansExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBIPLOOKUPS));
+	$isIplookupExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBREPORTS));
+	$isReportsExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBPASS));
+	$isPassExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBLIKES));
+	$isLikesExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBMODLOG));
+	$isModlogExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+}
+if (!$isPostsExists) {
+	$dbh->exec($postsQuery);
 }
 if (!$isBansExists) {
 	$dbh->exec($bansQuery);
 }
-
-// Create the pass table if it does not exist
-if (ATOM_DBDRIVER === 'pgsql') {
-	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(ATOM_DBPASS);
-	$isPassExists = $dbh->query($query)->fetchColumn() != 0;
-} else {
-	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBPASS));
-	$isPassExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+if (!$isReportsExists) {
+	$dbh->exec($reportsQuery);
 }
 if (!$isPassExists) {
 	$dbh->exec($passQuery);
 }
-
-// Create the likes table if it does not exist
-if (ATOM_DBDRIVER === 'pgsql') {
-	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(ATOM_DBLIKES);
-	$isLikesExists = $dbh->query($query)->fetchColumn() != 0;
-} else {
-	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBLIKES));
-	$isLikesExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
-}
 if (!$isLikesExists) {
 	$dbh->exec($likesQuery);
 }
-
-// Create the modlog table if it does not exist
-if (ATOM_DBDRIVER === 'pgsql') {
-	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " . $dbh->quote(ATOM_DBMODLOG);
-	$isModlogExists = $dbh->query($query)->fetchColumn() != 0;
-} else {
-	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBMODLOG));
-	$isModlogExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
-}
-
 if (!$isModlogExists) {
 	$dbh->exec($modlogQuery);
 }
-
-// Create the modlog table if it does not exist
-if (ATOM_DBDRIVER === 'pgsql') {
-	$query = "SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
-		$dbh->quote(ATOM_DBIPLOOKUPS);
-	$isIplookupExists = $dbh->query($query)->fetchColumn() != 0;
-} else {
-	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBIPLOOKUPS));
-	$isIplookupExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
-}
-
 if (!$isIplookupExists) {
 	$dbh->exec($ipLookupsQuery);
 }
@@ -336,6 +314,8 @@ function deletePost($id) {
 			WHERE id = ?",
 			array($thispost['id']));
 	}
+	deleteReports($id);
+	deleteLikes($id);
 }
 
 function deletePostImages($post, $imgList) {
@@ -437,8 +417,8 @@ function getThreadPosts($id, $moderatedOnly = true) {
 	$results = pdoQuery(
 		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE (id = ? OR parent = ?)" .
-		($moderatedOnly ? " AND moderated = 1" : "") .
-		" ORDER BY id ASC",
+		($moderatedOnly ? " AND moderated = 1" : "") . "
+		ORDER BY id ASC",
 		array($id, $id));
 	while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 		$posts[] = $row;
@@ -485,26 +465,6 @@ function bumpThread($id) {
 		SET bumped = ?
 		WHERE id = ?",
 		array($now, $id));
-}
-
-/* ==[ Dirty IP lookups ]================================================================================== */
-
-function lookupByIP($ip) {
-	$result = pdoQuery(
-		"SELECT * FROM " . ATOM_DBIPLOOKUPS . "
-		WHERE ip = ? LIMIT 1",
-		array($ip));
-	return $result->fetch(PDO::FETCH_ASSOC);
-}
-
-function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
-	global $dbh;
-	$stm = $dbh->prepare(
-		"INSERT INTO " . ATOM_DBIPLOOKUPS . "
-		(ip, abuser, vps, proxy, tor, vpn)
-		VALUES (?, ?, ?, ?, ?, ?)");
-	$stm->execute(array($ip, $abuser, $vps, $proxy, $tor, $vpn));
-	return $dbh->lastInsertId();
 }
 
 /* ==[ Bans ]============================================================================================== */
@@ -563,6 +523,65 @@ function clearExpiredBans() {
 		array($now));
 }
 
+/* ==[ Dirty IP lookups ]================================================================================== */
+
+function lookupByIP($ip) {
+	$result = pdoQuery(
+		"SELECT * FROM " . ATOM_DBIPLOOKUPS . "
+		WHERE ip = ? LIMIT 1",
+		array($ip));
+	return $result->fetch(PDO::FETCH_ASSOC);
+}
+
+function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
+	global $dbh;
+	$stm = $dbh->prepare(
+		"INSERT INTO " . ATOM_DBIPLOOKUPS . "
+		(ip, abuser, vps, proxy, tor, vpn)
+		VALUES (?, ?, ?, ?, ?, ?)");
+	$stm->execute(array($ip, $abuser, $vps, $proxy, $tor, $vpn));
+	return $dbh->lastInsertId();
+}
+
+/* ==[ Posts reports ]===================================================================================== */
+
+function getAllReports() {
+	$reports = array();
+	$results = pdoQuery(
+		"SELECT * FROM " . ATOM_DBREPORTS . "
+		WHERE board = ?
+		ORDER BY postnum DESC, timestamp DESC",
+		array(ATOM_BOARD));
+	while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
+		$reports[] = $row;
+	}
+	return $reports;
+}
+
+function insertReport($id, $board, $ip, $reason) {
+	global $dbh;
+	$result = pdoQuery(
+		"SELECT * FROM " . ATOM_DBREPORTS . "
+		WHERE ip = ? AND board = ? AND postnum = ?",
+		array($ip, $board, $id));
+	if ((int)$result->fetchColumn()) {
+		return 'exists';
+	}
+	$stm = $dbh->prepare(
+		"INSERT INTO " . ATOM_DBREPORTS . "
+		(ip, board, postnum, reason, timestamp)
+		VALUES (?, ?, ?, ?, ?)");
+	$stm->execute(array($ip, $board, $id, $reason, time()));
+	return $dbh->lastInsertId();
+}
+
+function deleteReports($id) {
+	pdoQuery(
+		"DELETE FROM " . ATOM_DBREPORTS . "
+		WHERE board = ? AND postnum = ?",
+		array(ATOM_BOARD, $id));
+}
+
 /* ==[ Passcodes ]========================================================================================= */
 
 function passByID($passId) {
@@ -578,8 +597,8 @@ function getAllPasscodes() {
 	$results = pdoQuery(
 		"SELECT * FROM " . ATOM_DBPASS . "
 		ORDER BY number ASC");
-	while ($pass = $results->fetch(PDO::FETCH_ASSOC)) {
-		$passcodes[] = $pass;
+	while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
+		$passcodes[] = $row;
 	}
 	return $passcodes;
 }
@@ -632,7 +651,20 @@ function deletePass($passId) {
 
 /* ==[ Likes ]============================================================================================= */
 
-function toggleLikePost($id, $ip) {
+function getAllLikes() {
+	$likes = array();
+	$results = pdoQuery(
+		"SELECT * FROM " . ATOM_DBLIKES . "
+		WHERE board = ?
+		ORDER BY board ASC, postnum ASC",
+		array(ATOM_BOARD));
+	while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
+		$likes[] = $row;
+	}
+	return $likes;
+}
+
+function toggleLike($id, $ip) {
 	$result = pdoQuery(
 		"SELECT COUNT(*) FROM " . ATOM_DBLIKES . "
 		WHERE ip = ? AND board = ? AND postnum = ?",
@@ -663,6 +695,13 @@ function toggleLikePost($id, $ip) {
 	return array(!$isAlreadyLiked, $countOfPostLikes);
 }
 
+function deleteLikes($id) {
+	pdoQuery(
+		"DELETE FROM " . ATOM_DBLIKES . "
+		WHERE board = ? AND postnum = ?",
+		array(ATOM_BOARD, $id));
+}
+
 /* ==[ Modlog ]============================================================================================ */
 
 function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
@@ -672,7 +711,8 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 		if ($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
 			$results = pdoQuery(
 				"SELECT timestamp, username, action, color FROM " . ATOM_DBMODLOG . "
-				WHERE boardname = ? ORDER BY timestamp DESC LIMIT 100",
+				WHERE boardname = ?
+				ORDER BY timestamp DESC LIMIT 100",
 				array(ATOM_BOARD));
 			while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 				$records[] = $row;
@@ -680,7 +720,8 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 		} elseif ($periodEndDate !== 0 && $periodStartDate !== 0) { // If the date range is set
 			$results = pdoQuery(
 				"SELECT timestamp, username, action, color FROM " . ATOM_DBMODLOG . "
-				WHERE boardname = ? AND timestamp >= ? AND timestamp <= ? ORDER BY timestamp DESC",
+				WHERE boardname = ? AND timestamp >= ? AND timestamp <= ?
+				ORDER BY timestamp DESC",
 				array(ATOM_BOARD, $periodStartDate, $periodEndDate));
 			while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 				$records[] = $row;
@@ -690,7 +731,8 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 	} elseif ($private === '0') {
 		$results = pdoQuery(
 			"SELECT timestamp, action FROM " . ATOM_DBMODLOG . "
-			WHERE boardname = ? AND private = ? ORDER BY timestamp DESC LIMIT 100",
+			WHERE boardname = ? AND private = ?
+			ORDER BY timestamp DESC LIMIT 100",
 			array(ATOM_BOARD, '0'));
 		while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 			$records[] = $row;

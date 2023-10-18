@@ -54,11 +54,13 @@ define('ATOM_DBPOSTS', ATOM_BOARD . '_posts');
 // Modlog table name in database (use the same modlog table across boards for global modlog)
 // define('ATOM_DBMODLOG', 'modlog');
 define('ATOM_DBMODLOG', ATOM_BOARD . '_modlog');
-// Bans table name in database (use the same bans table across boards for global bans)
+// Reports table name in database
+define('ATOM_DBREPORTS', ATOM_BOARD . '_reports');
+// Bans table name in database
 define('ATOM_DBBANS', 'bans');
-// Likes table name in database (use the same likes table across boards for global likes)
+// Likes table name in database
 define('ATOM_DBLIKES', 'likes');
-// Passcodes table name in database (use the same likes table across boards for global passcodes)
+// Passcodes table name in database
 define('ATOM_DBPASS', 'pass');
 // Database for dirty IP lookups
 define('ATOM_DBIPLOOKUPS', 'iplookups');

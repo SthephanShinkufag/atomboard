@@ -1,7 +1,7 @@
 <?php
 // Uncomment to show debugging errors
-// error_reporting(E_ALL);
-// ini_set('display_errors', 1);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 ini_set('session.gc_maxlifetime', 2592000); // 30 days
 session_set_cookie_params(2592000); // store session cookie for 30 days
 
@@ -21,7 +21,7 @@ function fancyDie($message) {
 
 <html data-theme="' . ATOM_THEME . '">
 <head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023091900">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023101900">
 </head>
 <body align="center">
 	<br>
@@ -40,10 +40,17 @@ function managementRequest() {
 	$isAdmin = $access == 'admin';
 	$isJanitor = $access == 'janitor';
 
-	/* --------[ Show login form ]-------- */
+	/* --------[ Show login or post report form if not logged ]-------- */
 
 	if ($access == 'disabled') {
-		die(managePage(manageLoginForm(), 'login'));
+		if (isset($_GET['moderate']) && $_GET['moderate'] > 0) {
+			$post = getPost($_GET['moderate']);
+			if (!$post) {
+				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
+			}
+			die(managePage(buildReportPostForm($post)));
+		}
+		die(managePage(buildManageLoginForm(), 'login'));
 	}
 
 	/* --------[ Rebuild all posts ]-------- */
@@ -54,6 +61,17 @@ function managementRequest() {
 			rebuildThreadPage($thread['id']);
 		}
 		rebuildIndexPages();
+
+		// Delete likes for deleted posts
+		$likes = getAllLikes();
+		foreach ($likes as $like) {
+			$id = $like['postnum'];
+			$post = getPost($id);
+			if(!$post) {
+				deleteLikes($id);
+			}
+		}
+
 		die(managePage(manageInfo('Rebuilt board.')));
 	}
 
@@ -130,7 +148,6 @@ function managementRequest() {
 		}
 		mysqli_query($link, $postsQuery);
 		mysqli_query($link, $bansQuery);
-		mysqli_query($link, $passQuery);
 		mysqli_query($link, $likesQuery);
 		$maxId = 0;
 		$threads = getThreads();
@@ -331,43 +348,41 @@ function managementRequest() {
 				$ban = array();
 				$ban['ip'] = $_POST['ip'];
 				if ($_POST['expire'] == 1) {
-				    // warning
-				    $expire = 1;
-				    $expire_type = 'warning';
+					$expire = 1;
+					$expireType = 'warning';
 				} else if ($_POST['expire'] > 0) {
-				    $expire = time() + $_POST['expire'];
-				    $expire_type = 'regular ban';
+					$expire = time() + $_POST['expire'];
+					$expireType = 'regular ban';
 				} else {
-				    // permanent
-				    $expire = 0;
-				    $expire_type = 'permanent ban';
+					$expire = 0;
+					$expireType = 'permanent ban';
 				}
 				$ban['expire'] = $expire;
 				$ban['reason'] = $_POST['reason'];
 				insertBan($ban);
-				modLog('Ban record (' . $expire_type . ') added for ' . $ban['ip'] .
-				    ' by ' . $_SESSION['atom_user'], '0', 'Black');
+				modLog('Ban record (' . $expireType . ') added for ' . $ban['ip'] .
+					' by ' . $_SESSION['atom_user'], '0', 'Black');
 				$text .= manageInfo('Ban record added for ' . $ban['ip']);
 			}
 		} elseif (isset($_GET['lift'])) {
 			$ban = banByID($_GET['lift']);
 			if ($ban) {
 				modLog('Ban record lifted for ' . ip2cidr($ban['ip_from'], $ban['ip_to']) .
-				    ' by ' . $_SESSION['atom_user'], '0', 'Black');
+					' by ' . $_SESSION['atom_user'], '0', 'Black');
 				deleteBan($_GET['lift']);
 				$text .= manageInfo('Ban record lifted for ' . ip2cidr($ban['ip_from'], $ban['ip_to']));
 			}
 		}
-		die(managePage(manageBanForm() . manageBansTable(), 'bans'));
+		die(managePage(buildBansPage(), 'bans'));
 	}
 
 	/* --------[ Show passcodes form ]-------- */
 
 	if (ATOM_PASSCODES_ENABLED && isset($_GET['passcodes']) && !$isJanitor) {
 		if ($_GET['passcodes'] == 'manage') {
-			die(managePage(buildPasscodesForm(), 'passcode_manage'));
+			die(managePage(buildPasscodesPage(), 'passcode_manage'));
 		} else if ($_GET['passcodes'] == 'block') {
-			die(managePage(buildPasscodesForm(), 'passcode_block'));
+			die(managePage(buildPasscodesPage(), 'passcode_block'));
 		}
 	}
 
@@ -409,7 +424,7 @@ function managementRequest() {
 			$fromtime = intval(strtotime($_POST['from']));
 			$totime = intval(strtotime($_POST['to']));
 		}
-		die(managePage(generateModLogForm() . generateModLogTable(true, $fromtime, $totime)));
+		die(managePage(buildModLogForm() . buildModLogTable(true, $fromtime, $totime)));
 	}
 
 	/* --------[ Delete post or thread ]-------- */
@@ -527,9 +542,9 @@ function managementRequest() {
 			if (!$post) {
 				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 			}
-			die(managePage(manageModeratePost($post)));
+			die(managePage(buildModeratePostPage($post)));
 		}
-		die(managePage(manageModeratePostForm(), 'moderate'));
+		die(managePage(buildModeratePostForm(), 'moderate'));
 	}
 
 	/* --------[ Sticky thread ]-------- */
@@ -608,62 +623,7 @@ function managementRequest() {
 
 	/* --------[ Show status for posts ]-------- */
 
-	die(managePage(manageStatus()));
-}
-
-/* ==[ Passcode requests ]================================================================================= */
-
-function passcodeRequest() {
-	// Check passcode entered in passcode login form
-	if (isset($_POST['passcode'])) {
-		$passId = $_POST['passcode'];
-		$pass = passByID($passId);
-		if (!$pass) {
-			die(managePage('<p><b>Warning!</b></p>' .
-				'<p>Unable to log in with that passcode. It may be expired.</p>'));
-		}
-		$blocked = isPassBlocked($pass);
-		if (isPassExpired($pass)) {
-			clearPass();
-			die(managePage('<p><b>Cound not log in the passcode!</b></p><p>That passcode has expired</p>'));
-		} else if ($blocked) {
-			clearPass();
-			die(managePage('<p><b>Could not log in the provided pass code: It has been blocked till ' .
-				date('d.m.y D H:i:s', $pass['blocked_till']) . '.</b></p><p>Reason: ' . $blocked . '</p>'));
-		}
-		setcookie('passcode', '1', $pass['expires'], '/');
-		$_SESSION['passcode'] = $passId;
-		die(managePage(manageInfo('You have logged in. You may post without entering the captcha.')));
-	}
-
-	// Check passcode status by imgboard.php?passcode&check
-	if (isset($_GET['check'])) {
-		if (isset($_SESSION['passcode'])) {
-			$pass = passByID($_SESSION['passcode']);
-			if ($pass && !isPassExpired($pass) && !isPassBlocked($pass)) {
-				die('OK');
-			}
-		}
-		http_response_code(403);
-		die('INVALID');
-	}
-
-	// Logout from passcode
-	if (isset($_GET['logout'])) {
-		clearPass();
-		die(managePage(manageInfo('You have logged out.')));
-	}
-
-	// Check if passcode already has effect now
-	if (isset($_SESSION['passcode'])) {
-		$pass = passByID($_SESSION['passcode']);
-		if ($pass && !isPassExpired($pass) && !isPassBlocked($pass)) {
-			die(managePage(passLoginForm('valid')));
-		}
-	}
-
-	// Show passcode login form
-	die(managePage(passLoginForm('login'), 'passcode'));
+	die(managePage(buildStatusPage()));
 }
 
 /* ==[ Posting requests ]================================================================================== */
@@ -799,35 +759,35 @@ function postingRequest() {
 			}
 		}
 
-        // Check for ban
-        $ban = banByIP($ip);
-        if ($ban) {
-            $direct_ban = $ban['ip_from'] == $ban['ip_to'];
-            // range bans do not affect passcode users
-            if ($direct_ban || (!$validPasscode)) {
-                $reason = $ban['reason'] == '' ? '' : '<br>Reason: ' . $ban['reason'];
-                if ($ban['expire'] == 1) {
-                    fancyDie('Your IP address ' . $ip .
-                        ' has been issued a warning.
-                        <br>To continue posting, please read <a href="/' . ATOM_BOARD .
-                        '/imgboard.php?banned">this page</a>.
-                        <br>'. $reason);
-                } else if ($ban['expire'] == 0 || $ban['expire'] > time()) {
-                    $expire = $ban['expire'] > 0 ?
-                        '<br>This ban will expire ' . date('y.m.d D H:i:s', $ban['expire']) :
-                        '<br>This ban is permanent and will not expire.';
-                    if (ATOM_PASSCODES_ENABLED && !$direct_ban) {
-                        $expire .= '<br><br>This is a range ban (if affects a whole subnet), ';
-                        $expire .= '<a href="/' . ATOM_BOARD .
-                        '/imgboard.php?passcode">passcode users</a> are not affected by subnet bans.';
-                    }
-                    fancyDie('Your IP address ' . $ip .
-                        ' has been banned from posting on this image board. ' . $expire . '<br>'. $reason);
-                } else {
-                    clearExpiredBans();
-                }
-            }
-        }
+		// Check for ban
+		$ban = banByIP($ip);
+		if ($ban) {
+			$direct_ban = $ban['ip_from'] == $ban['ip_to'];
+			// range bans do not affect passcode users
+			if ($direct_ban || (!$validPasscode)) {
+				$reason = $ban['reason'] == '' ? '' : '<br>Reason: ' . $ban['reason'];
+				if ($ban['expire'] == 1) {
+					fancyDie('Your IP address ' . $ip .
+						' has been issued a warning.
+						<br>To continue posting, please read <a href="/' . ATOM_BOARD .
+						'/imgboard.php?banned">this page</a>.
+						<br>'. $reason);
+				} else if ($ban['expire'] == 0 || $ban['expire'] > time()) {
+					$expire = $ban['expire'] > 0 ?
+						'<br>This ban will expire ' . date('y.m.d D H:i:s', $ban['expire']) :
+						'<br>This ban is permanent and will not expire.';
+					if (ATOM_PASSCODES_ENABLED && !$direct_ban) {
+						$expire .= '<br><br>This is a range ban (if affects a whole subnet), ';
+						$expire .= '<a href="/' . ATOM_BOARD .
+						'/imgboard.php?passcode">passcode users</a> are not affected by subnet bans.';
+					}
+					fancyDie('Your IP address ' . $ip .
+						' has been banned from posting on this image board. ' . $expire . '<br>'. $reason);
+				} else {
+					clearExpiredBans();
+				}
+			}
+		}
 
 		// Check for message size
 		if (strlen($_POST['message']) > 8000) {
@@ -1406,6 +1366,32 @@ function postingRequest() {
 	exit();
 }
 
+/* ==[ Banned request ]==================================================================================== */
+
+function bannedRequest() {
+	$ip = $_SERVER['REMOTE_ADDR'];
+	$ban = banByIP($ip);
+	if ($ban) {
+		if ($ban['expire'] == 1) {
+			deleteBan($ban['id']);
+			fancyDie('Your IP address ' . $ip . ' has been issued a warning:<br><br>' . $ban['reason'] .
+				'<br><br>Please make sure you have read and understood the rules.<br>
+				This warning has been automatically removed, you may continue posting now.');
+		} else if ($ban['expire'] == 0 || $ban['expire'] > time()) {
+			$reason = $ban['reason'] == '' ? '' : '<br>Reason: ' . $ban['reason'];
+			$expire = $ban['expire'] > 0 ?
+				'<br>This ban will expire ' . date('y.m.d D H:i:s', $ban['expire']) :
+				'<br>This ban is permanent and will not expire.';
+			fancyDie('Your IP address ' . $ip .
+				' has been banned from posting on this image board. ' . $expire . $reason);
+		} else {
+			clearExpiredBans();
+		}
+	} else {
+		fancyDie('Your IP address ' . $ip . ' is not banned at this time.');
+	}
+}
+
 /* ==[ Deletion request ]================================================================================== */
 
 function deletionRequest() {
@@ -1428,44 +1414,92 @@ function deletionRequest() {
 	} elseif ($post['password'] == '' || md5(md5($_POST['password'])) != $post['password']) {
 		fancyDie('Invalid password.');
 	}
-	deletePost($post['id']);
+	$id = $post['id'];
+	deletePost($id);
 	rebuildThread(getThreadId($post));
-	fancyDie('Post deleted.');
+	fancyDie('Post №' . $id . ' successfully deleted.');
 }
 
-/* ==[ Banned request ]================================================================================== */
+/* ==[ Post report request ]=============================================================================== */
 
-function bannedRequest() {
-    $ip = $_SERVER['REMOTE_ADDR'];
-    $ban = banByIP($ip);
+function reportRequest() {
+	if (isset($_GET['addreport'])) {
+		$id = $_POST['id'];
+		$report = insertReport($id, $_POST['board'], $_POST['ip'], $_POST['reason']);
+		if ($report) {
+			if ($report == 'exists') {
+				fancyDie('You have already sent a report to post №' . $id . '!');
+			}
+			fancyDie('Report to post №' . $id . ' successfully sent.');
+		}
+		fancyDie('An error occurred while sending the report.');
+	} else if (isset($_GET['deletereports'])) {
+		$id = $_GET['id'];
+		deleteReports($id);
+		fancyDie('Post №' . $id . ' approved. All reports are closed.');
+	}
+}
 
-    if ($ban) {
-        if ($ban['expire'] == 1) {
-            deleteBan($ban['id']);
-            fancyDie('Your IP address ' . $ip .
-                ' has been issued a warning:<br><br>' . $ban['reason'] .
-                '<br><br>Please make sure you have read and understood the rules.
-                <br>This warning has been automatically removed, you may continue posting now.');
-        } else if ($ban['expire'] == 0 || $ban['expire'] > time()) {
-            $reason = $ban['reason'] == '' ? '' : '<br>Reason: ' . $ban['reason'];
-            $expire = $ban['expire'] > 0 ?
-                '<br>This ban will expire ' . date('y.m.d D H:i:s', $ban['expire']) :
-                '<br>This ban is permanent and will not expire.';
-            fancyDie('Your IP address ' . $ip .
-                ' has been banned from posting on this image board. ' . $expire . $reason);
-        } else {
-            clearExpiredBans();
-        }
-    } else {
-        fancyDie('Your IP address ' . $ip . ' is not banned at this time.');
-    }
+/* ==[ Passcode requests ]================================================================================= */
+
+function passcodeRequest() {
+	// Check passcode entered in passcode login form
+	if (isset($_POST['passcode'])) {
+		$passId = $_POST['passcode'];
+		$pass = passByID($passId);
+		if (!$pass) {
+			die(managePage('<p><b>Warning!</b></p>' .
+				'<p>Unable to log in with that passcode. It may be expired.</p>'));
+		}
+		$blocked = isPassBlocked($pass);
+		if (isPassExpired($pass)) {
+			clearPass();
+			die(managePage('<p><b>Cound not log in the passcode!</b></p><p>That passcode has expired</p>'));
+		} else if ($blocked) {
+			clearPass();
+			die(managePage('<p><b>Could not log in the provided pass code: It has been blocked till ' .
+				date('d.m.y D H:i:s', $pass['blocked_till']) . '.</b></p><p>Reason: ' . $blocked . '</p>'));
+		}
+		setcookie('passcode', '1', $pass['expires'], '/');
+		$_SESSION['passcode'] = $passId;
+		die(managePage(manageInfo('You have logged in. You may post without entering the captcha.')));
+	}
+
+	// Check passcode status by imgboard.php?passcode&check
+	if (isset($_GET['check'])) {
+		if (isset($_SESSION['passcode'])) {
+			$pass = passByID($_SESSION['passcode']);
+			if ($pass && !isPassExpired($pass) && !isPassBlocked($pass)) {
+				die('OK');
+			}
+		}
+		http_response_code(403);
+		die('INVALID');
+	}
+
+	// Logout from passcode
+	if (isset($_GET['logout'])) {
+		clearPass();
+		die(managePage(manageInfo('You have logged out.')));
+	}
+
+	// Check if passcode already has effect now
+	if (isset($_SESSION['passcode'])) {
+		$pass = passByID($_SESSION['passcode']);
+		if ($pass && !isPassExpired($pass) && !isPassBlocked($pass)) {
+			die(managePage(buildPasscodeLoginForm('valid')));
+		}
+	}
+
+	// Show passcode login form
+	die(managePage(buildPasscodeLoginForm('login'), 'passcode'));
 }
 
 /* ==[ Like request ]====================================================================================== */
 
 function likeRequest() {
 	$postNum = $_GET['like'];
-	$result = toggleLikePost($postNum, $_SERVER['REMOTE_ADDR']);
+	$result = toggleLike($postNum, $_SERVER['REMOTE_ADDR']);
 	$post = getPost($postNum);
 	$post['likes'] = $result;
 	rebuildThread(getThreadId($post));
@@ -1528,20 +1562,23 @@ $access = checkAccessRights();
 if (isset($_GET['manage'])) {
 	managementRequest();
 }
-if (isset($_GET['banned'])) {
-	bannedRequest();
-}
-if (ATOM_PASSCODES_ENABLED && isset($_GET['passcode'])) {
-	passcodeRequest();
-}
-if (isset($_GET['delete'])) {
-	deletionRequest();
-}
 if (
 	isset($_POST['name']) || isset($_POST['email']) || isset($_POST['subject']) || isset($_POST['message']) ||
 	isset($_POST['file']) || isset($_POST['embed']) || isset($_POST['password'])
 ) {
 	postingRequest();
+}
+if (isset($_GET['banned'])) {
+	bannedRequest();
+}
+if (isset($_GET['delete'])) {
+	deletionRequest();
+}
+if (isset($_GET['report'])) {
+	reportRequest();
+}
+if (ATOM_PASSCODES_ENABLED && isset($_GET['passcode'])) {
+	passcodeRequest();
 }
 if (isset($_GET['like'])) {
 	likeRequest();

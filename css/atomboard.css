@@ -18,11 +18,12 @@ html[data-theme="Dark"] {
 	--inputs-bg: #16222d;
 	--inputs-border: 1px solid #38444d;
 	--inputs-color: #ccc;
+	--legend-color: #7fb1e8;
 	--link-color: #89c2ff;
 	--link-button-bg: linear-gradient(to bottom, #596375, #153864);
 	--link-button-bg-active: #223a57;
 	--link-button-bg-hover: #45689f;
-	--link-button-color: #e0e0e0;
+	--link-button-color: #ccc;
 	--link-hover: #ed88fb;
 	--navigation-bg: linear-gradient(to bottom, #5070b5, #0f2037);
 	--navigation-link-border: #002b60;
@@ -55,6 +56,7 @@ html[data-theme="Light"] {
 	--inputs-bg: #fff;
 	--inputs-border: 1px solid #808080;
 	--inputs-color: #000;
+	--legend-color: #71819f;
 	--link-color: #0f73c8;
 	--link-button-bg: linear-gradient(to bottom, #c9d4e6, #577dae);
 	--link-button-bg-active: #435e82;
@@ -70,7 +72,7 @@ html[data-theme="Light"] {
 	--reply-bg: #ddd;
 	--reply-border: #ccc;
 	--table-border: #8a97a4;
-	--table-th-bg: #b0e0e6;
+	--table-th-bg: #c0d4ea;
 }
 
 /* ==[ Common rules ]====================================================================================== */
@@ -129,8 +131,16 @@ input[type="password"], input[type="text"], textarea {
 	border-radius: 3px;
 }
 
+.input-controls {
+	display: inline-block;
+}
+
 fieldset {
 	border: 1px solid var(--fieldset-border);
+}
+
+fieldset + fieldset {
+	margin-top: 20px;
 }
 
 .footer {
@@ -139,20 +149,13 @@ fieldset {
 	text-align: center;
 }
 
+legend {
+	color: var(--legend-color);
+	font-weight: bold;
+}
+
 .login {
 	text-align: center;
-}
-
-.managebutton {
-	min-width: 120px;
-	margin: 2px 4px 2px 0;
-	padding: 2px 10px !important;
-}
-
-.managebutton-action {
-	min-width: 160px;
-	margin: 2px 4px 2px 0;
-	padding: 2px 10px !important;
 }
 
 .manageinfo {
@@ -163,7 +166,17 @@ fieldset {
 	width: 100%;
 }
 
-.table {
+.report {
+	display: inline-block;
+	margin: 1px 1px 1px 23px;
+}
+
+.report > .message {
+	color: #ff2020;
+}
+
+
+.table, .table-status {
 	width: 100%;
 	border-collapse: collapse;
 }
@@ -177,6 +190,19 @@ fieldset {
 	padding: 3px;
 	background: var(--table-th-bg);
 	border: 1px solid var(--table-border);
+}
+
+.table-status > tbody > tr > td {
+	padding: 1px 2px 2px 2px;
+	border: 1px solid var(--table-border);
+	border-top: none;
+}
+
+.table-status > tbody > tr > th {
+	padding: 4px;
+	background: var(--table-th-bg);
+	border: 1px solid var(--table-border);
+	border-bottom: none;
 }
 
 .userdelete {
@@ -196,14 +222,6 @@ fieldset {
 .backlinks {
 	font-size: 75%;
 	font-style: italic;
-}
-
-body:not(.access-enabled) .button-manage {
-	display: none;
-}
-
-.button-manage {
-	margin-left: 4px;
 }
 
 .catalog-block {
@@ -541,6 +559,21 @@ button:hover, input[type="submit"]:hover {
 
 button:active, input[type="submit"]:active {
 	background-color: var(--button-bg-active);
+}
+
+.button-action {
+	min-width: 160px;
+	margin: 2px 4px 2px 0;
+	padding: 2px 10px !important;
+}
+
+.button-manage {
+	margin: 2px 0;
+	padding: 2px 6px !important;
+}
+
+.button-post-manage {
+	margin-left: 4px;
 }
 
 .link-button {

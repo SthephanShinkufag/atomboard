@@ -21,34 +21,27 @@ if (!$dbSelected) {
 }
 mysqli_query($link, "SET NAMES 'utf8mb4'");
 
-// Create the posts table if it does not exist
+// Creating tables that don't exist
 if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBPOSTS . "'")) == 0) {
 	mysqli_query($link, $postsQuery);
 }
-
-// Create the bans table if it does not exist
 if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBBANS . "'")) == 0) {
 	mysqli_query($link, $bansQuery);
 }
-
-// Create the bans table if it does not exist
+if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBIPLOOKUPS . "'")) == 0) {
+	mysqli_query($link, $ipLookupsQuery);
+}
+if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBREPORTS . "'")) == 0) {
+	mysqli_query($link, $reportsQuery);
+}
 if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBPASS . "'")) == 0) {
 	mysqli_query($link, $passQuery);
 }
-
-// Create the likes table if it does not exist
 if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBLIKES . "'")) == 0) {
 	mysqli_query($link, $likesQuery);
 }
-
-// Create the modlog table if it does not exist
 if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBMODLOG . "'")) == 0) {
 	mysqli_query($link, $modlogQuery);
-}
-
-// Create the ip lookups table if it does not exist
-if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBIPLOOKUPS . "'")) == 0) {
-	mysqli_query($link, $ipLookupsQuery);
 }
 
 function mysqli_result($res, $row, $field = 0) {
@@ -429,37 +422,6 @@ function bumpThread($id) {
 		WHERE `id` = " . $id . " LIMIT 1");
 }
 
-/* ==[ Dirty IP lookups ]================================================================================== */
-
-function lookupByIP($ip) {
-	global $link;
-	$result = mysqli_query($link,
-		"SELECT * FROM " . ATOM_DBIPLOOKUPS . "
-		WHERE ip = '" . mysqli_real_escape_string($ip) . "' LIMIT 1",
-		array($ip));
-	if ($result) {
-		while ($ban = mysqli_fetch_assoc($result)) {
-			return $ban;
-		}
-	}
-}
-
-function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
-	global $link;
-	mysqli_query($link,
-		"INSERT INTO `" . ATOM_DBIPLOOKUPS . "`
-		(ip, abuser, vps, proxy, tor, vpn)
-		VALUES (
-			'" . mysqli_real_escape_string($ip) . "',
-			'" . mysqli_real_escape_string($abuser) . "',
-			'" . mysqli_real_escape_string($vps) . "',
-			'" . mysqli_real_escape_string($proxy) . "',
-			'" . mysqli_real_escape_string($tor) . "',
-			'" . mysqli_real_escape_string($vpn) . "'
-		)");
-	return mysqli_insert_id($link);
-}
-
 /* ==[ Bans ]============================================================================================== */
 
 function banByID($id) {
@@ -535,6 +497,37 @@ function clearExpiredBans() {
 				WHERE `id` = " . $ban['id'] . " LIMIT 1");
 		}
 	}
+}
+
+/* ==[ Dirty IP lookups ]================================================================================== */
+
+function lookupByIP($ip) {
+	global $link;
+	$result = mysqli_query($link,
+		"SELECT * FROM " . ATOM_DBIPLOOKUPS . "
+		WHERE ip = '" . mysqli_real_escape_string($ip) . "' LIMIT 1",
+		array($ip));
+	if ($result) {
+		while ($ban = mysqli_fetch_assoc($result)) {
+			return $ban;
+		}
+	}
+}
+
+function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
+	global $link;
+	mysqli_query($link,
+		"INSERT INTO `" . ATOM_DBIPLOOKUPS . "`
+		(ip, abuser, vps, proxy, tor, vpn)
+		VALUES (
+			'" . mysqli_real_escape_string($ip) . "',
+			'" . mysqli_real_escape_string($abuser) . "',
+			'" . mysqli_real_escape_string($vps) . "',
+			'" . mysqli_real_escape_string($proxy) . "',
+			'" . mysqli_real_escape_string($tor) . "',
+			'" . mysqli_real_escape_string($vpn) . "'
+		)");
+	return mysqli_insert_id($link);
 }
 
 /* ==[ Passcodes ]========================================================================================= */
@@ -618,7 +611,7 @@ function deletePass($passId) {
 
 /* ==[ Likes ]============================================================================================= */
 
-function toggleLikePost($id, $ip) {
+function toggleLike($id, $ip) {
 	global $link;
 	$isAlreadyLiked = mysqli_result(mysqli_query($link,
 		"SELECT COUNT(*) FROM `" . ATOM_DBLIKES . "`

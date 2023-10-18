@@ -14,8 +14,7 @@ if (!$db) {
 
 // Create the posts table if it does not exist
 $result = $db->query(
-	"SELECT name FROM sqlite_master" .
-	" WHERE type='table' AND name='" . ATOM_DBPOSTS . "'");
+	"SELECT name FROM sqlite_master WHERE type='table' AND name='" . ATOM_DBPOSTS . "'");
 if (!$result->fetchArray()) {
 	$db->exec("CREATE TABLE " . ATOM_DBPOSTS . " (
 		id INTEGER PRIMARY KEY,
@@ -33,55 +32,54 @@ if (!$result->fetchArray()) {
 		file0 TEXT NOT NULL,
 		file0_hex TEXT NOT NULL,
 		file0_original TEXT NOT NULL,
-		file0_size INTEGER NOT NULL DEFAULT '0',
+		file0_size INTEGER NOT NULL DEFAULT 0,
 		file0_size_formatted TEXT NOT NULL,
-		image0_width INTEGER NOT NULL DEFAULT '0',
-		image0_height INTEGER NOT NULL DEFAULT '0',
+		image0_width INTEGER NOT NULL DEFAULT 0,
+		image0_height INTEGER NOT NULL DEFAULT 0,
 		thumb0 TEXT NOT NULL,
-		thumb0_width INTEGER NOT NULL DEFAULT '0',
-		thumb0_height INTEGER NOT NULL DEFAULT '0',
+		thumb0_width INTEGER NOT NULL DEFAULT 0,
+		thumb0_height INTEGER NOT NULL DEFAULT 0,
 		file1 TEXT NOT NULL,
 		file1_hex TEXT NOT NULL,
 		file1_original TEXT NOT NULL,
-		file1_size INTEGER NOT NULL DEFAULT '0',
+		file1_size INTEGER NOT NULL DEFAULT 0,
 		file1_size_formatted TEXT NOT NULL,
-		image1_width INTEGER NOT NULL DEFAULT '0',
-		image1_height INTEGER NOT NULL DEFAULT '0',
+		image1_width INTEGER NOT NULL DEFAULT 0,
+		image1_height INTEGER NOT NULL DEFAULT 0,
 		thumb1 TEXT NOT NULL,
-		thumb1_width INTEGER NOT NULL DEFAULT '0',
-		thumb1_height INTEGER NOT NULL DEFAULT '0',
+		thumb1_width INTEGER NOT NULL DEFAULT 0,
+		thumb1_height INTEGER NOT NULL DEFAULT 0,
 		file2 TEXT NOT NULL,
 		file2_hex TEXT NOT NULL,
 		file2_original TEXT NOT NULL,
-		file2_size INTEGER NOT NULL DEFAULT '0',
+		file2_size INTEGER NOT NULL DEFAULT 0,
 		file2_size_formatted TEXT NOT NULL,
-		image2_width INTEGER NOT NULL DEFAULT '0',
-		image2_height INTEGER NOT NULL DEFAULT '0',
+		image2_width INTEGER NOT NULL DEFAULT 0,
+		image2_height INTEGER NOT NULL DEFAULT 0,
 		thumb2 TEXT NOT NULL,
-		thumb2_width INTEGER NOT NULL DEFAULT '0',
-		thumb2_height INTEGER NOT NULL DEFAULT '0',
+		thumb2_width INTEGER NOT NULL DEFAULT 0,
+		thumb2_height INTEGER NOT NULL DEFAULT 0,
 		file3 TEXT NOT NULL,
 		file3_hex TEXT NOT NULL,
 		file3_original TEXT NOT NULL,
-		file3_size INTEGER NOT NULL DEFAULT '0',
+		file3_size INTEGER NOT NULL DEFAULT 0,
 		file3_size_formatted TEXT NOT NULL,
-		image3_width INTEGER NOT NULL DEFAULT '0',
-		image3_height INTEGER NOT NULL DEFAULT '0',
+		image3_width INTEGER NOT NULL DEFAULT 0,
+		image3_height INTEGER NOT NULL DEFAULT 0,
 		thumb3 TEXT NOT NULL,
-		thumb3_width INTEGER NOT NULL DEFAULT '0',
-		thumb3_height INTEGER NOT NULL DEFAULT '0',
-		likes INTEGER NOT NULL DEFAULT '0',
-		stickied INTEGER NOT NULL DEFAULT '0',
-		locked INTEGER NOT NULL DEFAULT '0',
-		endless INTEGER NOT NULL DEFAULT '0'
+		thumb3_width INTEGER NOT NULL DEFAULT 0,
+		thumb3_height INTEGER NOT NULL DEFAULT 0,
+		likes INTEGER NOT NULL DEFAULT 0,
+		stickied INTEGER NOT NULL DEFAULT 0,
+		locked INTEGER NOT NULL DEFAULT 0,
+		endless INTEGER NOT NULL DEFAULT 0
 		pass TEXT
 	)");
 }
 
 // Create the bans table if it does not exist
 $result = $db->query(
-	"SELECT name FROM sqlite_master" .
-	" WHERE type='table' AND name='" . ATOM_DBBANS . "'");
+	"SELECT name FROM sqlite_master WHERE type='table' AND name='" . ATOM_DBBANS . "'");
 if (!$result->fetchArray()) {
 	$db->exec("CREATE TABLE " . ATOM_DBBANS . " (
 		id INTEGER PRIMARY KEY,
@@ -93,24 +91,36 @@ if (!$result->fetchArray()) {
 	)");
 }
 
+// Create the IP lookups table if it does not exist
+$result = $db->query(
+	"SELECT name FROM sqlite_master WHERE type='table' AND name='" . ATOM_DBIPLOOKUPS . "'");
+if (!$result->fetchArray()) {
+	$db->exec("CREATE TABLE " . ATOM_DBIPLOOKUPS . " (
+		ip TEXT PRIMARY KEY,
+		abuser INTEGER NOT NULL DEFAULT 0,
+		vps INTEGER NOT NULL DEFAULT 0,
+		proxy INTEGER NOT NULL DEFAULT 0,
+		tor INTEGER NOT NULL DEFAULT 0,
+		vpn INTEGER NOT NULL DEFAULT 0
+	)");
+}
+
 // Create the likes table if it does not exist
 $result = $db->query(
-	"SELECT name FROM sqlite_master" .
-	" WHERE type='table' AND name='" . ATOM_DBLIKES . "'");
+	"SELECT name FROM sqlite_master WHERE type='table' AND name='" . ATOM_DBLIKES . "'");
 if (!$result->fetchArray()) {
 	$db->exec("CREATE TABLE " . ATOM_DBLIKES . " (
 		id INTEGER PRIMARY KEY,
 		ip TEXT NOT NULL,
 		board TEXT NOT NULL,
 		postnum INTEGER NOT NULL,
-		islike INTEGER NOT NULL DEFAULT '1'
+		islike INTEGER NOT NULL DEFAULT 1
 	)");
 }
 
 // Create the modlog table if it does not exist
 $result = $db->query(
-	"SELECT name FROM sqlite_master" .
-	" WHERE type='table' AND name='" . ATOM_DBMODLOG . "'");
+	"SELECT name FROM sqlite_master WHERE type='table' AND name='" . ATOM_DBMODLOG . "'");
 if (!$result->fetchArray()) {
 	$db->exec("CREATE TABLE " . ATOM_DBMODLOG . " (
 		id INTEGER PRIMARY KEY,
@@ -119,14 +129,9 @@ if (!$result->fetchArray()) {
 		username TEXT NOT NULL,
 		action TEXT NOT NULL,
 		color TEXT NOT NULL,
-		private INTEGER NOT NULL DEFAULT '1'
+		private INTEGER NOT NULL DEFAULT 1
 	)");
 }
-
-// Add stickied column if it isn't present
-@$db->exec(
-	"ALTER TABLE " . ATOM_DBPOSTS . "
-	ADD COLUMN stickied INTEGER NOT NULL DEFAULT '0'");
 
 /* ==[ Posts ]============================================================================================= */
 
@@ -483,36 +488,6 @@ function bumpThread($id) {
 		WHERE id = " . $id);
 }
 
-/* ==[ Dirty IP lookups ]================================================================================== */
-
-function lookupByIP($ip) {
-	global $db;
-	$result = $db->query(
-		"SELECT * FROM " . ATOM_DBIPLOOKUPS . "
-		WHERE ip = '" . $db->escapeString($ip) . "' LIMIT 1");
-	if ($result) {
-		while ($ban = $result->fetchArray()) {
-			return $ban;
-		}
-	}
-}
-
-function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
-	global $db;
-	$db->exec(
-		"INSERT INTO `" . ATOM_DBIPLOOKUPS . "`
-		(ip, abuser, vps, proxy, tor, vpn)
-		VALUES (
-			'" . $db->escapeString($ip) . "',
-			'" . $db->escapeString($abuser) . "',
-			'" . $db->escapeString($vps) . "',
-			'" . $db->escapeString($proxy) . "',
-			'" . $db->escapeString($tor) . "',
-			'" . $db->escapeString($vpn) . "'
-		)");
-	return $db->lastInsertRowID();
-}
-
 /* ==[ Bans ]============================================================================================== */
 
 function banByID($id) {
@@ -583,9 +558,39 @@ function clearExpiredBans() {
 	}
 }
 
+/* ==[ Dirty IP lookups ]================================================================================== */
+
+function lookupByIP($ip) {
+	global $db;
+	$result = $db->query(
+		"SELECT * FROM " . ATOM_DBIPLOOKUPS . "
+		WHERE ip = '" . $db->escapeString($ip) . "' LIMIT 1");
+	if ($result) {
+		while ($ban = $result->fetchArray()) {
+			return $ban;
+		}
+	}
+}
+
+function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
+	global $db;
+	$db->exec(
+		"INSERT INTO `" . ATOM_DBIPLOOKUPS . "`
+		(ip, abuser, vps, proxy, tor, vpn)
+		VALUES (
+			'" . $db->escapeString($ip) . "',
+			'" . $db->escapeString($abuser) . "',
+			'" . $db->escapeString($vps) . "',
+			'" . $db->escapeString($proxy) . "',
+			'" . $db->escapeString($tor) . "',
+			'" . $db->escapeString($vpn) . "'
+		)");
+	return $db->lastInsertRowID();
+}
+
 /* ==[ Likes ]============================================================================================= */
 
-function toggleLikePost($id, $ip) {
+function toggleLike($id, $ip) {
 	global $db;
 	$isAlreadyLiked = $db->querySingle(
 		"SELECT COUNT(*) FROM " . ATOM_DBLIKES . "

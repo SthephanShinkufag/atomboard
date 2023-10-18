@@ -187,10 +187,6 @@ function initAfterDom() {
 		}
 	}
 
-	// Check and enable posts moderation buttons
-	if (getCookie('atom_access') === '1') {
-		document.body.classList.add('access-enabled');
-	}
 	// Check and apply passcode
 	if (getCookie('passcode') === '1') {
 		var xhr = new XMLHttpRequest();
