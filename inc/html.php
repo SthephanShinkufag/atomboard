@@ -491,9 +491,8 @@ function buildPost($post, $res, $mode = '') {
 	// Start post building
 	$omitted = $post['omitted'];
 	$likes = $post['likes'];
-	$replyBtn = ($isOp && $res == ATOM_INDEXPAGE ? '&nbsp;<a class="link-button" href="res/' .
+	$replyBtn = ($isOp && $res == ATOM_INDEXPAGE ? '<a class="link-button" href="res/' .
 		$id . '.html" title="Reply to thread №' . $id . '">Reply</a>' : '');
-
 	return PHP_EOL . ($isOp ? '
 			<div class="oppost" id="op' . $id . '">' : '
 			<table border="0"><tbody><tr><td class="reply" id="reply' . $id . '">') . '
@@ -518,27 +517,29 @@ function buildPost($post, $res, $mode = '') {
 					<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $id .
 						'" title="Click to link to this post">№</a>' .
 					'<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#q' . $id .
-						'" title="Click to reply to this post">' . $id . '</a>') .
-					($post['stickied'] == 1 ? '
-					<img src="/' . ATOM_BOARD . '/icons/sticky.png"' .
-						' title="Thread is stickied to top" width="16" height="16">' : '') .
-					($post['locked'] == 1 ? '
-					<img src="/' . ATOM_BOARD . '/icons/locked.png"' .
-						' title="Thread is locked for posting" width="11" height="16">' : '') .
-					($post['endless'] == 1 ? '
-					<img src="/' . ATOM_BOARD . '/icons/endless.png"' .
-						' title="Thread is endless" width="16" height="16">' : '') .
-					(ATOM_LIKES ? '
-					<span class="like-container">
-						<span class="like-icon' . ($likes ? ' like-enabled' : ' like-disabled') .
-							'" onclick="sendLike(this, ' . $id . ');">
-							<svg><use xlink:href="#symbol-like"></use></svg>
-						</span>
-						<span class="like-counter">' . ($likes ? $likes : '') . '</span>
-					</span>' : '') . '
-				</span><a class="link-button button-post-manage" target="_blank" href="/' . ATOM_BOARD .
-					'/imgboard.php?manage=&moderate=' . $id . '" title="Manage post №' . $id . '">!</a>' .
-				$replyBtn . '
+							'" title="Click to reply to this post">' . $id . '</a>') . '
+					<span class="post-buttons">' .
+						(ATOM_LIKES ? '
+						<span class="like-container">
+							<span class="like-icon' . ($likes ? ' like-enabled' : ' like-disabled') .
+								'" onclick="sendLike(this, ' . $id . ');">
+								<svg><use xlink:href="#symbol-like"></use></svg>
+							</span><span class="like-counter">' . ($likes ? $likes : '') . '</span>
+						</span>' : '') .
+						($post['stickied'] == 1 ? '
+						<img src="/' . ATOM_BOARD . '/icons/sticky.png"' .
+							' title="Thread is stickied to top" width="16" height="16">' : '') .
+						($post['locked'] == 1 ? '
+						<img src="/' . ATOM_BOARD . '/icons/locked.png"' .
+							' title="Thread is locked for posting" width="11" height="16">' : '') .
+						($post['endless'] == 1 ? '
+						<img src="/' . ATOM_BOARD . '/icons/endless.png"' .
+							' title="Thread is endless" width="16" height="16">' : '') . '
+						<a class="link-button button-post-manage" target="_blank" href="/' . ATOM_BOARD .
+						'/imgboard.php?manage=&moderate=' . $id . '" title="Manage post №' . $id . '">!</a>' .
+						$replyBtn . '
+					</span>' .
+				'</span>
 				<br>' .
 				($isEditPost && $hasImages ? '
 				<form method="get" action="?">
@@ -565,7 +566,7 @@ function buildPost($post, $res, $mode = '') {
 			' . (!$isOp ? '</td></tr></tbody></table>' : '</div>' .
 			($res == ATOM_INDEXPAGE && $omitted > 0 ? '
 			<div class="omittedposts">' . $omitted . ' ' .
-				plural('post', $omitted) . ' omitted. Click' . $replyBtn . ' to view.
+				plural('post', $omitted) . ' omitted. Click ' . $replyBtn . ' to view.
 			</div>' : ''));
 }
 

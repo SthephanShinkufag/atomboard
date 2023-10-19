@@ -55,7 +55,7 @@ define('ATOM_DBPOSTS', ATOM_BOARD . '_posts');
 // define('ATOM_DBMODLOG', 'modlog');
 define('ATOM_DBMODLOG', ATOM_BOARD . '_modlog');
 // Reports table name in database
-define('ATOM_DBREPORTS', ATOM_BOARD . '_reports');
+define('ATOM_DBREPORTS', 'reports');
 // Bans table name in database
 define('ATOM_DBBANS', 'bans');
 // Likes table name in database
