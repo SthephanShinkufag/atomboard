@@ -12,6 +12,8 @@ define('ATOM_BOARD_DESCRIPTION', '');
 define('ATOM_INDEX', 'index.html');
 // Timezone (see https://secure.php.net/manual/en/timezones.php - e.g. 'America/Los_Angeles')
 define('ATOM_TIMEZONE', 'UTC');
+// Default theme style. Values: 'Dark', 'Light'
+define('ATOM_THEME', 'Dark');
 // Specify your code at the top of pages
 define('ATOM_HTML_INFO_TOP', '');
 // Specify your code at the bottom of pages
@@ -22,8 +24,6 @@ define('ATOM_HTML_NAVIGATION', '
 			<span class="navigation-separator"></span>
 			<a class="navigation-link" href="/' . ATOM_BOARD . '/" title="' . ATOM_BOARD_DESCRIPTION . '">' .
 				ATOM_BOARD . '</a>');
-// Default theme style. Values: 'Dark', 'Light'
-define('ATOM_THEME', 'Dark');
 
 /* ==[ Administration staff ]============================================================================== */
 // Administrator password. Administrator has full access to the board
@@ -54,16 +54,16 @@ define('ATOM_DBPOSTS', ATOM_BOARD . '_posts');
 // Modlog table name in database (use the same modlog table across boards for global modlog)
 // define('ATOM_DBMODLOG', 'modlog');
 define('ATOM_DBMODLOG', ATOM_BOARD . '_modlog');
-// Reports table name in database
-define('ATOM_DBREPORTS', 'reports');
 // Bans table name in database
 define('ATOM_DBBANS', 'bans');
-// Likes table name in database
-define('ATOM_DBLIKES', 'likes');
-// Passcodes table name in database
-define('ATOM_DBPASS', 'pass');
 // Database for dirty IP lookups
 define('ATOM_DBIPLOOKUPS', 'iplookups');
+// Reports table name in database
+define('ATOM_DBREPORTS', 'reports');
+// Passcodes table name in database
+define('ATOM_DBPASS', 'pass');
+// Likes table name in database
+define('ATOM_DBLIKES', 'likes');
 // Enable database migration tool (see README for instructions)
 define('ATOM_DBMIGRATE', false);
 

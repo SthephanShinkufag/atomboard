@@ -74,15 +74,15 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 
 	$bansQuery = 'CREATE TABLE "' . ATOM_DBBANS . '" (
 		"id" bigserial NOT NULL,
-		"ipFrom" bigint NOT NULL,
-		"ipTo" bigint NOT NULL,
+		"ip_from" bigint NOT NULL,
+		"ip_to" bigint NOT NULL,
 		"timestamp" integer NOT NULL,
 		"expire" integer NOT NULL,
 		"reason" text NOT NULL,
 		PRIMARY KEY ("id")
 	);
-	CREATE INDEX ON "' . ATOM_DBBANS . '"("ipFrom");
-	CREATE INDEX ON "' . ATOM_DBBANS . '"("ipTo");';
+	CREATE INDEX ON "' . ATOM_DBBANS . '"("ip_from");
+	CREATE INDEX ON "' . ATOM_DBBANS . '"("ip_to");';
 
 	$ipLookupsQuery = 'CREATE TABLE "' . ATOM_DBIPLOOKUPS . '" (
 		"ip" varchar(39) NOT NULL,
@@ -212,14 +212,14 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 
 	$bansQuery = "CREATE TABLE `" . ATOM_DBBANS . "` (
 		`id` mediumint(7) unsigned NOT NULL auto_increment,
-		`ipFrom` bigint(20) NOT NULL,
-		`ipTo` bigint(20) NOT NULL,
+		`ip_from` bigint(20) NOT NULL,
+		`ip_to` bigint(20) NOT NULL,
 		`timestamp` int(20) NOT NULL,
 		`expire` int(20) NOT NULL,
 		`reason` text NOT NULL,
 		PRIMARY KEY (`id`),
-			KEY `ipFrom`(`ipFrom`),
-			KEY `ipTo`(`ipTo`)
+			KEY `ip_from`(`ip_from`),
+			KEY `ip_to`(`ip_to`)
 	)";
 
 	$ipLookupsQuery = "CREATE TABLE `" . ATOM_DBIPLOOKUPS . "` (
