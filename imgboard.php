@@ -67,7 +67,7 @@ function managementRequest() {
 		foreach ($likes as $like) {
 			$id = $like['postnum'];
 			$post = getPost($id);
-			if(!$post) {
+			if (!$post) {
 				deleteLikes($id);
 			}
 		}
@@ -367,10 +367,10 @@ function managementRequest() {
 		} elseif (isset($_GET['lift'])) {
 			$ban = banByID($_GET['lift']);
 			if ($ban) {
-				modLog('Ban record lifted for ' . ip2cidr($ban['ip_from'], $ban['ip_to']) .
-					' by ' . $_SESSION['atom_user'], '0', 'Black');
+				$cidrIP = ip2cidr($ban['ip_from'], $ban['ip_to']);
+				modLog('Ban record lifted for ' . $cidrIP . ' by ' . $_SESSION['atom_user'], '0', 'Black');
 				deleteBan($_GET['lift']);
-				$text .= manageInfo('Ban record lifted for ' . ip2cidr($ban['ip_from'], $ban['ip_to']));
+				$text .= manageInfo('Ban record lifted for ' . $cidrIP);
 			}
 		}
 		die(managePage(buildBansPage(), 'bans'));
@@ -429,8 +429,11 @@ function managementRequest() {
 	
 	/* --------[ View all posts from ip ]-------- */
 
-	if (isset($_GET['userinfo'])) {
-		$ip = $_GET['userinfo'];
+	if (isset($_GET['ipinfo'])) {
+		$ip = $_GET['ipinfo'];
+		if ($ip == 'manage') {
+			die(managePage(buildUserInfoForm(), 'ipinfo'));
+		}
 		die(managePage(buildUserInfoPage($ip, getPostsByIP($ip))));
 	}
 
@@ -613,8 +616,8 @@ function managementRequest() {
 
 	/* --------[ Raw post sending ]-------- */
 
-	if (isset($_GET['staffPost'])) {
-		die(managePage(buildPostForm(0, true), 'staffPost'));
+	if (isset($_GET['staffpost'])) {
+		die(managePage(buildPostForm(0, true), 'staffpost'));
 	}
 
 	/* --------[ Log out ]-------- */
@@ -770,7 +773,7 @@ function postingRequest() {
 		$ban = banByIP($ip);
 		if ($ban) {
 			$direct_ban = $ban['ip_from'] == $ban['ip_to'];
-			// range bans do not affect passcode users
+			// Range bans do not affect passcode users
 			if ($direct_ban || (!$validPasscode)) {
 				$reason = $ban['reason'] == '' ? '' : '<br>Reason: ' . $ban['reason'];
 				if ($ban['expire'] == 1) {
@@ -835,10 +838,10 @@ function postingRequest() {
 	$hideFields = $isOp ? $atom_hidefieldsop : $atom_hidefields;
 	$post['ip'] = $_SERVER['REMOTE_ADDR'];
 	$post['pass'] = $validPasscode;
-	$staffPost = isstaffPost();
+	$isStaffPost = isStaffPost();
 
 	// Get name/tripcode
-	if ($staffPost || !in_array('name', $hideFields)) {
+	if ($isStaffPost || !in_array('name', $hideFields)) {
 		$postName = $_POST['name'];
 		if (preg_match('/(#|!)(.*)/', $postName, $regs)) {
 			$cap = $regs[2];
@@ -887,12 +890,12 @@ function postingRequest() {
 	}
 
 	// Get email
-	if ($staffPost || !in_array('email', $hideFields)) {
+	if ($isStaffPost || !in_array('email', $hideFields)) {
 		$post['email'] = escapeHTML(str_replace('"', '&quot;', substr($_POST['email'], 0, 75)));
 	}
 
 	// Get subject
-	if ($staffPost || !in_array('subject', $hideFields)) {
+	if ($isStaffPost || !in_array('subject', $hideFields)) {
 		$post['subject'] = escapeHTML(mb_substr($_POST['subject'], 0, 100));
 	}
 
@@ -900,7 +903,7 @@ function postingRequest() {
 	if (!in_array('message', $hideFields)) {
 		$post['message'] = $_POST['message'];
 		// Markup text formatting
-		if (!$staffPost) {
+		if (!$isStaffPost) {
 			$msg = escapeHTML(rtrim($post['message']));
 			if (ATOM_WORDBREAK > 0) {
 				$msg = preg_replace(
@@ -1001,7 +1004,7 @@ function postingRequest() {
 	}
 
 	// Get password
-	if ($staffPost || !in_array('password', $hideFields)) {
+	if ($isStaffPost || !in_array('password', $hideFields)) {
 		$post['password'] = $_POST['password'] != '' ? md5(md5($_POST['password'])) : '';
 	}
 
@@ -1051,7 +1054,7 @@ function postingRequest() {
 
 	if (isset($_POST['embed']) &&
 		trim($_POST['embed']) != '' &&
-		($staffPost || !in_array('embed', $hideFields))
+		($isStaffPost || !in_array('embed', $hideFields))
 	) {
 		if (isset($_FILES['file']) && $_FILES['file']['name'][0] != '') {
 			fancyDie('Embedding a URL and uploading a file at the same time is not supported.');
@@ -1104,7 +1107,7 @@ function postingRequest() {
 	/* --------[ Images upload ]-------- */
 
 	elseif (isset($_FILES['file']) && $_FILES['file']['name'][0] != '' &&
-		($staffPost || !in_array('file', $hideFields))
+		($isStaffPost || !in_array('file', $hideFields))
 	) {
 		$fileIdx = 0;
 		$filesCount = 0;
@@ -1306,10 +1309,10 @@ function postingRequest() {
 
 	if ($post['file0'] == '') {
 		$allowed = '';
-		if (!empty($atom_uploads) && ($staffPost || !in_array('file', $hideFields))) {
+		if (!empty($atom_uploads) && ($isStaffPost || !in_array('file', $hideFields))) {
 			$allowed = 'file';
 		}
-		if (!empty($atom_embeds) && ($staffPost || !in_array('embed', $hideFields))) {
+		if (!empty($atom_embeds) && ($isStaffPost || !in_array('embed', $hideFields))) {
 			if ($allowed != '') {
 				$allowed .= ' or ';
 			}
@@ -1318,7 +1321,7 @@ function postingRequest() {
 		if (isOp($post) && $allowed != '' && !ATOM_NOFILEOK) {
 			fancyDie('A ' . $allowed . ' is required to start a thread.');
 		}
-		if (!$staffPost && str_replace('<br>', '', $post['message']) == '') {
+		if (!$isStaffPost && str_replace('<br>', '', $post['message']) == '') {
 			$dieMsg = '';
 			if (!in_array('message', $hideFields)) {
 				$dieMsg .= 'enter a message ' . ($allowed != '' ? ' and/or ' : '');

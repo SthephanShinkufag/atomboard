@@ -16,8 +16,8 @@ function getCountryIcon($ip, $geoipReader) {
 }
 
 function getIpUserInfoLink($ip) {
-	return '<a href="/' . ATOM_BOARD . '/imgboard.php?manage=&userinfo=' . $ip .
-		'" target="_blank" title="Show user ip info">' . $ip . '</a>';
+	return '<a href="/' . ATOM_BOARD . '/imgboard.php?manage=&ipinfo=' . $ip .
+		'" target="_blank" title="View user IP info">' . $ip . '</a>';
 }
 
 /* ==[ Page elements ]===================================================================================== */
@@ -127,14 +127,14 @@ function supportedFileTypes() {
 	return 'Supported file type' . (count($atom_uploads) != 1 ? 's are ' : ' is ') . $typesFormatted . '.';
 }
 
-function buildPostForm($parent, $isstaffPost = false) {
+function buildPostForm($parent, $isStaffPost = false) {
 	global $atom_hidefieldsop, $atom_hidefields, $atom_uploads, $atom_embeds;
 	$isOnPage = $parent == ATOM_NEWTHREAD;
 	$hideFields = $isOnPage ? $atom_hidefieldsop : $atom_hidefields;
 	$postformExtra = array('name' => '', 'email' => '', 'subject' => '', 'footer' => '');
 	$inputSubmit = '<input type="submit" value="' .
-		($isstaffPost ? 'New post' : ($isOnPage ? 'New thread' : 'Reply')) . '" accesskey="z">';
-	if ($isstaffPost || !in_array('subject', $hideFields)) {
+		($isStaffPost ? 'New post' : ($isOnPage ? 'New thread' : 'Reply')) . '" accesskey="z">';
+	if ($isStaffPost || !in_array('subject', $hideFields)) {
 		$postformExtra['subject'] = $inputSubmit;
 	} elseif (!in_array('email', $hideFields)) {
 		$postformExtra['email'] = $inputSubmit;
@@ -150,7 +150,7 @@ function buildPostForm($parent, $isstaffPost = false) {
 	$fileTypesHtml = '';
 	$fileInputHtml = '';
 	$embedInputHtml = '';
-	if (!empty($atom_uploads) && ($isstaffPost || !in_array('file', $hideFields))) {
+	if (!empty($atom_uploads) && ($isStaffPost || !in_array('file', $hideFields))) {
 		if (ATOM_FILE_MAXKB > 0) {
 			$maxFileSizeInputHtml = '<input type="hidden" name="MAX_FILE_SIZE" value="' .
 				strval(ATOM_FILE_MAXKB * 1024) . '">';
@@ -163,7 +163,7 @@ function buildPostForm($parent, $isstaffPost = false) {
 						<td><input type="file" name="file[]" size="35" accesskey="f" multiple></td>
 					</tr>';
 	}
-	if (!empty($atom_embeds) && ($isstaffPost || !in_array('embed', $hideFields))) {
+	if (!empty($atom_embeds) && ($isStaffPost || !in_array('embed', $hideFields))) {
 		$embedInputHtml = '<tr>
 						<td class="postblock"></td>
 						<td><input type="text" class="postform-input" name="embed"' .
@@ -196,14 +196,14 @@ function buildPostForm($parent, $isstaffPost = false) {
 			<form name="postform" id="postform" action="/' . ATOM_BOARD .
 				'/imgboard.php" method="post" enctype="multipart/form-data">
 				' . $maxFileSizeInputHtml .
-			(!$isstaffPost ? '
+			(!$isStaffPost ? '
 				<input type="hidden" name="parent" value="' . $parent . '">' : '') . '
 				<table class="postform-table reply"><tbody>' . (
-					$isstaffPost ? '
+					$isStaffPost ? '
 					<tr>
 						<td class="postblock"></td>
 						<td>
-							<input type="checkbox" name="staffPost" checked style="margin: 0 auto;">
+							<input type="checkbox" name="staffpost" checked style="margin: 0 auto;">
 							<span style="font: 12px sans-serif;">Write message as raw HTML</span>
 						</td>
 					</tr>
@@ -213,7 +213,7 @@ function buildPostForm($parent, $isstaffPost = false) {
 							'Reply to (0 = new thread)" maxlength="75" accesskey="t"></td>
 					</tr>' : ''
 				) . (
-					$isstaffPost || !in_array('name', $hideFields) ? '
+					$isStaffPost || !in_array('name', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
 						<td>
@@ -223,7 +223,7 @@ function buildPostForm($parent, $isstaffPost = false) {
 						</td>
 					</tr>' : ''
 				) . (
-					$isstaffPost || !in_array('email', $hideFields) ? '
+					$isStaffPost || !in_array('email', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
 						<td>
@@ -233,7 +233,7 @@ function buildPostForm($parent, $isstaffPost = false) {
 						</td>
 					</tr>' : ''
 				) . (
-					$isstaffPost || !in_array('subject', $hideFields) ? '
+					$isStaffPost || !in_array('subject', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
 						<td style="display: flex;">
@@ -243,7 +243,7 @@ function buildPostForm($parent, $isstaffPost = false) {
 						</td>
 					</tr>' : ''
 				) . (
-					$isstaffPost || !in_array('message', $hideFields) ? '
+					$isStaffPost || !in_array('message', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
 						<td id="markup-buttons">
@@ -309,7 +309,7 @@ function buildPostForm($parent, $isstaffPost = false) {
 					' . $fileInputHtml . '
 					' . $embedInputHtml .
 				(
-					$isstaffPost || !in_array('password', $hideFields) ? '
+					$isStaffPost || !in_array('password', $hideFields) ? '
 					<tr>
 						<td class="postblock"></td>
 						<td><input type="password" name="password" id="newpostpassword" size="8"' .
@@ -704,12 +704,13 @@ function managePage($text, $action = '') {
 	$onload = '';
 	switch ($action) {
 	case 'bans': $onload = ' onload="document.form_bans.ip.focus();"'; break;
+	case 'ipinfo': $onload = ' onload="document.form_ipinfo.ipinfo.focus();"'; break;
 	case 'login': $onload = ' onload="document.form_login_staff.managepassword.focus();"'; break;
 	case 'moderate': $onload = ' onload="document.form_moderate_post.moderate.focus();"'; break;
 	case 'passcode': $onload = ' onload="document.form_login_passcode.passcode.focus();"'; break;
 	case 'passcode_block': $onload = ' onload="document.form_passcode_manage.block_reason.focus();"'; break;
 	case 'passcode_manage': $onload = ' onload="document.form_passcode_new.meta.focus();"'; break;
-	case 'staffPost': $onload = ' onload="document.postform.parent.focus();"'; break;
+	case 'staffpost': $onload = ' onload="document.postform.parent.focus();"'; break;
 	}
 	return pageHeader() . '<body' . $onload . '>' .
 		pageWrapper(ATOM_BOARD_DESCRIPTION, true) .
@@ -720,11 +721,12 @@ function managePage($text, $action = '') {
 			($access == 'admin' || $access == 'moderator' ? '
 			<a class="link-button" href="?manage&bans">Bans</a>
 			<a class="link-button" href="?manage&passcodes=manage">Passcodes</a>
-			<a class="link-button" href="?manage&modlog">ModLog</a>' : '') .
+			<a class="link-button" href="?manage&modlog">ModLog</a>' : '') . '
+			<a class="link-button" href="?manage&ipinfo=manage">IP info</a>' .
 			(count($atom_janitors) != 0 && $access == 'janitor' ? '
 			<a class="link-button" href="/' . ATOM_BOARD . '/janitorlog.html">JanitorLog</a>' : '') . '
 			<a class="link-button" href="?manage&moderate">Manage post</a>
-			<a class="link-button" href="?manage&staffPost">Raw post</a>' .
+			<a class="link-button" href="?manage&staffpost">Raw post</a>' .
 			($access == 'admin' ? '
 			<a class="link-button" href="?manage&rebuildall">Rebuild All</a>' : '') .
 			($access == 'admin' && ATOM_DBMIGRATE ? '
@@ -844,11 +846,14 @@ function buildBansPage() {
 			} else {
 				$expire = 'Does not expire';
 			}
+			$ipFrom = $ban['ip_from'];
+			$ipTo = $ban['ip_to'];
+			$cidrIP = ip2cidr($ipFrom, $ipTo);
 			$text .= '
 			<tr>
 				<td>' .
-					(ATOM_GEOIP ? getCountryIcon(long2ip($ban['ip_from']), $geoipReader) : '') .
-					getIpUserInfoLink(ip2cidr($ban['ip_from'], $ban['ip_to'])) . '</td>
+					(ATOM_GEOIP ? getCountryIcon(long2ip($ipFrom), $geoipReader) : '') .
+					($ipFrom == $ipTo ? getIpUserInfoLink($cidrIP) : $cidrIP) . '</td>
 				<td>' . date('d.m.Y D H:i:s', $ban['timestamp']) . '</td>
 				<td>' . $expire . '</td><td>' . ($ban['reason'] == '' ?
 					'&nbsp;' : htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8')) . '</td>
@@ -962,9 +967,12 @@ function buildPasscodesPage() {
 	foreach ($passcodes as $pass) {
 		$ip = $pass['last_used_ip'];
 		$countryIcon = '';
+		$passcodeNum = $pass['number'];
 		$passHtml .= '
 			<tr>
-				<td>' . $pass['number'] . '</td>' .
+				<td><a target="_blank" href="/' . ATOM_BOARD . '/imgboard.php?manage=&passcode=' .
+					$passcodeNum . '&passcodes=block" title="Manage passcode №' . $passcodeNum . '">' .
+					$passcodeNum . '</a></td>' .
 				($isAdmin ? '
 				<td>' . $pass['id'] . '</td>' : '') . '
 				<td>' . $pass['meta'] . '</td>
@@ -984,6 +992,138 @@ function buildPasscodesPage() {
 	$passHtml .= '
 		</tbody></table>';
 	return $passHtml;
+}
+
+function buildUserInfoForm() {
+	return '<form id="form_moderate_post" name="form_ipinfo" method="get" action="?">
+			<input type="hidden" name="manage" value="">
+			<fieldset>
+				<legend>View user IP info</legend>
+				<div valign="top">
+					<label for="ipinfo">IP address:</label>
+					<input type="text" name="ipinfo" id="ipinfo">
+					<input type="submit" class="button-manage" value="Submit">
+				</div>
+			</fieldset>
+		</form>
+		<br>';
+}
+
+
+function buildUserInfoPage($ip, $posts) {
+	global $access;
+	$isMod = $access == 'admin' || $access == 'moderator';
+	$postsHtml = '';
+	foreach ($posts as $post) {
+		$postsHtml .= '
+					<tr><th>' . getPostManageButtons($post) . '
+					</th></tr>
+					<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . PHP_EOL . '
+					</td></tr>';
+	}
+	$banHtml = '';
+	$ban = banByIP($ip);
+	if ($ban) {
+		if ($ban['expire'] == 1) {
+			$expire = 'Warning';
+		} else if ($ban['expire'] > 0) {
+			$expire = date('d.m.Y D H:i:s', $ban['expire']);
+		} else {
+			$expire = 'Does not expire';
+		}
+		$banHtml = '
+					<tr>
+						<th>Set at</th>
+						<th>Expires</th>
+						<th>Reason provided</th>
+						<th>&nbsp;</th>
+					</tr>
+					<tr>
+						<td>' . date('d.m.Y D H:i:s', $ban['timestamp']) . '</td>
+						<td>' . $expire . '</td><td>' . ($ban['reason'] == '' ?
+							'&nbsp;' : htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8')) . '</td>
+						<td><a href="?manage&bans&lift=' . $ban['id'] . '">lift</a></td>
+					</tr>';
+	}
+	$ipLookupHtml = '';
+	if (ATOM_IPLOOKUPS_KEY) {
+		$ipLookup = lookupByIP($ip);
+		if ($ipLookup) {
+			$red = ' style="background: #ff000060;">1';
+			$ipLookupHtml = '
+				<table class="table"><tbody>
+					<tr>
+						<th>Abuser</th>
+						<th>VPS</th>
+						<th>Proxy</th>
+						<th>TOR</th>
+						<th>VPN</th>
+					</tr>
+					<tr>
+						<td' . ($ipLookup['abuser'] ? $red : '>0') . '</td>
+						<td' . ($ipLookup['vps'] ? $red : '>0') . '</td>
+						<td' . ($ipLookup['proxy'] ? $red : '>0') . '</td>
+						<td' . ($ipLookup['tor'] ? $red : '>0') . '</td>
+						<td' . ($ipLookup['vpn'] ? $red : '>0') . '</td>
+					</tr>
+				</tbody></table>';
+		} else {
+			$ipLookupHtml = 'This IP address has not yet been verified.';
+		}
+	}
+	return '<fieldset>
+			<legend>User IP: ' . $ip . '</legend>
+			<fieldset>
+				<legend>Action</legend>
+				<table border="0" cellspacing="0" cellpadding="0" width="100%"><tbody>
+					<tr>
+						<td align="right" width="50%;">
+							<form method="get" action="?">
+								<input type="hidden" name="manage" value="">
+								<input type="hidden" name="delall" value="' . $ip . '">
+								<input type="submit" class="button-action" value="Delete all" onclick="' .
+									'return confirm(\'Are you sure to delete all from ' . $ip . '?\')">
+							</form>
+						</td>
+						<td><small>This will delete all posts and threads from ip ' . $ip . '</small></td>
+					</tr>
+					<tr>
+						<td align="right" width="50%;">
+							<form method="get" action="?">
+								<input type="hidden" name="manage" value="">
+								<input type="hidden" name="bans" value="' . $ip . '">
+								<input type="submit" class="button-action" value="Ban user"' .
+									($ban || !$isMod ? ' disabled' : '') . '>
+							</form>
+						</td>
+						<td><small>' . (
+							$ban ? 'Ban record already exists for ' . $ip : (
+							$isMod ? 'Ban ip ' . $ip : 'Janitors can\'t ban an IP address.'
+							)) . '</small></td>
+					</tr>
+				</tbody></table>
+			</fieldset>
+			<fieldset>
+				<legend>Bans and warnings</legend>' .
+				($ban ? '
+				<table class="table"><tbody>' .
+					$banHtml . '
+				</tbody></table>' : 'This IP has no bans or warnings.') . '
+			</fieldset>' .
+			(ATOM_IPLOOKUPS_KEY ? '
+			<fieldset>
+				<legend>IP lookup</legend>
+				' . $ipLookupHtml . '
+			</fieldset>' : '') . '
+			<fieldset>
+				<legend>User posts and threads</legend>' .
+				($postsHtml ? '
+				<table class="table-status"><tbody>' .
+					$postsHtml . '
+				</tbody></table>' : 'No posts or threads from this IP on this board.') . '
+			</fieldset>
+		</fieldset>
+		<br>';
 }
 
 function buildReportPostForm($post) {
@@ -1033,7 +1173,7 @@ function buildModeratePostPage($post) {
 	global $access;
 	$id = $post['id'];
 	$ip = $post['ip'];
-	$passcodeNum = $post['pass'];
+	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
 	$isOp = isOp($post);
 	$ban = banByIP($ip);
 	$isMod = $access == 'admin' || $access == 'moderator';
@@ -1173,7 +1313,7 @@ function buildModeratePostPage($post) {
 function getPostManageButtons($post) {
 	global $access;
 	$id = $post['id'];
-	$passcodeNum = $post['pass'];
+	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
 	$ip = $post['ip'];
 	$isOp = isOp($post);
 	$a = '<a class="link-button" target="_blank" href="/' . ATOM_BOARD . '/imgboard.php?';
@@ -1216,7 +1356,7 @@ function buildStatusPage() {
 		}
 		foreach (array_keys($reportsByPost) as $id) {
 			$post = getPost($id);
-			if(!$post) {
+			if (!$post) {
 				continue;
 			}
 			$reportsHtml .= '
@@ -1319,60 +1459,6 @@ function buildStatusPage() {
 			<table class="table-status"><tbody>' .
 				$postsHtml . '
 			</tbody></table>
-		</fieldset>
-		<br>';
-}
-
-function buildUserInfoPage($ip, $posts) {
-	global $access;
-	$isMod = $access == 'admin' || $access == 'moderator';
-	$ban = banByIP($ip);
-	$postsHtml = '';
-	foreach ($posts as $post) {
-		$postsHtml .= '
-				<tr><th>' . getPostManageButtons($post) . '
-				</th></tr>
-				<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . PHP_EOL . '
-				</td></tr>';
-	}
-	return '<fieldset>
-			<legend>User ip ' . $ip . ' info</legend>
-			<fieldset>
-				<legend>Action</legend>
-				<table border="0" cellspacing="0" cellpadding="0" width="100%"><tbody>
-					<tr>
-						<td align="right" width="50%;">
-							<form method="get" action="?">
-								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="delall" value="' . $ip . '">
-								<input type="submit" class="button-action" value="Delete all" onclick="' .
-									'return confirm(\'Are you sure to delete all from ' . $ip . '?\')">
-							</form>
-						</td>
-						<td><small>This will delete all posts and threads from ip ' . $ip . '</small></td>
-					</tr>
-					<tr>
-						<td align="right" width="50%;">
-							<form method="get" action="?">
-								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="bans" value="' . $ip . '">
-								<input type="submit" class="button-action" value="Ban user"' .
-									($ban || !$isMod ? ' disabled' : '') . '>
-							</form>
-						</td>
-						<td><small>' . (
-							$ban ? 'Ban record already exists for ' . $ip : (
-							$isMod ? 'Ban ip ' . $ip : 'Janitors can\'t ban an IP address.'
-							)) . '</small></td>
-					</tr>
-				</tbody></table>
-			</fieldset>
-			<fieldset>
-				<legend>User posts and threads</legend>
-			<table class="table-status"><tbody>' .
-				$postsHtml . '
-			</tbody></table>
-			</fieldset>
 		</fieldset>
 		<br>';
 }
