@@ -1,7 +1,7 @@
 <?php
 // Uncomment to show debugging errors
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// error_reporting(E_ALL);
+// ini_set('display_errors', 1);
 ini_set('session.gc_maxlifetime', 2592000); // 30 days
 session_set_cookie_params(2592000); // store session cookie for 30 days
 
@@ -21,7 +21,7 @@ function fancyDie($message) {
 
 <html data-theme="' . ATOM_THEME . '">
 <head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023101900">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023102000">
 </head>
 <body align="center">
 	<br>
@@ -426,6 +426,13 @@ function managementRequest() {
 		}
 		die(managePage(buildModLogForm() . buildModLogTable(true, $fromtime, $totime)));
 	}
+	
+	/* --------[ View all posts from ip ]-------- */
+
+	if (isset($_GET['userinfo'])) {
+		$ip = $_GET['userinfo'];
+		die(managePage(buildUserInfoPage($ip, getPostsByIP($ip))));
+	}
 
 	/* --------[ Delete post or thread ]-------- */
 
@@ -767,22 +774,20 @@ function postingRequest() {
 			if ($direct_ban || (!$validPasscode)) {
 				$reason = $ban['reason'] == '' ? '' : '<br>Reason: ' . $ban['reason'];
 				if ($ban['expire'] == 1) {
-					fancyDie('Your IP address ' . $ip .
-						' has been issued a warning.
-						<br>To continue posting, please read <a href="/' . ATOM_BOARD .
-						'/imgboard.php?banned">this page</a>.
-						<br>'. $reason);
+					fancyDie('Your IP address ' . $ip . ' has been issued a warning.<br>
+						To continue posting, please read <a href="/' . ATOM_BOARD .
+						'/imgboard.php?banned">this page</a>.<br>' . $reason);
 				} else if ($ban['expire'] == 0 || $ban['expire'] > time()) {
 					$expire = $ban['expire'] > 0 ?
 						'<br>This ban will expire ' . date('y.m.d D H:i:s', $ban['expire']) :
 						'<br>This ban is permanent and will not expire.';
 					if (ATOM_PASSCODES_ENABLED && !$direct_ban) {
-						$expire .= '<br><br>This is a range ban (if affects a whole subnet), ';
-						$expire .= '<a href="/' . ATOM_BOARD .
-						'/imgboard.php?passcode">passcode users</a> are not affected by subnet bans.';
+						$expire .= '<br><br>This is a range ban (if affects a whole subnet),
+							<a href="/' . ATOM_BOARD . '/imgboard.php?passcode">passcode users</a>
+							are not affected by subnet bans.';
 					}
 					fancyDie('Your IP address ' . $ip .
-						' has been banned from posting on this image board. ' . $expire . '<br>'. $reason);
+						' has been banned from posting on this image board. ' . $expire . '<br>' . $reason);
 				} else {
 					clearExpiredBans();
 				}
@@ -1562,6 +1567,9 @@ $access = checkAccessRights();
 if (isset($_GET['manage'])) {
 	managementRequest();
 }
+if (isset($_GET['delete'])) { // Fust be before postingRequest()
+	deletionRequest();
+}
 if (
 	isset($_POST['name']) || isset($_POST['email']) || isset($_POST['subject']) || isset($_POST['message']) ||
 	isset($_POST['file']) || isset($_POST['embed']) || isset($_POST['password'])
@@ -1570,9 +1578,6 @@ if (
 }
 if (isset($_GET['banned'])) {
 	bannedRequest();
-}
-if (isset($_GET['delete'])) {
-	deletionRequest();
 }
 if (isset($_GET['report'])) {
 	reportRequest();

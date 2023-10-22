@@ -16,7 +16,7 @@ function $id(id) {
 
 function getCookie(name) {
 	var parts = ('; ' + document.cookie).split('; ' + name + '=');
-	return parts.length === 2 ? parts.pop().split(";").shift() : null;
+	return parts.length === 2 ? parts.pop().split(';').shift() : null;
 }
 
 function highlightPost(num) {
@@ -188,15 +188,13 @@ function initAfterDom() {
 	}
 
 	// Check and apply passcode
-	if (getCookie('passcode') === '1') {
+	var captchaEl = $id('captchablock');
+	if (captchaEl && getCookie('passcode') === '1') {
 		var xhr = new XMLHttpRequest();
 		xhr.onreadystatechange = function() {
 			if (xhr.readyState === XMLHttpRequest.DONE) {
-				if (xhr.responseText === "OK") {
-					var captchaEl = $id('captchablock');
-					if (captchaEl) {
-						captchaEl.style.display = 'none';
-					}
+				if (xhr.responseText === 'OK') {
+					captchaEl.style.display = 'none';
 					var validCaptchaEl = $id('validcaptchablock');
 					if (validCaptchaEl) {
 						validCaptchaEl.style.display = '';

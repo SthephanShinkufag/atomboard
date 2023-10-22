@@ -7,6 +7,19 @@ if (ATOM_GEOIP == 'geoip2') {
 }
 use GeoIp2\Database\Reader;
 
+/* ==[ Common elements ]=================================================================================== */
+
+function getCountryIcon($ip, $geoipReader) {
+	$countryCode = checkGeoIP($ip, $geoipReader);
+	return '<img class="poster-country" title="' . $countryCode . '" src="/' . ATOM_BOARD .
+		'/icons/flag-icons/' . $countryCode . '.png">&nbsp;';
+}
+
+function getIpUserInfoLink($ip) {
+	return '<a href="/' . ATOM_BOARD . '/imgboard.php?manage=&userinfo=' . $ip .
+		'" target="_blank" title="Show user ip info">' . $ip . '</a>';
+}
+
 /* ==[ Page elements ]===================================================================================== */
 
 function pageHeader() {
@@ -23,8 +36,8 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023101900">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023101900"></script>' .
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023102000">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023102000"></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -141,8 +154,8 @@ function buildPostForm($parent, $isstaffPost = false) {
 		if (ATOM_FILE_MAXKB > 0) {
 			$maxFileSizeInputHtml = '<input type="hidden" name="MAX_FILE_SIZE" value="' .
 				strval(ATOM_FILE_MAXKB * 1024) . '">';
-			$maxFileSizeRulesHtml = '<li>Maximum number of files is ' . ATOM_FILES_COUNT . ', ' .
-				ATOM_FILE_MAXKBDESC . ' total.</li>';
+			$maxFileSizeRulesHtml = '<li>Limit: ' . ATOM_FILES_COUNT . ' ' .
+				plural('file', ATOM_FILES_COUNT) . ', ' . ATOM_FILE_MAXKBDESC . ' per file.</li>';
 		}
 		$fileTypesHtml = '<li>' . supportedFileTypes() . '</li>';
 		$fileInputHtml = '<tr>
@@ -483,12 +496,8 @@ function buildPost($post, $res, $mode = '') {
 		}
 	}
 
-	// Country flags
-	$ip = $post['ip'];
-	$countryCode = checkGeoIP($ip,
-		ATOM_GEOIP == 'geoip2' ? new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL);
-
 	// Start post building
+	$ip = $post['ip'];
 	$omitted = $post['omitted'];
 	$likes = $post['likes'];
 	$replyBtn = ($isOp && $res == ATOM_INDEXPAGE ? '<a class="link-button" href="res/' .
@@ -500,13 +509,11 @@ function buildPost($post, $res, $mode = '') {
 				<label>
 					<input type="checkbox" name="delete" value="' . $id . '">' .
 					($post['subject'] != '' ? '
-					<span class="filetitle">' . $post['subject'] . '</span>' : '') .
-					(ATOM_GEOIP ? '
-						<img class="poster-country" title="' . $countryCode . '" src="/' . ATOM_BOARD .
-							'/icons/flag-icons/' . $countryCode . '.png">' : '') .
-							($showIP || $isEditPost ? ' ' . $ip : '') .
-					'</span> ' .
-					$post['nameblock'] . '
+					<span class="filetitle">' . $post['subject'] . '</span>' : '') . '
+					' . (ATOM_GEOIP ? getCountryIcon($ip, ATOM_GEOIP == 'geoip2' ?
+						new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL) : '') .
+					($showIP || $isEditPost ? getIpUserInfoLink($ip) : '') . '
+					' . $post['nameblock'] . '
 				</label>
 				<span class="reflink">' . ($res == ATOM_RESPAGE ? '
 					<a href="' . $thrId . '.html#' . $id . '" onclick="highlightPost(' . $id .
@@ -716,8 +723,8 @@ function managePage($text, $action = '') {
 			<a class="link-button" href="?manage&modlog">ModLog</a>' : '') .
 			(count($atom_janitors) != 0 && $access == 'janitor' ? '
 			<a class="link-button" href="/' . ATOM_BOARD . '/janitorlog.html">JanitorLog</a>' : '') . '
-			<a class="link-button" href="?manage&moderate">Moderate Post</a>
-			<a class="link-button" href="?manage&staffPost">Raw Post</a>' .
+			<a class="link-button" href="?manage&moderate">Manage post</a>
+			<a class="link-button" href="?manage&staffPost">Raw post</a>' .
 			($access == 'admin' ? '
 			<a class="link-button" href="?manage&rebuildall">Rebuild All</a>' : '') .
 			($access == 'admin' && ATOM_DBMIGRATE ? '
@@ -837,15 +844,14 @@ function buildBansPage() {
 			} else {
 				$expire = 'Does not expire';
 			}
-			$reason = $ban['reason'] == '' ? '&nbsp;' : htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8');
-			$countryCode = checkGeoIP(long2ip($ban['ip_from']), $geoipReader);
 			$text .= '
 			<tr>
-				<td>' . (ATOM_GEOIP ? '<img class="poster-country" title="' . $countryCode . '" src="/' .
-					ATOM_BOARD . '/icons/flag-icons/' . $countryCode . '.png"> ' : '') .
-					ip2cidr($ban['ip_from'], $ban['ip_to']) . '</td>
+				<td>' .
+					(ATOM_GEOIP ? getCountryIcon(long2ip($ban['ip_from']), $geoipReader) : '') .
+					getIpUserInfoLink(ip2cidr($ban['ip_from'], $ban['ip_to'])) . '</td>
 				<td>' . date('d.m.Y D H:i:s', $ban['timestamp']) . '</td>
-				<td>' . $expire . '</td><td>' . $reason . '</td>
+				<td>' . $expire . '</td><td>' . ($ban['reason'] == '' ?
+					'&nbsp;' : htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8')) . '</td>
 				<td><a href="?manage&bans&lift=' . $ban['id'] . '">lift</a></td>
 			</tr>';
 		}
@@ -954,14 +960,8 @@ function buildPasscodesPage() {
 			</tr>';
 	$passcodes = getAllPasscodes();
 	foreach ($passcodes as $pass) {
-		$passIp = $pass['last_used_ip'];
+		$ip = $pass['last_used_ip'];
 		$countryIcon = '';
-		if ($passIp) {
-			$countryCode = checkGeoIP($passIp,
-				ATOM_GEOIP == 'geoip2' ? new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL);
-			$countryIcon = '<img class="poster-country" title="' . $countryCode . '" src="/' . ATOM_BOARD .
-				'/icons/flag-icons/' . $countryCode . '.png">';
-		}
 		$passHtml .= '
 			<tr>
 				<td>' . $pass['number'] . '</td>' .
@@ -975,8 +975,10 @@ function buildPasscodesPage() {
 				<td>' . $pass['blocked_reason'] . '</td>
 				<td>' . ($pass['last_used'] ?
 					date('d.m.Y H:i:s', $pass['last_used']) : '') . '</td>
-				<td style="white-space: pre;">' .
-					($countryIcon ? $countryIcon . '&nbsp;' : '') . $passIp . '</td>
+				<td style="white-space: pre;">' . ($ip ?
+					(ATOM_GEOIP ? getCountryIcon($ip, ATOM_GEOIP == 'geoip2' ?
+						new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL) : '') .
+					getIpUserInfoLink($ip) : '') . '</td>
 			</tr>';
 	}
 	$passHtml .= '
@@ -1118,9 +1120,9 @@ function buildModeratePostPage($post) {
 									($isOp ? 'thread' : 'post') . '">
 							</form>
 						</td>
-						<td><small>' . ($isOp ? 'This will delete the entire thread below.' :
-							'This will delete the post below.'
-						) . '</small></td>
+						<td><small>' .
+							($isOp ? 'This will delete the entire thread.' : 'This will delete the post.') .
+						'</small></td>
 					</tr>
 					<tr>
 						<td align="right" width="50%;">
@@ -1143,8 +1145,8 @@ function buildModeratePostPage($post) {
 							</form>
 						</td>
 						<td><small>' . (
-							$ban ? ' A ban record already exists for ' . $ip : (
-							$isMod ? 'IP address: ' . $ip : 'Only an administrator may ban an IP address.'
+							$ban ? 'Ban record already exists for ' . $ip : (
+							$isMod ? 'Ban ip ' . $ip : 'Janitors can\'t ban an IP address.'
 							)) . '</small></td>
 					</tr>
 					' . ($passcodeNum ? '<tr>
@@ -1156,8 +1158,7 @@ function buildModeratePostPage($post) {
 								<input type="submit" class="button-action" value="Manage passcode">
 							</form>
 						</td>
-						<td><small>' . ($passcodeNum ? ('Passcode number: ' . $passcodeNum): '') .
-							'</small></td>
+						<td><small>Manage passcode №' . $passcodeNum . '</small></td>
 					</tr>' : '') . '
 				</tbody></table>
 			</fieldset>
@@ -1171,32 +1172,27 @@ function buildModeratePostPage($post) {
 
 function getPostManageButtons($post) {
 	global $access;
-	$isMod = $access == 'admin' || $access == 'moderator';
 	$id = $post['id'];
 	$passcodeNum = $post['pass'];
 	$ip = $post['ip'];
-	$ban = banByIP($ip);
 	$isOp = isOp($post);
-	$url = '/' . ATOM_BOARD . '/imgboard.php?';
+	$a = '<a class="link-button" target="_blank" href="/' . ATOM_BOARD . '/imgboard.php?';
 	return '
-					<a class="link-button" target="_blank" href="' . $url . 'manage=&moderate=' . $id .
-						'" title="Advanced options.">Manage ' . ($isOp ? 'thread' : 'post') . '</a>
-					<a class="link-button" target="_blank" href="' . $url . 'manage=&delete=' . $id .
-						'" title="This will delete the ' .
+					' . $a . 'manage=&moderate=' . $id . '" title="Advanced options.">Manage ' .
+						($isOp ? 'thread' : 'post') . '</a>
+					' . $a . 'manage=&delete=' . $id . '" title="This will delete the ' .
 						($isOp ? 'entire thread.">Delete thread' : 'post.">Delete post') . '</a>
-					<a class="link-button" target="_blank" href="' . $url . 'manage=&delall=' . $ip .
-						'" onclick="if (confirm(\'Are you sure to delete all from ' . $ip . '?\'))' .
+					' . $a . 'manage=&delall=' . $ip . '" onclick="' .
+						'if (confirm(\'Are you sure to delete all from ' . $ip . '?\'))' .
 						' { return true; } else { event.stopPropagation(); event.preventDefault(); };"' .
-						' title="This will delete all posts and threads from ip ' . $ip .
-						'">Delete all</a>' .
-					($isMod ? '
-					<a class="link-button" target="_blank" href="' . $url . 'manage=&bans=' . $ip .
-						'" title="' . ($ban ? 'Ban record already exists for ' . $ip : 'Ban ip ' . $ip) .
+						' title="This will delete all posts and threads from ip ' . $ip . '">Delete all</a>' .
+					($access == 'admin' || $access == 'moderator' ? '
+					' . $a . 'manage=&bans=' . $ip . '" title="' .
+						(banByIP($ip) ? 'Ban record already exists for ' . $ip : 'Ban ip ' . $ip) .
 						'">Ban user</a>' : '') .
 					($passcodeNum ? '
-					<a class="link-button" target="_blank" href="' . $url . 'manage=&passcode=' .
-						$passcodeNum . '&passcodes=block" title="Manage passcode №' . $passcodeNum .
-						'">Manage passcode</a>' : '');
+					' . $a . 'manage=&passcode=' . $passcodeNum . '&passcodes=block"' .
+						' title="Manage passcode №' . $passcodeNum . '">Manage passcode</a>' : '');
 }
 
 function buildStatusPage() {
@@ -1233,14 +1229,11 @@ function buildStatusPage() {
 				<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . PHP_EOL;
 			$reportArr = $reportsByPost[$id];
 			foreach ($reportArr as $report) {
-				$reportIP = $report['ip'];
-				$countryCode = checkGeoIP($reportIP, $geoipReader);
+				$ip = $report['ip'];
 				$reportsHtml .= '
 					<div class="reply report">
-						&nbsp;' . (ATOM_GEOIP ?
-							'<img class="poster-country" title="' . $countryCode . '" src="/' .
-							ATOM_BOARD . '/icons/flag-icons/' . $countryCode . '.png"> ' : '') .
-						$reportIP . '
+						&nbsp;' . (ATOM_GEOIP ? getCountryIcon($ip, $geoipReader) : '') .
+						getIpUserInfoLink($ip) . '
 						(' . date('d.m.y D H:i:s', $report['timestamp']) . ')
 						<br>
 						<div class="message">' . $report['reason'] . '</div>
@@ -1270,12 +1263,11 @@ function buildStatusPage() {
 	}
 
 	// Build recent posts table
-	$postHtml = '';
-	$recentCount = 0;
-	$posts = getLatestPosts(true, 100);
+	$postsHtml = '';
+	$recentCount = 100;
+	$posts = getLatestPosts(true, $recentCount);
 	foreach ($posts as $post) {
-		$recentCount++;
-		$postHtml .= '
+		$postsHtml .= '
 				<tr><th>' . getPostManageButtons($post) . '
 				</th></tr>
 				<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . PHP_EOL . '
@@ -1325,8 +1317,62 @@ function buildStatusPage() {
 		<fieldset>
 			<legend>Recent ' . $recentCount . ' posts</legend>
 			<table class="table-status"><tbody>' .
-				$postHtml . '
+				$postsHtml . '
 			</tbody></table>
+		</fieldset>
+		<br>';
+}
+
+function buildUserInfoPage($ip, $posts) {
+	global $access;
+	$isMod = $access == 'admin' || $access == 'moderator';
+	$ban = banByIP($ip);
+	$postsHtml = '';
+	foreach ($posts as $post) {
+		$postsHtml .= '
+				<tr><th>' . getPostManageButtons($post) . '
+				</th></tr>
+				<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . PHP_EOL . '
+				</td></tr>';
+	}
+	return '<fieldset>
+			<legend>User ip ' . $ip . ' info</legend>
+			<fieldset>
+				<legend>Action</legend>
+				<table border="0" cellspacing="0" cellpadding="0" width="100%"><tbody>
+					<tr>
+						<td align="right" width="50%;">
+							<form method="get" action="?">
+								<input type="hidden" name="manage" value="">
+								<input type="hidden" name="delall" value="' . $ip . '">
+								<input type="submit" class="button-action" value="Delete all" onclick="' .
+									'return confirm(\'Are you sure to delete all from ' . $ip . '?\')">
+							</form>
+						</td>
+						<td><small>This will delete all posts and threads from ip ' . $ip . '</small></td>
+					</tr>
+					<tr>
+						<td align="right" width="50%;">
+							<form method="get" action="?">
+								<input type="hidden" name="manage" value="">
+								<input type="hidden" name="bans" value="' . $ip . '">
+								<input type="submit" class="button-action" value="Ban user"' .
+									($ban || !$isMod ? ' disabled' : '') . '>
+							</form>
+						</td>
+						<td><small>' . (
+							$ban ? 'Ban record already exists for ' . $ip : (
+							$isMod ? 'Ban ip ' . $ip : 'Janitors can\'t ban an IP address.'
+							)) . '</small></td>
+					</tr>
+				</tbody></table>
+			</fieldset>
+			<fieldset>
+				<legend>User posts and threads</legend>
+			<table class="table-status"><tbody>' .
+				$postsHtml . '
+			</tbody></table>
+			</fieldset>
 		</fieldset>
 		<br>';
 }
