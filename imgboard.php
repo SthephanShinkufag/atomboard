@@ -1048,7 +1048,9 @@ function postingRequest() {
 		$postNameBlock = '<a href="mailto:' . $postEmail . '"' .
 			($lowEmail == 'sage' ? ' class="sage"' : '') . '>' . $postNameBlock . '</a>';
 	}
-	$post['nameblock'] = $postNameBlock . ' ' . date('d.m.y D H:i:s', time());
+	$tt = time();
+	$postDateBlock = '<span class="posterdate" data-timestamp="' . $tt . '">' . date('d.m.y D H:i:s', $tt) . '</span>';
+	$post['nameblock'] = $postNameBlock . ' ' . $postDateBlock;
 
 	/* --------[ Embed URL upload ]-------- */
 

@@ -428,7 +428,9 @@ function buildPost($post, $res, $mode = '') {
 		}
 		$origName = $post['file' . $index . '_original'];
 		$hasOrigName = $origName != '';
-		$thumblink = '<a href="' . $directLink . '" target="_blank"' .
+		$extraThumbData = 'data-size="' . $post['file' . $index . '_size'] . '" data-width="' .
+		    $fWidth . '" data-height="' . $fHeight . '"';
+		$thumblink = '<a href="' . $directLink . '" ' . $extraThumbData . ' target="_blank"' .
 			($isEmbed || in_array($fExt, array('jpg', 'png', 'gif', 'webp', 'webm', 'mp4', 'mov')) ?
 				$expandClick : '') .
 			($hasOrigName ? ' download="' . $origName . '" title="Click to expand/collapse">' : '>');
