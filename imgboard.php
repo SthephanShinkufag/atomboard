@@ -1433,9 +1433,11 @@ function deletionRequest() {
 /* ==[ Post report request ]=============================================================================== */
 
 function reportRequest() {
+	global $access;
 	if (isset($_GET['addreport'])) {
+	    $ip = $_SERVER['REMOTE_ADDR'];
 		$id = $_POST['id'];
-		$report = insertReport($id, $_POST['board'], $_POST['ip'], $_POST['reason']);
+		$report = insertReport($id, ATOM_BOARD, $ip, $_POST['reason']);
 		if ($report) {
 			if ($report == 'exists') {
 				fancyDie('You have already sent a report to post №' . $id . '!');
@@ -1443,10 +1445,14 @@ function reportRequest() {
 			fancyDie('Report to post №' . $id . ' successfully sent.');
 		}
 		fancyDie('An error occurred while sending the report.');
-	} else if (isset($_GET['deletereports'])) {
-		$id = $_GET['id'];
-		deleteReports($id);
-		fancyDie('Post №' . $id . ' approved. All reports are closed.');
+	} else {
+	    if ($access != 'disabled') {
+	        if (isset($_GET['deletereports'])) {
+                $id = $_GET['id'];
+                deleteReports($id);
+                fancyDie('Post №' . $id . ' approved. All reports are closed.');
+            }
+	    }
 	}
 }
 
