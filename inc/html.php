@@ -1131,8 +1131,6 @@ function buildUserInfoPage($ip, $posts) {
 function buildReportPostForm($post) {
 	return '<form id="form_report_post" name="form_report_post" method="post" action="?report&addreport">
 			<input type="hidden" name="id" value="' . $post['id'] . '">
-			<input type="hidden" name="board" value="' . ATOM_BOARD . '">
-			<input type="hidden" name="ip" value="' . $_SERVER['REMOTE_ADDR'] . '">
 			<fieldset>
 				<legend>Report a ' . (isOp($post) ? 'thread' : 'post') . ' to moderators</legend>
 				<div valign="top">
