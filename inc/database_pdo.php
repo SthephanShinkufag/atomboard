@@ -545,6 +545,19 @@ function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
 
 /* ==[ Posts reports ]===================================================================================== */
 
+function reportsByPostID($id) {
+	$reports = array();
+	$results = pdoQuery(
+		"SELECT * FROM " . ATOM_DBREPORTS . "
+		WHERE postnum = ?
+		ORDER BY timestamp DESC",
+		array($id));
+	while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
+		$reports[] = $row;
+	}
+	return $reports;
+}
+
 function getAllReports() {
 	$reports = array();
 	$results = pdoQuery(

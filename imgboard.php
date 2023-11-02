@@ -777,9 +777,9 @@ function postingRequest() {
 			if ($direct_ban || (!$validPasscode)) {
 				$reason = $ban['reason'] == '' ? '' : '<br>Reason: ' . $ban['reason'];
 				if ($ban['expire'] == 1) {
-					fancyDie('Your IP address ' . $ip . ' has been issued a warning.<br>
-						To continue posting, please read <a href="/' . ATOM_BOARD .
-						'/imgboard.php?banned">this page</a>.<br>' . $reason);
+					fancyDie('Your IP address ' . $ip .
+						 ' has been issued a warning.<br>To continue posting, please read <a href="/' .
+						 ATOM_BOARD . '/imgboard.php?banned">this page</a>.<br>' . $reason);
 				} else if ($ban['expire'] == 0 || $ban['expire'] > time()) {
 					$expire = $ban['expire'] > 0 ?
 						'<br>This ban will expire ' . date('y.m.d D H:i:s', $ban['expire']) :
@@ -1435,9 +1435,8 @@ function deletionRequest() {
 function reportRequest() {
 	global $access;
 	if (isset($_GET['addreport'])) {
-	    $ip = $_SERVER['REMOTE_ADDR'];
 		$id = $_POST['id'];
-		$report = insertReport($id, ATOM_BOARD, $ip, $_POST['reason']);
+		$report = insertReport($id, ATOM_BOARD, $_SERVER['REMOTE_ADDR'], $_POST['reason']);
 		if ($report) {
 			if ($report == 'exists') {
 				fancyDie('You have already sent a report to post №' . $id . '!');
@@ -1445,14 +1444,10 @@ function reportRequest() {
 			fancyDie('Report to post №' . $id . ' successfully sent.');
 		}
 		fancyDie('An error occurred while sending the report.');
-	} else {
-	    if ($access != 'disabled') {
-	        if (isset($_GET['deletereports'])) {
-                $id = $_GET['id'];
-                deleteReports($id);
-                fancyDie('Post №' . $id . ' approved. All reports are closed.');
-            }
-	    }
+	} else if ($access != 'disabled' && isset($_GET['deletereports'])) {
+		$id = $_GET['id'];
+		deleteReports($id);
+		fancyDie('Post №' . $id . ' approved. All reports are closed.');
 	}
 }
 

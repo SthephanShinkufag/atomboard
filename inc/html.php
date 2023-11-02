@@ -429,7 +429,7 @@ function buildPost($post, $res, $mode = '') {
 		$origName = $post['file' . $index . '_original'];
 		$hasOrigName = $origName != '';
 		$extraThumbData = 'data-size="' . $post['file' . $index . '_size'] . '" data-width="' .
-		    $fWidth . '" data-height="' . $fHeight . '"';
+			$fWidth . '" data-height="' . $fHeight . '"';
 		$thumblink = '<a href="' . $directLink . '" ' . $extraThumbData . ' target="_blank"' .
 			($isEmbed || in_array($fExt, array('jpg', 'png', 'gif', 'webp', 'webm', 'mp4', 'mov')) ?
 				$expandClick : '') .
@@ -1169,6 +1169,23 @@ function buildModeratePostForm() {
 		<br>';
 }
 
+function getPostReports($reports, $geoipReader) {
+	$reportsHtml = '';
+	foreach ($reports as $report) {
+		$ip = $report['ip'];
+		$reportsHtml .= '
+					<div class="reply report">
+						&nbsp;' . (ATOM_GEOIP ? getCountryIcon($ip, $geoipReader) : '') .
+						getIpUserInfoLink($ip) . '
+						(' . date('d.m.y D H:i:s', $report['timestamp']) . ')
+						<br>
+						<div class="message">' . $report['reason'] . '</div>
+					</div>
+					<br>';
+	}
+	return $reportsHtml;
+}
+
 function buildModeratePostPage($post) {
 	global $access;
 	$id = $post['id'];
@@ -1177,64 +1194,66 @@ function buildModeratePostPage($post) {
 	$isOp = isOp($post);
 	$ban = banByIP($ip);
 	$isMod = $access == 'admin' || $access == 'moderator';
+	$reports = reportsByPostID($id);
+	$reportsCount = count($reports);
 	$stickyHtml = '';
 	$lockedHtml = '';
 	$endlessHtml = '';
 	if ($isOp) {
 		$isStickied = $post['stickied'] == 1;
 		$stickyHtml = '
-					<tr>
-						<td align="right" width="50%;">
-							<form method="get" action="?">
-								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="sticky" value="' . $id . '">
-								<input type="hidden" name="setsticky" value="' . ($isStickied ? 0 : 1) . '">
-								<button type="submit" class="button-action">
-									<img src="/' . ATOM_BOARD .
-									'/icons/sticky.png" width="16" height="16" style="vertical-align: -3px;">
-									' . ($isStickied ? 'Unsticky' : 'Sticky') . ' thread
-								</button>
-							</form>
-						</td>
-						<td><small>' . ($isStickied ? 'Return this thread to a normal state.' :
-							'Keep this thread at the top of the board.') . '</small></td>
-					</tr>';
+				<tr>
+					<td align="right" width="50%;">
+						<form method="get" action="?">
+							<input type="hidden" name="manage" value="">
+							<input type="hidden" name="sticky" value="' . $id . '">
+							<input type="hidden" name="setsticky" value="' . ($isStickied ? 0 : 1) . '">
+							<button type="submit" class="button-action">
+								<img src="/' . ATOM_BOARD .
+								'/icons/sticky.png" width="16" height="16" style="vertical-align: -3px;">
+								' . ($isStickied ? 'Unsticky' : 'Sticky') . ' thread
+							</button>
+						</form>
+					</td>
+					<td><small>' . ($isStickied ? 'Return this thread to a normal state.' :
+						'Keep this thread at the top of the board.') . '</small></td>
+				</tr>';
 		$isLocked = $post['locked'] == 1;
 		$lockedValue = $isLocked ? 'Unlock' : 'Lock';
 		$lockedHtml = '
-					<tr>
-						<td align="right" width="50%;">
-							<form method="get" action="?">
-								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="locked" value="' . $id . '">
-								<input type="hidden" name="setlocked" value="' . ($isLocked ? 0 : 1) . '">
-								<button type="submit" class="button-action">
-									<img src="/' . ATOM_BOARD .
-									'/icons/locked.png" width="11" height="16" style="vertical-align: -3px;">
-									' . $lockedValue . ' thread
-								</button>
-							</form>
-						</td>
-						<td><small>' . $lockedValue . ' this thread for posting.</small></td>
-					</tr>';
+				<tr>
+					<td align="right" width="50%;">
+						<form method="get" action="?">
+							<input type="hidden" name="manage" value="">
+							<input type="hidden" name="locked" value="' . $id . '">
+							<input type="hidden" name="setlocked" value="' . ($isLocked ? 0 : 1) . '">
+							<button type="submit" class="button-action">
+								<img src="/' . ATOM_BOARD .
+								'/icons/locked.png" width="11" height="16" style="vertical-align: -3px;">
+								' . $lockedValue . ' thread
+							</button>
+						</form>
+					</td>
+					<td><small>' . $lockedValue . ' this thread for posting.</small></td>
+				</tr>';
 		$isEndless = $post['endless'] == 1;
 		$endlessHtml = '
-					<tr>
-						<td align="right" width="50%;">
-							<form method="get" action="?">
-								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="endless" value="' . $id . '">
-								<input type="hidden" name="setendless" value="' . ($isEndless ? 0 : 1) . '">
-								<button type="submit" class="button-action">
-									<img src="/' . ATOM_BOARD .
-									'/icons/endless.png" width="16" height="16" style="vertical-align: -3px;">
-									Make ' . ($isEndless ? 'non-endless' : 'endless') . ' thread
-								</button>
-							</form>
-						</td>
-						<td><small>' . ($isEndless ? 'Disable' : 'Enable') .
-							' endless mode for this thread.</small></td>
-					</tr>';
+				<tr>
+					<td align="right" width="50%;">
+						<form method="get" action="?">
+							<input type="hidden" name="manage" value="">
+							<input type="hidden" name="endless" value="' . $id . '">
+							<input type="hidden" name="setendless" value="' . ($isEndless ? 0 : 1) . '">
+							<button type="submit" class="button-action">
+								<img src="/' . ATOM_BOARD .
+								'/icons/endless.png" width="16" height="16" style="vertical-align: -3px;">
+								Make ' . ($isEndless ? 'non-endless' : 'endless') . ' thread
+							</button>
+						</form>
+					</td>
+					<td><small>' . ($isEndless ? 'Disable' : 'Enable') .
+						' endless mode for this thread.</small></td>
+				</tr>';
 		$postHtml = '';
 		$posts = getThreadPosts($id, false);
 		foreach ($posts as $postTemp) {
@@ -1245,67 +1264,82 @@ function buildModeratePostPage($post) {
 	}
 	return '<fieldset>
 			<legend>Moderating №' . $id . '</legend>
-			<fieldset>
-				<legend>Action</legend>
-				<table border="0" cellspacing="0" cellpadding="0" width="100%"><tbody>' .
-					$stickyHtml .
-					$lockedHtml .
-					$endlessHtml . '
-					<tr>
-						<td align="right" width="50%;">
-							<form method="get" action="?">
-								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="delete" value="' . $id . '">
-								<input type="submit" class="button-action" value="Delete ' .
-									($isOp ? 'thread' : 'post') . '">
-							</form>
-						</td>
-						<td><small>' .
-							($isOp ? 'This will delete the entire thread.' : 'This will delete the post.') .
-						'</small></td>
-					</tr>
-					<tr>
-						<td align="right" width="50%;">
-							<form method="get" action="?">
-								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="delall" value="' . $ip . '">
-								<input type="submit" class="button-action" value="Delete all" onclick="' .
-									'return confirm(\'Are you sure to delete all from ' . $ip . '?\')">
-							</form>
-						</td>
-						<td><small>This will delete all posts and threads from ip ' . $ip . '</small></td>
-					</tr>
-					<tr>
-						<td align="right" width="50%;">
-							<form method="get" action="?">
-								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="bans" value="' . $ip . '">
-								<input type="submit" class="button-action" value="Ban user"' .
-									($ban || !$isMod ? ' disabled' : '') . '>
-							</form>
-						</td>
-						<td><small>' . (
-							$ban ? 'Ban record already exists for ' . $ip : (
-							$isMod ? 'Ban ip ' . $ip : 'Janitors can\'t ban an IP address.'
-							)) . '</small></td>
-					</tr>
-					' . ($passcodeNum ? '<tr>
-						<td align="right" width="50%;">
-							<form method="get" action="?">
-								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="passcode" value="' . $passcodeNum . '">
-								<input type="hidden" name="passcodes" value="block">
-								<input type="submit" class="button-action" value="Manage passcode">
-							</form>
-						</td>
-						<td><small>Manage passcode №' . $passcodeNum . '</small></td>
-					</tr>' : '') . '
-				</tbody></table>
-			</fieldset>
-			<fieldset>
-				<legend>' . ($isOp ? 'Thread' : 'Post') . '</legend>' .
-				$postHtml . '
-			</fieldset>
+			<table border="0" cellspacing="0" cellpadding="0" width="100%"><tbody>' .
+				$stickyHtml .
+				$lockedHtml .
+				$endlessHtml . '
+				<tr>
+					<td align="right" width="50%;">
+						<form method="get" action="?">
+							<input type="hidden" name="manage" value="">
+							<input type="hidden" name="delete" value="' . $id . '">
+							<input type="submit" class="button-action" value="Delete ' .
+								($isOp ? 'thread' : 'post') . '">
+						</form>
+					</td>
+					<td><small>' .
+						($isOp ? 'This will delete the entire thread.' : 'This will delete the post.') .
+					'</small></td>
+				</tr>
+				<tr>
+					<td align="right" width="50%;">
+						<form method="get" action="?">
+							<input type="hidden" name="manage" value="">
+							<input type="hidden" name="delall" value="' . $ip . '">
+							<input type="submit" class="button-action" value="Delete all" onclick="' .
+								'return confirm(\'Are you sure to delete all from ' . $ip . '?\')">
+						</form>
+					</td>
+					<td><small>This will delete all posts and threads from ip ' . $ip . '</small></td>
+				</tr>
+				<tr>
+					<td align="right" width="50%;">
+						<form method="get" action="?">
+							<input type="hidden" name="manage" value="">
+							<input type="hidden" name="bans" value="' . $ip . '">
+							<input type="submit" class="button-action" value="Ban user"' .
+								($ban || !$isMod ? ' disabled' : '') . '>
+						</form>
+					</td>
+					<td><small>' . (
+						$ban ? 'Ban record already exists for ' . $ip :
+						($isMod ? 'Ban ip ' . $ip : 'Janitors can\'t ban an IP address.')
+					) . '</small></td>
+				</tr>
+				' . ($passcodeNum ? '<tr>
+					<td align="right" width="50%;">
+						<form method="get" action="?">
+							<input type="hidden" name="manage" value="">
+							<input type="hidden" name="passcode" value="' . $passcodeNum . '">
+							<input type="hidden" name="passcodes" value="block">
+							<input type="submit" class="button-action" value="Manage passcode">
+						</form>
+					</td>
+					<td><small>Manage passcode №' . $passcodeNum . '</small></td>
+				</tr>' : '') . '
+				' . ($reportsCount ? '<tr>
+					<td align="right" width="50%;">
+						<form method="get" action="?">
+							<input type="hidden" name="report" value="">
+							<input type="hidden" name="deletereports">
+							<input type="hidden" name="id" value="' . $id . '">
+							<input type="submit" class="button-action" value="Close reports">
+						</form>
+					</td>
+					<td><small>Delete all related reports</small></td>
+				</tr>' : '') . '
+			</tbody></table>
+		</fieldset>' .
+		($reportsCount ? '
+		<fieldset>
+			<legend>Reports</legend>
+			<table class="table-status"><tbody>' .
+				getPostReports($reports, new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb')) . '
+			</tbody></table>
+		</fieldset>' : '') . '
+		<fieldset>
+			<legend>' . ($isOp ? 'Thread' : 'Post') . '</legend>' .
+			$postHtml . '
 		</fieldset>
 		<br>';
 }
@@ -1366,21 +1400,9 @@ function buildStatusPage() {
 						'" title="Delete all related reports.">Close reports</a>' .
 					getPostManageButtons($post) . '
 				</th></tr>
-				<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . PHP_EOL;
-			$reportArr = $reportsByPost[$id];
-			foreach ($reportArr as $report) {
-				$ip = $report['ip'];
-				$reportsHtml .= '
-					<div class="reply report">
-						&nbsp;' . (ATOM_GEOIP ? getCountryIcon($ip, $geoipReader) : '') .
-						getIpUserInfoLink($ip) . '
-						(' . date('d.m.y D H:i:s', $report['timestamp']) . ')
-						<br>
-						<div class="message">' . $report['reason'] . '</div>
-					</div>
-					<br>';
-			}
-			$reportsHtml .= '
+				<tr><td>' .
+					buildPost($post, ATOM_INDEXPAGE, 'ip') . PHP_EOL .
+					getPostReports($reportsByPost[$id], $geoipReader) . '
 				</td></tr>';
 		}
 	}
@@ -1440,7 +1462,7 @@ function buildStatusPage() {
 				</td>' : '') . '
 			</tr></tbody></table>
 		</fieldset>' .
-		(count($reports) ? '
+		($reportsCount ? '
 		<fieldset>
 			<legend>Reports</legend>
 			<table class="table-status"><tbody>' .
