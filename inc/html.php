@@ -55,8 +55,8 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023110600">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023110600"></script>' .
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023110700">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023110700"></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -971,11 +971,9 @@ function buildPasscodesPage() {
 				<td>' . $pass['meta'] . '</td>
 				<td>' . date('d.m.Y H:i:s', $pass['issued']) . '</td>
 				<td>' . date('d.m.Y H:i:s', $pass['expires']) . '</td>
-				<td>' . ($pass['blocked_till'] ?
-					date('d.m.Y H:i:s', $pass['blocked_till']) : '') . '</td>
+				<td>' . ($pass['blocked_till'] ? date('d.m.Y H:i:s', $pass['blocked_till']) : '') . '</td>
 				<td>' . $pass['blocked_reason'] . '</td>
-				<td>' . ($pass['last_used'] ?
-					date('d.m.Y H:i:s', $pass['last_used']) : '') . '</td>
+				<td>' . ($pass['last_used'] ? date('d.m.Y H:i:s', $pass['last_used']) : '') . '</td>
 				<td style="white-space: pre;">' . ($ip ?
 					(ATOM_GEOIP ? getCountryIcon($ip, $geoipReader) : '') .
 					getIpUserInfoLink($ip) : '') . '</td>
