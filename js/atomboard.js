@@ -176,6 +176,42 @@ function saveSettings() {
 }
 
 function initAfterDom() {
+	// Build post backlinks
+	if(!$id('de-main')) { // Check if Dollchan Extension is disabled
+		var backLinksArr = {};
+		var replyMessages = $Q('.message');
+		for (var i = 0, len = replyMessages.length; i < len; ++i) {
+			var replyMessage = replyMessages[i];
+			var match = replyMessage.innerHTML.match(/>&gt;&gt;(\d+)<\/a>/);
+			if (!match) {
+				continue;
+			}
+			var postId = match[1];
+			if(!backLinksArr[postId]) {
+				backLinksArr[postId] = [];
+			}
+			backLinksArr[postId].push(replyMessage.closest('.reply, .oppost').id.match(/\d+/));
+		}
+		var boardName = $q('input[name="board"]').value;
+		var isThread = window.location.href.includes('/res/');
+		var thrId = isThread ? $q('.thread').id.match(/\d+/) : 0;
+		for (postId in backLinksArr) {
+			var post = $q('#reply' + postId + ', #op' + postId);
+			if(!post) {
+				continue;
+			}
+			backLinks = backLinksArr[postId];
+			for (var i = 0, len = backLinks.length; i < len; ++i) {
+				backLinks[i] = '<a class="' +
+					(post.classList.contains('oppost') ? 'refop' : 'refreply') + '" href="/' + boardName +
+					'/res/' + (isThread ? thrId : post.closest('.thread').id.match(/\d+/)) +
+					'.html#' + backLinks[i] + '">&gt;&gt;' + backLinks[i] + '</a>';
+			}
+			$q('.message', post).insertAdjacentHTML('afterend',
+					'\r\n<div class="backlinks">' + backLinks.join(', ') + '</div>');
+		}
+	}
+
 	// Navigate to post if hash available
 	var hash = window.location.hash;
 	if (hash) {

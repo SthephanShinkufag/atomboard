@@ -128,8 +128,6 @@ define('ATOM_UNIQUENAME', '');
 define('ATOM_TRIPSEED', '');
 // Likes (reactions to posts)
 define('ATOM_LIKES', true);
-// Display reflinks to replies that reference a post
-define('ATOM_BACKLINKS', true);
 // Words longer than this many characters will be broken apart, 0 to disable
 define('ATOM_WORDBREAK', 0);
 

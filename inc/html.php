@@ -9,8 +9,27 @@ use GeoIp2\Database\Reader;
 
 /* ==[ Common elements ]=================================================================================== */
 
-function getCountryIcon($ip, $geoipReader) {
-	$countryCode = checkGeoIP($ip, $geoipReader);
+function getCountryIcon($ip, $geoipReader = NULL) {
+	$countryCode = '';
+	$validIP = filter_var($ip, FILTER_VALIDATE_IP);
+	if ($validIP) {
+		if (ATOM_GEOIP == 'geoip2') {
+			if(!$geoipReader) {
+				$geoipReader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
+			}
+			try {
+				$record = $geoipReader->country($validIP);
+				$countryCode = $record->country->isoCode;
+			} catch (\GeoIp2\Exception\AddressNotFoundException $e) {
+				$countryCode = 'ANON';
+			}
+		} else if (ATOM_GEOIP == 'geoip') {
+			$countryCode = geoip_country_code_by_name($validIP);
+		}
+	}
+	if(!$countryCode) {
+		$countryCode = 'ANON';
+	}
 	return '<img class="poster-country" title="' . $countryCode . '" src="/' . ATOM_BOARD .
 		'/icons/flag-icons/' . $countryCode . '.png">&nbsp;';
 }
@@ -36,8 +55,8 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023102000">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023102000"></script>' .
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023110600">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023110600"></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -344,45 +363,6 @@ function buildPostForm($parent, $isStaffPost = false) {
 
 /* ==[ Post ]============================================================================================== */
 
-function checkGeoIP($ip) {
-	$countryCode = 'ANON';
-	$validIP = filter_var($ip, FILTER_VALIDATE_IP);
-	if ($validIP) {
-		if (ATOM_GEOIP == 'geoip2') {
-			$reader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
-			try {
-				$record = $reader->country($validIP);
-				$countryCode = $record->country->isoCode;
-			} catch (\GeoIp2\Exception\AddressNotFoundException $e) {
-				$countryCode = 'ANON';
-			}
-		} else if (ATOM_GEOIP == 'geoip') {
-			$countryCode = geoip_country_code_by_name($validIP);
-		}
-	}
-	return $countryCode ? $countryCode : 'ANON';
-}
-
-function buildPostBacklinks($id, $thrId) {
-	if (!ATOM_BACKLINKS) {
-		return '';
-	}
-	$str = '';
-	$match = '&gt;&gt;' . $id . '<';
-	$posts = getThreadPosts($thrId);
-	foreach ($posts as $reply) {
-		if (strpos($reply['message'], $match) === false) {
-			continue;
-		}
-		$post = getPost($reply['id']);
-		$str .= ($str != '' ? ', ' : '') . (!$post ? '&gt;&gt;' . $reply['id'] :
-			'<a class="' . (isOp($post) ? 'refop' : 'refreply') . '" href="/' . ATOM_BOARD . '/res/' .
-				getThreadId($post) . '.html#' . $reply['id'] . '">&gt;&gt;' . $reply['id'] . '</a>');
-	}
-	return $str != '' ? '
-				<div class="backlinks">' . $str . '</div>' : '';
-}
-
 function buildPost($post, $res, $mode = '') {
 	$isEditPost = $mode == 'edit';
 	$showIP = $mode == 'ip';
@@ -447,32 +427,32 @@ function buildPost($post, $res, $mode = '') {
 			continue;
 		}
 		$filehtml .= '
-				<div class="image-container">
-					<span class="filesize">' .
-					($isEditPost ? '
-						<input type="checkbox" name="delete-img-mod[]" value="' . $index . '">' : '') . '
-						' . $filesize . '
-					</span>
-					<div id="thumbfile' . $id . $index . '">' .
-						($post['thumb' . $index] != '' /* If a video has a thumbnail */ ? '
-						' . $thumblink . '
-							<img src="/' . ATOM_BOARD . '/thumb/' . $post['thumb' . $index] .
-							'" alt="' . $id . $index . '" class="thumb' . ($isVideo ? ' thumb-video' : '') .
-							'" id="thumbnail' . $id . $index.
-							'" width="' . $post['thumb' . $index . '_width'] .
-							'" height="' . $post['thumb' . $index . '_height'] . '">
-						</a>' :
-						($isVideo /* If a video has no thumbnail */ ? '
-						' . $thumblink . '
-							<video src="' . $directLink . '" alt="' . $id . $index .
-							'" class="thumb thumb-video" id="thumbnail' . $id . $index. '"></video>
-						</a>' : '')) . '
-					</div>' . ($expandHtml == '' ? '' : '
-					<div id="expand' . $id . $index . '" style="display: none;">
-						' . $expandHtml . '
-					</div>
-					<div id="file' . $id . $index . '" class="thumb" style="display: none;"></div>
-				</div>');
+					<div class="image-container">
+						<span class="filesize">' .
+						($isEditPost ? '
+							<input type="checkbox" name="delete-img-mod[]" value="' . $index . '">' : '') . '
+							' . $filesize . '
+						</span>
+						<div id="thumbfile' . $id . $index . '">' .
+							($post['thumb' . $index] != '' /* If a video has a thumbnail */ ? '
+							' . $thumblink . '
+								<img src="/' . ATOM_BOARD . '/thumb/' . $post['thumb' . $index] .
+								'" alt="' . $id . $index . '" class="thumb' .
+								($isVideo ? ' thumb-video' : '') . '" id="thumbnail' . $id . $index.
+								'" width="' . $post['thumb' . $index . '_width'] .
+								'" height="' . $post['thumb' . $index . '_height'] . '">
+							</a>' :
+							($isVideo /* If a video has no thumbnail */ ? '
+							' . $thumblink . '
+								<video src="' . $directLink . '" alt="' . $id . $index .
+								'" class="thumb thumb-video" id="thumbnail' . $id . $index. '"></video>
+							</a>' : '')) . '
+						</div>' . ($expandHtml == '' ? '' : '
+						<div id="expand' . $id . $index . '" style="display: none;">
+							' . $expandHtml . '
+						</div>
+						<div id="file' . $id . $index . '" class="thumb" style="display: none;"></div>
+					</div>');
 	}
 
 	// Truncate messages on board index pages for readability
@@ -491,10 +471,10 @@ function buildPost($post, $res, $mode = '') {
 				array('quiet' => true, 'show-body-only' => true),
 				'utf8'
 			) . '
-					<div class="abbrev">
-						Post too long. <a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $id .
-						'">Click to view</a>.
-					</div>';
+						<div class="abbrev">
+							Post too long. <a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $id .
+							'">Click to view</a>.
+						</div>';
 		}
 	}
 
@@ -504,79 +484,83 @@ function buildPost($post, $res, $mode = '') {
 	$likes = $post['likes'];
 	$replyBtn = ($isOp && $res == ATOM_INDEXPAGE ? '<a class="link-button" href="res/' .
 		$id . '.html" title="Reply to thread №' . $id . '">Reply</a>' : '');
-	return PHP_EOL . ($isOp ? '
-			<div class="oppost" id="op' . $id . '">' : '
-			<table border="0"><tbody><tr><td class="reply" id="reply' . $id . '">') . '
-				<a id="' . $id . '"></a>
-				<label>
-					<input type="checkbox" name="delete" value="' . $id . '">' .
-					($post['subject'] != '' ? '
-					<span class="filetitle">' . $post['subject'] . '</span>' : '') . '
-					' . (ATOM_GEOIP ? getCountryIcon($ip, ATOM_GEOIP == 'geoip2' ?
-						new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL) : '') .
-					($showIP || $isEditPost ? getIpUserInfoLink($ip) : '') . '
-					' . $post['nameblock'] . '
-				</label>
-				<span class="reflink">' . ($res == ATOM_RESPAGE ? '
-					<a href="' . $thrId . '.html#' . $id . '" onclick="highlightPost(' . $id .
-						');" title="Click to link to this post">№</a>' .
-					'<a href="' . $thrId . '.html#q' . $id . '" onclick="quotePost(' . $id .
-						');" title="Click to reply to this post">' .
-						$id . '</a>' : '
-					<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $id .
-						'" title="Click to link to this post">№</a>' .
-					'<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#q' . $id .
-							'" title="Click to reply to this post">' . $id . '</a>') . '
-					<span class="post-buttons">' .
-						(ATOM_LIKES ? '
-						<span class="like-container">
-							<span class="like-icon' . ($likes ? ' like-enabled' : ' like-disabled') .
-								'" onclick="sendLike(this, ' . $id . ');">
-								<svg><use xlink:href="#symbol-like"></use></svg>
-							</span><span class="like-counter">' . ($likes ? $likes : '') . '</span>
-						</span>' : '') .
-						($post['stickied'] == 1 ? '
-						<img src="/' . ATOM_BOARD . '/icons/sticky.png"' .
-							' title="Thread is stickied to top" width="16" height="16">' : '') .
-						($post['locked'] == 1 ? '
-						<img src="/' . ATOM_BOARD . '/icons/locked.png"' .
-							' title="Thread is locked for posting" width="11" height="16">' : '') .
-						($post['endless'] == 1 ? '
-						<img src="/' . ATOM_BOARD . '/icons/endless.png"' .
-							' title="Thread is endless" width="16" height="16">' : '') . '
-						<a class="link-button button-post-manage" target="_blank" href="/' . ATOM_BOARD .
-						'/imgboard.php?manage=&moderate=' . $id . '" title="Manage post №' . $id . '">!</a>' .
-						$replyBtn . '
-					</span>' .
-				'</span>
-				<br>' .
-				($isEditPost && $hasImages ? '
-				<form method="get" action="?">
-					<input type="hidden" name="manage" value="">
-					<input type="hidden" name="delete-img" value="' . $id . '">
-					<select name="action" class="button-manage" style="margin-left: 20px;">
-						<option value="delete" selected>Delete images</option>
-						<option value="hide">Hide thumbnails</option>
-					</select>
-					<input type="submit" class="button-manage" value="Apply to selected">
-					<br>' : '') .
-					($imagesCount > 1 ? '<div class="images-container">' . $filehtml . '</div>' : $filehtml) .
+	return ($isOp ? '
+				<div class="oppost" id="op' . $id . '">' : '
+				<table border="0"><tbody><tr><td class="reply" id="reply' . $id . '">') . '
+					<a id="' . $id . '"></a>
+					<label>
+						<input type="checkbox" name="delete" value="' . $id . '">' .
+						($post['subject'] != '' ? '
+						<span class="filetitle">' . $post['subject'] . '</span>' : '') . '
+						' . (ATOM_GEOIP ? getCountryIcon($ip) : '') .
+						($showIP || $isEditPost ? getIpUserInfoLink($ip) : '') . '
+						' . $post['nameblock'] . '
+					</label>
+					<span class="reflink">' . ($res == ATOM_RESPAGE ? '
+						<a href="' . $thrId . '.html#' . $id . '" onclick="highlightPost(' . $id .
+							');" title="Click to link to this post">№</a>' .
+						'<a href="' . $thrId . '.html#q' . $id . '" onclick="quotePost(' . $id .
+							');" title="Click to reply to this post">' .
+							$id . '</a>' : '
+						<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $id .
+							'" title="Click to link to this post">№</a>' .
+						'<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#q' . $id .
+								'" title="Click to reply to this post">' . $id . '</a>') . '
+						<span class="post-buttons">' .
+							(ATOM_LIKES ? '
+							<span class="like-container">
+								<span class="like-icon' . ($likes ? ' like-enabled' : ' like-disabled') .
+									'" onclick="sendLike(this, ' . $id . ');">
+									<svg><use xlink:href="#symbol-like"></use></svg>
+								</span><span class="like-counter">' . ($likes ? $likes : '') . '</span>
+							</span>' : '') .
+							($post['stickied'] == 1 ? '
+							<img src="/' . ATOM_BOARD . '/icons/sticky.png"' .
+								' title="Thread is stickied to top" width="16" height="16">' : '') .
+							($post['locked'] == 1 ? '
+							<img src="/' . ATOM_BOARD . '/icons/locked.png"' .
+								' title="Thread is locked for posting" width="11" height="16">' : '') .
+							($post['endless'] == 1 ? '
+							<img src="/' . ATOM_BOARD . '/icons/endless.png"' .
+								' title="Thread is endless" width="16" height="16">' : '') . '
+							<a class="link-button button-post-manage" target="_blank" href="/' . ATOM_BOARD .
+							'/imgboard.php?manage=&moderate=' . $id . '" title="Manage post №' . $id .
+							'">!</a>' .
+							$replyBtn . '
+						</span>
+					</span>
+					<br>' .
 					($isEditPost && $hasImages ? '
-				</form>' : '') . '
-				<div class="message">' .
-					($isEditPost ? '
-					<form method="post" action="?manage&editpost=' . $id . '" enctype="multipart/form-data">
-						<textarea id="message" name="message">' . htmlspecialchars($message) . '</textarea>
-						<br>
-						<input type="submit" class="button-manage" value="Edit">
-					</form>' : $message) . '
-				</div>' .
-				buildPostBacklinks($id, $thrId) . '
-			' . (!$isOp ? '</td></tr></tbody></table>' : '</div>' .
-			($res == ATOM_INDEXPAGE && $omitted > 0 ? '
-			<div class="omittedposts">' . $omitted . ' ' .
-				plural('post', $omitted) . ' omitted. Click ' . $replyBtn . ' to view.
-			</div>' : ''));
+					<form method="get" action="?">
+						<input type="hidden" name="manage" value="">
+						<input type="hidden" name="delete-img" value="' . $id . '">
+						<select name="action" class="button-manage" style="margin-left: 20px;">
+							<option value="delete" selected>Delete images</option>
+							<option value="hide">Hide thumbnails</option>
+						</select>
+						<input type="submit" class="button-manage" value="Apply to selected">
+						<br>' : '') .
+						($imagesCount > 1 ?
+							'<div class="images-container">' . $filehtml . '</div>' : $filehtml) .
+						($isEditPost && $hasImages ? '
+					</form>' : '') . '
+					<div class="message">' .
+						($isEditPost ? '
+						<form method="post" action="?manage&editpost=' . $id .
+							'" enctype="multipart/form-data">
+							<textarea id="message" name="message">' .
+								htmlspecialchars($message) .
+							'</textarea>
+							<br>
+							<input type="submit" class="button-manage" value="Edit">
+						</form>' : $message) .
+					'</div>
+				' . (!$isOp ? '</td></tr></tbody></table>' : '</div>' .
+				($res == ATOM_INDEXPAGE && $omitted > 0 ? '
+				<div class="omittedposts">
+					' . $omitted . ' ' . plural('post', $omitted) .
+					' omitted. Click ' . $replyBtn . ' to view.
+				</div>' : ''));
 }
 
 /* ==[ Page ]============================================================================================== */
@@ -642,12 +626,14 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 /* ==[ Rebuilding ]======================================================================================== */
 
 function rebuildThreadPage($id) {
-	$htmlPosts = '';
+	$htmlPosts = '
+			<div class="thread" id="thread' . $id . '">';
 	$posts = getThreadPosts($id);
 	foreach ($posts as $post) {
 		$htmlPosts .= buildPost($post, ATOM_RESPAGE);
 	}
 	$htmlPosts .= '
+			</div>
 			<hr>';
 	writePage('res/' . $id . '.html', buildPage($htmlPosts, $id));
 }
@@ -667,8 +653,10 @@ function rebuildIndexPages() {
 		for ($j = count($replies) - 1; $j > $thread['omitted']; $j--) {
 			$htmlReplies[] = buildPost($replies[$j], ATOM_INDEXPAGE);
 		}
-		$htmlPosts .= buildPost($thread, ATOM_INDEXPAGE) . implode('', array_reverse($htmlReplies)) .
-			PHP_EOL . '
+		$htmlPosts .= '
+			<div class="thread" id="thread' . $thread['id'] . '">' .
+				buildPost($thread, ATOM_INDEXPAGE) . implode('', array_reverse($htmlReplies)) . '
+			</div>
 			<hr>';
 		if (++$i >= ATOM_THREADSPERPAGE) {
 			$file = $page == 0 ? ATOM_INDEX : $page . '.html';
@@ -966,6 +954,9 @@ function buildPasscodesPage() {
 				<th>Last used IP</th>
 			</tr>';
 	$passcodes = getAllPasscodes();
+	if (ATOM_GEOIP == 'geoip2') {
+		$geoipReader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
+	}
 	foreach ($passcodes as $pass) {
 		$ip = $pass['last_used_ip'];
 		$countryIcon = '';
@@ -986,8 +977,7 @@ function buildPasscodesPage() {
 				<td>' . ($pass['last_used'] ?
 					date('d.m.Y H:i:s', $pass['last_used']) : '') . '</td>
 				<td style="white-space: pre;">' . ($ip ?
-					(ATOM_GEOIP ? getCountryIcon($ip, ATOM_GEOIP == 'geoip2' ?
-						new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL) : '') .
+					(ATOM_GEOIP ? getCountryIcon($ip, $geoipReader) : '') .
 					getIpUserInfoLink($ip) : '') . '</td>
 			</tr>';
 	}
@@ -1020,7 +1010,7 @@ function buildUserInfoPage($ip, $posts) {
 		$postsHtml .= '
 					<tr><th>' . getPostManageButtons($post) . '
 					</th></tr>
-					<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . PHP_EOL . '
+					<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . '
 					</td></tr>';
 	}
 	$banHtml = '';
@@ -1394,7 +1384,7 @@ function buildStatusPage() {
 					getPostManageButtons($post) . '
 				</th></tr>
 				<tr><td>' .
-					buildPost($post, ATOM_INDEXPAGE, 'ip') . PHP_EOL .
+					buildPost($post, ATOM_INDEXPAGE, 'ip') .
 					getPostReports($reportsByPost[$id], $geoipReader) . '
 				</td></tr>';
 		}
@@ -1412,7 +1402,7 @@ function buildStatusPage() {
 						'manage=&approve=' . $id . '" title="Allow to be published.">Approve</a>' .
 					getPostManageButtons($post) . '
 				</th></tr>
-				<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . PHP_EOL . '
+				<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . '
 				</td></tr>';
 		}
 	}
@@ -1425,7 +1415,7 @@ function buildStatusPage() {
 		$postsHtml .= '
 				<tr><th>' . getPostManageButtons($post) . '
 				</th></tr>
-				<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . PHP_EOL . '
+				<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . '
 				</td></tr>';
 	}
 

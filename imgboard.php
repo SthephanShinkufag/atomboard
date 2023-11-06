@@ -21,7 +21,7 @@ function fancyDie($message) {
 
 <html data-theme="' . ATOM_THEME . '">
 <head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023102000">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023110600">
 </head>
 <body align="center">
 	<br>
@@ -63,6 +63,7 @@ function managementRequest() {
 		rebuildIndexPages();
 
 		// Delete likes for deleted posts
+		/*
 		$likes = getAllLikes();
 		foreach ($likes as $like) {
 			$id = $like['postnum'];
@@ -71,6 +72,7 @@ function managementRequest() {
 				deleteLikes($id);
 			}
 		}
+		*/
 
 		die(managePage(manageInfo('Rebuilt board.')));
 	}
