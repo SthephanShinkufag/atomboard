@@ -493,14 +493,14 @@ function managementRequest() {
 		if ($_GET['action'] == 'delete') {
 			deletePostImages($post, $_GET['delete-img-mod']);
 			rebuildThread($thrId);
-			modLog('Deleted image(s) of ' . (isOp($post) ? 'op-post in thread №' . $id :
+			modLog('Deleted image(s) of ' . (isOp($post) ? 'OP-post in thread №' . $id :
 				'post №' . $id . ' in thread №' . $thrId) . '.', '0', 'Black');
 			die(managePage(manageInfo('Selected images from post №' . $id . ' are deleted.')));
 		}
 		if ($_GET['action'] == 'hide') {
 			hidePostImages($post, $_GET['delete-img-mod']);
 			rebuildThread($thrId);
-			modLog('Hidden thumbnail(s) of ' . (isOp($post) ? 'op-post in thread №' . $id :
+			modLog('Hidden thumbnail(s) of ' . (isOp($post) ? 'OP-post in thread №' . $id :
 				'post №' . $id . ' in thread №' . $thrId) . '.', '0', 'Black');
 			die(managePage(manageInfo('Thumbnails for selected images from post №' . $id . ' are changed.')));
 		}
@@ -518,7 +518,7 @@ function managementRequest() {
 		editPostMessage($id, $_POST['message'] . '<br><br><span style="color: purple;">Message edited: ' .
 			date('d.m.y D H:i:s', time()) . '</span>');
 		rebuildThread($thrId);
-		modLog('Edited message of ' . (isOp($post) ? 'op-post in thread №' . $id :
+		modLog('Edited message of ' . (isOp($post) ? 'OP-post in thread №' . $id :
 			'post №' . $id . ' in thread №' . $thrId) . '.', '0', 'Black');
 		die(managePage(manageInfo('Message in post №' . $id . ' changed.')));
 	}
@@ -772,25 +772,25 @@ function postingRequest() {
 		// Check for ban
 		$ban = banByIP($ip);
 		if ($ban) {
-			$direct_ban = $ban['ip_from'] == $ban['ip_to'];
+			$directBan = $ban['ip_from'] == $ban['ip_to'];
 			// Range bans do not affect passcode users
-			if ($direct_ban || (!$validPasscode)) {
-				$reason = $ban['reason'] == '' ? '' : '<br>Reason: ' . $ban['reason'];
+			if ($directBan || !$validPasscode) {
+				$reason = $ban['reason'] == '' ? '' : '<br><br>Reason: ' . $ban['reason'];
 				if ($ban['expire'] == 1) {
 					fancyDie('Your IP address ' . $ip .
 						 ' has been issued a warning.<br>To continue posting, please read <a href="/' .
-						 ATOM_BOARD . '/imgboard.php?banned">this page</a>.<br>' . $reason);
+						 ATOM_BOARD . '/imgboard.php?banned">this page</a>.' . $reason);
 				} else if ($ban['expire'] == 0 || $ban['expire'] > time()) {
-					$expire = $ban['expire'] > 0 ?
-						'<br>This ban will expire ' . date('y.m.d D H:i:s', $ban['expire']) :
-						'<br>This ban is permanent and will not expire.';
-					if (ATOM_PASSCODES_ENABLED && !$direct_ban) {
-						$expire .= '<br><br>This is a range ban (if affects a whole subnet),
-							<a href="/' . ATOM_BOARD . '/imgboard.php?passcode">passcode users</a>
-							are not affected by subnet bans.';
+					$details = $ban['expire'] > 0 ?
+						'<br>This ban will expire ' . date('d.m.Y D H:i:s', $ban['expire']) :
+						'<br>This ban is permanent and will not expire.' .
+						(!$directBan ? '<br>This is a range ban (affects a whole subnet).' : '');
+					if (ATOM_PASSCODES_ENABLED && !$directBan) {
+						$details .= '<br><br><a href="/' . ATOM_BOARD .
+							'/imgboard.php?passcode">Passcode users</a> are not affected by subnet bans.';
 					}
 					fancyDie('Your IP address ' . $ip .
-						' has been banned from posting on this image board. ' . $expire . '<br>' . $reason);
+						' has been banned from posting on this image board. ' . $details . $reason);
 				} else {
 					clearExpiredBans();
 				}

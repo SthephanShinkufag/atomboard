@@ -1140,7 +1140,7 @@ function buildReportPostForm($post) {
 				</div>
 			</fieldset>
 			<fieldset>
-				<legend>' . (isOp($post) ? 'OP post' : 'Post') . '</legend>' .
+				<legend>' . (isOp($post) ? 'OP-post' : 'Post') . '</legend>' .
 				buildPost($post, ATOM_INDEXPAGE) . '
 			</fieldset>
 		</form>
@@ -1254,16 +1254,9 @@ function buildModeratePostPage($post) {
 					<td><small>' . ($isEndless ? 'Disable' : 'Enable') .
 						' endless mode for this thread.</small></td>
 				</tr>';
-		$postHtml = '';
-		$posts = getThreadPosts($id, false);
-		foreach ($posts as $postTemp) {
-			$postHtml .= buildPost($postTemp, ATOM_INDEXPAGE, 'edit');
-		}
-	} else {
-		$postHtml = buildPost($post, ATOM_INDEXPAGE, 'edit');
 	}
 	return '<fieldset>
-			<legend>Moderating №' . $id . '</legend>
+			<legend>Moderating ' . ($isOp ? 'thread' : 'post') . ' №' . $id . '</legend>
 			<table border="0" cellspacing="0" cellpadding="0" width="100%"><tbody>' .
 				$stickyHtml .
 				$lockedHtml .
@@ -1338,8 +1331,8 @@ function buildModeratePostPage($post) {
 			</tbody></table>
 		</fieldset>' : '') . '
 		<fieldset>
-			<legend>' . ($isOp ? 'Thread' : 'Post') . '</legend>' .
-			$postHtml . '
+			<legend>' . ($isOp ? 'OP-post' : 'Post') . '</legend>' .
+			buildPost($post, ATOM_INDEXPAGE, 'edit') . '
 		</fieldset>
 		<br>';
 }
