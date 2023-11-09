@@ -55,10 +55,10 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023110700">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023111000">
 	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023110700"></script>
 	<script src="/' . ATOM_BOARD .
-		'/js/extnesion/Dollchan-Extension-Tools.user.js?2023110700" async defer></script>' .
+		'/js/extension/Dollchan_Extension_Tools.user.js?2023111000" async defer></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -495,28 +495,25 @@ function buildPost($post, $res, $mode = '') {
 							'" title="Click to link to this post">№</a>' .
 						'<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#q' . $id .
 								'" title="Click to reply to this post">' . $id . '</a>') . '
-						<span class="post-buttons">' .
-							(ATOM_LIKES ? '
-							<span class="like-container">
-								<span class="like-icon' . ($likes ? ' like-enabled' : ' like-disabled') .
-									'" onclick="sendLike(this, ' . $id . ');">
-									<svg><use xlink:href="#symbol-like"></use></svg>
-								</span><span class="like-counter">' . ($likes ? $likes : '') . '</span>
-							</span>' : '') .
-							($post['stickied'] == 1 ? '
-							<img src="/' . ATOM_BOARD . '/icons/sticky.png"' .
-								' title="Thread is stickied to top" width="16" height="16">' : '') .
-							($post['locked'] == 1 ? '
-							<img src="/' . ATOM_BOARD . '/icons/locked.png"' .
-								' title="Thread is locked for posting" width="11" height="16">' : '') .
-							($post['endless'] == 1 ? '
-							<img src="/' . ATOM_BOARD . '/icons/endless.png"' .
-								' title="Thread is endless" width="16" height="16">' : '') . '
-							<a class="link-button button-post-manage" target="_blank" href="/' . ATOM_BOARD .
-							'/imgboard.php?manage=&moderate=' . $id . '" title="Manage post №' . $id .
-							'">!</a>' .
-							$replyBtn . '
-						</span>
+					</span>
+					<span class="post-buttons">' .
+						(ATOM_LIKES ? '
+						<span class="like-container">
+							<span class="like-icon' . ($likes ? ' like-enabled' : ' like-disabled') .
+								'" onclick="sendLike(this, ' . $id . ');">
+								<svg><use xlink:href="#symbol-like"></use></svg>
+							</span><span class="like-counter">' . ($likes ? $likes : '') . '</span>
+						</span>' : '') .
+						($post['stickied'] == 1 ? '
+						<img src="/' . ATOM_BOARD . '/icons/sticky.png"' .
+							' title="Thread is stickied to top" width="16" height="16">' : '') .
+						($post['locked'] == 1 ? '
+						<img src="/' . ATOM_BOARD . '/icons/locked.png"' .
+							' title="Thread is locked for posting" width="11" height="16">' : '') .
+						($post['endless'] == 1 ? '
+						<img src="/' . ATOM_BOARD . '/icons/endless.png"' .
+							' title="Thread is endless" width="16" height="16">' : '') .
+						$replyBtn . '
 					</span>
 					<br>' .
 					($isEditPost && $hasImages ? '

@@ -21,7 +21,7 @@ function fancyDie($message) {
 
 <html data-theme="' . ATOM_THEME . '">
 <head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023110700">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023111000">
 </head>
 <body align="center">
 	<br>
@@ -1436,16 +1436,29 @@ function deletionRequest() {
 
 function reportRequest() {
 	global $access;
+	$isJson = isset($_GET['json']) && $_GET['json'] == '1';
 	if (isset($_GET['addreport'])) {
 		$id = $_POST['id'];
 		$report = insertReport($id, ATOM_BOARD, $_SERVER['REMOTE_ADDR'], $_POST['reason']);
 		if ($report) {
 			if ($report == 'exists') {
-				fancyDie('You have already sent a report to post №' . $id . '!');
+				if($isJson) {
+					die('{ "result": "alreadysent" }');
+				} else {
+					fancyDie('You have already sent a report to post №' . $id . '!');
+				}
 			}
-			fancyDie('Report to post №' . $id . ' successfully sent.');
+			if($isJson) {
+				die('{ "result": "ok" }');
+			} else {
+				fancyDie('Report to post №' . $id . ' successfully sent.');
+			}
 		}
-		fancyDie('An error occurred while sending the report.');
+		if($isJson) {
+			die('{ "result": "error" }');
+		} else {
+			fancyDie('An error occurred while sending the report.');
+		}
 	} else if ($access != 'disabled' && isset($_GET['deletereports'])) {
 		$id = $_GET['id'];
 		deleteReports($id);
