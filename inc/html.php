@@ -56,7 +56,9 @@ function pageHeader() {
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
 	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023110700">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023110700"></script>' .
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023110700"></script>
+	<script src="/' . ATOM_BOARD .
+		'/js/extnesion/Dollchan-Extension-Tools.user.js?2023110700" async defer></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -263,19 +265,6 @@ function buildPostForm($parent, $isStaffPost = false) {
 					</tr>' : ''
 				) . (
 					$isStaffPost || !in_array('message', $hideFields) ? '
-					<tr>
-						<td class="postblock"></td>
-						<td id="markup-buttons">
-							<button class="markup-button" id="markup-bold" title="Bold">B</button>
-							<button class="markup-button" id="markup-italic" title="Italic">I</button>
-							<button class="markup-button" id="markup-underline" title="Underline">U</button>
-							<button class="markup-button" id="markup-strike" title="Strike">S</button>
-							<button class="markup-button" id="markup-spoiler" title="Spoiler">%</button>
-							<button class="markup-button" id="markup-code" title="Code">C</button>
-							<button class="markup-button" id="markup-quote" title="' .
-								'Select the text, then click to insert a quote">&gt;</button>
-						</td>
-					</tr>
 					<tr>
 						<td class="postblock"></td>
 						<td>
@@ -496,7 +485,7 @@ function buildPost($post, $res, $mode = '') {
 						($showIP || $isEditPost ? getIpUserInfoLink($ip) : '') . '
 						' . $post['nameblock'] . '
 					</label>
-					<span class="reflink">' . ($res == ATOM_RESPAGE ? '
+					<span class="post-reflink">' . ($res == ATOM_RESPAGE ? '
 						<a href="' . $thrId . '.html#' . $id . '" onclick="highlightPost(' . $id .
 							');" title="Click to link to this post">№</a>' .
 						'<a href="' . $thrId . '.html#q' . $id . '" onclick="quotePost(' . $id .
@@ -595,7 +584,7 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 					</td>');
 	}
 	// Build page's body
-	return pageHeader() . '<body class="tinyib atomboard">' .
+	return pageHeader() . '<body class="tinyib atomboard de-runned">' .
 		pageWrapper(ATOM_BOARD_DESCRIPTION, $isInThread) .
 		(ATOM_HTML_INFO_TOP ? ATOM_HTML_INFO_TOP . '
 		<hr>

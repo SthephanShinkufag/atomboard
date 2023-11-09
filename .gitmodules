@@ -1,0 +1,4 @@
+[submodule "js/extension"]
+	path = js/extension
+	url = git@github.com:SthephanShinkufag/Dollchan-Extension-Tools.git
+	branch = atomboard-extension

@@ -297,6 +297,19 @@ legend {
 	padding: 0 4px;
 }
 
+.post-reflink {
+	font-weight: bold;
+	font-size: 13px;
+}
+
+.post-reflink a {
+	color: inherit;
+}
+
+.post-reflink a:hover {
+	color: var(--link-hover);
+}
+
 .poster-country {
 	height: 14px;
 	vertical-align: -2px;
@@ -327,19 +340,6 @@ legend {
 	opacity: var(--poster-opacity);
 	cursor: pointer;
 	filter: var(--posteruid-filter);
-}
-
-.reflink {
-	font-weight: bold;
-	font-size: 13px;
-}
-
-.reflink a {
-	color: inherit;
-}
-
-.reflink a:hover {
-	color: var(--link-hover);
 }
 
 .reply {

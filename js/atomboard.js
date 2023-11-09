@@ -30,6 +30,14 @@ function saveSettings() {
 	localStorage.atomSettings = JSON.stringify(settings);
 }
 
+// Used in html.php
+function quotePost(num) {
+	var el = $id('message');
+	el.value += '>>' + num + '\n';
+	el.focus();
+	return false;
+}
+
 /* ==[ Theme styles ]====================================================================================== */
 
 function setThemeSelectors(value) {
@@ -112,73 +120,6 @@ function initPasswords() {
 	}
 }
 
-/* ==[ Postform message markup ]=========================================================================== */
-
-// Used in html.php
-function quotePost(num) {
-	var el = $id('message');
-	el.value += '>>' + num + '\n';
-	el.focus();
-	return false;
-}
-
-function textInsert(el, txt) {
-	const scrtop = el.scrollTop;
-	const start = el.selectionStart;
-	el.value = el.value.substr(0, start) + txt + el.value.substr(el.selectionEnd);
-	el.setSelectionRange(start + txt.length, start + txt.length);
-	el.focus();
-	el.scrollTop = scrtop;
-}
-
-function initMarkupButtons() {
-	var selectedText = '';
-	var markupEvents = function(e) {
-		if (e.type === 'mouseover') {
-			selectedText = window.getSelection().toString();
-			return;
-		}
-		var tag, msgEl = $id('message');
-		var msgElVal = msgEl.value;
-		var start = msgEl.selectionStart;
-		var end = msgEl.selectionEnd;
-		switch(e.target.id) {
-		case 'markup-bold': tag = 'b'; break;
-		case 'markup-italic': tag = 'i'; break;
-		case 'markup-underline': tag = 'u'; break;
-		case 'markup-strike': tag = 's'; break;
-		case 'markup-spoiler': tag = 'spoiler'; break;
-		case 'markup-code': tag = 'code'; break;
-		case 'markup-quote':
-			textInsert(msgEl, '> ' + (start === end ? selectedText : msgElVal.substring(start, end))
-				.replace(/\n/gm, '\n> '));
-			selectedText = '';
-			e.preventDefault();
-			return;
-		}
-		var scrtop = msgEl.scrtop;
-		var str, len, val = msgElVal.substring(start, end);
-		if (val.includes('\n')) {
-			str = '[' + tag + ']' + val + '[/' + tag + ']';
-			len = start + str.length;
-		} else {
-			var m = val.match(/^(\s*)(.*?)(\s*)$/);
-			str = m[1] + '[' + tag + ']' + m[2] + '[/' + tag + ']' + m[3];
-			len = start + (!m[2].length ? m[1].length + tag.length + 2 : str.length);
-		}
-		msgEl.value = msgElVal.substr(0, start) + str + msgElVal.substr(end);
-		msgEl.setSelectionRange(len, len);
-		msgEl.focus();
-		msgEl.scrollTop = scrtop;
-		e.preventDefault();
-	}
-	var markupBtns = $id('markup-buttons');
-	if (markupBtns) {
-		markupBtns.addEventListener('click', markupEvents);
-		$id('markup-quote').addEventListener('mouseover', markupEvents);
-	}
-}
-
 /* ==[ Posts highlighting and navigation ]================================================================= */
 
 // Used in html.php
@@ -242,43 +183,6 @@ function initPostsHighlighting() {
 	};
 	document.body.addEventListener('click', handleEvent, true);
 	document.body.addEventListener('mouseover', handleEvent, true);
-}
-
-/* ==[ Posts backlinks ]=================================================================================== */
-
-function buildBackLinks() {
-	var backLinksArr = {};
-	var replyMessages = $Q('.message');
-	for (var i = 0, len = replyMessages.length; i < len; ++i) {
-		var replyMessage = replyMessages[i];
-		var match = replyMessage.innerHTML.match(/>&gt;&gt;(\d+)<\/a>/);
-		if (!match) {
-			continue;
-		}
-		var postId = match[1];
-		if (!backLinksArr[postId]) {
-			backLinksArr[postId] = [];
-		}
-		backLinksArr[postId].push(replyMessage.closest('.reply, .oppost').id.match(/\d+/));
-	}
-	var boardName = $q('input[name="board"]').value;
-	var isThread = window.location.href.includes('/res/');
-	var thrId = isThread ? $q('.thread').id.match(/\d+/) : 0;
-	for (postId in backLinksArr) {
-		var post = $q('#reply' + postId + ', #op' + postId);
-		if (!post) {
-			continue;
-		}
-		var backLinks = backLinksArr[postId];
-		for (var i = 0, len = backLinks.length; i < len; ++i) {
-			backLinks[i] = '<a class="' +
-				(post.classList.contains('oppost') ? 'refop' : 'refreply') + '" href="/' + boardName +
-				'/res/' + (isThread ? thrId : post.closest('.thread').id.match(/\d+/)) +
-				'.html#' + backLinks[i] + '">&gt;&gt;' + backLinks[i] + '</a>';
-		}
-		$q('.message', post).insertAdjacentHTML('afterend',
-			'\r\n<div class="backlinks">' + backLinks.join(', ') + '</div>');
-	}
 }
 
 /* ==[ Posts files expanding ]============================================================================= */
@@ -364,22 +268,11 @@ function main() {
 
 	// Do stuff after DOM loading
 	document.addEventListener('DOMContentLoaded', function initAfterDOM() {
-		if (!$id('de-main')) { // If Dollchan Extension is disabled
-			buildBackLinks(); // Building >>backlinks for replies to posts
-		}
 		navigatePostHash(); // Navigate to post if hash available
 		checkPasscode(); // Check and apply passcode
 		initPasswords(); // Set passwords for post form and deletion form
-		initMarkupButtons(); // Add events to markup buttons
 		setThemeSelectors(settings.themeStyle); // Set theme style selectors
 		initPostsHighlighting(); // Events for highlighting posts by clicking on user ID
-	});
-
-	// Disable markup buttons if Dollchan Extension enabled
-	window.addEventListener('load', function() {
-		if ($id('de-main')) {
-			$id('markup-buttons').style.display = 'none';
-		}
 	});
 }
 
