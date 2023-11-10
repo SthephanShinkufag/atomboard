@@ -553,32 +553,22 @@ function buildPost($post, $res, $mode = '') {
 
 function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 	// Build page links: [Previous] [0] [1] [2] [Next]
-	$isInThread = $parent != ATOM_NEWTHREAD;
 	$pagelinks = '';
+	$isInThread = $parent != ATOM_NEWTHREAD;
 	if (!$isInThread) {
 		$pages = max($pages, 0);
 		$pagelinks = ($thispage == 0 ?
-					'<td>Previous</td>' :
-					'<td>
-						<form method="get" action="' . ($thispage == 1 ? 'index' : $thispage - 1) . '.html">
-							<input value="Previous" type="submit">
-						</form>
-					</td>') . '
-					<td>';
+			'<span class="pagelist-previous">[Previous]</span>' :
+			'<span class="pagelist-previous">[<a href="' .
+				($thispage == 1 ? 'index' : $thispage - 1) . '.html">Previous</a>]</span>') . '
+			<span class="pagelist-links">';
 		for ($i = 0; $i <= $pages; $i++) {
-			if ($thispage == $i) {
-				$pagelinks .= '&#91;' . $i . '&#93; ';
-			} else {
-				$pagelinks .= '&#91;<a href="' . ($i == 0 ? "index" : $i) . '.html">' . $i . '</a>&#93; ';
-			}
+			$pagelinks .= $thispage == $i ? '[' . $i . '] ' :
+				'[<a href="' . ($i == 0 ? "index" : $i) . '.html">' . $i . '</a>] ';
 		}
-		$pagelinks .= '</td>' . ($pages <= $thispage ? '
-					<td>Next</td>' : '
-					<td>
-						<form method="get" action="' . ($thispage + 1) . '.html">
-							<input value="Next" type="submit">
-						</form>
-					</td>');
+		$pagelinks .= '</span>' . ($pages <= $thispage ? '
+			<span class="pagelist-next">[Next]</span>' : '
+			<span class="pagelist-next">[<a href="' . ($thispage + 1) . '.html">Next</a>]</span>');
 	}
 	// Build page's body
 	return pageHeader() . '<body class="tinyib atomboard de-runned">' .
@@ -596,13 +586,9 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 					' placeholder="Password">&nbsp;<input name="deletepost" value="Delete" type="submit">
 			</div>
 		</form>
-		<table>
-			<tbody>
-				<tr>
-					' . $pagelinks . '
-				</tr>
-			</tbody>
-		</table>' .
+		<div class="pagelist">
+			' . $pagelinks . '
+		</div>' .
 		(ATOM_HTML_INFO_BOTTOM ? '
 		<hr>
 		' . ATOM_HTML_INFO_BOTTOM : '') .

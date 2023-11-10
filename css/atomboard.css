@@ -665,9 +665,3 @@ button:not([disabled]):active, input[type="submit"]:not([disabled]):active {
 		width: auto;
 	}
 }
-
-/* ==[ Dollchan Extension ]================================================================================ */
-
-#de-main > hr {
-	display: none;
-}
