@@ -55,10 +55,10 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023111000">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023110700"></script>
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023112100">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023112100"></script>
 	<script src="/' . ATOM_BOARD .
-		'/js/extension/Dollchan_Extension_Tools.user.js?2023111000" async defer></script>' .
+		'/js/extension/Dollchan_Extension_Tools.user.js?2023112100" async defer></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
