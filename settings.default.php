@@ -187,6 +187,10 @@ $atom_embeds = array(
 define('ATOM_FILE_MAXKB', 20480);
 // Human-readable representation of the maximum file size
 define('ATOM_FILE_MAXKBDESC', '20 MB');
+// Maximum file size in kilobytes for passcode users (if enabled), 0 to disable
+define('ATOM_FILE_MAXKB_PASS', 40960);
+// Human-readable representation of the maximum file size for passcode users (if enabled)
+define('ATOM_FILE_MAXKBDESC_PASS', '40 MB');
 // Maximum number of uploaded files (up to 4)
 define('ATOM_FILES_COUNT', 4);
 // Thumbnail method to use: 'gd', 'imagemagick' (see README for instructions)

@@ -173,10 +173,17 @@ function buildPostForm($parent, $isStaffPost = false) {
 	$embedInputHtml = '';
 	if (!empty($atom_uploads) && ($isStaffPost || !in_array('file', $hideFields))) {
 		if (ATOM_FILE_MAXKB > 0) {
+		    $extra = '';
+		    $max_fs = ATOM_FILE_MAXKB;
+		    if (ATOM_PASSCODES_ENABLED) {
+		        $max_fs = max($max_fs, ATOM_FILE_MAXKB_PASS);
+		        $extra = ' (' . ATOM_FILE_MAXKBDESC_PASS . ' for <a href="/' . ATOM_BOARD .
+		            '/imgboard.php?passcode">Passcode users</a> users)';
+		    }
 			$maxFileSizeInputHtml = '<input type="hidden" name="MAX_FILE_SIZE" value="' .
-				strval(ATOM_FILE_MAXKB * 1024) . '">';
+				strval($max_fs * 1024) . '">';
 			$maxFileSizeRulesHtml = '<li>Limit: ' . ATOM_FILES_COUNT . ' ' .
-				plural('file', ATOM_FILES_COUNT) . ', ' . ATOM_FILE_MAXKBDESC . ' per file.</li>';
+				plural('file', ATOM_FILES_COUNT) . ', ' . ATOM_FILE_MAXKBDESC . ' per file' . $extra . '.</li>';
 		}
 		$fileTypesHtml = '<li>' . supportedFileTypes() . '</li>';
 		$fileInputHtml = '<tr>

@@ -1123,10 +1123,18 @@ function postingRequest() {
 
 			// Check for upload errors
 			$fileIdxTxt = 'File №' . $fileIdx;
+
+			if (ATOM_PASSCODES_ENABLED) {
+				$f_sz_error_text = $fileIdxTxt . ' is larger than ' . ATOM_FILE_MAXKBDESC . ' (' .
+					ATOM_FILE_MAXKBDESC_PASS . ' for passcode users).';
+			} else {
+				$f_sz_error_text = $fileIdxTxt . ' is larger than ' . ATOM_FILE_MAXKBDESC . '.';
+			}
+
 			switch ($error) {
 			case UPLOAD_ERR_OK: break;
 			case UPLOAD_ERR_FORM_SIZE:
-				fancyDie($fileIdxTxt . ' is larger than ' . ATOM_FILE_MAXKBDESC . '.');
+                fancyDie($f_sz_error_text);
 				break;
 			case UPLOAD_ERR_INI_SIZE:
 				fancyDie($fileIdxTxt . ' exceeds the upload_max_filesize directive (' .
@@ -1146,9 +1154,15 @@ function postingRequest() {
 				fancyDie($fileIdxTxt . ' transfer failure.<br>Please retry the submission.');
 			}
 
-			// Check for bytes size restriction
-			if (ATOM_FILE_MAXKB > 0 && filesize($file) > ATOM_FILE_MAXKB * 1024) {
-				fancyDie($fileIdxTxt . ' is larger than ' . ATOM_FILE_MAXKBDESC . '.');
+			// Check for bytes size restriction (but it only applies to passcode users)
+			if (ATOM_PASSCODES_ENABLED && $validPasscode) {
+				if (ATOM_FILE_MAXKB_PASS > 0 && filesize($file) > ATOM_FILE_MAXKB_PASS * 1024) {
+					fancyDie($f_sz_error_text);
+				}
+			} else {
+				if (ATOM_FILE_MAXKB > 0 && filesize($file) > ATOM_FILE_MAXKB * 1024) {
+					fancyDie($f_sz_error_text);
+				}
 			}
 
 			// Get post image fields
