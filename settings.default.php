@@ -148,7 +148,7 @@ define('ATOM_THREAD_LIMIT', 500);
 
 /* ==[ Reply form and posting ]============================================================================ */
 // Delay (in seconds) between posts from the same IP address to help control flooding, 0 to disable
-define('ATOM_POSTING_DELAY', 20);
+define('ATOM_POSTING_DELAY', 30);
 // Redirect to thread after posting
 define('ATOM_ALWAYSNOKO', true);
 // Fields to hide when creating a new thread

@@ -21,7 +21,7 @@ function fancyDie($message) {
 
 <html data-theme="' . ATOM_THEME . '">
 <head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023121000">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023112800">
 </head>
 <body align="center">
 	<br>
@@ -1025,8 +1025,7 @@ function postingRequest() {
 		case 'janitor': $postNameBlock .= ' <span class="postername-mod">## Janitor</span>'; break;
 		case 'moderator': $postNameBlock .= ' <span class="postername-mod">## Mod</span>'; break;
 		}
-	}
-	if (ATOM_UNIQUEID) {
+	} else if (ATOM_UNIQUEID) {
 		$uidHash = substr(md5($post['pass'] ? $post['pass'] :
 			$post['ip'] . intval($post['parent']) . ATOM_TRIPSEED), 0, 8);
 		$uidHashInt = hexdec('0x' . $uidHash);
@@ -1121,20 +1120,15 @@ function postingRequest() {
 				continue;
 			}
 
-			// Check for upload errors
 			$fileIdxTxt = 'File №' . $fileIdx;
+			$fileSizeErrorText = $fileIdxTxt . ' is larger than ' . ATOM_FILE_MAXKBDESC . '' .
+				(ATOM_PASSCODES_ENABLED ? ' (' . ATOM_FILE_MAXKBDESC_PASS . ' for passcode users).' : '.');
 
-			if (ATOM_PASSCODES_ENABLED) {
-				$f_sz_error_text = $fileIdxTxt . ' is larger than ' . ATOM_FILE_MAXKBDESC . ' (' .
-					ATOM_FILE_MAXKBDESC_PASS . ' for passcode users).';
-			} else {
-				$f_sz_error_text = $fileIdxTxt . ' is larger than ' . ATOM_FILE_MAXKBDESC . '.';
-			}
-
+			// Check for upload errors
 			switch ($error) {
 			case UPLOAD_ERR_OK: break;
 			case UPLOAD_ERR_FORM_SIZE:
-                fancyDie($f_sz_error_text);
+				fancyDie($fileSizeErrorText);
 				break;
 			case UPLOAD_ERR_INI_SIZE:
 				fancyDie($fileIdxTxt . ' exceeds the upload_max_filesize directive (' .
@@ -1157,11 +1151,11 @@ function postingRequest() {
 			// Check for bytes size restriction (but it only applies to passcode users)
 			if (ATOM_PASSCODES_ENABLED && $validPasscode) {
 				if (ATOM_FILE_MAXKB_PASS > 0 && filesize($file) > ATOM_FILE_MAXKB_PASS * 1024) {
-					fancyDie($f_sz_error_text);
+					fancyDie($fileSizeErrorText);
 				}
 			} else {
 				if (ATOM_FILE_MAXKB > 0 && filesize($file) > ATOM_FILE_MAXKB * 1024) {
-					fancyDie($f_sz_error_text);
+					fancyDie($fileSizeErrorText);
 				}
 			}
 
@@ -1456,19 +1450,19 @@ function reportRequest() {
 		$report = insertReport($id, ATOM_BOARD, $_SERVER['REMOTE_ADDR'], $_POST['reason']);
 		if ($report) {
 			if ($report == 'exists') {
-				if($isJson) {
+				if ($isJson) {
 					die('{ "result": "alreadysent" }');
 				} else {
 					fancyDie('You have already sent a report to post №' . $id . '!');
 				}
 			}
-			if($isJson) {
+			if ($isJson) {
 				die('{ "result": "ok" }');
 			} else {
 				fancyDie('Report to post №' . $id . ' successfully sent.');
 			}
 		}
-		if($isJson) {
+		if ($isJson) {
 			die('{ "result": "error" }');
 		} else {
 			fancyDie('An error occurred while sending the report.');

@@ -14,7 +14,7 @@ function getCountryIcon($ip, $geoipReader = NULL) {
 	$validIP = filter_var($ip, FILTER_VALIDATE_IP);
 	if ($validIP) {
 		if (ATOM_GEOIP == 'geoip2') {
-			if(!$geoipReader) {
+			if (!$geoipReader) {
 				$geoipReader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
 			}
 			try {
@@ -27,11 +27,11 @@ function getCountryIcon($ip, $geoipReader = NULL) {
 			$countryCode = geoip_country_code_by_name($validIP);
 		}
 	}
-	if(!$countryCode) {
+	if (!$countryCode) {
 		$countryCode = 'ANON';
 	}
 	return '<img class="poster-country" title="' . $countryCode . '" src="/' . ATOM_BOARD .
-		'/icons/flag-icons/' . $countryCode . '.png">&nbsp;';
+		'/icons/flag-icons/' . $countryCode . '.png">';
 }
 
 function getIpUserInfoLink($ip) {
@@ -47,18 +47,13 @@ function pageHeader() {
 <html data-theme="' . ATOM_THEME . '">
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8">
-	<meta http-equiv="cache-control" content="max-age=0">
-	<meta http-equiv="cache-control" content="no-store, no-cache, must-revalidate">
-	<meta http-equiv="expires" content="0">
-	<meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT">
-	<meta http-equiv="pragma" content="no-cache">
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023112100">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023112100"></script>
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023112800">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023112800"></script>
 	<script src="/' . ATOM_BOARD .
-		'/js/extension/Dollchan_Extension_Tools.user.js?2023112100" async defer></script>' .
+		'/js/extension/Dollchan_Extension_Tools.user.js?2023112800" async defer></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -173,17 +168,14 @@ function buildPostForm($parent, $isStaffPost = false) {
 	$embedInputHtml = '';
 	if (!empty($atom_uploads) && ($isStaffPost || !in_array('file', $hideFields))) {
 		if (ATOM_FILE_MAXKB > 0) {
-		    $extra = '';
-		    $max_fs = ATOM_FILE_MAXKB;
-		    if (ATOM_PASSCODES_ENABLED) {
-		        $max_fs = max($max_fs, ATOM_FILE_MAXKB_PASS);
-		        $extra = ' (' . ATOM_FILE_MAXKBDESC_PASS . ' for <a href="/' . ATOM_BOARD .
-		            '/imgboard.php?passcode">Passcode users</a> users)';
-		    }
+			$maxFileSize = ATOM_PASSCODES_ENABLED ? max(ATOM_FILE_MAXKB, ATOM_FILE_MAXKB_PASS) :
+				ATOM_FILE_MAXKB;
 			$maxFileSizeInputHtml = '<input type="hidden" name="MAX_FILE_SIZE" value="' .
-				strval($max_fs * 1024) . '">';
+				strval($maxFileSize * 1024) . '">';
 			$maxFileSizeRulesHtml = '<li>Limit: ' . ATOM_FILES_COUNT . ' ' .
-				plural('file', ATOM_FILES_COUNT) . ', ' . ATOM_FILE_MAXKBDESC . ' per file' . $extra . '.</li>';
+				plural('file', ATOM_FILES_COUNT) . ', ' . ATOM_FILE_MAXKBDESC . ' per file' .
+				(ATOM_PASSCODES_ENABLED ? ' (' . ATOM_FILE_MAXKBDESC_PASS . ' for <a href="/' . ATOM_BOARD .
+					'/imgboard.php?passcode">Passcode users</a>)' : '') . '.</li>';
 		}
 		$fileTypesHtml = '<li>' . supportedFileTypes() . '</li>';
 		$fileInputHtml = '<tr>
@@ -217,7 +209,7 @@ function buildPostForm($parent, $isStaffPost = false) {
 	}
 	$uniquePostersCount = getUniquePostersCount();
 	$uniquePosters = $uniquePostersCount > 0 ?
-		'<li>Currently ' . $uniquePostersCount . ' unique users.</li>' : '';
+		'<li>' . $uniquePostersCount . ' unique users on the board.</li>' : '';
 
 	// Build postform
 	return '<div class="postarea">
@@ -489,7 +481,7 @@ function buildPost($post, $res, $mode = '') {
 						($post['subject'] != '' ? '
 						<span class="filetitle">' . $post['subject'] . '</span>' : '') . '
 						' . (ATOM_GEOIP ? getCountryIcon($ip) : '') .
-						($showIP || $isEditPost ? getIpUserInfoLink($ip) : '') . '
+						($showIP || $isEditPost ? '&nbsp;' . getIpUserInfoLink($ip) : '') . '
 						' . $post['nameblock'] . '
 					</label>
 					<span class="post-reflink">' . ($res == ATOM_RESPAGE ? '
@@ -741,6 +733,8 @@ function buildPasscodeLoginForm($action = '') {
 }
 
 function buildBansPage() {
+	$getAllBans = getAllBans();
+	$bansCount = count($getAllBans);
 	$text = '<form id="form_bans" name="form_bans" method="post" action="?manage&bans">
 			<fieldset>
 				<legend>Ban an IP-address</legend>
@@ -792,9 +786,9 @@ function buildBansPage() {
 				</tbody></table>
 			</fieldset>
 		</form>
-		<br>';
-	$getAllBans = getAllBans();
-	if (count($getAllBans) > 0) {
+		<br>
+		Total bans: ' . $bansCount . '<br>';
+	if ($bansCount > 0) {
 		if (ATOM_GEOIP == 'geoip2') {
 			$geoipReader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
 		}
@@ -820,8 +814,8 @@ function buildBansPage() {
 			$cidrIP = ip2cidr($ipFrom, $ipTo);
 			$text .= '
 			<tr>
-				<td>' .
-					(ATOM_GEOIP ? getCountryIcon(long2ip($ipFrom), $geoipReader) : '') .
+				<td style="white-space: nowrap;">' .
+					(ATOM_GEOIP ? getCountryIcon(long2ip($ipFrom), $geoipReader) . '&nbsp;' : '') .
 					($ipFrom == $ipTo ? getIpUserInfoLink($cidrIP) : $cidrIP) . '</td>
 				<td>' . date('d.m.Y D H:i:s', $ban['timestamp']) . '</td>
 				<td>' . $expire . '</td><td>' . ($ban['reason'] == '' ?
@@ -921,7 +915,7 @@ function buildPasscodesPage() {
 		<br>
 		<table class="table"><tbody>
 			<tr>
-				<th>Number</th>' .
+				<th>№</th>' .
 				($isAdmin ? '
 				<th>ID</th>' : '') . '
 				<th>Meta</th>
@@ -953,8 +947,8 @@ function buildPasscodesPage() {
 				<td>' . ($pass['blocked_till'] ? date('d.m.Y H:i:s', $pass['blocked_till']) : '') . '</td>
 				<td>' . $pass['blocked_reason'] . '</td>
 				<td>' . ($pass['last_used'] ? date('d.m.Y H:i:s', $pass['last_used']) : '') . '</td>
-				<td style="white-space: pre;">' . ($ip ?
-					(ATOM_GEOIP ? getCountryIcon($ip, $geoipReader) : '') .
+				<td style="white-space: nowrap;">' . ($ip ?
+					(ATOM_GEOIP ? getCountryIcon($ip, $geoipReader) . '&nbsp;' : '') .
 					getIpUserInfoLink($ip) : '') . '</td>
 			</tr>';
 	}
@@ -1142,7 +1136,7 @@ function getPostReports($reports, $geoipReader) {
 		$ip = $report['ip'];
 		$reportsHtml .= '
 					<div class="reply report">
-						&nbsp;' . (ATOM_GEOIP ? getCountryIcon($ip, $geoipReader) : '') .
+						&nbsp;' . (ATOM_GEOIP ? getCountryIcon($ip, $geoipReader) . '&nbsp;' : '') .
 						getIpUserInfoLink($ip) . '
 						(' . date('d.m.y D H:i:s', $report['timestamp']) . ')
 						<br>

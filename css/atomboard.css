@@ -334,8 +334,6 @@ legend {
 }
 
 .posteruid {
-	padding: 0 3px;
-	border-radius: 6px;
 	font: bold 13px Arial;
 	opacity: var(--poster-opacity);
 	cursor: pointer;
@@ -505,7 +503,7 @@ pre + br {
 }
 
 .rules {
-	font: 10px sans-serif;
+	font: 11px sans-serif;
 	padding-left: 5px;
 }
 
