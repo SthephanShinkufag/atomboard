@@ -21,7 +21,7 @@ function fancyDie($message) {
 
 <html data-theme="' . ATOM_THEME . '">
 <head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023112800">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023113000">
 </head>
 <body align="center">
 	<br>
@@ -649,34 +649,7 @@ function postingRequest() {
 
 	global $access, $atom_embeds, $atom_hidefields, $atom_hidefieldsop, $atom_uploads;
 	$hasAccess = $access != 'disabled';
-	$validPasscode = 0;
-
-	if (ATOM_PASSCODES_ENABLED && isset($_SESSION['passcode']) && $_SESSION['passcode'] != '') {
-		$pass = passByID($_SESSION['passcode']);
-		if (!$pass || isPassExpired($pass)) {
-			clearPass();
-			fancyDie('Your passcode has expired. Please issue a new passcode to continue.');
-		} else {
-			$passBlocked = isPassBlocked($pass);
-			if ($passBlocked) {
-				fancyDie('Your passcode has been blocked till ' .
-					date('d.m.y D H:i:s', $pass['blocked_till']) . '. ' .
-					'Reason: ' . $passBlocked . '. Please log in again after the block expires.');
-			} else {
-				$ip = $_SERVER['REMOTE_ADDR'];
-				$now = time();
-				$checkTill = $pass['last_used'] + ATOM_PASSCODES_USE_LIMIT;
-				if ($checkTill > $now) {
-					if ($pass['last_used_ip'] != $ip) {
-						fancyDie('Your passcode has been used recently by another ip. Please wait till ' .
-							date('d.m.y D H:i:s', $checkTill));
-					}
-				}
-				$validPasscode = $pass['number'];
-				usePass($pass['id'], $ip); // Update passcode info (last used ip)
-			}
-		}
-	}
+	$validPasscode = checkForPasscode(true);
 
 	if (!$hasAccess) {
 		if ($validPasscode) {
@@ -774,29 +747,7 @@ function postingRequest() {
 		// Check for ban
 		$ban = banByIP($ip);
 		if ($ban) {
-			$directBan = $ban['ip_from'] == $ban['ip_to'];
-			// Range bans do not affect passcode users
-			if ($directBan || !$validPasscode) {
-				$reason = $ban['reason'] == '' ? '' : '<br><br>Reason: ' . $ban['reason'];
-				if ($ban['expire'] == 1) {
-					fancyDie('Your IP address ' . $ip .
-						 ' has been issued a warning.<br>To continue posting, please read <a href="/' .
-						 ATOM_BOARD . '/imgboard.php?banned">this page</a>.' . $reason);
-				} else if ($ban['expire'] == 0 || $ban['expire'] > time()) {
-					$details = $ban['expire'] > 0 ?
-						'<br>This ban will expire ' . date('d.m.Y D H:i:s', $ban['expire']) :
-						'<br>This ban is permanent and will not expire.' .
-						(!$directBan ? '<br>This is a range ban (affects a whole subnet).' : '');
-					if (ATOM_PASSCODES_ENABLED && !$directBan) {
-						$details .= '<br><br><a href="/' . ATOM_BOARD .
-							'/imgboard.php?passcode">Passcode users</a> are not affected by subnet bans.';
-					}
-					fancyDie('Your IP address ' . $ip .
-						' has been banned from posting on this image board. ' . $details . $reason);
-				} else {
-					clearExpiredBans();
-				}
-			}
+			checkForBans($ip, $ban, $validPasscode, false, false);
 		}
 
 		// Check for message size
@@ -1388,25 +1339,49 @@ function postingRequest() {
 
 /* ==[ Banned request ]==================================================================================== */
 
+function checkForBans($ip, $ban, $validPasscode, $isCloseWarning, $isJson) {
+	$directBan = $ban['ip_from'] == $ban['ip_to'];
+	// Range bans do not affect passcode users
+	if (!$directBan && $validPasscode) {
+		return;
+	}
+	$message = '';
+	$reason = $ban['reason'] == '' ? '' : '<br><br>Reason: ' . $ban['reason'];
+	if ($ban['expire'] == 1) {
+		if($isCloseWarning) {
+			deleteBan($ban['id']);
+			$message = 'Your IP address ' . $ip . ' has been issued a warning:<br><br>' . $ban['reason'] .
+				'<br><br>Please make sure you have read and understood the rules.<br>
+				This warning has been automatically removed, you may continue posting now.';
+		} else {
+			$message = 'Your IP address ' . $ip . ' has been issued a warning.<br>To continue posting,' .
+				' please read <a href="/' . ATOM_BOARD . '/imgboard.php?banned">this page</a>.' . $reason;
+		}
+	} else if ($ban['expire'] == 0 || $ban['expire'] > time()) {
+		$message = 'Your IP address ' . $ip . ' has been banned from posting on this image board. ' . (
+			$ban['expire'] > 0 ? '<br>This ban will expire ' . date('d.m.Y D H:i:s', $ban['expire']) :
+				'<br>This ban is permanent and will not expire.' .
+				(!$directBan ? '<br>This is a range ban (affects a whole subnet).' : '') .
+				(ATOM_PASSCODES_ENABLED && !$directBan ? '<br><br><a href="/' . ATOM_BOARD .
+					'/imgboard.php?passcode">Passcode users</a> are not affected by subnet bans.' : '')
+		) . $reason;
+	} else {
+		clearExpiredBans();
+	}
+	if($message) {
+		if($isJson) {
+			die('{ "result": "error", "message": "' . $message . '" }');
+		} else {
+			fancyDie($message);
+		}
+	}
+}
+
 function bannedRequest() {
 	$ip = $_SERVER['REMOTE_ADDR'];
 	$ban = banByIP($ip);
 	if ($ban) {
-		if ($ban['expire'] == 1) {
-			deleteBan($ban['id']);
-			fancyDie('Your IP address ' . $ip . ' has been issued a warning:<br><br>' . $ban['reason'] .
-				'<br><br>Please make sure you have read and understood the rules.<br>
-				This warning has been automatically removed, you may continue posting now.');
-		} else if ($ban['expire'] == 0 || $ban['expire'] > time()) {
-			$reason = $ban['reason'] == '' ? '' : '<br>Reason: ' . $ban['reason'];
-			$expire = $ban['expire'] > 0 ?
-				'<br>This ban will expire ' . date('y.m.d D H:i:s', $ban['expire']) :
-				'<br>This ban is permanent and will not expire.';
-			fancyDie('Your IP address ' . $ip .
-				' has been banned from posting on this image board. ' . $expire . $reason);
-		} else {
-			clearExpiredBans();
-		}
+		checkForBans($ip, $ban, checkForPasscode(false), true, false);
 	} else {
 		fancyDie('Your IP address ' . $ip . ' is not banned at this time.');
 	}
@@ -1445,9 +1420,14 @@ function deletionRequest() {
 function reportRequest() {
 	global $access;
 	$isJson = isset($_GET['json']) && $_GET['json'] == '1';
+	$ip = $_SERVER['REMOTE_ADDR'];
+	$ban = banByIP($ip);
+	if ($ban) {
+		checkForBans($ip, $ban, checkForPasscode(false), false, $isJson);
+	}
 	if (isset($_GET['addreport'])) {
 		$id = $_POST['id'];
-		$report = insertReport($id, ATOM_BOARD, $_SERVER['REMOTE_ADDR'], $_POST['reason']);
+		$report = insertReport($id, ATOM_BOARD, $ip, $_POST['reason']);
 		if ($report) {
 			if ($report == 'exists') {
 				if ($isJson) {
@@ -1475,6 +1455,32 @@ function reportRequest() {
 }
 
 /* ==[ Passcode requests ]================================================================================= */
+
+function checkForPasscode($showMessages) {
+	if (!ATOM_PASSCODES_ENABLED || !isset($_SESSION['passcode']) || $_SESSION['passcode'] == '') {
+		return 0;
+	}
+	$pass = passByID($_SESSION['passcode']);
+	if (!$pass || isPassExpired($pass)) {
+		clearPass();
+		if ($showMessages) {
+			fancyDie('Your passcode has expired. Please issue a new passcode to continue.');
+		}
+	}
+	$passBlocked = isPassBlocked($pass);
+	if ($passBlocked && $showMessages) {
+		fancyDie('Your passcode has been blocked till ' . date('d.m.y D H:i:s', $pass['blocked_till']) .
+			'. Reason: ' . $passBlocked . '. Please log in again after the block expires.');
+	}
+	$ip = $_SERVER['REMOTE_ADDR'];
+	$checkTill = $pass['last_used'] + ATOM_PASSCODES_USE_LIMIT;
+	if ($checkTill > time() && $pass['last_used_ip'] != $ip && $showMessages) {
+		fancyDie('Your passcode has been used recently by another ip. Please wait till ' .
+			date('d.m.y D H:i:s', $checkTill));
+	}
+	usePass($pass['id'], $ip); // Update passcode info (last used ip)
+	return $pass['number'] ? $pass['number'] : 0;
+}
 
 function passcodeRequest() {
 	// Check passcode entered in passcode login form
@@ -1596,7 +1602,7 @@ $access = checkAccessRights();
 if (isset($_GET['manage'])) {
 	managementRequest();
 }
-if (isset($_GET['delete'])) { // Fust be before postingRequest()
+if (isset($_GET['delete'])) { // Must be before postingRequest()
 	deletionRequest();
 }
 if (
