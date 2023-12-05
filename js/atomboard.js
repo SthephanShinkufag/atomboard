@@ -51,7 +51,7 @@ function setThemeSelectors(value) {
 function setThemeStyle(el) {
 	var selectorValue = el.value;
 	setThemeSelectors(selectorValue);
-	document.documentElement.dataset.theme = settings.themeStyle = selectorValue;
+	document.documentElement.dataset.theme = settings.theme2Style = selectorValue;
 	saveSettings();
 }
 
@@ -260,18 +260,18 @@ function main() {
 	}
 	
 	// Set theme style
-	if (!settings.themeStyle) {
-		settings.themeStyle = document.documentElement.dataset.theme;
+	if (!settings.theme2Style) {
+		settings.theme2Style = document.documentElement.dataset.theme;
 		saveSettings();
 	}
-	document.documentElement.dataset.theme = settings.themeStyle;
+	document.documentElement.dataset.theme = settings.theme2Style;
 
 	// Do stuff after DOM loading
 	document.addEventListener('DOMContentLoaded', function initAfterDOM() {
 		navigatePostHash(); // Navigate to post if hash available
 		checkPasscode(); // Check and apply passcode
 		initPasswords(); // Set passwords for post form and deletion form
-		setThemeSelectors(settings.themeStyle); // Set theme style selectors
+		setThemeSelectors(settings.theme2Style); // Set theme style selectors
 		initPostsHighlighting(); // Events for highlighting posts by clicking on user ID
 	});
 }

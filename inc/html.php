@@ -51,7 +51,9 @@ function pageHeader() {
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
 	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023113000">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/snow.css?2023113000">
 	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023113000"></script>
+	<script src="/' . ATOM_BOARD . '/js/snow.js?2023113000"></script>
 	<script src="/' . ATOM_BOARD .
 		'/js/extension/Dollchan_Extension_Tools.user.js?2023113000" async defer></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
@@ -62,7 +64,8 @@ function pageHeader() {
 
 function pageWrapper($description, $needReturn) {
 	return '
-	<div class="wrapper">
+    <div class="snow-container"></div>
+	<div class="wrapper over-the-snow">
 		<div id="navigation-top" class="navigation">' . ATOM_HTML_NAVIGATION . '
 			<a class="navigation-link" href="/' . ATOM_BOARD .
 				'/catalog.html" title="Go to catalog">Catalog</a>
@@ -71,7 +74,8 @@ function pageWrapper($description, $needReturn) {
 			<a class="navigation-link" href="/' . ATOM_BOARD .
 				'/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
 			<select class="select-style navigation-link" onchange="setThemeStyle(this);">
-				<option value="Dark" selected>Dark</option>
+				<option value="Snow" selected>Snow</option>
+				<option value="Dark">Dark</option>
 				<option value="Light">Light</option>
 			</select>
 		</div>
@@ -113,7 +117,8 @@ function pageFooter($needReturn) {
 			<a class="navigation-link" href="/' . ATOM_BOARD .
 				'/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
 			<select class="select-style navigation-link" onchange="setThemeStyle(this);">
-				<option value="Dark" selected>Dark</option>
+				<option value="Snow" selected>Snow</option>
+				<option value="Dark">Dark</option>
 				<option value="Light">Light</option>
 			</select>
 		</div>
@@ -415,7 +420,7 @@ function buildPost($post, $res, $mode = '') {
 			continue;
 		}
 		$filehtml .= '
-					<div class="image-container">
+					<div class="image-container"><div class="helper"></div>
 						<span class="filesize">' .
 						($isEditPost ? '
 							<input type="checkbox" name="delete-img-mod[]" value="' . $index . '">' : '') . '
