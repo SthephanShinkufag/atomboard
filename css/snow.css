@@ -38,64 +38,59 @@ html[data-theme="Snow"] {
 }
 
 .snow-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    overflow: hidden;
-    width: 100vw;
-    height: 100vh;
-    z-index: 10;
-    pointer-events: none;
-}
-
-.over-the-snow {
-    position: relative;
-    z-index: 20;
+	position: fixed;
+	top: 0;
+	left: 0;
+	overflow: hidden;
+	width: 100vw;
+	height: 100vh;
+	z-index: 10;
+	pointer-events: none;
 }
 
 .snowflake {
-    position: absolute;
-    background-color: white;
-    border-radius: 50%;
-    opacity: 0.8;
-    pointer-events: none;
+	position: absolute;
+	background-color: white;
+	border-radius: 50%;
+	opacity: 0.8;
+	pointer-events: none;
 }
 
 @keyframes fall {
-    0% {
-        opacity: 0;
-        transform: translateY(0);
-    }
-    10% {
-        opacity: 1;
-    }
-    100% {
-        opacity: 0.5;
-        transform: translateY(100vh);
-    }
+	0% {
+		opacity: 0;
+		transform: translateY(0);
+	}
+	10% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0.5;
+		transform: translateY(100vh);
+	}
 }
 
 @keyframes diagonal-fall {
-    0% {
-        opacity: 0;
-        transform: translate(0, 0);
-    }
-    10% {
-        opacity: 1;
-    }
-    100% {
-        opacity: 0.25;
-        transform: translate(10vw, 100vh);
-    }
+	0% {
+		opacity: 0;
+		transform: translate(0, 0);
+	}
+	10% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0.25;
+		transform: translate(10vw, 100vh);
+	}
 }
 
 .oppost .image-container .helper {
    background: url("./hat.png");
-    background-size: cover;
-    position: relative;
-    width: 100px;
-    height: 110px;
-    margin-left: 180px;
-    margin-bottom: -100px;
-    right: 0;
+	background-size: cover;
+	position: relative;
+	width: 100px;
+	height: 110px;
+	margin-left: 180px;
+	margin-bottom: -100px;
+	right: 0;
 }

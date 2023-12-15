@@ -50,12 +50,12 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023113000">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/snow.css?2023113000">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023113000"></script>
-	<script src="/' . ATOM_BOARD . '/js/snow.js?2023113000"></script>
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023121500">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/snow.css?2023121500">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023121500"></script>
+	<script src="/' . ATOM_BOARD . '/js/snow.js?2023121500"></script>
 	<script src="/' . ATOM_BOARD .
-		'/js/extension/Dollchan_Extension_Tools.user.js?2023113000" async defer></script>' .
+		'/js/extension/Dollchan_Extension_Tools.user.js?2023121500" async defer></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -65,7 +65,7 @@ function pageHeader() {
 function pageWrapper($description, $needReturn) {
 	return '
     <div class="snow-container"></div>
-	<div class="wrapper over-the-snow">
+	<div class="wrapper">
 		<div id="navigation-top" class="navigation">' . ATOM_HTML_NAVIGATION . '
 			<a class="navigation-link" href="/' . ATOM_BOARD .
 				'/catalog.html" title="Go to catalog">Catalog</a>
