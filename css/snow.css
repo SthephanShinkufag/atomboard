@@ -37,6 +37,19 @@ html[data-theme="Snow"] {
 	--posteruid-filter: invert(100%);
 }
 
+.oppost .image-container {
+	position: relative;
+}
+
+.oppost .image-container > .snow-hat {
+	position: absolute;
+	width: 100px;
+	height: 110px;
+	right: 0;
+	background: url("./hat.png");
+	background-size: cover;
+}
+
 .snow-container {
 	position: fixed;
 	top: 0;
@@ -82,15 +95,4 @@ html[data-theme="Snow"] {
 		opacity: 0.25;
 		transform: translate(10vw, 100vh);
 	}
-}
-
-.oppost .image-container .helper {
-   background: url("./hat.png");
-	background-size: cover;
-	position: relative;
-	width: 100px;
-	height: 110px;
-	margin-left: 180px;
-	margin-bottom: -100px;
-	right: 0;
 }
