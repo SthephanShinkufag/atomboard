@@ -63,16 +63,22 @@ function managementRequest() {
 		rebuildIndexPages();
 
 		// Delete likes for deleted posts
-		/*
 		$likes = getAllLikes();
 		foreach ($likes as $like) {
 			$id = $like['postnum'];
-			$post = getPost($id);
-			if (!$post) {
+			if (!getPost($id)) {
 				deleteLikes($id);
 			}
 		}
-		*/
+
+		// Delete reports for deleted posts
+		$reports = getAllReports();
+		foreach ($reports as $report) {
+			$id = $report['postnum'];
+			if (!getPost($id)) {
+				deleteReports($id);
+			}
+		}
 
 		die(managePage(manageInfo('Rebuilt board.')));
 	}

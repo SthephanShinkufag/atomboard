@@ -30,14 +30,6 @@ function saveSettings() {
 	localStorage.atomSettings = JSON.stringify(settings);
 }
 
-// Used in html.php
-function quotePost(num) {
-	var el = $id('message');
-	el.value += '>>' + num + '\n';
-	el.focus();
-	return false;
-}
-
 /* ==[ Theme styles ]====================================================================================== */
 
 function setThemeSelectors(value) {
@@ -120,37 +112,7 @@ function initPasswords() {
 	}
 }
 
-/* ==[ Posts highlighting and navigation ]================================================================= */
-
-// Used in html.php
-function highlightPost(num) {
-	unhighlightPosts();
-	var post = $id('reply' + num) || $id('op' + num);
-	if (post) {
-		post.classList.add('highlighted');
-	}
-	return false;
-}
-
-function unhighlightPosts() {
-	var els = $Q('.highlighted');
-	for (var i = 0, len = els.length; i < len; ++i) {
-		els[i].classList.remove('highlighted');
-	}
-}
-
-function navigatePostHash() {
-	var hash = window.location.hash;
-	if (!hash) {
-		return;
-	}
-	var hashMatch = hash.match(/^#q([0-9]+)$/i);
-	if (hashMatch && hashMatch[1]) {
-		quotePost(hashMatch[1]);
-	} else if ((hashMatch = hash.match(/^#([0-9]+)$/i)) && hashMatch[1]) {
-		highlightPost(hashMatch[1]);
-	}
-}
+/* ==[ Posts highlighting ]================================================================================ */
 
 function initPostsHighlighting() {
 	var highlightedUID = null;
@@ -160,7 +122,11 @@ function initPostsHighlighting() {
 			return;
 		}
 		if (e.type === 'click') {
-			unhighlightPosts();
+			// Unhighlight posts
+			var els = $Q('.highlighted');
+			for (var i = 0, len = els.length; i < len; ++i) {
+				els[i].classList.remove('highlighted');
+			}
 			var uid = targetEl.dataset.uid;
 			if (highlightedUID === uid) {
 				highlightedUID = null;
@@ -268,7 +234,6 @@ function main() {
 
 	// Do stuff after DOM loading
 	document.addEventListener('DOMContentLoaded', function initAfterDOM() {
-		navigatePostHash(); // Navigate to post if hash available
 		checkPasscode(); // Check and apply passcode
 		initPasswords(); // Set passwords for post form and deletion form
 		setThemeSelectors(settings.theme2Style); // Set theme style selectors

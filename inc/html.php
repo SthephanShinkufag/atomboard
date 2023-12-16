@@ -491,14 +491,12 @@ function buildPost($post, $res, $mode = '') {
 						' . $post['nameblock'] . '
 					</label>
 					<span class="post-reflink">' . ($res == ATOM_RESPAGE ? '
-						<a href="' . $thrId . '.html#' . $id . '" onclick="highlightPost(' . $id .
-							');" title="Click to link to this post">№</a>' .
-						'<a href="' . $thrId . '.html#q' . $id . '" onclick="quotePost(' . $id .
-							');" title="Click to reply to this post">' .
+						<a href="' . $thrId . '.html#' . $id . '" title="Click to link to this post">№</a>
+						<a href="' . $thrId . '.html#' . $id . '" title="Click to reply to this post">' .
 							$id . '</a>' : '
 						<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $id .
-							'" title="Click to link to this post">№</a>' .
-						'<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#q' . $id .
+							'" title="Click to link to this post">№</a>
+						<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $id .
 								'" title="Click to reply to this post">' . $id . '</a>') . '
 					</span>
 					<span class="post-buttons">' .
