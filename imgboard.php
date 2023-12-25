@@ -983,8 +983,7 @@ function postingRequest() {
 		case 'moderator': $postNameBlock .= ' <span class="postername-mod">## Mod</span>'; break;
 		}
 	} else if (ATOM_UNIQUEID) {
-		$uidHash = substr(md5($post['pass'] ? $post['pass'] :
-			$post['ip'] . intval($post['parent']) . ATOM_TRIPSEED), 0, 8);
+		$uidHash = substr(md5($post['ip'] . intval($post['parent']) . ATOM_TRIPSEED), 0, 8);
 		$uidHashInt = hexdec('0x' . $uidHash);
 		$uidName = $uidHash;
 		if (ATOM_UNIQUENAME) {
