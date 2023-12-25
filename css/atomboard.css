@@ -166,6 +166,14 @@ legend {
 	width: 100%;
 }
 
+.passcode-blocked {
+	background: #ff000060;
+}
+
+.passcode-expired {
+	background: #8a8a8a61;
+}
+
 .report {
 	display: inline-block;
 	margin: 1px 1px 1px 23px;

@@ -50,12 +50,12 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023121600">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/snow.css?2023121600">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023121600"></script>
-	<script src="/' . ATOM_BOARD . '/js/snow.js?2023121600"></script>
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2023122500">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/snow.css?2023122500">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2023122500"></script>
+	<script src="/' . ATOM_BOARD . '/js/snow.js?2023122500"></script>
 	<script src="/' . ATOM_BOARD .
-		'/js/extension/Dollchan_Extension_Tools.user.js?2023121600" async defer></script>' .
+		'/js/extension/Dollchan_Extension_Tools.user.js?2023122500" async defer></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -495,9 +495,9 @@ function buildPost($post, $res, $mode = '') {
 						<a href="' . $thrId . '.html#' . $id . '" title="Click to reply to this post">' .
 							$id . '</a>' : '
 						<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $id .
-							'" title="Click to link to this post">№</a>
+							'" title="Go to this post">№</a>
 						<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $id .
-								'" title="Click to reply to this post">' . $id . '</a>') . '
+							'" title="Go to to this post">' . $id . '</a>') . '
 					</span>
 					<span class="post-buttons">' .
 						(ATOM_LIKES ? '
@@ -938,8 +938,11 @@ function buildPasscodesPage() {
 		$ip = $pass['last_used_ip'];
 		$countryIcon = '';
 		$passcodeNum = $pass['number'];
+		$blockedTill = $pass['blocked_till'];
+		$nowTime = time();
 		$passHtml .= '
-			<tr>
+			<tr' . ($nowTime > $pass['expires'] ? ' class="passcode-expired"' :
+				($nowTime < $blockedTill ? ' class="passcode-blocked"' : '')) . '>
 				<td><a target="_blank" href="/' . ATOM_BOARD . '/imgboard.php?manage=&passcode=' .
 					$passcodeNum . '&passcodes=block" title="Manage passcode №' . $passcodeNum . '">' .
 					$passcodeNum . '</a></td>' .
@@ -948,7 +951,7 @@ function buildPasscodesPage() {
 				<td>' . $pass['meta'] . '</td>
 				<td>' . date('d.m.Y H:i:s', $pass['issued']) . '</td>
 				<td>' . date('d.m.Y H:i:s', $pass['expires']) . '</td>
-				<td>' . ($pass['blocked_till'] ? date('d.m.Y H:i:s', $pass['blocked_till']) : '') . '</td>
+				<td>' . ($blockedTill ? date('d.m.Y H:i:s', $blockedTill) : '') . '</td>
 				<td>' . $pass['blocked_reason'] . '</td>
 				<td>' . ($pass['last_used'] ? date('d.m.Y H:i:s', $pass['last_used']) : '') . '</td>
 				<td style="white-space: nowrap;">' . ($ip ?
