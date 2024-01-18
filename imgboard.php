@@ -1,7 +1,7 @@
 <?php
 // Uncomment to show debugging errors
-// error_reporting(E_ALL);
-// ini_set('display_errors', 1);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 ini_set('session.gc_maxlifetime', 2592000); // 30 days
 session_set_cookie_params(2592000); // store session cookie for 30 days
 
@@ -21,7 +21,7 @@ function fancyDie($message) {
 
 <html data-theme="' . ATOM_THEME . '">
 <head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2024010300">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2024011801">
 </head>
 <body align="center">
 	<br>
@@ -655,7 +655,8 @@ function postingRequest() {
 
 	global $access, $atom_embeds, $atom_hidefields, $atom_hidefieldsop, $atom_uploads;
 	$hasAccess = $access != 'disabled';
-	$validPasscode = checkForPasscode(true);
+	$passcode = checkForPasscode(true);
+	$validPasscode = $passcode[0];
 
 	if (!$hasAccess) {
 		if ($validPasscode) {
@@ -971,9 +972,11 @@ function postingRequest() {
 	$postName = $post['name'];
 	$postTripcode = $post['tripcode'];
 	$postEmail = $post['email'];
-	$postNameBlock = '<span class="postername' .
-		($hasAccess && $postName ? ($access == 'admin' ? ' postername-admin' : ' postername-mod') : '') .
-		'">' .
+	$postNameBlock =
+		($validPasscode && $passcode[1] ? '<img class="poster-achievement" height="18"' .
+			' title="Donator" src="/' . ATOM_BOARD . '/icons/donator.png">' : '') .
+		'<span class="postername' . ($hasAccess && $postName ?
+			($access == 'admin' ? ' postername-admin' : ' postername-mod') : '') . '">' .
 		(!$postName && !$postTripcode ? ATOM_POSTERNAME : $postName) .
 		($postTripcode != '' ? '</span><span class="postertrip">!' . $postTripcode : '') . '</span>';
 	if ($hasAccess && ($postName || $postTripcode)) {
@@ -1006,7 +1009,8 @@ function postingRequest() {
 			($lowEmail == 'sage' ? ' class="sage"' : '') . '>' . $postNameBlock . '</a>';
 	}
 	$tt = time();
-	$postDateBlock = '<span class="posterdate" data-timestamp="' . $tt . '">' . date('d.m.y D H:i:s', $tt) . '</span>';
+	$postDateBlock = '<span class="posterdate" data-timestamp="' . $tt . '">' .
+		date('d.m.y D H:i:s', $tt) . '</span>';
 	$post['nameblock'] = $postNameBlock . ' ' . $postDateBlock;
 
 	/* --------[ Embed URL upload ]-------- */
@@ -1386,7 +1390,7 @@ function bannedRequest() {
 	$ip = $_SERVER['REMOTE_ADDR'];
 	$ban = banByIP($ip);
 	if ($ban) {
-		checkForBans($ip, $ban, checkForPasscode(false), true, false);
+		checkForBans($ip, $ban, checkForPasscode(false)[0], true, false);
 	} else {
 		fancyDie('Your IP address ' . $ip . ' is not banned at this time.');
 	}
@@ -1428,7 +1432,7 @@ function reportRequest() {
 	$ip = $_SERVER['REMOTE_ADDR'];
 	$ban = banByIP($ip);
 	if ($ban) {
-		checkForBans($ip, $ban, checkForPasscode(false), false, $isJson);
+		checkForBans($ip, $ban, checkForPasscode(false)[0], false, $isJson);
 	}
 	if (isset($_GET['addreport'])) {
 		$id = $_POST['id'];
@@ -1463,7 +1467,7 @@ function reportRequest() {
 
 function checkForPasscode($showMessages) {
 	if (!ATOM_PASSCODES_ENABLED || !isset($_SESSION['passcode']) || $_SESSION['passcode'] == '') {
-		return 0;
+		return array(0);
 	}
 	$pass = passByID($_SESSION['passcode']);
 	if (!$pass || isPassExpired($pass)) {
@@ -1484,7 +1488,7 @@ function checkForPasscode($showMessages) {
 			date('d.m.y D H:i:s', $checkTill));
 	}
 	usePass($pass['id'], $ip); // Update passcode info (last used ip)
-	return $pass['number'] ? $pass['number'] : 0;
+	return $pass['number'] ? array($pass['number'], str_contains($pass['meta'], '[donator]')) : array(0);
 }
 
 function passcodeRequest() {
