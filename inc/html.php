@@ -710,7 +710,7 @@ function buildManageLoginForm() {
 		<br>';
 }
 
-function buildPasscodeLoginForm($action = '') {
+function buildPasscodeLoginForm($action, $pass = NULL) {
 	if ($action == 'login') {
 		return '<form id="form_login_passcode" name="form_login_passcode" method="post" action="?passcode">
 			<fieldset>
@@ -725,8 +725,10 @@ function buildPasscodeLoginForm($action = '') {
 		<br>';
 	}
 	if ($action == 'valid') {
-		return '<div align="center">You are already using a valid passcode. <a href="/' . ATOM_BOARD .
-			'/imgboard.php?passcode&logout">Log Out.</a></div><br>';
+		return '<div align="center"><b>You are using a valid passcode.</b><br>' .
+			'<br>Issued: ' . date('d.m.Y D H:i:s', $pass['issued']) .
+			'<br>Expires: ' . date('d.m.Y D H:i:s', $pass['expires']) .
+			'<br><a href="/' . ATOM_BOARD . '/imgboard.php?passcode&logout">Log Out.</a></div>';
 	}
 }
 

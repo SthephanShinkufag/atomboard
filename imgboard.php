@@ -1497,21 +1497,24 @@ function passcodeRequest() {
 		$passId = $_POST['passcode'];
 		$pass = passByID($passId);
 		if (!$pass) {
-			die(managePage('<p><b>Warning!</b></p>' .
-				'<p>Unable to log in with that passcode. It may be expired.</p>'));
+			die(managePage('<div align="center"><b>Could not log in the provided passcode:</b><br>' .
+				'<br>This passcode is not found in database.</div>'));
 		}
 		$blocked = isPassBlocked($pass);
 		if (isPassExpired($pass)) {
 			clearPass();
-			die(managePage('<p><b>Cound not log in the passcode!</b></p><p>That passcode has expired</p>'));
+			die(managePage('<div align="center"><b>Could not log in the provided passcode:</b><br>' .
+				'<br>This passcode has expired on ' . date('d.m.Y D H:i:s', $pass['expires']) . '.</div>'));
 		} else if ($blocked) {
 			clearPass();
-			die(managePage('<p><b>Could not log in the provided pass code: It has been blocked till ' .
-				date('d.m.y D H:i:s', $pass['blocked_till']) . '.</b></p><p>Reason: ' . $blocked . '</p>'));
+			die(managePage('<div align="center"><b>Could not log in the provided passcode:</b><br>' .
+				'<br>This passcode has been blocked till ' . date('d.m.y D H:i:s', $pass['blocked_till']) .
+				'<br>Reason: ' . $blocked . '</div>'));
 		}
 		setcookie('passcode', '1', $pass['expires'], '/');
 		$_SESSION['passcode'] = $passId;
-		die(managePage(manageInfo('You have logged in. You may post without entering the captcha.')));
+		die(managePage(manageInfo('<b>You have logged in. You may post without entering the captcha.</b>' .
+			'<br>This passcode will expire on ' . date('d.m.Y D H:i:s', $pass['expires']))));
 	}
 
 	// Check passcode status by imgboard.php?passcode&check
@@ -1536,7 +1539,7 @@ function passcodeRequest() {
 	if (isset($_SESSION['passcode'])) {
 		$pass = passByID($_SESSION['passcode']);
 		if ($pass && !isPassExpired($pass) && !isPassBlocked($pass)) {
-			die(managePage(buildPasscodeLoginForm('valid')));
+			die(managePage(buildPasscodeLoginForm('valid', $pass)));
 		}
 	}
 
