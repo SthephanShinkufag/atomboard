@@ -974,7 +974,7 @@ function postingRequest() {
 	$postEmail = $post['email'];
 	$postNameBlock =
 		($validPasscode && $passcode[1] ? '<img class="poster-achievement" height="18"' .
-			' title="Donator" src="/' . ATOM_BOARD . '/icons/donator.png">' : '') .
+			' title="Donator" src="/' . ATOM_BOARD . '/icons/donator.png"> ' : '') .
 		'<span class="postername' . ($hasAccess && $postName ?
 			($access == 'admin' ? ' postername-admin' : ' postername-mod') : '') . '">' .
 		(!$postName && !$postTripcode ? ATOM_POSTERNAME : $postName) .

@@ -917,7 +917,8 @@ function buildPasscodesPage() {
 			<tr>
 				<th>№</th>' .
 				($isAdmin ? '
-				<th>ID</th>' : '') . '
+				<th>ID (admin)</th>
+				<th>Meta (admin)</th>' : '') . '
 				<th>Meta</th>
 				<th>Set at</th>
 				<th>Expires</th>
@@ -943,8 +944,10 @@ function buildPasscodesPage() {
 					$passcodeNum . '&passcodes=block" title="Manage passcode №' . $passcodeNum . '">' .
 					$passcodeNum . '</a></td>' .
 				($isAdmin ? '
-				<td>' . $pass['id'] . '</td>' : '') . '
-				<td>' . $pass['meta'] . '</td>
+				<td style="width: 200px; word-break: break-all;">' . $pass['id'] . '</td>
+				<td>' . $pass['meta_admin'] . '</td>' : '') . '
+				<td>' . str_replace('[donator]', '<img class="poster-achievement" height="18"' .
+					' title="Donator" src="/' . ATOM_BOARD . '/icons/donator.png">', $pass['meta']) . '</td>
 				<td>' . date('d.m.Y H:i:s', $pass['issued']) . '</td>
 				<td>' . date('d.m.Y H:i:s', $pass['expires']) . '</td>
 				<td>' . ($blockedTill ? date('d.m.Y H:i:s', $blockedTill) : '') . '</td>
