@@ -360,23 +360,23 @@ function managementRequest() {
 					$expireType = 'warning';
 				} else if ($_POST['expire'] > 0) {
 					$expire = time() + $_POST['expire'];
-					$expireType = 'regular ban';
+					$expireType = 'till ' . date('d.m.y D H:i:s', $expire);
 				} else {
 					$expire = 0;
-					$expireType = 'permanent ban';
+					$expireType = 'permanent';
 				}
 				$ban['expire'] = $expire;
 				$ban['reason'] = $_POST['reason'];
 				insertBan($ban);
-				modLog('Ban record (' . $expireType . ') added for ' . $ban['ip'] .
-					' by ' . $_SESSION['atom_user'], '0', 'Black');
+				modLog('Ban record (' . $expireType . ') added for ' . $ban['ip'] . ', reason: ' .
+					$ban['reason'], '0', 'Black');
 				$text .= manageInfo('Ban record added for ' . $ban['ip']);
 			}
 		} elseif (isset($_GET['lift'])) {
 			$ban = banByID($_GET['lift']);
 			if ($ban) {
 				$cidrIP = ip2cidr($ban['ip_from'], $ban['ip_to']);
-				modLog('Ban record lifted for ' . $cidrIP . ' by ' . $_SESSION['atom_user'], '0', 'Black');
+				modLog('Ban record lifted for ' . $cidrIP, '0', 'Black');
 				deleteBan($_GET['lift']);
 				$text .= manageInfo('Ban record lifted for ' . $cidrIP);
 			}
@@ -1357,7 +1357,7 @@ function checkForBans($ip, $ban, $validPasscode, $isCloseWarning, $isJson) {
 	$message = '';
 	$reason = $ban['reason'] == '' ? '' : '<br><br>Reason: ' . $ban['reason'];
 	if ($ban['expire'] == 1) {
-		if($isCloseWarning) {
+		if ($isCloseWarning) {
 			deleteBan($ban['id']);
 			$message = 'Your IP address ' . $ip . ' has been issued a warning:<br><br>' . $ban['reason'] .
 				'<br><br>Please make sure you have read and understood the rules.<br>
@@ -1377,8 +1377,8 @@ function checkForBans($ip, $ban, $validPasscode, $isCloseWarning, $isJson) {
 	} else {
 		clearExpiredBans();
 	}
-	if($message) {
-		if($isJson) {
+	if ($message) {
+		if ($isJson) {
 			die('{ "result": "error", "message": "' . $message . '" }');
 		} else {
 			fancyDie($message);

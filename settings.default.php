@@ -110,6 +110,14 @@ define('ATOM_IPLOOKUPS_BLOCK_TOR', true);
 // Block IPs under VPN
 define('ATOM_IPLOOKUPS_BLOCK_VPN', true);
 
+/* ==[ Ban options ]======================================================================================= */
+// Ban reason templates. Empty array() to disable
+$atom_ban_reasons = array(
+	// 'Spamming',
+	// 'Abusive post',
+	// 'Breaking the rules'
+);
+
 /* ==[ Posts ]============================================================================================= */
 // Default poster names
 define('ATOM_POSTERNAME', 'Anonymous');

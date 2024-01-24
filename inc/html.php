@@ -733,6 +733,16 @@ function buildPasscodeLoginForm($action, $pass = NULL) {
 }
 
 function buildBansPage() {
+	global $atom_ban_reasons;
+	$banReasons = '';
+	if (!empty($atom_ban_reasons)) {
+		$banReasonsLen = count($atom_ban_reasons);
+		for ($i = 0; $i < $banReasonsLen; $i++) {
+			$banReasons .= '
+								<option value="' . $atom_ban_reasons[$i] . '">' .
+									$atom_ban_reasons[$i] . '</option>';
+		}
+	}
 	$getAllBans = getAllBans();
 	$bansCount = count($getAllBans);
 	$text = '<form id="form_bans" name="form_bans" method="post" action="?manage&bans">
@@ -777,7 +787,14 @@ function buildBansPage() {
 					</tr>
 					<tr>
 						<td><label for="reason">Reason:</label></td>
-						<td><input type="text" name="reason" id="reason">&nbsp;<small>optional</small></td>
+						<td>
+							<input type="text" name="reason" id="reason">
+							<select onchange="this.parentNode.firstElementChild.value = this.value;">
+								<option value="">- Select ban reason -</option>' .
+								$banReasons . '
+							</select>
+							<small>optional</small>
+						</td>
 					</tr>
 					<tr>
 						<td><input type="submit" class="button-manage" value="Submit"></td>
