@@ -789,9 +789,7 @@ function buildBansPage() {
 		<br>
 		Total bans: ' . $bansCount . '<br>';
 	if ($bansCount > 0) {
-		if (ATOM_GEOIP == 'geoip2') {
-			$geoipReader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
-		}
+		$geoipReader = ATOM_GEOIP == 'geoip2' ? new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
 		$text .= '
 		<table class="table"><tbody>
 			<tr>
@@ -928,9 +926,7 @@ function buildPasscodesPage() {
 				<th>Last used IP</th>
 			</tr>';
 	$passcodes = getAllPasscodes();
-	if (ATOM_GEOIP == 'geoip2') {
-		$geoipReader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
-	}
+	$geoipReader = ATOM_GEOIP == 'geoip2' ? new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
 	foreach ($passcodes as $pass) {
 		$ip = $pass['last_used_ip'];
 		$countryIcon = '';
@@ -1337,9 +1333,7 @@ function buildStatusPage() {
 	$reportsCount = count($reports);
 	$reportsHtml = '';
 	if ($reportsCount) {
-		if (ATOM_GEOIP == 'geoip2') {
-			$geoipReader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
-		}
+		$geoipReader = ATOM_GEOIP == 'geoip2' ? new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
 		$reportsByPost = array();
 		foreach ($reports as $report) {
 			$id = $report['postnum'];
