@@ -1,7 +1,7 @@
 <?php
 // Uncomment to show debugging errors
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// error_reporting(E_ALL);
+// ini_set('display_errors', 1);
 ini_set('session.gc_maxlifetime', 2592000); // 30 days
 session_set_cookie_params(2592000); // store session cookie for 30 days
 
@@ -1634,6 +1634,10 @@ if (ATOM_PASSCODES_ENABLED && isset($_GET['passcode'])) {
 }
 if (isset($_GET['like'])) {
 	likeRequest();
+}
+if (isset($_GET['ban_reasons'])) {
+	header('Content-type: application/json');
+	echo json_encode($atom_ban_reasons, JSON_UNESCAPED_UNICODE);
 }
 
 // Initialization of empty board 

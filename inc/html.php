@@ -788,11 +788,12 @@ function buildBansPage() {
 					<tr>
 						<td><label for="reason">Reason:</label></td>
 						<td>
-							<input type="text" name="reason" id="reason">
+							<input type="text" name="reason" id="reason">' .
+							($banReasons ? '
 							<select onchange="this.parentNode.firstElementChild.value = this.value;">
 								<option value="">- Select ban reason -</option>' .
 								$banReasons . '
-							</select>
+							</select>' : '') . '
 							<small>optional</small>
 						</td>
 					</tr>

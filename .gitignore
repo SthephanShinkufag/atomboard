@@ -1,9 +1,9 @@
-settings.php
-*.html
 *.db
+*.html
+*error_log
+.idea/
 .posts
 .posts.lock
 .project
 .settings/
-.idea/
-*error_log
+settings.php
