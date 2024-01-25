@@ -372,6 +372,27 @@ function isOp($post) {
 	return $post['parent'] == ATOM_NEWTHREAD;
 }
 
+function deleteAllPosts($ip) {
+	$deletedPosts = '';
+	$updThreads = array();
+	$posts = getPostsByIP($ip);
+	foreach ($posts as $post) {
+		$id = $post['id'];
+		$thrId = $post['parent'];
+		deletePost($id);
+		$deletedPosts .= $id . (next($posts) ? ', ' : '');
+		if (!isOp($post) && !in_array($thrId, $updThreads)) {
+			$updThreads[] = $thrId;
+		}
+	}
+	foreach ($updThreads as $updThreadId) {
+		rebuildThreadPage($updThreadId);
+	}
+	modLog('Deleted all posts from ip ' . $ip . ': №' . $deletedPosts . '.', '0', 'Black');
+	rebuildIndexPages();
+	return $deletedPosts;
+}
+
 /* ==[ Images/video files ]================================================================================ */
 
 function deletePostImagesFiles($post, $imgList = array()) {

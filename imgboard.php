@@ -80,7 +80,7 @@ function managementRequest() {
 			}
 		}
 
-		die(managePage(manageInfo('Rebuilt board.')));
+		die(managePage(manageInfo('The board has been rebuilt.')));
 	}
 
 	/* --------[ Update board ]-------- */
@@ -355,6 +355,7 @@ function managementRequest() {
 				}
 				$ban = array();
 				$ban['ip'] = $_POST['ip'];
+				$ip = $ban['ip'];
 				if ($_POST['expire'] == 1) {
 					$expire = 1;
 					$expireType = 'warning';
@@ -368,20 +369,21 @@ function managementRequest() {
 				$ban['expire'] = $expire;
 				$ban['reason'] = $_POST['reason'];
 				insertBan($ban);
-				modLog('Ban record (' . $expireType . ') added for ' . $ban['ip'] . ', reason: ' .
+				modLog('Ban record (' . $expireType . ') added for ' . $ip . ', reason: ' .
 					$ban['reason'], '0', 'Black');
-				$text .= manageInfo('Ban record added for ' . $ban['ip']);
+				$text = 'Ban record added for ' . $ip . (isset($_POST['ban_delall']) ?
+					'<br>Posts are deleted: №' . deleteAllPosts($ip) . '.' : '');
 			}
 		} elseif (isset($_GET['lift'])) {
 			$ban = banByID($_GET['lift']);
 			if ($ban) {
-				$cidrIP = ip2cidr($ban['ip_from'], $ban['ip_to']);
-				modLog('Ban record lifted for ' . $cidrIP, '0', 'Black');
+				$ip = ip2cidr($ban['ip_from'], $ban['ip_to']);
 				deleteBan($_GET['lift']);
-				$text .= manageInfo('Ban record lifted for ' . $cidrIP);
+				modLog('Ban record lifted for ' . $ip, '0', 'Black');
+				$text = 'Ban record lifted for ' . $ip;
 			}
 		}
-		die(managePage(buildBansPage(), 'bans'));
+		die(managePage(($text ? manageInfo($text) . PHP_EOL : '') . buildBansPage(), 'bans'));
 	}
 
 	/* --------[ Show passcodes form ]-------- */
@@ -398,7 +400,8 @@ function managementRequest() {
 
 	if (ATOM_PASSCODES_ENABLED && isset($_GET['issuepasscode']) && $isAdmin) {
 		if (isset($_POST['expires']) && $_POST['expires'] != '') {
-			die(managePage(manageInfo('New pass issued: ' . insertPass($_POST['expires'], $_POST['meta']))));
+			die(managePage(manageInfo('New passcode issued:<br>' . insertPass($_POST['expires'],
+				$_POST['meta']))));
 		}
 	}
 
@@ -410,10 +413,10 @@ function managementRequest() {
 			$blockTill = intval($_POST['block_till']);
 			if ($blockTill) {
 				blockPass($passcodeNum, $blockTill, $_POST['block_reason']);
-				die(managePage(manageInfo('Pass ' . $passcodeNum . ' has been blocked')));
+				die(managePage(manageInfo('Passcode ' . $passcodeNum . ' has been blocked')));
 			} else {
 				unblockPass($passcodeNum);
-				die(managePage(manageInfo('Pass ' . $passcodeNum . ' has been unblocked')));
+				die(managePage(manageInfo('Passcode ' . $passcodeNum . ' has been unblocked')));
 			}
 		}
 	}
@@ -462,31 +465,15 @@ function managementRequest() {
 			modLog('Deleted post №' . $id . ' in thread №' . $thrId . '.', '0', 'Black');
 		}
 		rebuildIndexPages();
-		die(managePage(manageInfo('Post №' . $id . ' are deleted.')));
+		die(managePage(manageInfo('Post №' . $id . ' has been deleted.')));
 	}
 
 	/* --------[ Delete all posts from ip ]-------- */
 
 	if (isset($_GET['delall'])) {
 		$ip = $_GET['delall'];
-		$posts = getPostsByIP($ip);
-		$deletedPosts = '';
-		$updThreads = array();
-		foreach ($posts as $post) {
-			$id = $post['id'];
-			$thrId = $post['parent'];
-			deletePost($id);
-			$deletedPosts .= $id . (next($posts) ? ', ' : '');
-			if (!isOp($post) && !in_array($thrId, $updThreads)) {
-				$updThreads[] = $thrId;
-			}
-		}
-		foreach ($updThreads as $updThreadId) {
-			rebuildThreadPage($updThreadId);
-		}
-		modLog('Deleted all posts from ip ' . $ip . ': №' . $deletedPosts . '.', '0', 'Black');
-		rebuildIndexPages();
-		die(managePage(manageInfo('Posts from ip ' . $ip . ' are deleted:<br>№' . $deletedPosts . '.')));
+		die(managePage(manageInfo('Posts from ip ' . $ip . ' have been deleted: №' .
+			deleteAllPosts($ip) . '.')));
 	}
 
 	/* --------[ Delete/hide images ]-------- */
@@ -503,14 +490,15 @@ function managementRequest() {
 			rebuildThread($thrId);
 			modLog('Deleted image(s) of ' . (isOp($post) ? 'OP-post in thread №' . $id :
 				'post №' . $id . ' in thread №' . $thrId) . '.', '0', 'Black');
-			die(managePage(manageInfo('Selected images from post №' . $id . ' are deleted.')));
+			die(managePage(manageInfo('Selected images from post №' . $id . ' have been deleted.')));
 		}
 		if ($_GET['action'] == 'hide') {
 			hidePostImages($post, $_GET['delete-img-mod']);
 			rebuildThread($thrId);
 			modLog('Hidden thumbnail(s) of ' . (isOp($post) ? 'OP-post in thread №' . $id :
 				'post №' . $id . ' in thread №' . $thrId) . '.', '0', 'Black');
-			die(managePage(manageInfo('Thumbnails for selected images from post №' . $id . ' are changed.')));
+			die(managePage(manageInfo('Thumbnails for selected images from post №' . $id .
+				' have been changed.')));
 		}
 	}
 
@@ -528,7 +516,7 @@ function managementRequest() {
 		rebuildThread($thrId);
 		modLog('Edited message of ' . (isOp($post) ? 'OP-post in thread №' . $id :
 			'post №' . $id . ' in thread №' . $thrId) . '.', '0', 'Black');
-		die(managePage(manageInfo('Message in post №' . $id . ' changed.')));
+		die(managePage(manageInfo('Message in post №' . $id . ' have been changed.')));
 	}
 
 	/* --------[ Approve post if premoderation enabled (see ATOM_REQMOD) ]-------- */
@@ -549,7 +537,7 @@ function managementRequest() {
 			trimThreadPostsCount($thrId);
 		}
 		rebuildThread($thrId);
-		die(managePage(manageInfo('Post №' . $id . ' approved.')));
+		die(managePage(manageInfo('Post №' . $id . ' has been approved.')));
 	}
 
 	/* --------[ Show post moderation form ]-------- */
@@ -581,7 +569,7 @@ function managementRequest() {
 		rebuildThread($id);
 		$stickiedText = $isStickied == 1 ? 'stickied' : 'un-stickied';
 		modLog(ucfirst($stickiedText) . ' thread №' . $id . '.', '0', 'Black');
-		die(managePage(manageInfo('Thread №' . $id . ' is ' . $stickiedText . '.')));
+		die(managePage(manageInfo('Thread №' . $id . ' has been ' . $stickiedText . '.')));
 	}
 
 	/* --------[ Lock thread ]--------= */
@@ -600,7 +588,7 @@ function managementRequest() {
 		rebuildThread($id);
 		$lockedText = $isLocked == 1 ? 'locked' : 'un-locked';
 		modLog(ucfirst($lockedText) . ' thread №' . $id . '.', '0', 'Black');
-		die(managePage(manageInfo('Thread №' . $id . ' is ' . $lockedText . '.')));
+		die(managePage(manageInfo('Thread №' . $id . ' has been ' . $lockedText . '.')));
 	}
 
 	/* --------[ Make endless threads ]-------- */
@@ -619,7 +607,7 @@ function managementRequest() {
 		rebuildThread($id);
 		$endlessText = $isEndless == 1 ? 'made endless' : 'made non-endless';
 		modLog(ucfirst($endlessText) . ' thread №' . $id . '.', '0', 'Black');
-		die(managePage(manageInfo('Thread №' . $id . ' is ' . $endlessText . '.')));
+		die(managePage(manageInfo('Thread №' . $id . ' has been ' . $endlessText . '.')));
 	}
 
 	/* --------[ Raw post sending ]-------- */
@@ -1421,7 +1409,7 @@ function deletionRequest() {
 	$id = $post['id'];
 	deletePost($id);
 	rebuildThread(getThreadId($post));
-	fancyDie('Post №' . $id . ' successfully deleted.');
+	fancyDie('Post №' . $id . ' has been deleted.');
 }
 
 /* ==[ Post report request ]=============================================================================== */
@@ -1532,7 +1520,7 @@ function passcodeRequest() {
 	// Logout from passcode
 	if (isset($_GET['logout'])) {
 		clearPass();
-		die(managePage(manageInfo('You have logged out.')));
+		die(managePage(manageInfo('You have been logged out.')));
 	}
 
 	// Check if passcode already has effect now
@@ -1558,8 +1546,8 @@ function likeRequest() {
 	die('{
 		"status": "ok",
 		"message": "' . (
-			$result[0] ? 'Post №' . $postNum . ' succesfully liked!' :
-			'The like to post №' . $postNum . ' is cancelled!'
+			$result[0] ? 'Post №' . $postNum . ' has been liked!' :
+			'The like to post №' . $postNum . ' has been cancelled!'
 		) . '",
 		"likes": ' . $result[1] . ' }');
 }
