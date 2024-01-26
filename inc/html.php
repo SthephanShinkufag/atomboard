@@ -799,8 +799,10 @@ function buildBansPage() {
 					</tr>
 					<tr>
 						<td>
-							<input type="submit" class="button-manage" name="ban" value="BAN">
-							<input type="submit" class="button-manage" name="ban_delall" value="BAN+DELALL"' .
+							<input type="submit" class="button-manage"' .
+								' name="ban" value="BAN" style="width: 100%;">
+							<input type="submit" class="button-manage"' .
+								' name="ban_delall" value="BAN+DELALL" style="width: 100%;"' .
 								' onclick="return confirm(\'Are you sure to ban and delete all posts?\')">
 						</td>
 						<td></td>

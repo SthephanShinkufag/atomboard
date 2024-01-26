@@ -346,34 +346,31 @@ function managementRequest() {
 	if (isset($_GET['bans']) && !$isJanitor) {
 		clearExpiredBans();
 		$text = '';
-		if (isset($_POST['ip'])) {
-			if ($_POST['ip'] != '') {
-				$ipArr = cidr2ip($_POST['ip']);
-				$banexists = banByIP(long2ip($ipArr[0]));
-				if ($banexists) {
-					fancyDie('Sorry, there is already a ban on record for that IP address.');
-				}
-				$ban = array();
-				$ban['ip'] = $_POST['ip'];
-				$ip = $ban['ip'];
-				if ($_POST['expire'] == 1) {
-					$expire = 1;
-					$expireType = 'warning';
-				} else if ($_POST['expire'] > 0) {
-					$expire = time() + $_POST['expire'];
-					$expireType = 'till ' . date('d.m.y D H:i:s', $expire);
-				} else {
-					$expire = 0;
-					$expireType = 'permanent';
-				}
-				$ban['expire'] = $expire;
-				$ban['reason'] = $_POST['reason'];
-				insertBan($ban);
-				modLog('Ban record (' . $expireType . ') added for ' . $ip . ', reason: ' .
-					$ban['reason'], '0', 'Black');
-				$text = 'Ban record added for ' . $ip . (isset($_POST['ban_delall']) ?
-					'<br>Posts are deleted: №' . deleteAllPosts($ip) . '.' : '');
+		$ip = $_POST['ip'];
+		if (isset($ip) && $ip != '') {
+			$banexists = banByIP(long2ip(cidr2ip($ip)[0]));
+			if ($banexists) {
+				fancyDie('Sorry, there is already a ban on record for that IP address.');
 			}
+			$ban = array();
+			$ban['ip'] = $ip;
+			if ($_POST['expire'] == 1) {
+				$expire = 1;
+				$expireType = 'warning';
+			} else if ($_POST['expire'] > 0) {
+				$expire = time() + $_POST['expire'];
+				$expireType = 'till ' . date('d.m.y D H:i:s', $expire);
+			} else {
+				$expire = 0;
+				$expireType = 'permanent';
+			}
+			$ban['expire'] = $expire;
+			$ban['reason'] = $_POST['reason'];
+			insertBan($ban);
+			modLog('Ban record (' . $expireType . ') added for ' . $ip . ', reason: ' . $ban['reason'],
+				'0', 'Black');
+			$text = 'Ban record added for ' . $ip . (isset($_POST['ban_delall']) ?
+				'<br>Posts are deleted: №' . deleteAllPosts(preg_replace('/\/\\d+/', '', $ip)) . '.' : '');
 		} elseif (isset($_GET['lift'])) {
 			$ban = banByID($_GET['lift']);
 			if ($ban) {
