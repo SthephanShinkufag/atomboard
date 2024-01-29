@@ -752,13 +752,14 @@ function buildBansPage() {
 					<tr>
 						<td><label for="ip">IP-address:</label></td>
 						<td><input type="text" name="ip" id="ip" value="' . $_GET['bans'] . '">
-						<small class="input-controls">
-							[ <a href="#" onclick="document.form_bans.ip.value+=\'/24\'; return false;">
-								subnet /24 mask 255.255.255.0</a> |
-							<a href="#" onclick="document.form_bans.ip.value+=\'/16\'; return false;">
-								subnet /16 mask 255.255.0.0</a>
-							] CIDR format is supported
-						</small>
+							<small class="input-controls">
+								[<a href="#" onclick="document.form_bans.ip.value+=\'/24\'; return false;">
+									subnet /24
+								</a> |
+								<a href="#" onclick="document.form_bans.ip.value+=\'/16\'; return false;">
+									subnet /16
+								</a>] CIDR format
+							</small>
 						</td>
 					</tr>
 					<tr>
@@ -800,9 +801,9 @@ function buildBansPage() {
 					<tr>
 						<td>
 							<input type="submit" class="button-manage"' .
-								' name="ban" value="BAN" style="width: 100%;">
+								' name="ban" value="Ban" style="width: 100%;">
 							<input type="submit" class="button-manage"' .
-								' name="ban_delall" value="BAN+DELALL" style="width: 100%;"' .
+								' name="ban_delall" value="Ban + DelAll" style="width: 100%;"' .
 								' onclick="return confirm(\'Are you sure to ban and delete all posts?\')">
 						</td>
 						<td></td>
@@ -983,16 +984,31 @@ function buildPasscodesPage() {
 	return $passHtml;
 }
 
-function buildUserInfoForm() {
-	return '<form id="form_moderate_post" name="form_ipinfo" method="get" action="?">
+function buildUserInfoForm($ip = '') {
+	return '<form name="form_ipinfo" method="get" action="?">
 			<input type="hidden" name="manage" value="">
 			<fieldset>
 				<legend>View user IP info</legend>
-				<div valign="top">
-					<label for="ipinfo">IP address:</label>
-					<input type="text" name="ipinfo" id="ipinfo">
-					<input type="submit" class="button-manage" value="Submit">
-				</div>
+				<table><tbody>
+					<tr>
+						<td><label for="ipinfo">IP address:</label></td>
+						<td>
+							<input type="text" name="ipinfo" id="ipinfo" value="' . $ip . '">
+							<small class="input-controls">
+								[<a href="#" onclick="document.form_ipinfo.ipinfo.value+=\'/24\';' .
+									' return false;"> subnet /24 </a> |
+								<a href="#" onclick="document.form_ipinfo.ipinfo.value+=\'/16\';' .
+									' return false;"> subnet /16 </a>] CIDR format
+							</small>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<input type="submit" class="button-manage" value="Submit" style="width: 100%;">
+						</td>
+						<td></td>
+					</tr>
+				</tbody></table>
 			</fieldset>
 		</form>
 		<br>';
@@ -1060,7 +1076,8 @@ function buildUserInfoPage($ip, $posts) {
 			$ipLookupHtml = 'This IP address has not yet been verified.';
 		}
 	}
-	return '<fieldset>
+	return 	buildUserInfoForm($ip) . '
+		<fieldset>
 			<legend>User IP: ' . $ip . '</legend>
 			<fieldset>
 				<legend>Action</legend>
