@@ -370,7 +370,7 @@ function managementRequest() {
 			modLog('Ban record (' . $expireType . ') added for ' . $ip . ', reason: ' . $ban['reason'],
 				'0', 'Black');
 			$text = 'Ban record added for ' . $ip . (isset($_POST['ban_delall']) ?
-				'<br>Posts are deleted: №' . deleteAllPosts(preg_replace('/\/\\d+/', '', $ip)) . '.' : '');
+				'<br>Posts are deleted: №' . deleteAllPosts($ip) . '.' : '');
 		} elseif (isset($_GET['lift'])) {
 			$ban = banByID($_GET['lift']);
 			if ($ban) {

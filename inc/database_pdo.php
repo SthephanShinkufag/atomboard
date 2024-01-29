@@ -231,11 +231,18 @@ function getPost($id) {
 
 function getPostsByIP($ip) {
 	$posts = array();
-	$results = pdoQuery(
-		"SELECT * FROM " . ATOM_DBPOSTS . "
-		WHERE ip = ?
-		ORDER BY timestamp DESC",
-		array($ip));
+	$ipArr = cidr2ip($ip);
+	$results = $ipArr[0] == $ipArr[1] ?
+		pdoQuery(
+			"SELECT * FROM " . ATOM_DBPOSTS . "
+			WHERE ip = ?
+			ORDER BY timestamp DESC",
+			array($ip)) :
+		pdoQuery(
+			"SELECT * FROM " . ATOM_DBPOSTS . "
+			WHERE INET_ATON(ip) >= ? AND INET_ATON(ip) <= ?
+			ORDER BY timestamp DESC",
+			cidr2ip($ip));
 	while ($row = $results->fetch(PDO::FETCH_ASSOC)) {
 		$posts[] = $row;
 	}
