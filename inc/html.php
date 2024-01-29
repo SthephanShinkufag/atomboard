@@ -1331,7 +1331,8 @@ function buildModeratePostPage($post) {
 		<fieldset>
 			<legend>Reports</legend>
 			<table class="table-status"><tbody>' .
-				getPostReports($reports, new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb')) . '
+				getPostReports($reports,
+					ATOM_GEOIP == 'geoip2' ? new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL) . '
 			</tbody></table>
 		</fieldset>' : '') . '
 		<fieldset>
