@@ -812,3 +812,23 @@ function ip2cidr($ipFrom, $ipTo) {
 	$b = 32 - log($range, 2);
 	return long2ip($ipFrom) . '/' . $b;
 }
+
+function getCountryCode($ip, $geoipReader) {
+	$countryCode = '';
+	if ($ip) {
+		if (ATOM_GEOIP == 'geoip2') {
+			if (!$geoipReader) {
+				$geoipReader = new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
+			}
+			try {
+				$record = $geoipReader->country($ip);
+				$countryCode = $record->country->isoCode;
+			} catch (\GeoIp2\Exception\AddressNotFoundException $e) {
+				$countryCode = 'ANON';
+			}
+		} else if (ATOM_GEOIP == 'geoip') {
+			$countryCode = geoip_country_code_by_name($ip);
+		}
+	}
+	return $countryCode ? $countryCode : 'ANON';
+}

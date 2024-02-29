@@ -2,34 +2,11 @@
 if (!defined('ATOM_BOARD')) {
 	die('');
 }
-if (ATOM_GEOIP == 'geoip2') {
-	require 'vendor/autoload.php';
-}
-use GeoIp2\Database\Reader;
 
 /* ==[ Common elements ]=================================================================================== */
 
-function getCountryIcon($ip, $geoipReader = NULL) {
-	$countryCode = '';
-	$validIP = filter_var($ip, FILTER_VALIDATE_IP);
-	if ($validIP) {
-		if (ATOM_GEOIP == 'geoip2') {
-			if (!$geoipReader) {
-				$geoipReader = new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
-			}
-			try {
-				$record = $geoipReader->country($validIP);
-				$countryCode = $record->country->isoCode;
-			} catch (\GeoIp2\Exception\AddressNotFoundException $e) {
-				$countryCode = 'ANON';
-			}
-		} else if (ATOM_GEOIP == 'geoip') {
-			$countryCode = geoip_country_code_by_name($validIP);
-		}
-	}
-	if (!$countryCode) {
-		$countryCode = 'ANON';
-	}
+function getCountryIcon($ip, $geoipReader) {
+	$countryCode = getCountryCode(filter_var($ip, FILTER_VALIDATE_IP), $geoipReader);
 	return '<img class="poster-country" title="' . $countryCode . '" src="/' . ATOM_BOARD .
 		'/icons/flag-icons/' . $countryCode . '.png">';
 }
@@ -480,7 +457,7 @@ function buildPost($post, $res, $mode = '') {
 						<input type="checkbox" name="delete" value="' . $id . '">' .
 						($post['subject'] != '' ? '
 						<span class="filetitle">' . $post['subject'] . '</span>' : '') . '
-						' . (ATOM_GEOIP ? getCountryIcon($ip) : '') .
+						' . (ATOM_GEOIP ? getCountryIcon($ip, NULL) : '') .
 						($showIP || $isEditPost ? '&nbsp;' . getIpUserInfoLink($ip) : '') . '
 						' . $post['nameblock'] . '
 					</label>
@@ -814,7 +791,8 @@ function buildBansPage() {
 		<br>
 		Total bans: ' . $bansCount . '<br>';
 	if ($bansCount > 0) {
-		$geoipReader = ATOM_GEOIP == 'geoip2' ? new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
+		$geoipReader = ATOM_GEOIP == 'geoip2' ?
+			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
 		$text .= '
 		<table class="table"><tbody>
 			<tr>
@@ -951,7 +929,8 @@ function buildPasscodesPage() {
 				<th>Last used IP</th>
 			</tr>';
 	$passcodes = getAllPasscodes();
-	$geoipReader = ATOM_GEOIP == 'geoip2' ? new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
+	$geoipReader = ATOM_GEOIP == 'geoip2' ?
+		new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
 	foreach ($passcodes as $pass) {
 		$ip = $pass['last_used_ip'];
 		$countryIcon = '';
@@ -1331,8 +1310,8 @@ function buildModeratePostPage($post) {
 		<fieldset>
 			<legend>Reports</legend>
 			<table class="table-status"><tbody>' .
-				getPostReports($reports,
-					ATOM_GEOIP == 'geoip2' ? new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL) . '
+				getPostReports($reports, ATOM_GEOIP == 'geoip2' ?
+					new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL) . '
 			</tbody></table>
 		</fieldset>' : '') . '
 		<fieldset>
@@ -1375,7 +1354,8 @@ function buildStatusPage() {
 	$reportsCount = count($reports);
 	$reportsHtml = '';
 	if ($reportsCount) {
-		$geoipReader = ATOM_GEOIP == 'geoip2' ? new Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
+		$geoipReader = ATOM_GEOIP == 'geoip2' ?
+			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
 		$reportsByPost = array();
 		foreach ($reports as $report) {
 			$id = $report['postnum'];

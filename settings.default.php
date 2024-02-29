@@ -117,6 +117,12 @@ $atom_ban_reasons = array(
 	// 'Abusive post',
 	// 'Breaking the rules'
 );
+// List of countries from which it is prohibited to post. ATOM_GEOIP must be set.
+// See ISO-3166 alpha2 at http://www.geonames.org/countries/
+$atom_banned_countries = array(
+	// 'RU',
+	// 'BY'
+);
 
 /* ==[ Posts ]============================================================================================= */
 // Default poster names

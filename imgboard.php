@@ -638,7 +638,7 @@ function postingRequest() {
 
 	/* --------[ Post submission check ]-------- */
 
-	global $access, $atom_embeds, $atom_hidefields, $atom_hidefieldsop, $atom_uploads;
+	global $access, $atom_banned_countries, $atom_embeds, $atom_hidefields, $atom_hidefieldsop, $atom_uploads;
 	$hasAccess = $access != 'disabled';
 	$passcode = checkForPasscode(true);
 	$validPasscode = $passcode[0];
@@ -693,8 +693,16 @@ function postingRequest() {
 			unset($_SESSION['atom_captcha']);
 		}
 
-		// Check for dirty ip using external service - ipregistry.co
+		// Check for banned countries
 		$ip = $_SERVER['REMOTE_ADDR'];
+		if (ATOM_GEOIP && !empty($atom_banned_countries)) {
+			$countryCode = getCountryCode($ip, $geoipReader);
+			if (in_array($countryCode, $atom_banned_countries)) {
+				fancyDie('Posting from your country is prohibited: ' . $countryCode);
+			}
+		}
+
+		// Check for dirty ip using external service - ipregistry.co
 		if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY && !$validPasscode) {
 			$ipLookup = lookupByIP($ip);
 			if ($ipLookup) {
@@ -1556,6 +1564,9 @@ if (!file_exists('settings.php')) {
 	fancyDie('Please copy the file settings.default.php to settings.php');
 }
 require 'settings.php';
+if (ATOM_GEOIP == 'geoip2') {
+	require 'vendor/autoload.php';
+}
 if (ATOM_TRIPSEED == '' || ATOM_ADMINPASS == '') {
 	fancyDie('settings.php: ATOM_TRIPSEED and ATOM_ADMINPASS must be configured.');
 }
