@@ -979,17 +979,23 @@ function postingRequest() {
 		case 'moderator': $postNameBlock .= ' <span class="postername-mod">## Mod</span>'; break;
 		}
 	} else if (ATOM_UNIQUEID) {
+	    $aprilFools = (date('m-d') == '04-01');
 		$uidHash = substr(md5($post['ip'] . intval($post['parent']) . ATOM_TRIPSEED), 0, 8);
-		$uidHashInt = hexdec('0x' . $uidHash);
 		$uidName = $uidHash;
 		if (ATOM_UNIQUENAME) {
-			global $firstNames, $lastNames;
-			srand($uidHashInt);
-			$firstNamesLen = count($firstNames);
-			$lastNamesLen = count($lastNames);
-			$uidName = ($firstNamesLen ? $firstNames[rand() % $firstNamesLen] : '') .
-				($lastNamesLen ? (($firstNamesLen ? ' ' : '') . $lastNames[rand() % $lastNamesLen]) : '');
+		    if ($aprilFools) {
+		        $uidHash = 'deadbeef';
+		        $uidName = 'Домінік Сметана';
+		    } else {
+			    global $firstNames, $lastNames;
+                srand($uidHashInt);
+                $firstNamesLen = count($firstNames);
+                $lastNamesLen = count($lastNames);
+                $uidName = ($firstNamesLen ? $firstNames[rand() % $firstNamesLen] : '') .
+                    ($lastNamesLen ? (($firstNamesLen ? ' ' : '') . $lastNames[rand() % $lastNamesLen]) : '');
+			}
 		}
+		$uidHashInt = hexdec('0x' . $uidHash);
 		$hue = 2 * pi() * ($uidHashInt / 0xFFFFFF);
 		$saturation = '100%';
 		$lightness = '25%';
