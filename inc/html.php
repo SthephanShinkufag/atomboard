@@ -644,8 +644,8 @@ function managePage($text, $action = '') {
 	case 'login': $onload = ' onload="document.form_login_staff.managepassword.focus();"'; break;
 	case 'moderate': $onload = ' onload="document.form_moderate_post.moderate.focus();"'; break;
 	case 'passcode': $onload = ' onload="document.form_login_passcode.passcode.focus();"'; break;
-	case 'passcode_block': $onload = ' onload="document.form_passcode_manage.block_reason.focus();"'; break;
-	case 'passcode_manage': $onload = ' onload="document.form_passcode_new.meta.focus();"'; break;
+	case 'passcode_manage': $onload = ' onload="document.form_passcode_manage.block_reason.focus();"'; break;
+	case 'passcode_new': $onload = ' onload="document.form_passcode_new.meta.focus();"'; break;
 	case 'staffpost': $onload = ' onload="document.postform.parent.focus();"'; break;
 	}
 	return pageHeader() . '<body' . $onload . '>' .
@@ -656,7 +656,7 @@ function managePage($text, $action = '') {
 			<a class="link-button" href="?manage">Status</a>' .
 			($access == 'admin' || $access == 'moderator' ? '
 			<a class="link-button" href="?manage&bans">Bans</a>
-			<a class="link-button" href="?manage&passcodes=manage">Passcodes</a>
+			<a class="link-button" href="?manage&passcodes=new">Passcodes</a>
 			<a class="link-button" href="?manage&modlog">ModLog</a>' : '') . '
 			<a class="link-button" href="?manage&ipinfo=manage">IP info</a>' .
 			(count($atom_janitors) != 0 && $access == 'janitor' ? '
@@ -868,6 +868,10 @@ function buildPasscodesPage() {
 		<br>
 		';
 	}
+	$passNum = isset($_GET['passcode']) ? $_GET['passcode'] : NULL;
+	if($passNum) {
+		$editPass = passByNum($passNum);
+	}
 	$passHtml .= '<form id="form_passcode_manage" name="form_passcode_manage" method="post"' .
 			' action="?manage&managepasscode">
 			<fieldset>
@@ -876,35 +880,50 @@ function buildPasscodesPage() {
 					<tr>
 						<td><label for="id">Passcode number:</label></td>
 						<td>
-							<input type="text" name="id" id="id" value="' .
-								(isset($_GET['passcode']) ? $_GET['passcode'] : '') . '">
+							<input type="text" name="id" id="id" value="' . ($passNum ? $passNum : '') . '">
 						</td>
 					</tr>
 					<tr>
-						<td><label for="expires">Block duration (sec):</label></td>
+						<td><label for="meta">Meta (related info):</label></td>
+						<td><input type="text" name="meta" id="meta" value="' .
+							(isset($editPass['meta']) ? $editPass['meta'] : '') . '" size="50"></td>
+					</tr>' .
+					($isAdmin ? '
+					<tr>
+						<td><label for="expires">Expires:</label></td>
+						<td><input type="datetime-local" name="expires" id="expires" value="' .
+							(isset($editPass['expires']) ? date('Y-m-d\TH:i', $editPass['expires']) : '') .
+							'"></td>
+					</tr>' : '') . '
+					<tr>
+						<td><label for="block_till">Block till:</label></td>
 						<td>
-							<input type="text" name="block_till" id="block_till" value="604800">
+							<input type="datetime-local" name="block_till" id="block_till" value="' .
+								(isset($editPass['blocked_till']) && $editPass['blocked_till'] ?
+									date('Y-m-d\TH:i', $editPass['blocked_till']) : '') . '">
 							<small class="input-controls">
-								[ <a href="#" onclick="document.form_passcode_manage.block_till.value=' .
-									'\'3600\'; return false;">1hr</a> |
-								<a href="#" onclick="document.form_passcode_manage.block_till.value=' .
-									'\'86400\'; return false;">1d</a> |
-								<a href="#" onclick="document.form_passcode_manage.block_till.value=' .
-									'\'172800\'; return false;">2d</a> |
-								<a href="#" onclick="document.form_passcode_manage.block_till.value=' .
-									'\'604800\'; return false;">1w</a> |
-								<a href="#" onclick="document.form_passcode_manage.block_till.value=' .
-									'\'1209600\'; return false;">2w</a> |
-								<a href="#" onclick="document.form_passcode_manage.block_till.value=' .
-									'\'2592000\'; return false;">30d</a> |
-								<a href="#" onclick="document.form_passcode_manage.block_till.value=' .
-									'\'0\'; return false;">unblock</a> ]
+								[ <a href="#" onclick="this.parentNode.previousElementSibling.value=' .
+									'new Date(Date.now()+36E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">1hr</a> |
+								<a href="#" onclick="this.parentNode.previousElementSibling.value=' .
+									'new Date(Date.now()+864E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">1d</a> |
+								<a href="#" onclick="this.parentNode.previousElementSibling.value=' .
+									'new Date(Date.now()+1728E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">2d</a> |
+								<a href="#" onclick="this.parentNode.previousElementSibling.value=' .
+									'new Date(Date.now()+6048E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">1w</a> |
+								<a href="#" onclick="this.parentNode.previousElementSibling.value=' .
+									'new Date(Date.now()+12096E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">2w</a> |
+								<a href="#" onclick="this.parentNode.previousElementSibling.value=' .
+									'new Date(Date.now()+2592E6-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">30d</a> |
+								<a href="#" onclick="this.parentNode.previousElementSibling.value=' .
+									'\'\'; return false;">unblock</a> ]
 							</small>
 						</td>
 					</tr>
 					<tr>
 						<td><label for="block_reason">Block reason:</label></td>
-						<td><input type="text" name="block_reason" id="block_reason"></td>
+						<td><input type="text" name="block_reason" id="block_reason" value="' .
+							(isset($editPass['blocked_reason']) ? $editPass['blocked_reason'] : '') .
+							'" size="50"></td>
 					</tr>
 					<tr>
 						<td><input type="submit" class="button-manage" value="Submit"></td>
@@ -941,7 +960,7 @@ function buildPasscodesPage() {
 			<tr' . ($nowTime > $pass['expires'] ? ' class="passcode-expired"' :
 				($nowTime < $blockedTill ? ' class="passcode-blocked"' : '')) . '>
 				<td><a target="_blank" href="/' . ATOM_BOARD . '/imgboard.php?manage=&passcode=' .
-					$passcodeNum . '&passcodes=block" title="Manage passcode №' . $passcodeNum . '">' .
+					$passcodeNum . '&passcodes=manage" title="Manage passcode №' . $passcodeNum . '">' .
 					$passcodeNum . '</a></td>' .
 				($isAdmin ? '
 				<td style="width: 200px; word-break: break-all;">' . $pass['id'] . '</td>
@@ -1287,7 +1306,7 @@ function buildModeratePostPage($post) {
 						<form method="get" action="?">
 							<input type="hidden" name="manage" value="">
 							<input type="hidden" name="passcode" value="' . $passcodeNum . '">
-							<input type="hidden" name="passcodes" value="block">
+							<input type="hidden" name="passcodes" value="manage">
 							<input type="submit" class="button-action" value="Manage passcode">
 						</form>
 					</td>
@@ -1342,7 +1361,7 @@ function getPostManageButtons($post) {
 						(banByIP($ip) ? 'Ban record already exists for ' . $ip : 'Ban ip ' . $ip) .
 						'">Ban user</a>' : '') .
 					($passcodeNum ? '
-					' . $a . 'manage=&passcode=' . $passcodeNum . '&passcodes=block"' .
+					' . $a . 'manage=&passcode=' . $passcodeNum . '&passcodes=manage"' .
 						' title="Manage passcode №' . $passcodeNum . '">Manage passcode</a>' : '');
 }
 

@@ -386,10 +386,10 @@ function managementRequest() {
 	/* --------[ Show passcodes form ]-------- */
 
 	if (ATOM_PASSCODES_ENABLED && isset($_GET['passcodes']) && !$isJanitor) {
-		if ($_GET['passcodes'] == 'manage') {
+		if ($_GET['passcodes'] == 'new') {
+			die(managePage(buildPasscodesPage(), 'passcode_new'));
+		} else if ($_GET['passcodes'] == 'manage') {
 			die(managePage(buildPasscodesPage(), 'passcode_manage'));
-		} else if ($_GET['passcodes'] == 'block') {
-			die(managePage(buildPasscodesPage(), 'passcode_block'));
 		}
 	}
 
@@ -402,20 +402,17 @@ function managementRequest() {
 		}
 	}
 
-	/* --------[ Block a passcode ]-------- */
+	/* --------[ Manage a passcode ]-------- */
 
 	if (ATOM_PASSCODES_ENABLED && isset($_GET['managepasscode']) && !$isJanitor) {
-		if (isset($_POST['block_till']) && isset($_POST['id']) && isset($_POST['block_reason'])) {
-			$passcodeNum = intval($_POST['id']);
-			$blockTill = intval($_POST['block_till']);
-			if ($blockTill) {
-				blockPass($passcodeNum, $blockTill, $_POST['block_reason']);
-				die(managePage(manageInfo('Passcode ' . $passcodeNum . ' has been blocked')));
-			} else {
-				unblockPass($passcodeNum);
-				die(managePage(manageInfo('Passcode ' . $passcodeNum . ' has been unblocked')));
-			}
-		}
+		$passcodeNum = intval($_POST['id']);
+		changePass(
+			$passcodeNum,
+			$_POST['meta'],
+			isset($_POST['expires']) && $_POST['expires'] ? strtotime($_POST['expires']) : 0,
+			$_POST['block_till'] ? strtotime($_POST['block_till']) : 0,
+			$_POST['block_reason']);
+		die(managePage(manageInfo('Passcode ' . $passcodeNum . ' has been changed.')));
 	}
 
 	/* --------[ Show moderation log ]-------- */
@@ -979,23 +976,17 @@ function postingRequest() {
 		case 'moderator': $postNameBlock .= ' <span class="postername-mod">## Mod</span>'; break;
 		}
 	} else if (ATOM_UNIQUEID) {
-	    $aprilFools = (date('m-d') == '04-01');
 		$uidHash = substr(md5($post['ip'] . intval($post['parent']) . ATOM_TRIPSEED), 0, 8);
+		$uidHashInt = hexdec('0x' . $uidHash);
 		$uidName = $uidHash;
 		if (ATOM_UNIQUENAME) {
-		    if ($aprilFools) {
-		        $uidHash = 'deadbeef';
-		        $uidName = 'Домінік Сметана';
-		    } else {
-			    global $firstNames, $lastNames;
-                srand($uidHashInt);
-                $firstNamesLen = count($firstNames);
-                $lastNamesLen = count($lastNames);
-                $uidName = ($firstNamesLen ? $firstNames[rand() % $firstNamesLen] : '') .
-                    ($lastNamesLen ? (($firstNamesLen ? ' ' : '') . $lastNames[rand() % $lastNamesLen]) : '');
-			}
+			global $firstNames, $lastNames;
+			srand($uidHashInt);
+			$firstNamesLen = count($firstNames);
+			$lastNamesLen = count($lastNames);
+			$uidName = ($firstNamesLen ? $firstNames[rand() % $firstNamesLen] : '') .
+				($lastNamesLen ? (($firstNamesLen ? ' ' : '') . $lastNames[rand() % $lastNamesLen]) : '');
 		}
-		$uidHashInt = hexdec('0x' . $uidHash);
 		$hue = 2 * pi() * ($uidHashInt / 0xFFFFFF);
 		$saturation = '100%';
 		$lightness = '25%';

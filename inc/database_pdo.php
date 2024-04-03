@@ -612,6 +612,14 @@ function passByID($passId) {
 	return $result->fetch(PDO::FETCH_ASSOC);
 }
 
+function passByNum($passNum) {
+	$result = pdoQuery(
+		"SELECT * FROM " . ATOM_DBPASS . "
+		WHERE number = ?",
+		array($passNum));
+	return $result->fetch(PDO::FETCH_ASSOC);
+}
+
 function getAllPasscodes() {
 	$passcodes = array();
 	$results = pdoQuery(
@@ -644,22 +652,17 @@ function usePass($passId, $ip) {
 	$stm->execute(array(time(), $ip, $passId));
 }
 
-function blockPass($passNum, $blockTill, $blockReason) {
+function changePass($passNum, $meta, $expires, $blockTill, $blockReason) {
 	global $dbh;
 	$stm = $dbh->prepare(
 		"UPDATE " . ATOM_DBPASS . "
-		SET `blocked_till` = ?, `blocked_reason` = ?
+		SET `meta` = ?,
+			" . ($expires ? "`expires` = ?," : "") . "
+			`blocked_till` = ?,
+			`blocked_reason` = ?
 		WHERE `number` = ?");
-	$stm->execute(array(time() + $blockTill, $blockReason, $passNum));
-}
-
-function unblockPass($passNum) {
-	global $dbh;
-	$stm = $dbh->prepare(
-		"UPDATE " . ATOM_DBPASS . "
-		SET `blocked_till` = 0, `blocked_reason` = ''
-		WHERE `number` = ?");
-	$stm->execute(array($passNum));
+	$stm->execute($expires ? array($meta, $expires, $blockTill, $blockReason, $passNum) :
+		array($meta, $blockTill, $blockReason, $passNum));
 }
 
 function deletePass($passId) {
