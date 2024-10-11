@@ -1111,7 +1111,7 @@ function postingRequest() {
 
 			// Get post image fields
 			$post['file' . $index . '_original'] = trim(htmlentities(
-				mb_substr(basename($_FILES['file']['name'][$index]), 0, 50), ENT_QUOTES, 'UTF-8'));
+				mb_substr(basename($_FILES['file']['name'][$index]), 0, 100), ENT_QUOTES, 'UTF-8'));
 			$post['file' . $index . '_hex'] = md5_file($file);
 			$post['file' . $index . '_size'] = $_FILES['file']['size'][$index];
 
