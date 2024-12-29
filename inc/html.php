@@ -27,10 +27,12 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2024082700">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2024082700"></script>
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2024123001">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/snow.css?2024123001">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2024123001"></script>
+	<script src="/' . ATOM_BOARD . '/js/snow.js?2024123001"></script>
 	<script src="/' . ATOM_BOARD .
-		'/js/extension/Dollchan_Extension_Tools.user.js?2024082700" async defer></script>' .
+		'/js/extension/Dollchan_Extension_Tools.user.js?2024123001" async defer></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -39,6 +41,7 @@ function pageHeader() {
 
 function pageWrapper($description, $needReturn) {
 	return '
+	<div class="snow-container"></div>
 	<div class="wrapper">
 		<div id="navigation-top" class="navigation">' . ATOM_HTML_NAVIGATION . '
 			<a class="navigation-link" href="/' . ATOM_BOARD .
@@ -48,7 +51,8 @@ function pageWrapper($description, $needReturn) {
 			<a class="navigation-link" href="/' . ATOM_BOARD .
 				'/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
 			<select class="select-style navigation-link" onchange="setThemeStyle(this);">
-				<option value="Dark" selected>Dark</option>
+				<option value="Snow" selected>Snow</option>
+				<option value="Dark">Dark</option>
 				<option value="Light">Light</option>
 			</select>
 		</div>
@@ -90,7 +94,8 @@ function pageFooter($needReturn) {
 			<a class="navigation-link" href="/' . ATOM_BOARD .
 				'/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
 			<select class="select-style navigation-link" onchange="setThemeStyle(this);">
-				<option value="Dark" selected>Dark</option>
+				<option value="Snow" selected>Snow</option>
+				<option value="Dark">Dark</option>
 				<option value="Light">Light</option>
 			</select>
 		</div>
@@ -393,6 +398,7 @@ function buildPost($post, $res, $mode = '') {
 		}
 		$filehtml .= '
 					<div class="image-container">
+						<div class="snow-hat"></div>
 						<span class="filesize">' .
 						($isEditPost ? '
 							<input type="checkbox" name="delete-img-mod[]" value="' . $index . '">' : '') . '
