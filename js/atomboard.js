@@ -43,7 +43,7 @@ function setThemeSelectors(value) {
 function setThemeStyle(el) {
 	var selectorValue = el.value;
 	setThemeSelectors(selectorValue);
-	document.documentElement.dataset.theme = settings.themeStyle3 = selectorValue;
+	document.documentElement.dataset.theme = settings.themeStyle = selectorValue;
 	saveSettings();
 }
 
@@ -226,17 +226,17 @@ function main() {
 	}
 	
 	// Set theme style
-	if (!settings.themeStyle3) {
-		settings.themeStyle3 = 'Snow';
+	if (!settings.themeStyle) {
+		settings.themeStyle = document.documentElement.dataset.theme;
 		saveSettings();
 	}
-	document.documentElement.dataset.theme = settings.themeStyle3;
+	document.documentElement.dataset.theme = settings.themeStyle;
 
 	// Do stuff after DOM loading
 	document.addEventListener('DOMContentLoaded', function initAfterDOM() {
 		checkPasscode(); // Check and apply passcode
 		initPasswords(); // Set passwords for post form and deletion form
-		setThemeSelectors(settings.themeStyle3); // Set theme style selectors
+		setThemeSelectors(settings.themeStyle); // Set theme style selectors
 		initPostsHighlighting(); // Events for highlighting posts by clicking on user ID
 	});
 }
