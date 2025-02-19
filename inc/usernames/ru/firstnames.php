@@ -1,5 +1,5 @@
-<php
-$firstnames = array(
+<?php
+$firstNames = array(
 	"Авангардный",
 	"Агрессивный",
 	"Амбициозный",

@@ -133,7 +133,7 @@ define('ATOM_GEOIP', '');
 // Unique ID's based on IP
 define('ATOM_UNIQUEID', false);
 // Generate unique poster names instead of ID's. Requires ATOM_UNIQUEID = true.
-// Values: 'ua', 'custom', '' to disable
+// Values: 'ua', 'custom', 'ru', '' to disable
 // First names array is in inc/usernames/ATOM_UNIQUENAME/firstnames.php
 // Last names array is in inc/usernames/ATOM_UNIQUENAME/lastnames.php
 define('ATOM_UNIQUENAME', '');
