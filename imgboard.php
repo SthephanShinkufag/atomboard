@@ -976,22 +976,37 @@ function postingRequest() {
 		case 'moderator': $postNameBlock .= ' <span class="postername-mod">## Mod</span>'; break;
 		}
 	} else if (ATOM_UNIQUEID) {
-		$uidHash = substr(md5($post['ip'] . intval($post['parent']) . ATOM_TRIPSEED), 0, 8);
-		$uidHashInt = hexdec('0x' . $uidHash);
-		$uidName = $uidHash;
+		$ip = $post['ip'];
+		$ipHash = substr(md5($ip . intval($post['parent']) . ATOM_TRIPSEED), 0, 8);
+		$ipHashInt = hexdec('0x' . $ipHash);
+		$uid = '';
 		if (ATOM_UNIQUENAME) {
 			global $firstNames, $lastNames;
-			srand($uidHashInt);
 			$firstNamesLen = count($firstNames);
 			$lastNamesLen = count($lastNames);
-			$uidName = ($firstNamesLen ? $firstNames[rand() % $firstNamesLen] : '') .
-				($lastNamesLen ? (($firstNamesLen ? ' ' : '') . $lastNames[rand() % $lastNamesLen]) : '');
+			$firstName = '';
+			$lastName = '';
+
+			// Generate firstname by ip
+			if($firstNamesLen) {
+				srand($ipHashInt);
+				$firstName = $firstNames[rand() % $firstNamesLen];
+			}
+
+			// generate lastname by subnet .24
+			if($lastNamesLen) {
+				$subnet = long2ip(cidr2ip($ip . '/24')[0]);
+				srand(hexdec('0x' . substr(md5($subnet . intval($post['parent']) . ATOM_TRIPSEED), 0, 8)));
+				$lastName = $lastNames[rand() % $lastNamesLen];
+			}
+
+			$uid = $firstName . ($firstName && $lastName ? ' ' : '') . $lastName;
 		}
-		$hue = 2 * pi() * ($uidHashInt / 0xFFFFFF);
+		$hue = 2 * pi() * ($ipHashInt / 0xFFFFFF);
 		$saturation = '100%';
 		$lightness = '25%';
-		$postNameBlock .= ' <span class="posteruid" data-uid="' . $uidHash . '" style="color: hsl(' .
-			$hue . ', ' . $saturation . ', ' . $lightness . ');">' . $uidName . '</span>';
+		$postNameBlock .= ' <span class="posteruid" data-uid="' . $ipHash . '" style="color: hsl(' .
+			$hue . ', ' . $saturation . ', ' . $lightness . ');">' . ($uid ? $uid : $ipHash) . '</span>';
 	}
 	$lowEmail = strtolower($postEmail);
 	if ($postEmail != '' && $lowEmail != 'noko') {
