@@ -987,15 +987,15 @@ function postingRequest() {
 			$firstName = '';
 			$lastName = '';
 
-			// Generate firstname by ip
+			// Generate firstname by IP
 			if($firstNamesLen) {
 				srand($ipHashInt);
 				$firstName = $firstNames[rand() % $firstNamesLen];
 			}
 
-			// generate lastname by subnet .24
+			// Generate lastname by subnet /20
 			if($lastNamesLen) {
-				$subnet = long2ip(cidr2ip($ip . '/24')[0]);
+				$subnet = long2ip(cidr2ip($ip . '/20')[0]);
 				srand(hexdec('0x' . substr(md5($subnet . intval($post['parent']) . ATOM_TRIPSEED), 0, 8)));
 				$lastName = $lastNames[rand() % $lastNamesLen];
 			}
