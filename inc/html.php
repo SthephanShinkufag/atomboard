@@ -790,7 +790,8 @@ function buildBansPage() {
 								' onclick="return confirm(\'Are you sure to ban and delete all posts?\')">
 						</td>
 						<td>
-							<input type="text" name="thrid" placeholder="Thread number">
+							<input type="text" name="thrid" placeholder="Thread number" value="' .
+								(isset($_GET['thrid']) ? $_GET['thrid'] : '') . '">
 							<small>Leave empty to delete all posts and threads</small>
 						</td>
 					</tr>
@@ -1201,7 +1202,7 @@ function buildModeratePostPage($post) {
 	global $access;
 	$id = $post['id'];
 	$ip = $post['ip'];
-	$thrId = $post['parent'];
+	$thrId = $post['parent'] !== 0 ? $post['parent'] : $id;
 	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
 	$isOp = isOp($post);
 	$ban = banByIP($ip);
@@ -1318,6 +1319,7 @@ function buildModeratePostPage($post) {
 						<form method="get" action="?">
 							<input type="hidden" name="manage" value="">
 							<input type="hidden" name="bans" value="' . $ip . '">
+							<input type="hidden" name="thrid" value="' . $thrId . '">
 							<input type="submit" class="button-action" value="Ban user"' .
 								($ban || !$isMod ? ' disabled' : '') . '>
 						</form>
@@ -1369,7 +1371,7 @@ function buildModeratePostPage($post) {
 function getPostManageButtons($post) {
 	global $access;
 	$id = $post['id'];
-	$thrId = $post['parent'];
+	$thrId = $post['parent'] !== 0 ? $post['parent'] : $id;
 	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
 	$ip = $post['ip'];
 	$isOp = isOp($post);
@@ -1390,7 +1392,7 @@ function getPostManageButtons($post) {
 						' { return true; } else { event.stopPropagation(); event.preventDefault(); };"' .
 						' title="This will delete all posts and threads from ip ' . $ip . '">Delete all</a>' .
 					($access == 'admin' || $access == 'moderator' ? '
-					' . $a . 'manage=&bans=' . $ip . '" title="' .
+					' . $a . 'manage=&bans=' . $ip . '&thrid=' . $thrId . '" title="' .
 						(banByIP($ip) ? 'Ban record already exists for ' . $ip : 'Ban ip ' . $ip) .
 						'">Ban user</a>' : '') .
 					($passcodeNum ? '
