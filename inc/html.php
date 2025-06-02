@@ -780,11 +780,19 @@ function buildBansPage() {
 						<td>
 							<input type="submit" class="button-manage"' .
 								' name="ban" value="Ban" style="width: 100%;">
+						</td>
+						<td></td>
+					</tr>
+					<tr>
+						<td>
 							<input type="submit" class="button-manage"' .
 								' name="ban_delall" value="Ban + DelAll" style="width: 100%;"' .
 								' onclick="return confirm(\'Are you sure to ban and delete all posts?\')">
 						</td>
-						<td></td>
+						<td>
+							<input type="text" name="thrid" placeholder="Thread number">
+							<small>Leave empty to delete all posts and threads</small>
+						</td>
 					</tr>
 				</tbody></table>
 			</fieldset>
@@ -1193,6 +1201,7 @@ function buildModeratePostPage($post) {
 	global $access;
 	$id = $post['id'];
 	$ip = $post['ip'];
+	$thrId = $post['parent'];
 	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
 	$isOp = isOp($post);
 	$ban = banByIP($ip);
@@ -1282,8 +1291,24 @@ function buildModeratePostPage($post) {
 						<form method="get" action="?">
 							<input type="hidden" name="manage" value="">
 							<input type="hidden" name="delall" value="' . $ip . '">
+							<input type="hidden" name="thrid" value="' . $thrId . '">
+							<input type="submit" class="button-action" value="DelAll in thread" onclick="' .
+								'return confirm(\'Are you sure to delete all posts from ' . $ip .
+								' in thread №' . $thrId . '?\')">
+						</form>
+					</td>
+					<td><small>This will delete all posts from ip ' . $ip .
+						' in thread <a href="https://dollchan.net/test/res/' . $thrId .
+						'.html#' . $id . '" target="_blank">№' . $thrId . '</a></small></td>
+				</tr>
+				<tr>
+					<td align="right" width="50%;">
+						<form method="get" action="?">
+							<input type="hidden" name="manage" value="">
+							<input type="hidden" name="delall" value="' . $ip . '">
 							<input type="submit" class="button-action" value="Delete all" onclick="' .
-								'return confirm(\'Are you sure to delete all from ' . $ip . '?\')">
+								'return confirm(\'Are you sure to delete ALL POSTS AND THERADS from ' .
+								$ip . '?\')">
 						</form>
 					</td>
 					<td><small>This will delete all posts and threads from ip ' . $ip . '</small></td>
@@ -1344,6 +1369,7 @@ function buildModeratePostPage($post) {
 function getPostManageButtons($post) {
 	global $access;
 	$id = $post['id'];
+	$thrId = $post['parent'];
 	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
 	$ip = $post['ip'];
 	$isOp = isOp($post);
@@ -1353,8 +1379,14 @@ function getPostManageButtons($post) {
 						($isOp ? 'thread' : 'post') . '</a>
 					' . $a . 'manage=&delete=' . $id . '" title="This will delete the ' .
 						($isOp ? 'entire thread.">Delete thread' : 'post.">Delete post') . '</a>
+					' . $a . 'manage=&delall=' . $ip . '&thrid=' . $thrId . '" onclick="' .
+						'if (confirm(\'Are you sure to delete all posts from ' . $ip .
+						' in thread №' . $thrId . '?\'))' .
+						' { return true; } else { event.stopPropagation(); event.preventDefault(); };"' .
+						' title="This will delete all posts from ip ' . $ip .
+						' in thread №' . $thrId . '">DelAll in thread</a>
 					' . $a . 'manage=&delall=' . $ip . '" onclick="' .
-						'if (confirm(\'Are you sure to delete all from ' . $ip . '?\'))' .
+						'if (confirm(\'Are you sure to delete ALL POSTS AND THERADS from ' . $ip . '?\'))' .
 						' { return true; } else { event.stopPropagation(); event.preventDefault(); };"' .
 						' title="This will delete all posts and threads from ip ' . $ip . '">Delete all</a>' .
 					($access == 'admin' || $access == 'moderator' ? '

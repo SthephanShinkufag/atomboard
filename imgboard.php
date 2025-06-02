@@ -370,7 +370,8 @@ function managementRequest() {
 			modLog('Ban record (' . $expireType . ') added for ' . $ip . ', reason: ' . $ban['reason'],
 				'0', 'Black');
 			$text = 'Ban record added for ' . $ip . (isset($_POST['ban_delall']) ?
-				'<br>Posts are deleted: №' . deleteAllPosts($ip) . '.' : '');
+				'<br>Posts are deleted: №' .
+				deleteAllPosts($ip, $_POST['thrid'] ? $_POST['thrid'] : NULL) . '.' : '');
 		} elseif (isset($_GET['lift'])) {
 			$ban = banByID($_GET['lift']);
 			if ($ban) {
@@ -466,8 +467,14 @@ function managementRequest() {
 
 	if (isset($_GET['delall'])) {
 		$ip = $_GET['delall'];
-		die(managePage(manageInfo('Posts from ip ' . $ip . ' have been deleted: №' .
-			deleteAllPosts($ip) . '.')));
+		if(isset($_GET['thrid'])) {
+			$thrid = $_GET['thrid'];
+			die(managePage(manageInfo('Posts from ip ' . $ip . ' in thread №' . $thrid .
+				' have been deleted: №' . deleteAllPosts($ip, $thrid) . '.')));
+		} else {
+			die(managePage(manageInfo('Posts from ip ' . $ip . ' have been deleted: №' .
+				deleteAllPosts($ip, NULL) . '.')));
+		}
 	}
 
 	/* --------[ Delete/hide images ]-------- */

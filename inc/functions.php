@@ -372,17 +372,21 @@ function isOp($post) {
 	return $post['parent'] == ATOM_NEWTHREAD;
 }
 
-function deleteAllPosts($ip) {
+function deleteAllPosts($ip, $parentId) {
 	$deletedPosts = '';
 	$updThreads = array();
 	$posts = getPostsByIP($ip);
+	$count = 0;
 	foreach ($posts as $post) {
 		$id = $post['id'];
 		$thrId = $post['parent'];
-		deletePost($id);
-		$deletedPosts .= $id . (next($posts) ? ', ' : '');
-		if (!isOp($post) && !in_array($thrId, $updThreads)) {
-			$updThreads[] = $thrId;
+		if(!isset($parentId) || $thrId === intval($parentId)) {
+			deletePost($id);
+			$deletedPosts .= ($count ? ', ' : '') . $id;
+			if (!isOp($post) && !in_array($thrId, $updThreads)) {
+				$updThreads[] = $thrId;
+			}
+			$count++;
 		}
 	}
 	foreach ($updThreads as $updThreadId) {
