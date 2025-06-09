@@ -700,6 +700,8 @@ function postingRequest() {
 		// Check for banned countries
 		$ip = $_SERVER['REMOTE_ADDR'];
 		if (ATOM_GEOIP && !empty($atom_banned_countries)) {
+			$geoipReader = ATOM_GEOIP == 'geoip2' ?
+				new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
 			$countryCode = getCountryCode($ip, $geoipReader);
 			if (in_array($countryCode, $atom_banned_countries)) {
 				fancyDie('Posting from your country is prohibited: ' . $countryCode);
