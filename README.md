@@ -33,7 +33,7 @@ Features
    - Protection by IP lookups using [ipregistry.co](https://ipregistry.co/) - block abusive IPs, IPs under proxy, VPN, TOR network and cloud providers.
  - Post files:
    - You can upload up to 4 files per post.
-   - Supported GIF, JPG, PNG, MP4, MOV, WebM and WebP upload.
+   - Supported GIF, JPG, PNG, AVIF, MP4, MOV, WebM and WebP upload.
    - You can also upload, view and expand videos without instaled `mediainfo` and `ffmpegthumbnailer`. Videos will be injected right in page without generated thumbnails.
    - Allow new threads without requiring a file, or even disallow sending of files entirely.
  - Posts:

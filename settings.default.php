@@ -180,6 +180,7 @@ $atom_uploads = array(
 	'image/pjpeg' => array('jpg'),
 	'image/png' => array('png'),
 	'image/gif' => array('gif'),
+	'image/avif' => array('avif'),
 	'image/webp' => array('webp'),
 	'video/webm' => array('webm'),
 	'audio/webm' => array('webm'),

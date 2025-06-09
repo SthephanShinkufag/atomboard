@@ -178,6 +178,7 @@ function buildPostForm($parent, $isStaffPost = false) {
 		isset($atom_uploads['image/pjpeg']) ||
 		isset($atom_uploads['image/png']) ||
 		isset($atom_uploads['image/gif']) ||
+		isset($atom_uploads['image/avif']) ||
 		isset($atom_uploads['image/webp'])
 	) {
 		$thumbnailsHtml = '<li>Images greater than ' . ATOM_FILE_MAXWOP . 'x' . ATOM_FILE_MAXHOP . (
@@ -367,7 +368,7 @@ function buildPost($post, $res, $mode = '') {
 				'style="position: static; pointer-events: inherit; display: inline; height: auto;' .
 				' max-width: 100%; max-height: 100%;" controls autoplay loop><source src="' .
 				$directLink . '"></source></video>');
-		} elseif (in_array($fExt, array('jpg', 'png', 'gif', 'webp'))) {
+		} elseif (in_array($fExt, array('jpg', 'png', 'gif', 'avif', 'webp'))) {
 			$expandHtml = rawurlencode('<a href="' . $directLink . '"' . $expandClick . '><img src="/' .
 				ATOM_BOARD . '/src/' . $fName . '" width="' . $fWidth .
 				'" style="max-width: 100%; height: auto;"></a>');
@@ -377,7 +378,7 @@ function buildPost($post, $res, $mode = '') {
 		$extraThumbData = 'data-size="' . $post['file' . $index . '_size'] . '" data-width="' .
 			$fWidth . '" data-height="' . $fHeight . '"';
 		$thumblink = '<a href="' . $directLink . '" ' . $extraThumbData . ' target="_blank"' .
-			($isEmbed || in_array($fExt, array('jpg', 'png', 'gif', 'webp', 'webm', 'mp4', 'mov')) ?
+			($isEmbed || in_array($fExt, array('jpg', 'png', 'gif', 'avif', 'webp', 'webm', 'mp4', 'mov')) ?
 				$expandClick : '') .
 			($hasOrigName ? ' download="' . $origName . '" title="Click to expand/collapse">' : '>');
 		$filesize = '';

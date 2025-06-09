@@ -1,7 +1,7 @@
 <?php
 // Uncomment to show debugging errors
-// error_reporting(E_ALL);
-// ini_set('display_errors', 1);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 ini_set('session.gc_maxlifetime', 2592000); // 30 days
 session_set_cookie_params(2592000); // store session cookie for 30 days
 
@@ -1051,9 +1051,10 @@ function postingRequest() {
 		$post['image0_width'] = $fileInfo[0];
 		$post['image0_height'] = $fileInfo[1];
 		switch(mime_content_type($fileLocation)) {
+		case 'image/avif': $post['thumb0'] = $fileName . '.avif'; break;
+		case 'image/gif': $post['thumb0'] = $fileName . '.gif'; break;
 		case 'image/jpeg': $post['thumb0'] = $fileName . '.jpg'; break;
 		case 'image/png': $post['thumb0'] = $fileName . '.png'; break;
-		case 'image/gif': $post['thumb0'] = $fileName . '.gif'; break;
 		case 'image/webp': $post['thumb0'] = $fileName . '.webp'; break;
 		default: fancyDie('Error while processing audio/video.');
 		}
@@ -1236,10 +1237,11 @@ function postingRequest() {
 
 			// Get image info
 			elseif (in_array($fileMime, array(
+				'image/avif',
+				'image/gif',
 				'image/jpeg',
 				'image/pjpeg',
 				'image/png',
-				'image/gif',
 				'image/webp'))
 			) {
 				$fileInfo = @getimagesize($fileLocation);
@@ -1259,10 +1261,11 @@ function postingRequest() {
 
 			// Get default image thumbnail
 			elseif (in_array($fileMime, array(
+				'image/avif',
+				'image/gif',
 				'image/jpeg',
 				'image/pjpeg',
 				'image/png',
-				'image/gif',
 				'image/webp'
 			))) {
 				$post['thumb' . $index] = $fileName . 's.' . $atom_uploads[$fileMime][0];

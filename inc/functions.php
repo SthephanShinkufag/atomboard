@@ -528,7 +528,9 @@ function createThumbnail($file_location, $thumb_location, $new_w, $new_h) {
 		} elseif (preg_match("/png/", $system[0])) {
 			$src_img = @imagecreatefrompng($file_location);
 		} elseif (preg_match("/gif/", $system[0])) {
-			$src_img = imagecreatefromgif ($file_location);
+			$src_img = imagecreatefromgif($file_location);
+		} elseif (preg_match("/avif/", $system[0])) {
+			$src_img = imagecreatefromavif($file_location);
 		} elseif (preg_match("/webp/", $system[0])) {
 			$src_img = imagecreatefromwebp($file_location);
 		} else {
@@ -564,6 +566,10 @@ function createThumbnail($file_location, $thumb_location, $new_w, $new_h) {
 			}
 		} elseif (preg_match("/gif/", $system[0])) {
 			if (!imagegif ($dst_img, $thumb_location)) {
+				return false;
+			}
+		} elseif (preg_match("/avif/", $system[0])) {
+			if (!imageavif($dst_img, $thumb_location, 70)) {
 				return false;
 			}
 		} elseif (preg_match("/webp/", $system[0])) {
