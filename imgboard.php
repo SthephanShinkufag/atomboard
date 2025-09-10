@@ -879,6 +879,7 @@ function postingRequest() {
 				$m = str_replace('`', '&#96;', $m);
 				$m = str_replace('<', '&lt;', $m);
 				$m = preg_replace('/>|&gt;/', '@!@ATOM_GT@!@', $m);
+				$m = str_replace('/', '&#47;', $m);
 				$m = str_replace('[', '&#91;', $m);
 				$m = str_replace(']', '&#93;', $m);
 				$m = str_replace('*', '&#42;', $m);
@@ -892,6 +893,7 @@ function postingRequest() {
 				$m = $matches[1];
 				$m = str_replace('<', '&lt;', $m);
 				$m = preg_replace('/>|&gt;/', '@!@ATOM_GT@!@', $m);
+				$m = str_replace('/', '&#47;', $m);
 				$m = str_replace('[', '&#91;', $m);
 				$m = str_replace(']', '&#93;', $m);
 				$m = str_replace('*', '&#42;', $m);
@@ -955,7 +957,7 @@ function postingRequest() {
 						return '<a' . $matches[1] . 'href="' .
 							str_replace(ATOM_WORDBREAK_IDENTIFIER, '', $matches[2]) . '"' . $matches[3] .
 							'>' . str_replace(ATOM_WORDBREAK_IDENTIFIER, '<br>', $matches[4]) . '</a>';
-					}, msg)
+					}, $msg)
 				);
 			}
 			$post['message'] = $msg;
