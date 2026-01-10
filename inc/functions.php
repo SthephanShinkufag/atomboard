@@ -537,8 +537,7 @@ function createThumbnail($file_location, $thumb_location, $new_w, $new_h) {
 			return false;
 		}
 		if (!$src_img) {
-			fancyDie("Unable to read uploaded file during thumbnailing.<br>A common cause' .
-				' for this is an incorrect extension when the file is actually of a different type.");
+			return false;
 		}
 		$old_x = imageSX($src_img);
 		$old_y = imageSY($src_img);
@@ -841,4 +840,39 @@ function getCountryCode($ip, $geoipReader) {
 		}
 	}
 	return $countryCode ? $countryCode : 'ANON';
+}
+
+function isDirtyIP($ip) {
+	$ipLookup = lookupByIP($ip);
+	if ($ipLookup) {
+		$ipLookupAbuser = $ipLookup['abuser'];
+		$ipLookupVps = $ipLookup['vps'];
+		$ipLookupProxy = $ipLookup['proxy'];
+		$ipLookupTor = $ipLookup['tor'];
+		$ipLookupVpn = $ipLookup['vpn'];
+	} else {
+		try {
+			$json = json_decode(url_get_contents(
+				'https://api.ipregistry.co/' . $ip . '?key=' . ATOM_IPLOOKUPS_KEY));
+			$ipLookupSecurity = $json->security;
+			$ipLookupAbuser = (int)($ipLookupSecurity->is_abuser ||
+				$ipLookupSecurity->is_threat || $ipLookupSecurity->is_attacker);
+			$ipLookupVps = (int)($ipLookupSecurity->is_cloud_provider);
+			$ipLookupProxy = (int)($ipLookupSecurity->is_proxy);
+			$ipLookupTor = (int)($ipLookupSecurity->is_tor || $ipLookupSecurity->is_tor_exit);
+			$ipLookupVpn = (int)($ipLookupSecurity->is_vpn);
+			storeLookupResult($ip, $ipLookupAbuser, $ipLookupVps, $ipLookupProxy, $ipLookupTor, $ipLookupVpn);
+		} catch (Exception $e) {
+			$ipLookupAbuser = false;
+			$ipLookupVps = false;
+			$ipLookupProxy = false;
+			$ipLookupTor = false;
+			$ipLookupVpn = false;
+		}
+	}
+	return ATOM_IPLOOKUPS_BLOCK_ABUSER && $ipLookupAbuser ||
+		ATOM_IPLOOKUPS_BLOCK_VPS && $ipLookupVps ||
+		ATOM_IPLOOKUPS_BLOCK_PROXY && $ipLookupProxy ||
+		ATOM_IPLOOKUPS_BLOCK_TOR && $ipLookupTor ||
+		ATOM_IPLOOKUPS_BLOCK_VPN && $ipLookupVpn;
 }

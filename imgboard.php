@@ -708,46 +708,10 @@ function postingRequest() {
 			}
 		}
 
-		// Check for dirty ip using external service - ipregistry.co
-		if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY && !$validPasscode) {
-			$ipLookup = lookupByIP($ip);
-			if ($ipLookup) {
-				$ipLookupAbuser = $ipLookup['abuser'];
-				$ipLookupVps = $ipLookup['vps'];
-				$ipLookupProxy = $ipLookup['proxy'];
-				$ipLookupTor = $ipLookup['tor'];
-				$ipLookupVpn = $ipLookup['vpn'];
-			} else {
-				try {
-					$json = json_decode(url_get_contents(
-						'https://api.ipregistry.co/' . $ip . '?key=' . ATOM_IPLOOKUPS_KEY));
-					$ipLookupSecurity = $json->security;
-					$ipLookupAbuser = (int)($ipLookupSecurity->is_abuser ||
-						$ipLookupSecurity->is_threat || $ipLookupSecurity->is_attacker);
-					$ipLookupVps = (int)($ipLookupSecurity->is_cloud_provider);
-					$ipLookupProxy = (int)($ipLookupSecurity->is_proxy);
-					$ipLookupTor = (int)($ipLookupSecurity->is_tor || $ipLookupSecurity->is_tor_exit);
-					$ipLookupVpn = (int)($ipLookupSecurity->is_vpn);
-					storeLookupResult($ip, $ipLookupAbuser, $ipLookupVps,
-						$ipLookupProxy, $ipLookupTor, $ipLookupVpn);
-				} catch (Exception $e) {
-					$ipLookupAbuser = false;
-					$ipLookupVps = false;
-					$ipLookupProxy = false;
-					$ipLookupTor = false;
-					$ipLookupVpn = false;
-				}
-			}
-			if (
-				ATOM_IPLOOKUPS_BLOCK_ABUSER && $ipLookupAbuser ||
-				ATOM_IPLOOKUPS_BLOCK_VPS && $ipLookupVps ||
-				ATOM_IPLOOKUPS_BLOCK_PROXY && $ipLookupProxy ||
-				ATOM_IPLOOKUPS_BLOCK_TOR && $ipLookupTor ||
-				ATOM_IPLOOKUPS_BLOCK_VPN && $ipLookupVpn
-			) {
-				fancyDie('Your IP address ' . $ip .
-					' is not allowed to post due to abuse (proxy, Tor, VPN, VPS).');
-			}
+		// Check for dirty ip
+		if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY && !$validPasscode && isDirtyIP($ip)) {
+			fancyDie('Your IP address ' . $ip .
+				' is not allowed to post due to abuse (proxy, Tor, VPN, VPS).');
 		}
 
 		// Check for ban
@@ -1454,47 +1418,16 @@ function reportRequest() {
 		checkForBans($ip, $ban, checkForPasscode(false)[0], false, $isJson);
 	}
 
-    // Check for dirty ip using external service - ipregistry.co
-    if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY) {
-        $ipLookup = lookupByIP($ip);
-        if ($ipLookup) {
-            $ipLookupAbuser = $ipLookup['abuser'];
-            $ipLookupVps = $ipLookup['vps'];
-            $ipLookupProxy = $ipLookup['proxy'];
-            $ipLookupTor = $ipLookup['tor'];
-            $ipLookupVpn = $ipLookup['vpn'];
-        } else {
-            try {
-                $json = json_decode(url_get_contents(
-                    'https://api.ipregistry.co/' . $ip . '?key=' . ATOM_IPLOOKUPS_KEY));
-                $ipLookupSecurity = $json->security;
-                $ipLookupAbuser = (int)($ipLookupSecurity->is_abuser ||
-                    $ipLookupSecurity->is_threat || $ipLookupSecurity->is_attacker);
-                $ipLookupVps = (int)($ipLookupSecurity->is_cloud_provider);
-                $ipLookupProxy = (int)($ipLookupSecurity->is_proxy);
-                $ipLookupTor = (int)($ipLookupSecurity->is_tor || $ipLookupSecurity->is_tor_exit);
-                $ipLookupVpn = (int)($ipLookupSecurity->is_vpn);
-                storeLookupResult($ip, $ipLookupAbuser, $ipLookupVps,
-                    $ipLookupProxy, $ipLookupTor, $ipLookupVpn);
-            } catch (Exception $e) {
-                $ipLookupAbuser = false;
-                $ipLookupVps = false;
-                $ipLookupProxy = false;
-                $ipLookupTor = false;
-                $ipLookupVpn = false;
-            }
-        }
-        if (
-            ATOM_IPLOOKUPS_BLOCK_ABUSER && $ipLookupAbuser ||
-            ATOM_IPLOOKUPS_BLOCK_VPS && $ipLookupVps ||
-            ATOM_IPLOOKUPS_BLOCK_PROXY && $ipLookupProxy ||
-            ATOM_IPLOOKUPS_BLOCK_TOR && $ipLookupTor ||
-            ATOM_IPLOOKUPS_BLOCK_VPN && $ipLookupVpn
-        ) {
-            fancyDie('Your IP address ' . $ip .
-                ' is not allowed to report due to abuse (proxy, Tor, VPN, VPS).');
-        }
-    }
+	// Check for dirty ip
+	if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY && isDirtyIP($ip)) {
+		$message = 'Your IP address ' . $ip .
+			' is not allowed to report due to abuse (proxy, Tor, VPN, VPS).';
+		if ($isJson) {
+			die('{ "result": "error", "message": "' . $message . '" }');
+		} else {
+			fancyDie($message);
+		}
+	}
 
 	if (isset($_GET['addreport'])) {
 		$id = $_POST['id'];

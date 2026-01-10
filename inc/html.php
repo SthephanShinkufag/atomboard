@@ -393,6 +393,15 @@ function buildPost($post, $res, $mode = '') {
 		if ($filesize == '') {
 			continue;
 		}
+		/*
+		// Use to view unused files that missed in database when rebuildall executed
+		if($fName != '') {
+			rename('src/' . $fName, 'src_copy/' . $fName);
+		}
+		if($post['thumb' . $index] != '') {
+			rename('thumb/' . $post['thumb' . $index], 'thumb_copy/' . $post['thumb' . $index]);
+		}
+		*/
 		$filehtml .= '
 					<div class="image-container">
 						<span class="filesize">' .
