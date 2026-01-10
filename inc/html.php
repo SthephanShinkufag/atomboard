@@ -1418,6 +1418,12 @@ function buildStatusPage() {
 	$reportsCount = count($reports);
 	$reportsHtml = '';
 	if ($reportsCount) {
+		$reportsHtml .= '
+				<tr><td><center>
+					<a class="link-button" target="_blank" href="/' . ATOM_BOARD . '/imgboard.php' .
+					'?report=&amp;deleteallreports" title="Delete all reports from the board.">' .
+					'Close all reports</a>
+				</center><hr></td></tr>';
 		$geoipReader = ATOM_GEOIP == 'geoip2' ?
 			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
 		$reportsByPost = array();

@@ -842,6 +842,7 @@ function getCountryCode($ip, $geoipReader) {
 	return $countryCode ? $countryCode : 'ANON';
 }
 
+// Check for dirty ip using external service - ipregistry.co
 function isDirtyIP($ip) {
 	$ipLookup = lookupByIP($ip);
 	if ($ipLookup) {

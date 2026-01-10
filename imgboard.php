@@ -1452,10 +1452,21 @@ function reportRequest() {
 		} else {
 			fancyDie('An error occurred while sending the report.');
 		}
-	} else if ($access != 'disabled' && isset($_GET['deletereports'])) {
-		$id = $_GET['id'];
-		deleteReports($id);
-		fancyDie('Post №' . $id . ' approved. All reports are closed.');
+	} else if ($access != 'disabled') {
+		if (isset($_GET['deletereports'])) {
+			$id = $_GET['id'];
+			deleteReports($id);
+			fancyDie('Post №' . $id . ' approved. All reports are closed.');
+		} else if (isset($_GET['deleteallreports'])) {
+			$reports = getAllReports();
+			$reportsCount = count($reports);
+			if ($reportsCount) {
+				foreach ($reports as $report) {
+					deleteReports($report['postnum']);
+				}
+				fancyDie('All reports on board /' . ATOM_BOARD . ' are closed.');
+			}
+		}
 	}
 }
 
