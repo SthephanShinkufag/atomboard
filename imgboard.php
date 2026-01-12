@@ -952,7 +952,7 @@ function postingRequest() {
 	} else if (ATOM_UNIQUEID) {
 		$ip = $post['ip'];
 		$ipHash = substr(md5($ip . (int)$post['parent'] . ATOM_TRIPSEED), 0, 8);
-		$ipHashInt = hexdec('0x' . $ipHash);
+		$ipHashInt = (int)hexdec('0x' . $ipHash);
 		$uid = '';
 		if (ATOM_UNIQUENAME) {
 			global $firstNames, $lastNames;
@@ -970,7 +970,7 @@ function postingRequest() {
 			// Generate lastname by subnet /20
 			if ($lastNamesLen) {
 				$subnet = long2ip(cidr2ip($ip . '/20')[0]);
-				srand(hexdec('0x' . substr(md5($subnet . (int)$post['parent'] . ATOM_TRIPSEED), 0, 8)));
+				srand((int)hexdec('0x' . substr(md5($subnet . (int)$post['parent'] . ATOM_TRIPSEED), 0, 8)));
 				$lastName = $lastNames[rand() % $lastNamesLen];
 			}
 
