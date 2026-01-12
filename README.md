@@ -6,7 +6,7 @@ Features
 ------------
 
  - Can store posts as text files for a portable set-up capable of running on virtually any PHP host.
- - Use [MySQL](https://mysql.com), [PostgreSQL](https://www.postgresql.org) or [SQLite](https://sqlite.org) for an efficient set-up able to handle high amounts of traffic.
+ - Use [MySQL](https://mysql.com) or [PostgreSQL](https://www.postgresql.org) for an efficient set-up able to handle high amounts of traffic.
  - Administration and moderation management:
    - Each post has its own management button.
    - You can set up list of moderators and janitors.
@@ -58,7 +58,7 @@ Installing
 ------------
 
  1. Verify the following are installed:
-    - [PHP 7.4+](https://php.net)
+    - [PHP 8.2+](https://php.net)
     - [GD Image Processing Library](https://php.net/gd)
       - This library is usually installed by default.
       - If you plan on disabling image uploads to use atomboard as a text board only, this library is not required.
@@ -69,7 +69,7 @@ Installing
     - When setting `ATOM_DBMODE` to `flatfile`, note that all post and ban data are exposed as the database is composed of standard text files. Access to `./inc/flatfile/` should be denied.
     - When setting `ATOM_DBMODE` to `pdo`, note that only the MySQL and PostgreSQL databases drivers have been tested. Theoretically it will work with any applicable driver, but this is not guaranteed. If you use an alternative driver, please report back.
     - To require moderation before displaying posts:
-      - Ensure your `ATOM_DBMODE` is set to `mysql`, `mysqli`, or `pdo`.
+      - Ensure your `ATOM_DBMODE` is set to `mysqli`, or `pdo`.
       - Set `ATOM_REQMOD` to `files` to require moderation for posts with files attached.
       - Set `ATOM_REQMOD` to `all` to require moderation for all posts.
       - Moderate posts by visiting the management panel.

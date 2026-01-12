@@ -1,7 +1,7 @@
 <?php
 // Uncomment to show debugging errors
-// error_reporting(E_ALL);
-// ini_set('display_errors', 1);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 ini_set('session.gc_maxlifetime', 2592000); // 30 days
 session_set_cookie_params(2592000); // store session cookie for 30 days
 
@@ -346,8 +346,8 @@ function managementRequest() {
 	if (isset($_GET['bans']) && !$isJanitor) {
 		clearExpiredBans();
 		$text = '';
-		$ip = $_POST['ip'];
-		if (isset($ip) && $ip != '') {
+		if (isset($_POST['ip']) && $_POST['ip'] != '') {
+			$ip = $_POST['ip'];
 			$banexists = banByIP(long2ip(cidr2ip($ip)[0]));
 			if ($banexists) {
 				fancyDie('Sorry, there is already a ban on record for that IP address.');
@@ -406,14 +406,13 @@ function managementRequest() {
 	/* --------[ Manage a passcode ]-------- */
 
 	if (ATOM_PASSCODES_ENABLED && isset($_GET['managepasscode']) && !$isJanitor) {
-		$passcodeNum = intval($_POST['id']);
 		changePass(
-			$passcodeNum,
+			$_POST['id'],
 			$_POST['meta'],
 			isset($_POST['expires']) && $_POST['expires'] ? strtotime($_POST['expires']) : 0,
 			$_POST['block_till'] ? strtotime($_POST['block_till']) : 0,
 			$_POST['block_reason']);
-		die(managePage(manageInfo('Passcode ' . $passcodeNum . ' has been changed.')));
+		die(managePage(manageInfo('Passcode ' . $_POST['id'] . ' has been changed.')));
 	}
 
 	/* --------[ Show moderation log ]-------- */
@@ -427,8 +426,8 @@ function managementRequest() {
 			) {
 				fancyDie('Wrong time format. Use yyyy-mm-dd format.');
 			}
-			$fromtime = intval(strtotime($_POST['from']));
-			$totime = intval(strtotime($_POST['to']));
+			$fromtime = (int)strtotime($_POST['from']);
+			$totime = (int)strtotime($_POST['to']);
 		}
 		die(managePage(buildModLogForm() . buildModLogTable(true, $fromtime, $totime)));
 	}
@@ -467,7 +466,7 @@ function managementRequest() {
 
 	if (isset($_GET['delall'])) {
 		$ip = $_GET['delall'];
-		if(isset($_GET['thrid'])) {
+		if (isset($_GET['thrid'])) {
 			$thrid = $_GET['thrid'];
 			die(managePage(manageInfo('Posts from ip ' . $ip . ' in thread №' . $thrid .
 				' have been deleted: №' . deleteAllPosts($ip, $thrid) . '.')));
@@ -564,7 +563,7 @@ function managementRequest() {
 		if (!$post || !isOp($post)) {
 			fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
 		}
-		$isStickied = intval($_GET['setsticky']);
+		$isStickied = (int)$_GET['setsticky'];
 		$id = $post['id'];
 		toggleStickyThread($id, $isStickied);
 		rebuildThread($id);
@@ -583,7 +582,7 @@ function managementRequest() {
 		if (!$post || !isOp($post)) {
 			fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
 		}
-		$isLocked = intval($_GET['setlocked']);
+		$isLocked = (int)$_GET['setlocked'];
 		$id = $post['id'];
 		toggleLockThread($id, $isLocked);
 		rebuildThread($id);
@@ -602,7 +601,7 @@ function managementRequest() {
 		if (!$post || !isOp($post)) {
 			fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
 		}
-		$isEndless = intval($_GET['setendless']);
+		$isEndless = (int)$_GET['setendless'];
 		$id = $post['id'];
 		toggleEndlessThread($id, $isEndless);
 		rebuildThread($id);
@@ -952,7 +951,7 @@ function postingRequest() {
 		}
 	} else if (ATOM_UNIQUEID) {
 		$ip = $post['ip'];
-		$ipHash = substr(md5($ip . intval($post['parent']) . ATOM_TRIPSEED), 0, 8);
+		$ipHash = substr(md5($ip . (int)$post['parent'] . ATOM_TRIPSEED), 0, 8);
 		$ipHashInt = hexdec('0x' . $ipHash);
 		$uid = '';
 		if (ATOM_UNIQUENAME) {
@@ -963,15 +962,15 @@ function postingRequest() {
 			$lastName = '';
 
 			// Generate firstname by IP
-			if($firstNamesLen) {
+			if ($firstNamesLen) {
 				srand($ipHashInt);
 				$firstName = $firstNames[rand() % $firstNamesLen];
 			}
 
 			// Generate lastname by subnet /20
-			if($lastNamesLen) {
+			if ($lastNamesLen) {
 				$subnet = long2ip(cidr2ip($ip . '/20')[0]);
-				srand(hexdec('0x' . substr(md5($subnet . intval($post['parent']) . ATOM_TRIPSEED), 0, 8)));
+				srand(hexdec('0x' . substr(md5($subnet . (int)$post['parent'] . ATOM_TRIPSEED), 0, 8)));
 				$lastName = $lastNames[rand() % $lastNamesLen];
 			}
 
@@ -1170,10 +1169,10 @@ function postingRequest() {
 			) {
 				preg_match('/^%(\d+)%/',
 					shell_exec('mediainfo --Inform="Video;%%Width%%" ' . $fileLocation), $match);
-				$videoWidth = $post['image' . $index . '_width'] = max(0, intval($match[1]));
+				$videoWidth = $post['image' . $index . '_width'] = max(0, (int)$match[1]);
 				preg_match('/^%(\d+)%/',
 					shell_exec('mediainfo --Inform="Video;%%Height%%" ' . $fileLocation), $match);
-				$videoHeight = $post['image' . $index . '_height'] = max(0, intval($match[1]));
+				$videoHeight = $post['image' . $index . '_height'] = max(0, (int)$match[1]);
 				if ($videoWidth > 0 && $videoHeight > 0) {
 					list($thumbMaxWidth, $thumbMaxHeight) = getThumbnailDimensions($post, $index);
 					$post['thumb' . $index] = $fileName . 's.jpg';
@@ -1193,7 +1192,7 @@ function postingRequest() {
 						addVideoOverlay('thumb/' . $post['thumb' . $index]);
 					}
 				}
-				$duration = intval(shell_exec('mediainfo --Inform="General;%Duration%" ' . $fileLocation));
+				$duration = (int)shell_exec('mediainfo --Inform="General;%Duration%" ' . $fileLocation);
 				if ($duration > 0) {
 					$mins = floor(round($duration / 1000) / 60);
 					$secs = str_pad(floor(round($duration / 1000) % 60), 2, '0', STR_PAD_LEFT);
@@ -1601,7 +1600,7 @@ foreach ($writedirs as $dir) {
 
 // Include php files
 $includes = array('inc/defines.php', 'inc/functions.php', 'inc/html.php');
-if (in_array(ATOM_DBMODE, array('flatfile', 'mysql', 'mysqli', 'sqlite', 'sqlite3', 'pdo'))) {
+if (in_array(ATOM_DBMODE, array('flatfile', 'mysqli', 'sqlite', 'sqlite3', 'pdo'))) {
 	$includes[] = 'inc/database_' . ATOM_DBMODE . '.php';
 } else {
 	fancyDie('settings.php: Unknown database mode in ATOM_DBMODE specified.');

@@ -380,7 +380,7 @@ function deleteAllPosts($ip, $parentId) {
 	foreach ($posts as $post) {
 		$id = $post['id'];
 		$thrId = $post['parent'];
-		if(!isset($parentId) || $thrId === intval($parentId)) {
+		if(!isset($parentId) || $thrId === (int)$parentId) {
 			deletePost($id);
 			$deletedPosts .= ($count ? ', ' : '') . $id;
 			if (!isOp($post) && !in_array($thrId, $updThreads)) {
@@ -402,7 +402,7 @@ function deleteAllPosts($ip, $parentId) {
 function deletePostImagesFiles($post, $imgList = array()) {
 	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT)) {
 		foreach ($imgList as $arrayIndex => $index) {
-			$index = intval(trim(basename($index)));
+			$index = (int)trim(basename($index));
 			if (!isEmbed($post['file' . $index . '_hex']) && $post['file' . $index] != '') {
 				@unlink('src/' . $post['file' . $index]);
 			}
@@ -427,7 +427,7 @@ function deletePostImagesFiles($post, $imgList = array()) {
 function deletePostImagesFilesThumbFiles($post, $imgList) {
 	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT)) {
 		foreach ($imgList as $arrayIndex => $index) {
-			$index = intval(trim(basename($index)));
+			$index = (int)trim(basename($index));
 			$thumbName = $post['thumb' . $index];
 			if ($thumbName != '' && $thumbName != 'spoiler.png') {
 				@unlink('thumb/' . $thumbName);
@@ -634,8 +634,8 @@ function addVideoOverlay($thumb_location) {
 	imagecopy(
 		$thumbnail,
 		$overlay_play,
-		intval($width / 2) - intval($overlay_width / 2),
-		intval($height / 2) - intval($overlay_height / 2),
+		(int)($width / 2) - (int)($overlay_width / 2),
+		(int)($height / 2) - (int)($overlay_height / 2),
 		0,
 		0,
 		$overlay_width,
@@ -674,7 +674,7 @@ function getEmbed($url) {
 // Delete old posts in endless threads
 function trimThreadPostsCount($id) {
 	$postOP = getPost($id);
-	if ($postOP && intval($postOP['endless']) == 1) {
+	if ($postOP && (int)$postOP['endless'] == 1) {
 		$posts = getThreadPosts($id, false);
 		$overLimit = count($posts) - ATOM_THREAD_LIMIT + 1;
 		if ($overLimit > 0) {

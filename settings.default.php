@@ -46,7 +46,7 @@ $atom_janitors = array(
 define('ATOM_REQMOD', '');
 
 /* ==[ Database ]========================================================================================== */
-// Recommended database modes from best to worst: 'pdo', 'mysqli', 'mysql', 'sqlite3', 'sqlite', 'flatfile'
+// Recommended database modes from best to worst: 'pdo', 'mysqli', 'flatfile'
 // 'flatfile' is only useful if you need portability or lack any kind of database
 define('ATOM_DBMODE', 'flatfile');
 // Posts table name in database
@@ -68,7 +68,7 @@ define('ATOM_DBLIKES', 'likes');
 define('ATOM_DBMIGRATE', false);
 
 /* ==[ Database configuration - MySQL / pgSQL ]============================================================ */
-// The following only apply when ATOM_DBMODE is set to 'mysql', 'mysqli' or 'pdo' with ATOM_DBDSN = ''
+// The following only apply when ATOM_DBMODE is set to 'mysqli' or 'pdo' with ATOM_DBDSN = ''
 // Hostname
 define('ATOM_DBHOST', 'localhost');
 // Port (set to 0 if you are using a UNIX socket as the host)
@@ -82,7 +82,7 @@ define('ATOM_DBNAME', '');
 
 /* ==[ Database configuration - PDO ]====================================================================== */
 // The following only apply when ATOM_DBMODE is set to 'pdo' (see README for instructions)
-// PDO driver to use: 'mysql', 'pgsql', 'sqlite'
+// PDO driver to use: 'mysql', 'pgsql'
 define('ATOM_DBDRIVER', 'mysql');
 // Enter a custom DSN to override all of the connection/driver settings above (see README for instructions)
 // When changing this, you should still set ATOM_DBDRIVER appropriately
