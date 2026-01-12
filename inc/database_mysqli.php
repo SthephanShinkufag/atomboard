@@ -122,16 +122,16 @@ function insertPost($post) {
 			$now,
 			$now,
 			$_SERVER['REMOTE_ADDR'],
-			$mysqli->real_escape_string($post['name']),
-			$mysqli->real_escape_string($post['tripcode']),
-			$mysqli->real_escape_string($post['email']),
-			$mysqli->real_escape_string($post['nameblock']),
-			$mysqli->real_escape_string($post['subject']),
-			$mysqli->real_escape_string($post['message']),
-			$mysqli->real_escape_string($post['password']),
+			$post['name'],
+			$post['tripcode'],
+			$post['email'],
+			$post['nameblock'],
+			$post['subject'],
+			$post['message'],
+			$post['password'],
 			$post['file0'],
 			$post['file0_hex'],
-			$mysqli->real_escape_string($post['file0_original']),
+			$post['file0_original'],
 			$post['file0_size'],
 			$post['file0_size_formatted'],
 			$post['image0_width'],
@@ -141,7 +141,7 @@ function insertPost($post) {
 			$post['thumb0_height'],
 			$post['file1'],
 			$post['file1_hex'],
-			$mysqli->real_escape_string($post['file1_original']),
+			$post['file1_original'],
 			$post['file1_size'],
 			$post['file1_size_formatted'],
 			$post['image1_width'],
@@ -151,7 +151,7 @@ function insertPost($post) {
 			$post['thumb1_height'],
 			$post['file2'],
 			$post['file2_hex'],
-			$mysqli->real_escape_string($post['file2_original']),
+			$post['file2_original'],
 			$post['file2_size'],
 			$post['file2_size_formatted'],
 			$post['image2_width'],
@@ -161,7 +161,7 @@ function insertPost($post) {
 			$post['thumb2_height'],
 			$post['file3'],
 			$post['file3_hex'],
-			$mysqli->real_escape_string($post['file3_original']),
+			$post['file3_original'],
 			$post['file3_size'],
 			$post['file3_size_formatted'],
 			$post['image3_width'],
@@ -214,7 +214,6 @@ function getPostsByIP($ip) {
 function getPostsByImageHex($hex) {
 	global $mysqli;
 	$posts = [];
-	$hex = $mysqli->real_escape_string($hex);
 	$result = $mysqli->execute_query(
 		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE (file0_hex = ? OR file1_hex = ? OR file2_hex = ? OR file3_hex = ?)
@@ -507,7 +506,7 @@ function insertBan($ban) {
 		"INSERT INTO " . ATOM_DBBANS . "
 		(ip_from, ip_to, timestamp, expire, reason)
 		VALUES (?, ?, ?, ?, ?)",
-		[$range[0], $range[1], $now, $ban['expire'], $mysqli->real_escape_string($ban['reason'])]);
+		[$range[0], $range[1], $now, $ban['expire'], $ban['reason']]);
 	return $mysqli->insert_id;
 }
 
@@ -597,7 +596,7 @@ function insertReport($id, $board, $ip, $reason) {
 		"INSERT INTO " . ATOM_DBREPORTS . "
 		(ip, board, postnum, reason, timestamp)
 		VALUES (?, ?, ?, ?, ?)",
-		[$ip, $board, (int)$id, $mysqli->real_escape_string($reason), time()]);
+		[$ip, $board, (int)$id, $reason, time()]);
 	return $mysqli->insert_id;
 }
 
@@ -652,7 +651,7 @@ function insertPass($expires, $meta) {
 		"INSERT INTO " . ATOM_DBPASS . "
 		(id, issued, expires, blocked_till, meta)
 		VALUES (?, ?, ?, ?, ?)",
-		[$passId, $now, $now + $expires, 0, $mysqli->real_escape_string($meta)]);
+		[$passId, $now, $now + $expires, 0, $meta]);
 	return $passId;
 }
 
@@ -675,10 +674,8 @@ function changePass($passNum, $meta, $expires, $blockTill, $blockReason) {
 			blocked_reason = ?
 		WHERE number = ?",
 		$expires ?
-			[$mysqli->real_escape_string($meta), $expires, $blockTill,
-				$mysqli->real_escape_string($blockReason), (int)$passNum] :
-			[$mysqli->real_escape_string($meta), $blockTill,
-				$mysqli->real_escape_string($blockReason), (int)$passNum]);
+			[$meta, $expires, $blockTill, $blockReason, (int)$passNum] :
+			[$meta, $blockTill, $blockReason, (int)$passNum]);
 }
 
 function deletePass($passId) {
@@ -811,5 +808,5 @@ function modLog($action, $private = '1', $color = 'Black') {
 		"INSERT INTO " . ATOM_DBMODLOG . "
 		(timestamp, boardname, username, action, color, private)
 		VALUES (?, ?, ?, ?, ?, ?)",
-		[time(), ATOM_BOARD, $mysqli->real_escape_string($userName), $action, $color, $private]);
+		[time(), ATOM_BOARD, $userName, $action, $color, $private]);
 }
