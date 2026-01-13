@@ -647,53 +647,9 @@ function postingRequest() {
 	$validPasscode = $passcode[0];
 
 	if (!$hasAccess) {
-		if ($validPasscode) {
-			// Passcode enabled - do nothing
-		}
-
-		// Check for recaptcha
-		elseif (ATOM_CAPTCHA == 'recaptcha') {
-			require_once 'inc/recaptcha/autoload.php';
-			$captcha = isset($_POST['g-recaptcha-response']) ? $_POST['g-recaptcha-response'] : '';
-			$failedCaptcha = true;
-			$recaptcha = new \ReCaptcha\ReCaptcha(ATOM_RECAPTCHA_SECRET);
-			$resp = $recaptcha->verify($captcha, $_SERVER['REMOTE_ADDR']);
-			if ($resp->isSuccess()) {
-				$failedCaptcha = false;
-			}
-			if ($failedCaptcha) {
-				$captchaError = 'Failed CAPTCHA.';
-				$errCodes = $resp->getErrorCodes();
-				$errReason = '';
-				if (count($errCodes) == 1) {
-					$errCodes = $errCodes;
-					$errReason = $errCodes[0];
-				}
-				if ($errReason == 'missing-input-response') {
-					$captchaError .= ' Please click the checkbox labeled "I\'m not a robot".';
-				} else {
-					$captchaError .= ' Reason:';
-					foreach ($errCodes as $error) {
-						$captchaError .= '<br>' . $error;
-					}
-				}
-				fancyDie($captchaError);
-			}
-		}
-
-		// Check for simple captcha
-		elseif (ATOM_CAPTCHA) {
-			$captcha = isset($_POST['captcha']) ? strtolower(trim($_POST['captcha'])) : '';
-			if ($captcha == '') {
-				fancyDie('Please enter the CAPTCHA text.');
-			}
-			if ($captcha != (isset($_SESSION['atom_captcha']) ?
-				strtolower(trim($_SESSION['atom_captcha'])) : '')
-			) {
-				fancyDie('Incorrect CAPTCHA text entered, please try again.<br>' .
-					'Click the image to retrieve a new CAPTCHA.');
-			}
-			unset($_SESSION['atom_captcha']);
+		// Checking for captcha if no passcode
+		if (!$validPasscode) {
+			checkCaptcha();
 		}
 
 		// Check for banned countries
@@ -1429,8 +1385,10 @@ function reportRequest() {
 	}
 
 	if (isset($_GET['addreport'])) {
+		if (!$validPasscode) {
+			checkCaptcha();
+		}
 		$id = $_POST['id'];
-
 		$report = insertReport($id, ATOM_BOARD, $ip, $_POST['reason']);
 		if ($report) {
 			if ($report == 'exists') {

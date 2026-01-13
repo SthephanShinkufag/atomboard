@@ -877,3 +877,68 @@ function isDirtyIP($ip) {
 		ATOM_IPLOOKUPS_BLOCK_TOR && $ipLookupTor ||
 		ATOM_IPLOOKUPS_BLOCK_VPN && $ipLookupVpn;
 }
+
+/* ==[ Captcha ]=========================================================================================== */
+
+function checkCaptcha() {
+	$isJson = isset($_GET['json']) && $_GET['json'] == '1';
+
+	// Check for recaptcha
+	if (ATOM_CAPTCHA == 'recaptcha') {
+		require_once 'inc/recaptcha/autoload.php';
+		$captcha = isset($_POST['g-recaptcha-response']) ? $_POST['g-recaptcha-response'] : '';
+		$failedCaptcha = true;
+		$recaptcha = new \ReCaptcha\ReCaptcha(ATOM_RECAPTCHA_SECRET);
+		$resp = $recaptcha->verify($captcha, $_SERVER['REMOTE_ADDR']);
+		if ($resp->isSuccess()) {
+			$failedCaptcha = false;
+		}
+		if ($failedCaptcha) {
+			$captchaError = 'Failed CAPTCHA.';
+			$errCodes = $resp->getErrorCodes();
+			$errReason = '';
+			if (count($errCodes) == 1) {
+				$errCodes = $errCodes;
+				$errReason = $errCodes[0];
+			}
+			if ($errReason == 'missing-input-response') {
+				$captchaError .= ' Please click the checkbox labeled "I\'m not a robot".';
+			} else {
+				$captchaError .= ' Reason:';
+				foreach ($errCodes as $error) {
+					$captchaError .= '<br>' . $error;
+				}
+			}
+			if ($isJson) {
+				die('{ "result": "error", "message": "' . $captchaError . '" }');
+			} else {
+				fancyDie($captchaError);
+			}
+		}
+	}
+
+	// Check for simple captcha
+	elseif (ATOM_CAPTCHA) {
+		$captcha = isset($_POST['captcha']) ? strtolower(trim($_POST['captcha'])) : '';
+		if ($captcha == '') {
+			$captchaError = 'Please enter the CAPTCHA text.';
+			if ($isJson) {
+				die('{ "result": "error", "message": "' . $captchaError . '" }');
+			} else {
+				fancyDie($captchaError);
+			}
+		}
+		if ($captcha != (isset($_SESSION['atom_captcha']) ?
+			strtolower(trim($_SESSION['atom_captcha'])) : '')
+		) {
+			$captchaError = 'Incorrect CAPTCHA text entered, please try again.<br>' .
+				'Click the image to retrieve a new CAPTCHA.';
+			if ($isJson) {
+				die('{ "result": "error", "message": "' . $captchaError . '" }');
+			} else {
+				fancyDie($captchaError);
+			}
+		}
+		unset($_SESSION['atom_captcha']);
+	}
+}

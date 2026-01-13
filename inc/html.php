@@ -110,6 +110,49 @@ function pageFooter($needReturn) {
 
 /* ==[ Postform ]========================================================================================== */
 
+function getCaptcha() {
+	return 	ATOM_CAPTCHA ? '
+					<tr id="captchablock">
+						<td class="postblock"></td>
+						<td>' . (ATOM_CAPTCHA === 'recaptcha' ? '
+							<div style="min-height: 80px;">
+								<div id="g-recaptcha" class="g-recaptcha" data-sitekey="' .
+									ATOM_RECAPTCHA_SITE . '"></div>
+								<noscript><div>
+									<div style="width: 302px; height: 422px; position: relative;">
+										<div style="width: 302px; height: 422px; position: absolute;">
+											<iframe src="https://www.google.com/recaptcha/api/fallback?k=' .
+												ATOM_RECAPTCHA_SITE . '" frameborder="0" scrolling="no"' .
+												' style="width: 302px; height:422px; border-style: none;">
+											</iframe>
+										</div>
+									</div>
+									<div style="width: 300px; height: 60px; border-style: none; bottom: 12px; left: 25px; margin: 0px; padding: 0px; right: 25px; background: #f9f9f9; border: 1px solid #c1c1c1; border-radius: 3px;">
+										<textarea id="g-recaptcha-response" name="g-recaptcha-response" class="g-recaptcha-response" style="width: 250px; height: 40px; border: 1px solid #c1c1c1; margin: 10px 25px; padding: 0px; resize: none;"></textarea>
+									</div>
+								</div></noscript>
+							</div>
+						' : '
+							<input type="text" class="postform-input" name="captcha" id="captcha"' .
+								' placeholder="Captcha" accesskey="c" autocomplete="off">
+							<img id="captchaimage" src="/' . ATOM_BOARD . '/inc/captcha.php"' .
+								' width="175" height="55" alt="CAPTCHA" onclick="reloadCaptcha();">
+						') . '</td>
+					</tr><tr id="validcaptchablock" style="display: none">
+						<td class="postblock"></td>
+						<td>
+							No captcha: you are a passcode user. <a href="/' . ATOM_BOARD .
+								'/imgboard.php?passcode&logout">Log Out.</a>
+						</td>
+					</tr><tr id="invalidcaptchablock" style="display: none">
+						<td class="postblock"></td>
+						<td>
+							Your pass code seems to be not valid. <a href="/' . ATOM_BOARD .
+								'/imgboard.php?passcode" target="_blank">Log In Again?</a>
+						</td>
+					</tr>' : '';
+}
+
 function supportedFileTypes() {
 	global $atom_uploads;
 	if (empty($atom_uploads)) {
@@ -250,48 +293,7 @@ function buildPostForm($parent, $isStaffPost = false) {
 								($isOnPage ? '' : ' - reply in thread') . '" accesskey="m"></textarea>
 						</td>
 					</tr>' : ''
-				) . (
-					ATOM_CAPTCHA ? '
-					<tr id="captchablock">
-						<td class="postblock"></td>
-						<td>' . (ATOM_CAPTCHA === 'recaptcha' ? '
-							<div style="min-height: 80px;">
-								<div id="g-recaptcha" class="g-recaptcha" data-sitekey="' .
-									ATOM_RECAPTCHA_SITE . '"></div>
-								<noscript><div>
-									<div style="width: 302px; height: 422px; position: relative;">
-										<div style="width: 302px; height: 422px; position: absolute;">
-											<iframe src="https://www.google.com/recaptcha/api/fallback?k=' .
-												ATOM_RECAPTCHA_SITE . '" frameborder="0" scrolling="no"' .
-												' style="width: 302px; height:422px; border-style: none;">
-											</iframe>
-										</div>
-									</div>
-									<div style="width: 300px; height: 60px; border-style: none; bottom: 12px; left: 25px; margin: 0px; padding: 0px; right: 25px; background: #f9f9f9; border: 1px solid #c1c1c1; border-radius: 3px;">
-										<textarea id="g-recaptcha-response" name="g-recaptcha-response" class="g-recaptcha-response" style="width: 250px; height: 40px; border: 1px solid #c1c1c1; margin: 10px 25px; padding: 0px; resize: none;"></textarea>
-									</div>
-								</div></noscript>
-							</div>
-						' : '
-							<input type="text" class="postform-input" name="captcha" id="captcha"' .
-								' placeholder="Captcha" accesskey="c" autocomplete="off">
-							<img id="captchaimage" src="/' . ATOM_BOARD . '/inc/captcha.php"' .
-								' width="175" height="55" alt="CAPTCHA" onclick="reloadCaptcha();">
-						') . '</td>
-					</tr><tr id="validcaptchablock" style="display: none">
-						<td class="postblock"></td>
-						<td>
-							No captcha: you are a passcode user. <a href="/' . ATOM_BOARD .
-								'/imgboard.php?passcode&logout">Log Out.</a>
-						</td>
-					</tr><tr id="invalidcaptchablock" style="display: none">
-						<td class="postblock"></td>
-						<td>
-							Your pass code seems to be not valid. <a href="/' . ATOM_BOARD .
-								'/imgboard.php?passcode" target="_blank">Log In Again?</a>
-						</td>
-					</tr>' : ''
-				) . '
+				) . getCaptcha() . '
 					' . $fileInputHtml . '
 					' . $embedInputHtml .
 				(
@@ -1155,11 +1157,12 @@ function buildReportPostForm($post) {
 			<input type="hidden" name="id" value="' . $post['id'] . '">
 			<fieldset>
 				<legend>Report a ' . (isOp($post) ? 'thread' : 'post') . ' to moderators</legend>
-				<div valign="top">
-					<label for="reason">Reason:</label>
-					<input type="text" name="reason" id="reason" style="width: 350px;">
-					<input type="submit" class="button-manage" value="Submit">
-				</div>
+				<label for="reason">Reason:</label>
+				<input type="text" name="reason" id="reason" style="width: 350px;">
+				<table><tbody>' .
+					getCaptcha() . '
+				</tbody></table>
+				<input type="submit" class="button-manage" value="Submit">
 			</fieldset>
 			<fieldset>
 				<legend>' . (isOp($post) ? 'OP-post' : 'Post') . '</legend>' .
