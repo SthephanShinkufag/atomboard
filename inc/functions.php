@@ -901,7 +901,7 @@ function checkCaptcha() {
 				$errReason = $errCodes[0];
 			}
 			if ($errReason == 'missing-input-response') {
-				$captchaError .= ' Please click the checkbox labeled "I\'m not a robot".';
+				$captchaError .= ' Please click the checkbox labeled \"I\'m not a robot\".';
 			} else {
 				$captchaError .= ' Reason:';
 				foreach ($errCodes as $error) {
