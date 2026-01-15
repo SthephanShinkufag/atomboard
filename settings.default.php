@@ -29,18 +29,18 @@ define('ATOM_HTML_NAVIGATION', '
 // Administrator password. Administrator has full access to the board
 define('ATOM_ADMINPASS', '');
 // Moderators have access to ban posters and delete posts
-$atom_moderators = array(
+$atom_moderators = [
 	// 'Mod1' => 'Password1',
 	// 'Mod2' => 'Password2',
 	// 'Mod3' => 'Password3'
-);
+];
 // Janitors only have access to delete posts (and moderate if ATOM_REQMOD is set)
 // If the array is not empty, the janitorlog.html will be generated
-$atom_janitors = array(
+$atom_janitors = [
 	// 'Janitor1' => 'Password1',
 	// 'Janitor2' => 'Password2',
 	// 'Janitor3' => 'Password3'
-);
+];
 // Require moderation before displaying posts
 // Values: 'files', 'all' (see README for instructions, only MySQL is supported), '' to disable
 define('ATOM_REQMOD', '');
@@ -111,18 +111,18 @@ define('ATOM_IPLOOKUPS_BLOCK_TOR', true);
 define('ATOM_IPLOOKUPS_BLOCK_VPN', true);
 
 /* ==[ Ban options ]======================================================================================= */
-// Ban reason templates. Empty array() to disable
-$atom_ban_reasons = array(
+// Ban reason templates. Empty array [] to disable
+$atom_ban_reasons = [
 	// 'Spamming',
 	// 'Abusive post',
 	// 'Breaking the rules'
-);
+];
 // List of countries from which it is prohibited to post. ATOM_GEOIP must be set.
 // See ISO-3166 alpha2 at http://www.geonames.org/countries/
-$atom_banned_countries = array(
+$atom_banned_countries = [
 	// 'RU',
 	// 'BY'
-);
+];
 
 /* ==[ Posts ]============================================================================================= */
 // Default poster names
@@ -166,36 +166,36 @@ define('ATOM_POSTING_DELAY', 30);
 // Redirect to thread after posting
 define('ATOM_ALWAYSNOKO', true);
 // Fields to hide when creating a new thread
-// e.g. array('name', 'email', 'subject', 'message', 'file', 'embed', 'password')
-$atom_hidefieldsop = array();
+// e.g. ['name', 'email', 'subject', 'message', 'file', 'embed', 'password']
+$atom_hidefieldsop = [];
 // Fields to hide when replying
-$atom_hidefields = array();
+$atom_hidefields = [];
 
 /* ==[ Upload mime types ]================================================================================= */
-// Empty array() to disable
-// Format: MIME type => (extension, optional thumbnail extensiion)
+// Empty array [] to disable
+// Format: MIME type => [extension, optional thumbnail extensiion]
 // Video thumbnails require mediainfo and ffmpegthumbnailer (see README for instructions)
-$atom_uploads = array(
-	'image/jpeg' => array('jpg'),
-	'image/pjpeg' => array('jpg'),
-	'image/png' => array('png'),
-	'image/gif' => array('gif'),
-	'image/avif' => array('avif'),
-	'image/webp' => array('webp'),
-	'video/webm' => array('webm'),
-	'audio/webm' => array('webm'),
-	'video/mp4' => array('mp4'),
-	'application/octet-stream' => array('mp4'),
-	'video/quicktime' => array('mov')
-);
+$atom_uploads = [
+	'image/jpeg' => ['jpg'],
+	'image/pjpeg' => ['jpg'],
+	'image/png' => ['png'],
+	'image/gif' => ['gif'],
+	'image/avif' => ['avif'],
+	'image/webp' => ['webp'],
+	'video/webm' => ['webm'],
+	'audio/webm' => ['webm'],
+	'video/mp4' => ['mp4'],
+	'application/octet-stream' => ['mp4'],
+	'video/quicktime' => ['mov']
+];
 
 /* ==[ Embed APIs ]======================================================================================== */
-// Empty array() to disable
-$atom_embeds = array(
+// Empty array [] to disable
+$atom_embeds = [
 	'SoundCloud.com' => 'https://soundcloud.com/oembed?format=json&url=ATOM_EMBED',
 	'Vimeo.com'      => 'https://vimeo.com/api/oembed.json?url=ATOM_EMBED',
 	'YouTube.com'    => 'https://www.youtube.com/oembed?url=ATOM_EMBED&format=json'
-);
+];
 
 /* ==[ File control ]====================================================================================== */
 // Maximum file size in kilobytes, 0 to disable

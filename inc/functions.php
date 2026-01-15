@@ -281,7 +281,7 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 /* ==[ Strings ]=========================================================================================== */
 
 function escapeHTML($string) {
-	return str_replace(array('&', '<', '>'), array('&amp;', '&lt;', '&gt;'), $string);
+	return str_replace(['&', '<', '>'], ['&amp;', '&lt;', '&gt;'], $string);
 }
 
 function plural($singular, $count, $plural = 's') {
@@ -292,7 +292,7 @@ function plural($singular, $count, $plural = 's') {
 }
 
 function strallpos($haystack, $needle, $offset = 0) {
-	$result = array();
+	$result = [];
 	for ($i = $offset; $i < strlen($haystack); $i++) {
 		$pos = strpos($haystack, $needle, $i);
 		if ($pos !== False) {
@@ -309,7 +309,7 @@ function strallpos($haystack, $needle, $offset = 0) {
 /* ==[ Posts ]============================================================================================= */
 
 function newPost($parent) {
-	return array(
+	return [
 		'parent' => $parent,
 		'timestamp' => '0',
 		'bumped' => '0',
@@ -365,7 +365,7 @@ function newPost($parent) {
 		'moderated' => '1',
 		'stickied' => '0',
 		'locked' => '0',
-		'endless' => '0');
+		'endless' => '0'];
 }
 
 function isOp($post) {
@@ -374,7 +374,7 @@ function isOp($post) {
 
 function deleteAllPosts($ip, $parentId) {
 	$deletedPosts = '';
-	$updThreads = array();
+	$updThreads = [];
 	$posts = getPostsByIP($ip);
 	$count = 0;
 	foreach ($posts as $post) {
@@ -399,7 +399,7 @@ function deleteAllPosts($ip, $parentId) {
 
 /* ==[ Images/video files ]================================================================================ */
 
-function deletePostImagesFiles($post, $imgList = array()) {
+function deletePostImagesFiles($post, $imgList = []) {
 	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT)) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = (int)trim(basename($index));
@@ -447,8 +447,8 @@ function getThumbnailDimensions($post, $imgIndex = 0) {
 	return (
 		$post['image' . $imgIndex . '_width'] > $max_width ||
 		$post['image' . $imgIndex . '_height'] > $max_height
-	) ? array($max_width, $max_height) :
-		array($post['image' . $imgIndex . '_width'], $post['image' . $imgIndex . '_height']);
+	) ? [$max_width, $max_height] :
+		[$post['image' . $imgIndex . '_width'], $post['image' . $imgIndex . '_height']];
 }
 
 function fastimagecopyresampled(
@@ -661,12 +661,12 @@ function getEmbed($url) {
 				$service_url = str_ireplace("ATOM_EMBED", urlencode($url), $service_url);
 				$result = json_decode(url_get_contents($service_url), true);
 				if (!empty($result)) {
-					return array($service, $result);
+					return [$service, $result];
 				}
 			}
 		}
 	}
-	return array('', array());
+	return ['', []];
 }
 
 /* ==[ Threads ]=========================================================================================== */
@@ -797,7 +797,7 @@ function cidr2ip($cidr) {
 	$ipArr = explode('/', $cidr);
 	if (count($ipArr) == 1) {
 		$start = ip2long($ipArr[0]);
-		return array($start, $start);
+		return [$start, $start];
 	}
 	$start = ip2long($ipArr[0]);
 	$nm = $ipArr[1];
@@ -806,7 +806,7 @@ function cidr2ip($cidr) {
 	$bitmask = 0x100000000 - $num;
 	$start &= $bitmask;
 	$end = $start + $num - 1;
-	return array($start, $end);
+	return [$start, $end];
 }
 
 function ip2cidr($ipFrom, $ipTo) {
@@ -898,7 +898,6 @@ function checkCaptcha() {
 			$errCodes = $resp->getErrorCodes();
 			$errReason = '';
 			if (count($errCodes) == 1) {
-				$errCodes = $errCodes;
 				$errReason = $errCodes[0];
 			}
 			if ($errReason == 'missing-input-response') {

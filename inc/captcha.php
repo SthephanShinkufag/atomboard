@@ -38,17 +38,17 @@ class SimpleCaptcha {
 	public $session_var = 'atom_captcha';
 
 	// Background color in RGB-array
-	public $backgroundColor = array(128, 128, 128);
+	public $backgroundColor = [128, 128, 128];
 
 	// Foreground colors in RGB-array
-	public $colors = array(
-		array(27, 78, 181), // blue
-		array(22, 163, 35), // green
-		array(214, 36, 7),  // red
-	);
+	public $colors = [
+		[27, 78, 181], // blue
+		[22, 163, 35], // green
+		[214, 36, 7],  // red
+	];
 
 	// Shadow color in RGB-array or null
-	public $shadowColor = array(254, 254, 254);
+	public $shadowColor = [254, 254, 254];
 
 	// Horizontal line through the text
 	public $lineWidth = 2;
@@ -60,18 +60,18 @@ class SimpleCaptcha {
 	 * - minSize: min font size
 	 * - maxSize: max font size
 	 */
-	public $fonts = array(
-		'Roboto-Regular' => array(
+	public $fonts = [
+		'Roboto-Regular' => [
 			'spacing' => 1,
 			'minSize' => 22,
 			'maxSize' => 32,
-			'font' => 'roboto_regular.ttf'),
-		'Roboto-Bold' => array(
+			'font' => 'roboto_regular.ttf'],
+		'Roboto-Bold' => [
 			'spacing' => 1,
 			'minSize' => 22,
 			'maxSize' => 32,
-			'font' => 'roboto_bold.ttf')
-	);
+			'font' => 'roboto_bold.ttf']
+	];
 
 	// Wave configuration in X and Y axes
 	public $Yperiod = 12;
@@ -99,7 +99,7 @@ class SimpleCaptcha {
 	// GD image
 	public $im;
 
-	public function __construct($config = array()) {
+	public function __construct($config = []) {
 	}
 
 	public function CreateImage() {
@@ -237,7 +237,7 @@ class SimpleCaptcha {
 		// Change random volcals
 		if ($extended) {
 			$text = preg_split('//', $text, -1, PREG_SPLIT_NO_EMPTY);
-			$vocals = array('a', 'e', 'i', 'o', 'u');
+			$vocals = ['a', 'e', 'i', 'o', 'u'];
 			foreach ($text as $i => $char) {
 				if (mt_rand(0, 1) && in_array($char, $vocals)) {
 					$text[$i] = $vocals[mt_rand(0, 4)];
@@ -263,7 +263,7 @@ class SimpleCaptcha {
 	}
 
 	// Text insertion
-	protected function WriteText($text, $fontcfg = array()) {
+	protected function WriteText($text, $fontcfg = []) {
 		if (empty($fontcfg)) {
 			// Select the font configuration
 			$fontcfg = $this->fonts[array_rand($this->fonts)];

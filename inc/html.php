@@ -27,10 +27,10 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2025012700">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2025012700"></script>
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026011500">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2026011500"></script>
 	<script src="/' . ATOM_BOARD .
-		'/js/extension/Dollchan_Extension_Tools.user.js?2025012700" async defer></script>' .
+		'/js/extension/Dollchan_Extension_Tools.user.js?2026011500" async defer></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -168,7 +168,7 @@ function buildPostForm($parent, $isStaffPost = false) {
 	global $atom_hidefieldsop, $atom_hidefields, $atom_uploads, $atom_embeds;
 	$isOnPage = $parent == ATOM_NEWTHREAD;
 	$hideFields = $isOnPage ? $atom_hidefieldsop : $atom_hidefields;
-	$postformExtra = array('name' => '', 'email' => '', 'subject' => '', 'footer' => '');
+	$postformExtra = ['name' => '', 'email' => '', 'subject' => '', 'footer' => ''];
 	$inputSubmit = '<input type="submit" value="' .
 		($isStaffPost ? 'New post' : ($isOnPage ? 'New thread' : 'Reply')) . '" accesskey="z">';
 	if ($isStaffPost || !in_array('subject', $hideFields)) {
@@ -370,7 +370,7 @@ function buildPost($post, $res, $mode = '') {
 				'style="position: static; pointer-events: inherit; display: inline; height: auto;' .
 				' max-width: 100%; max-height: 100%;" controls autoplay loop><source src="' .
 				$directLink . '"></source></video>');
-		} elseif (in_array($fExt, array('jpg', 'png', 'gif', 'avif', 'webp'))) {
+		} elseif (in_array($fExt, ['jpg', 'png', 'gif', 'avif', 'webp'])) {
 			$expandHtml = rawurlencode('<a href="' . $directLink . '"' . $expandClick . '><img src="/' .
 				ATOM_BOARD . '/src/' . $fName . '" width="' . $fWidth .
 				'" style="max-width: 100%; height: auto;"></a>');
@@ -380,7 +380,7 @@ function buildPost($post, $res, $mode = '') {
 		$extraThumbData = 'data-size="' . $post['file' . $index . '_size'] . '" data-width="' .
 			$fWidth . '" data-height="' . $fHeight . '"';
 		$thumblink = '<a href="' . $directLink . '" ' . $extraThumbData . ' target="_blank"' .
-			($isEmbed || in_array($fExt, array('jpg', 'png', 'gif', 'avif', 'webp', 'webm', 'mp4', 'mov')) ?
+			($isEmbed || in_array($fExt, ['jpg', 'png', 'gif', 'avif', 'webp', 'webm', 'mp4', 'mov']) ?
 				$expandClick : '') .
 			($hasOrigName ? ' download="' . $origName . '" title="Click to expand/collapse">' : '>');
 		$filesize = '';
@@ -446,7 +446,7 @@ function buildPost($post, $res, $mode = '') {
 		if ($truncLen) {
 			$message = tidy_repair_string(
 				substr($message, 0, $truncLen),
-				array('quiet' => true, 'show-body-only' => true),
+				['quiet' => true, 'show-body-only' => true],
 				'utf8'
 			) . '
 						<div class="abbrev">
@@ -608,7 +608,7 @@ function rebuildIndexPages() {
 		$replies = getThreadPosts($thread['id']);
 		$thread['omitted'] = max(0, count($replies) - ATOM_PREVIEWREPLIES - 1);
 		// Build replies for preview
-		$htmlReplies = array();
+		$htmlReplies = [];
 		for ($j = count($replies) - 1; $j > $thread['omitted']; $j--) {
 			$htmlReplies[] = buildPost($replies[$j], ATOM_INDEXPAGE);
 		}
@@ -1429,11 +1429,11 @@ function buildStatusPage() {
 				</center><hr></td></tr>';
 		$geoipReader = ATOM_GEOIP == 'geoip2' ?
 			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
-		$reportsByPost = array();
+		$reportsByPost = [];
 		foreach ($reports as $report) {
 			$id = $report['postnum'];
 			if (!isset($reportsByPost[$id])) {
-				$reportsByPost[$id] = array();
+				$reportsByPost[$id] = [];
 			}
 			$reportsByPost[$report['postnum']][] = $report;
 		}
@@ -1549,12 +1549,12 @@ function buildCatalogPage() {
 		if (function_exists('mb_substr') && extension_loaded('mbstring')) {
 			$OPpostMessage = tidy_repair_string(
 				mb_substr($post['message'], 0, 160, 'UTF-8'),
-				array('quiet' => true, 'show-body-only' => true),
+				['quiet' => true, 'show-body-only' => true],
 				'utf8');
 		} else {
 			$OPpostMessage = tidy_repair_string(
 				substr($post['message'], 0, 160),
-				array('quiet' => true, 'show-body-only' => true),
+				['quiet' => true, 'show-body-only' => true],
 				'utf8');
 		}
 		$OPpostSubject = $post['subject'];

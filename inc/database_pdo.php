@@ -11,7 +11,7 @@ try {
 			';dbname=' . ATOM_DBNAME . ';charset=utf8mb4',
 		ATOM_DBUSERNAME,
 		ATOM_DBPASSWORD,
-		array(PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
+		[PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 } catch (PDOException $e) {
 	fancyDie('Failed to connect to the database: ' . $e->getMessage());
 }

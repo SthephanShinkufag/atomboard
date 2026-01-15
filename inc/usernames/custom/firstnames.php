@@ -1,2 +1,2 @@
 <?php
-$firstNames = array();
+$firstNames = [];

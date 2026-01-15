@@ -107,7 +107,7 @@ $db->datadir = 'inc/flatfile/';
 /* ==[ Posts ]============================================================================================= */
 
 function convertPostsToSQLStyle($posts, $isSinglePost = false) {
-	$newposts = array();
+	$newposts = [];
 	foreach ($posts as $oldpost) {
 		$post = newPost(ATOM_NEWTHREAD);
 		$post['id']                   = $oldpost[POST_ID];
@@ -179,7 +179,7 @@ function convertPostsToSQLStyle($posts, $isSinglePost = false) {
 }
 
 function insertPost($newpost) {
-	$post = array();
+	$post = [];
 	$post[POST_ID]                   = '0';
 	$post[POST_PARENT]               = $newpost['parent'];
 	$post[POST_TIMESTAMP]            = time();
@@ -389,9 +389,9 @@ function getThreads() {
 		POSTS_FILE,
 		new SimpleWhereClause(POST_PARENT, '=', 0, INTEGER_COMPARISON),
 		-1,
-		array(
+		[
 			new OrderBy(POST_STICKIED, DESCENDING, INTEGER_COMPARISON),
-			new OrderBy(POST_BUMPED, DESCENDING, INTEGER_COMPARISON))));
+			new OrderBy(POST_BUMPED, DESCENDING, INTEGER_COMPARISON)]));
 }
 
 function getThreadsCount() {
@@ -472,15 +472,15 @@ function bumpThread($id) {
 /* ==[ Bans ]============================================================================================== */
 
 function convertBansToSQLStyle($bans, $isSingleBan = false) {
-	$newbans = array();
+	$newbans = [];
 	foreach ($bans as $oldban) {
-		$ban = array(
+		$ban = [
 			'id' => $oldban[BAN_ID],
 			'ip_from' => $oldban[BAN_IP_FROM],
 			'ip_to' => $oldban[BAN_IP_TO],
 			'timestamp' => $oldban[BAN_TIMESTAMP],
 			'expire' => $oldban[BAN_EXPIRE],
-			'reason' => $oldban[BAN_REASON]);
+			'reason' => $oldban[BAN_REASON]];
 		if ($isSingleBan) {
 			return $ban;
 		}
@@ -515,7 +515,7 @@ function getAllBans() {
 
 function insertBan($ban) {
 	$rangeFrom = cidr2ip($ban['ip'])[0];
-	$newban = array();
+	$newban = [];
 	$newban[BAN_ID] = '0';
 	// Only single ip ban is supported
 	$newban[BAN_IP_FROM] = $rangeFrom;
@@ -549,7 +549,7 @@ function lookupByIP($ip) {
 }
 
 function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
-	$lookup = array();
+	$lookup = [];
 	$lookup[IPLOOKUP_IP] = $ip;
 	$lookup[IPLOOKUP_ABUSER] = $abuser;
 	$lookup[IPLOOKUP_VPS] = $vps;
@@ -562,14 +562,14 @@ function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
 /* ==[ Likes ]============================================================================================= */
 
 function convertLikesToSQLStyle($likes) {
-	$newlikes = array();
+	$newlikes = [];
 	foreach ($likes as $oldlike) {
-		$newlikes[] = array(
+		$newlikes[] = [
 			'id' => $oldlike[LIKES_ID],
 			'ip' => $oldlike[LIKES_IP],
 			'board' => $oldlike[LIKES_BOARD],
 			'postnum' => $oldlike[LIKES_POSTNUM],
-			'islike' => $oldlike[LIKES_ISLIKE]);
+			'islike' => $oldlike[LIKES_ISLIKE]];
 	}
 	return $newlikes;
 }
@@ -591,7 +591,7 @@ function toggleLike($id, $ip) {
 	if ($isAlreadyLiked) {
 		$GLOBALS['db']->deleteWhere(LIKES_FILE, $compClause);
 	} else {
-		$like = array();
+		$like = [];
 		$like[LIKES_ID] = '0';
 		$like[LIKES_IP] = $ip;
 		$like[LIKES_BOARD] = ATOM_BOARD;
@@ -610,14 +610,14 @@ function toggleLike($id, $ip) {
 			$GLOBALS['db']->updateRowById(POSTS_FILE, POST_ID, $post);
 		}
 	}
-	return array(!$isAlreadyLiked, $countOfPostLikes);
+	return [!$isAlreadyLiked, $countOfPostLikes];
 }
 
 /* ==[ Modlog ]============================================================================================ */
 
 function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
-	$records = array();
-	$rows = array();
+	$records = [];
+	$rows = [];
 	// If we need a modlog for the admin panel with all public+private records
 	if ($private === '1') {
 		if ($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
@@ -627,11 +627,11 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 				100,
 				new OrderBy(MODLOG_TIMESTAMP, DESCENDING, INTEGER_COMPARISON));
 			foreach ($rows as $row) {
-				$records[] = array(
+				$records[] = [
 					'timestamp' => $row[MODLOG_TIMESTAMP],
 					'username' => $row[MODLOG_USERNAME],
 					'action' => $row[MODLOG_ACTION],
-					'color' => $row[MODLOG_COLOR]);
+					'color' => $row[MODLOG_COLOR]];
 			}
 		} elseif ($periodEndDate !== 0 && $periodStartDate !== 0) { // If the date range is set
 			$compClause = new AndWhereClause();
@@ -646,11 +646,11 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 				-1,
 				new OrderBy(MODLOG_TIMESTAMP, DESCENDING, INTEGER_COMPARISON));
 			foreach ($rows as $row) {
-				$records[] = array(
+				$records[] = [
 					'timestamp' => $row[MODLOG_TIMESTAMP],
 					'username' => $row[MODLOG_USERNAME],
 					'action' => $row[MODLOG_ACTION],
-					'color' => $row[MODLOG_COLOR]);
+					'color' => $row[MODLOG_COLOR]];
 			}
 		}
 	// If we need only public records
@@ -664,9 +664,9 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 			100,
 			new OrderBy(MODLOG_TIMESTAMP, DESCENDING, INTEGER_COMPARISON));
 		foreach ($rows as $row) {
-			$records[] = array(
+			$records[] = [
 				'timestamp' => $row[MODLOG_TIMESTAMP],
-				'action' => $row[MODLOG_ACTION]);
+				'action' => $row[MODLOG_ACTION]];
 		}
 	}
 	return $records;
@@ -676,7 +676,7 @@ function modLog($action, $private = '1', $color = 'Black') {
 	// modLog('Text to show in modlog', '[1, 0]', 'Color');
 	// '[1, 0]': 1 = Private record. 0 = Public record.
 	// 'Color': Choose what to put in style="color: " for this record
-	$row = array();
+	$row = [];
 	$row[MODLOG_ID] = '0';
 	$row[MODLOG_TIMESTAMP] = time();
 	$row[MODLOG_BOARDNAME] = ATOM_BOARD;

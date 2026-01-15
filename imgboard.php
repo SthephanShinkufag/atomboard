@@ -21,7 +21,7 @@ function fancyDie($message) {
 
 <html data-theme="' . ATOM_THEME . '">
 <head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2025012700">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026011500">
 </head>
 <body align="center">
 	<br>
@@ -352,7 +352,7 @@ function managementRequest() {
 			if ($banexists) {
 				fancyDie('Sorry, there is already a ban on record for that IP address.');
 			}
-			$ban = array();
+			$ban = [];
 			$ban['ip'] = $ip;
 			if ($_POST['expire'] == 1) {
 				$expire = 1;
@@ -1000,7 +1000,7 @@ function postingRequest() {
 			$embedHtml = preg_replace('/width="\d+"/', 'width="' . $fileInfo[0] . '"', $embedHtml);
 			$embedHtml = preg_replace('/height="\d+"/', 'height="' . $fileInfo[1] . '"', $embedHtml);
 		}
-		$post['file0'] = str_ireplace(array('src="https://', 'src="http://'), 'src="//', $embedHtml);
+		$post['file0'] = str_ireplace(['src="https://', 'src="http://'], 'src="//', $embedHtml);
 	}
 
 	/* --------[ Images upload ]-------- */
@@ -1159,14 +1159,14 @@ function postingRequest() {
 			}
 
 			// Get image info
-			elseif (in_array($fileMime, array(
+			elseif (in_array($fileMime, [
 				'image/avif',
 				'image/gif',
 				'image/jpeg',
 				'image/pjpeg',
 				'image/png',
-				'image/webp'))
-			) {
+				'image/webp'
+			])) {
 				$fileInfo = @getimagesize($fileLocation);
 				$post['image' . $index . '_width'] = $fileInfo[0];
 				$post['image' . $index . '_height'] = $fileInfo[1];
@@ -1183,14 +1183,14 @@ function postingRequest() {
 			}
 
 			// Get default image thumbnail
-			elseif (in_array($fileMime, array(
+			elseif (in_array($fileMime, [
 				'image/avif',
 				'image/gif',
 				'image/jpeg',
 				'image/pjpeg',
 				'image/png',
 				'image/webp'
-			))) {
+			])) {
 				$post['thumb' . $index] = $fileName . 's.' . $atom_uploads[$fileMime][0];
 				list($thumbMaxWidth, $thumbMaxHeight) = getThumbnailDimensions($post, $index);
 				if (!createThumbnail(
@@ -1385,7 +1385,7 @@ function reportRequest() {
 	}
 
 	if (isset($_GET['addreport'])) {
-		if (!$validPasscode) {
+		if (!checkForPasscode(false)[0]) {
 			checkCaptcha();
 		}
 		$id = $_POST['id'];
@@ -1431,7 +1431,7 @@ function reportRequest() {
 
 function checkForPasscode($showMessages) {
 	if (!ATOM_PASSCODES_ENABLED || !isset($_SESSION['passcode']) || $_SESSION['passcode'] == '') {
-		return array(0);
+		return [0];
 	}
 	$pass = passByID($_SESSION['passcode']);
 	if (!$pass || isPassExpired($pass)) {
@@ -1452,7 +1452,7 @@ function checkForPasscode($showMessages) {
 			date('d.m.y D H:i:s', $checkTill));
 	}
 	usePass($pass['id'], $ip); // Update passcode info (last used ip)
-	return $pass['number'] ? array($pass['number'], str_contains($pass['meta'], '[donator]')) : array(0);
+	return $pass['number'] ? [$pass['number'], str_contains($pass['meta'], '[donator]')] : [0];
 }
 
 function passcodeRequest() {
@@ -1546,7 +1546,7 @@ if (ATOM_CAPTCHA == 'recaptcha' && (ATOM_RECAPTCHA_SITE == '' || ATOM_RECAPTCHA_
 }
 
 // Check if directories are writable by the script
-$writedirs = array('res', 'src', 'thumb');
+$writedirs = ['res', 'src', 'thumb'];
 if (ATOM_DBMODE == 'flatfile') {
 	$writedirs[] = 'inc/flatfile';
 }
@@ -1557,8 +1557,8 @@ foreach ($writedirs as $dir) {
 }
 
 // Include php files
-$includes = array('inc/defines.php', 'inc/functions.php', 'inc/html.php');
-if (in_array(ATOM_DBMODE, array('flatfile', 'mysqli', 'sqlite', 'sqlite3', 'pdo'))) {
+$includes = ['inc/defines.php', 'inc/functions.php', 'inc/html.php'];
+if (in_array(ATOM_DBMODE, ['flatfile', 'mysqli', 'sqlite', 'sqlite3', 'pdo'])) {
 	$includes[] = 'inc/database_' . ATOM_DBMODE . '.php';
 } else {
 	fancyDie('settings.php: Unknown database mode in ATOM_DBMODE specified.');
