@@ -209,6 +209,7 @@ define('ATOM_FILE_MAXKBDESC_PASS', '40 MB');
 // Maximum number of uploaded files (up to 4)
 define('ATOM_FILES_COUNT', 4);
 // Thumbnail method to use: 'gd', 'imagemagick' (see README for instructions)
+// Please note that the GD library does not support animated WebP files
 define('ATOM_FILE_THUMBDRIVER', 'gd');
 // Add icons/video_overlay.png play icon over video and embedded thumbnails
 // Requires mediainfo and ffmpegthumbnailer (see README for instructions)
@@ -217,7 +218,7 @@ define('ATOM_VIDEO_OVERLAY', true);
 define('ATOM_NOFILEOK', false);
 // Allow duplicate files
 define('ATOM_FILE_DUPLICATE', false);
-// Animate gif thumbnails. Apply when ATOM_FILE_THUMBDRIVER is set to 'imagemagick'
+// Animate gif and webp thumbnails. Apply when ATOM_FILE_THUMBDRIVER is set to 'imagemagick'
 define('ATOM_FILE_ANIM_GIF', false);
 // Thumbnail size - new thread
 define('ATOM_FILE_MAXWOP', 230); // Width
