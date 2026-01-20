@@ -1,7 +1,7 @@
 <?php
 // Uncomment to show debugging errors
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// error_reporting(E_ALL);
+// ini_set('display_errors', 1);
 ini_set('session.gc_maxlifetime', 2592000); // 30 days
 session_set_cookie_params(2592000); // store session cookie for 30 days
 
@@ -21,7 +21,7 @@ function fancyDie($message) {
 
 <html data-theme="' . ATOM_THEME . '">
 <head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026011500">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026012000">
 </head>
 <body align="center">
 	<br>
