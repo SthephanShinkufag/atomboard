@@ -543,7 +543,7 @@ function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
 		"INSERT INTO " . ATOM_DBIPLOOKUPS . "
 		(ip, abuser, vps, proxy, tor, vpn)
 		VALUES (?, ?, ?, ?, ?, ?)",
-		[(int)$ip, (int)$abuser, (int)$vps, (int)$proxy, (int)$tor, (int)$vpn]);
+		[$ip, (int)$abuser, (int)$vps, (int)$proxy, (int)$tor, (int)$vpn]);
 	return $mysqli->insert_id;
 }
 

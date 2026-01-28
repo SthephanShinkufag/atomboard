@@ -218,7 +218,7 @@ define('ATOM_VIDEO_OVERLAY', true);
 define('ATOM_NOFILEOK', false);
 // Allow duplicate files
 define('ATOM_FILE_DUPLICATE', false);
-// Animate gif and webp thumbnails. Apply when ATOM_FILE_THUMBDRIVER is set to 'imagemagick'
+// Animate GIF and WebP thumbnails. Apply when ATOM_FILE_THUMBDRIVER is set to 'imagemagick'
 define('ATOM_FILE_ANIM_GIF', false);
 // Thumbnail size - new thread
 define('ATOM_FILE_MAXWOP', 230); // Width
