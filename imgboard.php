@@ -21,7 +21,7 @@ function fancyDie($message) {
 
 <html data-theme="' . ATOM_THEME . '">
 <head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026012000">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026021701">
 </head>
 <body align="center">
 	<br>
@@ -964,7 +964,7 @@ function postingRequest() {
 			!isset($embed['thumbnail_url'])
 		) {
 			fancyDie('Invalid embed URL.<br>Only ' .
-				(implode('/', array_keys($atom_embeds))) . ' URLs are supported.');
+				(implode(' / ', array_keys($atom_embeds))) . ' URLs are supported.');
 		}
 		$post['file0_hex'] = $service;
 		$fileName = time() . substr(microtime(), 2, 3) . '-0';
@@ -1056,8 +1056,10 @@ function postingRequest() {
 			}
 
 			// Get post image fields
-			$post['file' . $index . '_original'] = trim(htmlentities(
-				mb_substr(basename($_FILES['file']['name'][$index]), 0, 100), ENT_QUOTES, 'UTF-8'));
+			$filePath = pathinfo($_FILES['file']['name'][$index]);
+			$post['file' . $index . '_original'] =
+				trim(htmlentities(mb_substr($filePath['filename'], 0, 200) .
+				'.' . $filePath['extension'], ENT_QUOTES, 'UTF-8'));
 			$post['file' . $index . '_hex'] = md5_file($file);
 			$post['file' . $index . '_size'] = $_FILES['file']['size'][$index];
 

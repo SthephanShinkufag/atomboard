@@ -27,10 +27,10 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026012000">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2026012000"></script>
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026021701">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2026021701"></script>
 	<script src="/' . ATOM_BOARD .
-		'/js/extension/Dollchan_Extension_Tools.user.js?2026012000" async defer></script>' .
+		'/js/extension/Dollchan_Extension_Tools.user.js?2026021701" async defer></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -340,97 +340,74 @@ function buildPost($post, $res, $mode = '') {
 	}
 
 	// Build post file
-	$id = $post['id'];
+	$postId = $post['id'];
 	$thrId = getThreadId($post);
 	$isOp = isOp($post);
-	$filehtml = '';
-	$hasImages = false;
-	$imagesCount = 0;
-	for ($index = 0; $index < ATOM_FILES_COUNT; $index++) {
-		if (!$post['file' . $index . '_hex']) {
+	$fileHtml = '';
+	$filesCount = 0;
+	for ($i = 0; $i < ATOM_FILES_COUNT; $i++) {
+		$fileHex = $post['file' . $i . '_hex'];
+		if (!$fileHex) {
 			continue;
 		}
-		$hasImages = true;
-		$imagesCount++;
-		$fWidth = $post['image' . $index . '_width'];
-		$fHeight = $post['image' . $index . '_height'];
-		$fName = $post['file' . $index];
-		$isEmbed = isEmbed($post['file' . $index . '_hex']);
-		$fExt = substr(strrchr($fName, '.'), 1);
-		$isVideo = !!($fExt == 'webm' || $fExt == 'mp4' || $fExt == 'mov');
-		$directLink = $isEmbed ? '#' : '/' . ATOM_BOARD . '/src/' . $fName;
-		$expandClick = ' onclick="return expandFile(event, ' . $id . $index . ');"';
-		$expandHtml = '';
+		$filesCount++;
+		$fileWidth = $post['image' . $i . '_width'];
+		$fileHeight = $post['image' . $i . '_height'];
+		$hasSize = $fileWidth > 0 && $fileHeight > 0;
+		$fileName = $post['file' . $i];
+		$fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
+		$isImage = in_array($fileExt, ['jpg', 'png', 'gif', 'avif', 'webp']);
+		$isVideo = in_array($fileExt, ['webm', 'mp4', 'mov']);
+		$isEmbed = isEmbed($fileHex);
+		$fileUrl = $isEmbed ? '#' : '/' . ATOM_BOARD . '/src/' . $fileName;
+		$origName = $post['file' . $i . '_original'];
+		$linkHtml = 'href="' . $fileUrl . '" target="_blank" onclick="return expandFile(event, this, \'' . 
+			($isEmbed ? 'embed' : ($isVideo ? 'video' : ($isImage ? 'image' : 'file'))) . '\');"' .
+			($origName != '' ? ' download="' . $origName . '"' : '');
+		$fileInfoHtml = '<a class="file-fullname" ' . $linkHtml . '"><span class="file-name">';
 		if ($isEmbed) {
-			$expandHtml = rawurlencode($fName);
-		} elseif ($isVideo) {
-			$expandHtml = rawurlencode('<video ' .
-				($fWidth > 0 && $fHeight > 0 ? 'width="' . $fWidth . '" height="' . $fHeight . '"' :
-					'width="500"') .
-				'style="position: static; pointer-events: inherit; display: inline; height: auto;' .
-				' max-width: 100%; max-height: 100%;" controls autoplay loop><source src="' .
-				$directLink . '"></source></video>');
-		} elseif (in_array($fExt, ['jpg', 'png', 'gif', 'avif', 'webp'])) {
-			$expandHtml = rawurlencode('<a href="' . $directLink . '"' . $expandClick . '><img src="/' .
-				ATOM_BOARD . '/src/' . $fName . '" width="' . $fWidth .
-				'" style="max-width: 100%; height: auto;"></a>');
-		}
-		$origName = $post['file' . $index . '_original'];
-		$hasOrigName = $origName != '';
-		$extraThumbData = 'data-size="' . $post['file' . $index . '_size'] . '" data-width="' .
-			$fWidth . '" data-height="' . $fHeight . '"';
-		$thumblink = '<a href="' . $directLink . '" ' . $extraThumbData . ' target="_blank"' .
-			($isEmbed || in_array($fExt, ['jpg', 'png', 'gif', 'avif', 'webp', 'webm', 'mp4', 'mov']) ?
-				$expandClick : '') .
-			($hasOrigName ? ' download="' . $origName . '" title="Click to expand/collapse">' : '>');
-		$filesize = '';
-		if ($isEmbed) {
-			$filesize = '<a href="' . $directLink . '"' . $expandClick . '>' . $origName .
-				'</a>,&nbsp;' . $post['file' . $index . '_hex'];
-		} elseif ($fName != '') {
-			$filesize = $thumblink . ($hasOrigName ? $origName : $fName) . '</a><br>(' .
-				$post['file' . $index . '_size_formatted'] .
-				($fWidth > 0 && $fHeight > 0 ? ',&nbsp;' . $fWidth . 'x' . $fHeight : '') . ')';
-		}
-		if ($filesize == '') {
+			$fileInfoHtml .= $origName . '</span></a>,&nbsp;' . $fileHex;
+		} elseif ($fileName != '') {
+			$fileInfoHtml .= pathinfo($origName != '' ? $origName : $fileName, PATHINFO_FILENAME) .
+				'</span>.<span class="file-extension">' . $fileExt . '</span></a><br>(' .
+				$post['file' . $i . '_size_formatted'] .
+				($hasSize ? ',&nbsp;' . $fileWidth . 'x' . $fileHeight : '') . ')';
+		} else {
 			continue;
 		}
 		/*
 		// Use to view unused files that missed in database when rebuildall executed
-		if($fName != '') {
-			rename('src/' . $fName, 'src_copy/' . $fName);
+		if ($fileName != '') {
+			rename('src/' . $fileName, 'src_copy/' . $fileName);
 		}
-		if($post['thumb' . $index] != '') {
-			rename('thumb/' . $post['thumb' . $index], 'thumb_copy/' . $post['thumb' . $index]);
+		if ($post['thumb' . $i] != '') {
+			rename('thumb/' . $post['thumb' . $i], 'thumb_copy/' . $post['thumb' . $i]);
 		}
 		*/
-		$filehtml .= '
-					<div class="image-container">
-						<span class="filesize">' .
-						($isEditPost ? '
-							<input type="checkbox" name="delete-img-mod[]" value="' . $index . '">' : '') . '
-							' . $filesize . '
-						</span>
-						<div id="thumbfile' . $id . $index . '">' .
-							($post['thumb' . $index] != '' /* If a video has a thumbnail */ ? '
-							' . $thumblink . '
-								<img src="/' . ATOM_BOARD . '/thumb/' . $post['thumb' . $index] .
-								'" alt="' . $id . $index . '" class="thumb' .
-								($isVideo ? ' thumb-video' : '') . '" id="thumbnail' . $id . $index.
-								'" width="' . $post['thumb' . $index . '_width'] .
-								'" height="' . $post['thumb' . $index . '_height'] . '">
-							</a>' :
-							($isVideo /* If a video has no thumbnail */ ? '
-							' . $thumblink . '
-								<video src="' . $directLink . '" alt="' . $id . $index .
-								'" class="thumb thumb-video" id="thumbnail' . $id . $index. '"></video>
-							</a>' : '')) . '
-						</div>' . ($expandHtml == '' ? '' : '
-						<div id="expand' . $id . $index . '" style="display: none;">
-							' . $expandHtml . '
+		$fileHtml .= '
+					<div class="post-file">
+						<div class="file-info">' .
+							($isEditPost ? '
+							<input type="checkbox" name="delete-img-mod[]" value="' . $i . '">' : '') . '
+							' . $fileInfoHtml . '
 						</div>
-						<div id="file' . $id . $index . '" class="thumb" style="display: none;"></div>
-					</div>');
+						<div class="file-wrap"' .
+							($isEmbed ? ' data-embed="' . rawurlencode($fileName) . '"' :
+							($hasSize ? ' data-width="' . $fileWidth . '" data-height="' . $fileHeight . '"' :
+							'')) .'>' .
+							($post['thumb' . $i] != '' ? '
+							<a ' . $linkHtml . '>
+								<img class="file-thumb' . ($isVideo ? ' file-thumb-video' : '') .
+									'" src="/' . ATOM_BOARD . '/thumb/' . $post['thumb' . $i] .
+									'" width="' . $post['thumb' . $i . '_width'] .
+									'" height="' . $post['thumb' . $i . '_height'] . '" alt="Thumbnail">
+							</a>' :
+							($isVideo /* If a video has no thumbnail (ffmpeg error) */ ? '
+							<a ' . $linkHtml . '>
+								<video src="' . $fileUrl . '" class="file-thumb file-thumb-video"></video>
+							</a>' : '')) . '
+						</div>
+					</div>';
 	}
 
 	// Truncate messages on board index pages for readability
@@ -450,7 +427,7 @@ function buildPost($post, $res, $mode = '') {
 				'utf8'
 			) . '
 						<div class="abbrev">
-							Post too long. <a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $id .
+							Post too long. <a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $postId .
 							'">Click to view</a>.
 						</div>';
 		}
@@ -461,33 +438,33 @@ function buildPost($post, $res, $mode = '') {
 	$omitted = $post['omitted'];
 	$likes = $post['likes'];
 	$replyBtn = ($isOp && $res == ATOM_INDEXPAGE ? '<a class="link-button" href="res/' .
-		$id . '.html" title="Reply to thread №' . $id . '">Reply</a>' : '');
+		$postId . '.html" title="Reply to thread №' . $postId . '">Reply</a>' : '');
 	return ($isOp ? '
-				<div class="oppost" id="op' . $id . '">' : '
-				<table border="0"><tbody><tr><td class="reply" id="reply' . $id . '">') . '
-					<a id="' . $id . '"></a>
+				<div class="oppost" id="op' . $postId . '">' : '
+				<table border="0"><tbody><tr><td class="reply" id="reply' . $postId . '">') . '
+					<a id="' . $postId . '"></a>
 					<label>
-						<input type="checkbox" name="delete" value="' . $id . '">' .
+						<input type="checkbox" name="delete" value="' . $postId . '">' .
 						($post['subject'] != '' ? '
-						<span class="filetitle">' . $post['subject'] . '</span>' : '') . '
+						<span class="post-subject">' . $post['subject'] . '</span>' : '') . '
 						' . (ATOM_GEOIP ? getCountryIcon($ip, NULL) : '') .
 						($showIP || $isEditPost ? '&nbsp;' . getIpUserInfoLink($ip) : '') . '
 						' . $post['nameblock'] . '
 					</label>
 					<span class="post-reflink">' . ($res == ATOM_RESPAGE ? '
-						<a href="' . $thrId . '.html#' . $id . '" title="Click to link to this post">№</a>
-						<a href="' . $thrId . '.html#' . $id . '" title="Click to reply to this post">' .
-							$id . '</a>' : '
-						<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $id .
+						<a href="' . $thrId . '.html#' . $postId . '" title="Click to link to this post">№</a>
+						<a href="' . $thrId . '.html#' . $postId . '" title="Click to reply to this post">' .
+							$postId . '</a>' : '
+						<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $postId .
 							'" title="Go to this post">№</a>
-						<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $id .
-							'" title="Go to to this post">' . $id . '</a>') . '
+						<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $postId .
+							'" title="Go to to this post">' . $postId . '</a>') . '
 					</span>
 					<span class="post-buttons">' .
 						(ATOM_LIKES ? '
 						<span class="like-container">
 							<span class="like-icon' . ($likes ? ' like-enabled' : ' like-disabled') .
-								'" onclick="sendLike(this, ' . $id . ');">
+								'" onclick="sendLike(this, ' . $postId . ');">
 								<svg><use xlink:href="#symbol-like"></use></svg>
 							</span><span class="like-counter">' . ($likes ? $likes : '') . '</span>
 						</span>' : '') .
@@ -503,23 +480,22 @@ function buildPost($post, $res, $mode = '') {
 						$replyBtn . '
 					</span>
 					<br>' .
-					($isEditPost && $hasImages ? '
+					($isEditPost && $filesCount ? '
 					<form method="get" action="?">
 						<input type="hidden" name="manage" value="">
-						<input type="hidden" name="delete-img" value="' . $id . '">
+						<input type="hidden" name="delete-img" value="' . $postId . '">
 						<select name="action" class="button-manage" style="margin-left: 20px;">
 							<option value="delete" selected>Delete images</option>
 							<option value="hide">Hide thumbnails</option>
 						</select>
 						<input type="submit" class="button-manage" value="Apply to selected">
 						<br>' : '') .
-						($imagesCount > 1 ?
-							'<div class="images-container">' . $filehtml . '</div>' : $filehtml) .
-						($isEditPost && $hasImages ? '
+						($filesCount > 1 ? '<div class="post-files">' . $fileHtml . '</div>' : $fileHtml) .
+						($isEditPost && $filesCount ? '
 					</form>' : '') . '
-					<div class="message">' .
+					<div class="post-message">' .
 						($isEditPost ? '
-						<form method="post" action="?manage&editpost=' . $id .
+						<form method="post" action="?manage&editpost=' . $postId .
 							'" enctype="multipart/form-data">
 							<textarea id="message" name="message">' .
 								htmlspecialchars($message) .
@@ -584,17 +560,17 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 
 /* ==[ Rebuilding ]======================================================================================== */
 
-function rebuildThreadPage($id) {
+function rebuildThreadPage($thrId) {
 	$htmlPosts = '
-			<div class="thread" id="thread' . $id . '">';
-	$posts = getThreadPosts($id);
+			<div class="thread" id="thread' . $thrId . '">';
+	$posts = getThreadPosts($thrId);
 	foreach ($posts as $post) {
 		$htmlPosts .= buildPost($post, ATOM_RESPAGE);
 	}
 	$htmlPosts .= '
 			</div>
 			<hr>';
-	writePage('res/' . $id . '.html', buildPage($htmlPosts, $id));
+	writePage('res/' . $thrId . '.html', buildPage($htmlPosts, $thrId));
 }
 
 function rebuildIndexPages() {
@@ -637,8 +613,8 @@ function rebuildIndexPages() {
 	}
 }
 
-function rebuildThread($id) {
-	rebuildThreadPage($id);
+function rebuildThread($thrId) {
+	rebuildThreadPage($thrId);
 	rebuildIndexPages();
 }
 
@@ -891,7 +867,7 @@ function buildPasscodesPage() {
 		';
 	}
 	$passNum = isset($_GET['passcode']) ? $_GET['passcode'] : NULL;
-	if($passNum) {
+	if ($passNum) {
 		$editPass = passByNum($passNum);
 	}
 	$passHtml .= '<form id="form_passcode_manage" name="form_passcode_manage" method="post"' .
@@ -1204,7 +1180,7 @@ function getPostReports($reports, $geoipReader) {
 						getIpUserInfoLink($ip) . '
 						(' . date('d.m.y D H:i:s', $report['timestamp']) . ')
 						<br>
-						<div class="message">' . $report['reason'] . '</div>
+						<div class="post-message">' . $report['reason'] . '</div>
 					</div>
 					<br>';
 	}
@@ -1213,14 +1189,14 @@ function getPostReports($reports, $geoipReader) {
 
 function buildModeratePostPage($post) {
 	global $access;
-	$id = $post['id'];
+	$postId = $post['id'];
 	$ip = $post['ip'];
-	$thrId = $post['parent'] !== 0 ? $post['parent'] : $id;
+	$thrId = $post['parent'] !== 0 ? $post['parent'] : $postId;
 	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
 	$isOp = isOp($post);
 	$ban = banByIP($ip);
 	$isMod = $access == 'admin' || $access == 'moderator';
-	$reports = reportsByPostID($id);
+	$reports = reportsByPostID($postId);
 	$reportsCount = count($reports);
 	$stickyHtml = '';
 	$lockedHtml = '';
@@ -1232,7 +1208,7 @@ function buildModeratePostPage($post) {
 					<td align="right" width="50%;">
 						<form method="get" action="?">
 							<input type="hidden" name="manage" value="">
-							<input type="hidden" name="sticky" value="' . $id . '">
+							<input type="hidden" name="sticky" value="' . $postId . '">
 							<input type="hidden" name="setsticky" value="' . ($isStickied ? 0 : 1) . '">
 							<button type="submit" class="button-action">
 								<img src="/' . ATOM_BOARD .
@@ -1251,7 +1227,7 @@ function buildModeratePostPage($post) {
 					<td align="right" width="50%;">
 						<form method="get" action="?">
 							<input type="hidden" name="manage" value="">
-							<input type="hidden" name="locked" value="' . $id . '">
+							<input type="hidden" name="locked" value="' . $postId . '">
 							<input type="hidden" name="setlocked" value="' . ($isLocked ? 0 : 1) . '">
 							<button type="submit" class="button-action">
 								<img src="/' . ATOM_BOARD .
@@ -1268,7 +1244,7 @@ function buildModeratePostPage($post) {
 					<td align="right" width="50%;">
 						<form method="get" action="?">
 							<input type="hidden" name="manage" value="">
-							<input type="hidden" name="endless" value="' . $id . '">
+							<input type="hidden" name="endless" value="' . $postId . '">
 							<input type="hidden" name="setendless" value="' . ($isEndless ? 0 : 1) . '">
 							<button type="submit" class="button-action">
 								<img src="/' . ATOM_BOARD .
@@ -1282,7 +1258,7 @@ function buildModeratePostPage($post) {
 				</tr>';
 	}
 	return '<fieldset>
-			<legend>Moderating ' . ($isOp ? 'thread' : 'post') . ' №' . $id . '</legend>
+			<legend>Moderating ' . ($isOp ? 'thread' : 'post') . ' №' . $postId . '</legend>
 			<table border="0" cellspacing="0" cellpadding="0" width="100%"><tbody>' .
 				$stickyHtml .
 				$lockedHtml .
@@ -1291,7 +1267,7 @@ function buildModeratePostPage($post) {
 					<td align="right" width="50%;">
 						<form method="get" action="?">
 							<input type="hidden" name="manage" value="">
-							<input type="hidden" name="delete" value="' . $id . '">
+							<input type="hidden" name="delete" value="' . $postId . '">
 							<input type="submit" class="button-action" value="Delete ' .
 								($isOp ? 'thread' : 'post') . '">
 						</form>
@@ -1313,7 +1289,7 @@ function buildModeratePostPage($post) {
 					</td>
 					<td><small>This will delete all posts from ip ' . $ip .
 						' in thread <a href="https://dollchan.net/test/res/' . $thrId .
-						'.html#' . $id . '" target="_blank">№' . $thrId . '</a></small></td>
+						'.html#' . $postId . '" target="_blank">№' . $thrId . '</a></small></td>
 				</tr>
 				<tr>
 					<td align="right" width="50%;">
@@ -1358,7 +1334,7 @@ function buildModeratePostPage($post) {
 						<form method="get" action="?">
 							<input type="hidden" name="report" value="">
 							<input type="hidden" name="deletereports">
-							<input type="hidden" name="id" value="' . $id . '">
+							<input type="hidden" name="id" value="' . $postId . '">
 							<input type="submit" class="button-action" value="Close reports">
 						</form>
 					</td>
@@ -1383,16 +1359,16 @@ function buildModeratePostPage($post) {
 
 function getPostManageButtons($post) {
 	global $access;
-	$id = $post['id'];
-	$thrId = $post['parent'] !== 0 ? $post['parent'] : $id;
+	$postId = $post['id'];
+	$thrId = $post['parent'] !== 0 ? $post['parent'] : $postId;
 	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
 	$ip = $post['ip'];
 	$isOp = isOp($post);
 	$a = '<a class="link-button" target="_blank" href="/' . ATOM_BOARD . '/imgboard.php?';
 	return '
-					' . $a . 'manage=&moderate=' . $id . '" title="Advanced options.">Manage ' .
+					' . $a . 'manage=&moderate=' . $postId . '" title="Advanced options.">Manage ' .
 						($isOp ? 'thread' : 'post') . '</a>
-					' . $a . 'manage=&delete=' . $id . '" title="This will delete the ' .
+					' . $a . 'manage=&delete=' . $postId . '" title="This will delete the ' .
 						($isOp ? 'entire thread.">Delete thread' : 'post.">Delete post') . '</a>
 					' . $a . 'manage=&delall=' . $ip . '&thrid=' . $thrId . '" onclick="' .
 						'if (confirm(\'Are you sure to delete all posts from ' . $ip .
@@ -1431,27 +1407,27 @@ function buildStatusPage() {
 			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
 		$reportsByPost = [];
 		foreach ($reports as $report) {
-			$id = $report['postnum'];
-			if (!isset($reportsByPost[$id])) {
-				$reportsByPost[$id] = [];
+			$postId = $report['postnum'];
+			if (!isset($reportsByPost[$postId])) {
+				$reportsByPost[$postId] = [];
 			}
 			$reportsByPost[$report['postnum']][] = $report;
 		}
-		foreach (array_keys($reportsByPost) as $id) {
-			$post = getPost($id);
+		foreach (array_keys($reportsByPost) as $postId) {
+			$post = getPost($postId);
 			if (!$post) {
 				continue;
 			}
 			$reportsHtml .= '
 				<tr><th>
 					<a class="link-button" target="_blank" href="/' . ATOM_BOARD .
-						'/imgboard.php?report=&deletereports=&id=' . $id .
+						'/imgboard.php?report=&deletereports=&id=' . $postId .
 						'" title="Delete all related reports.">Close reports</a>' .
 					getPostManageButtons($post) . '
 				</th></tr>
 				<tr><td>' .
 					buildPost($post, ATOM_INDEXPAGE, 'ip') .
-					getPostReports($reportsByPost[$id], $geoipReader) . '
+					getPostReports($reportsByPost[$postId], $geoipReader) . '
 				</td></tr>';
 		}
 	}
@@ -1461,11 +1437,10 @@ function buildStatusPage() {
 	if (ATOM_REQMOD == 'files' || ATOM_REQMOD == 'all') {
 		$reqModPosts = getLatestPosts(false, 20);
 		foreach ($reqModPosts as $post) {
-			$id = $post['id'];
 			$reqModPostHtml .= '
 				<tr><th>
 					<a class="link-button" target="_blank" href="/' . ATOM_BOARD . '/imgboard.php?' .
-						'manage=&approve=' . $id . '" title="Allow to be published.">Approve</a>' .
+						'manage=&approve=' . $post['id'] . '" title="Allow to be published.">Approve</a>' .
 					getPostManageButtons($post) . '
 				</th></tr>
 				<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . '
@@ -1537,14 +1512,14 @@ function buildStatusPage() {
 /* ==[ Catalog ]=========================================================================================== */
 
 function buildCatalogPage() {
-	$catalogHTML = '';
+	$catalogHtml = '';
 	$thumb = 'icons/noimage.png';
 	$thumbWidth = ATOM_FILE_MAXW;
 	$thumbHeight = ATOM_FILE_MAXH;
 	$OPposts = getThreads();
 	foreach ($OPposts as $post) {
-		$id = $post['id'];
-		$numOfReplies = getThreadPostsCount($id);
+		$postId = $post['id'];
+		$numOfReplies = getThreadPostsCount($postId);
 		$OPpostMessage = '';
 		if (function_exists('mb_substr') && extension_loaded('mbstring')) {
 			$OPpostMessage = tidy_repair_string(
@@ -1568,28 +1543,28 @@ function buildCatalogPage() {
 			$thumbWidth = ATOM_FILE_MAXW;
 			$thumbHeight = ATOM_FILE_MAXH;
 		}
-		$catalogHTML .= '
+		$catalogHtml .= '
 			<div class="catalog-block">
-				<a href="res/' . $id . '.html">
+				<a href="res/' . $postId . '.html">
 					<img src="' . $thumb . '" width="' . $thumbWidth . '" height="' . $thumbHeight . '" />
 				</a>
 				<br>
 				<center>' .
 					($OPpostSubject ? '
-					<span class="filetitle">' . $OPpostSubject . '</span>
+					<span class="post-subject">' . $OPpostSubject . '</span>
 					<br>' : '') . '
 					<span class="postername">' . $OPuserName . '</span>
 					<span>replies: ' . $numOfReplies . '</span>
 					<br>
 				</center>
-				<div class="message" style="text-align: left">' . $OPpostMessage . '</div>
+				<div class="post-message" style="text-align: left">' . $OPpostMessage . '</div>
 				<br>
 			</div>';
 	}
 	return pageHeader() . '<body>' .
 		pageWrapper(ATOM_BOARD_DESCRIPTION . ' / Catalog', true) .
 		'<center>' .
-			$catalogHTML . '
+			$catalogHtml . '
 		</center>' .
 		pageFooter(true);
 }

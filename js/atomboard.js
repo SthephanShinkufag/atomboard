@@ -153,42 +153,43 @@ function initPostsHighlighting() {
 
 /* ==[ Posts files expanding ]============================================================================= */
 
-function hideFile(thumbEl, fileEl) {
-	thumbEl.style.removeProperty('display');
-	thumbEl.setAttribute('expanded', 'false');
-	fileEl.style.display = 'none';
-	fileEl.innerHTML = '';
+function collapseFile(thumbEl, expandedEl) {
+	thumbEl.style.display = '';
+	expandedEl.remove();
 }
 
 // Used in html.php
-function expandFile(e, id) {
+function expandFile(e, linkEl, type) {
 	if (e !== undefined && e.which !== undefined && e.which !== 1) {
 		return true;
 	}
-	var thumbEl = $id('thumbfile' + id);
-	var fileEl = $id('file' + id);
-	if (thumbEl.getAttribute('expanded') === 'true') {
-		hideFile(thumbEl, fileEl);
+	var wrapEl = $q('.file-wrap', linkEl.parentNode.parentNode);
+	var thumbEl = $q('.file-thumb', wrapEl);
+	var expandedEl = thumbEl.nextElementSibling;
+	if(expandedEl) {
+		collapseFile(thumbEl, expandedEl);
 		return false;
 	}
-	thumbEl.setAttribute('expanded', 'true');
-	fileEl.innerHTML= decodeURIComponent($id('expand' + id).textContent);
-	fileEl.style.visibility = 'hidden';
-	setTimeout(function(id, thumbEl, fileEl) {
-		return function() {
-			thumbEl.style.display = 'none';
-			fileEl.style.visibility = 'visible';
-			fileEl.style.removeProperty('display');
-			if (fileEl.firstElementChild.tagName !== 'VIDEO') {
-				return;
-			}
-			fileEl.addEventListener('click', function(e) {
-				if (e.clientY <= (e.target.getBoundingClientRect().bottom - 40)) {
-					hideFile($id('thumbfile' + id), $id('file' + id));
-				}
-			}, true);
-		}
-	}(id, thumbEl, fileEl), 100);
+	if(type === 'embed') {
+		thumbEl.style.display = 'none';
+		thumbEl.insertAdjacentHTML('afterend', decodeURIComponent(wrapEl.dataset.embed));
+	} else if(type === 'video') {
+		var width = wrapEl.dataset.width;
+		var height = wrapEl.dataset.height;
+		thumbEl.style.display = 'none';
+		thumbEl.insertAdjacentHTML('afterend', '<video class="file-expanded"' +
+			(width > 0 && height > 0 ? ' width="' + width + '" height="' + height + '"' : ' width="500"') +
+			' style="position: static; pointer-events: inherit; display: inline; height: auto;' +
+			' max-width: 100%; max-height: 100%;" controls autoplay loop><source src="' +
+			linkEl.href + '"></source></video>');
+	} else if(type === 'image') {
+		thumbEl.style.display = 'none';
+		thumbEl.insertAdjacentHTML('afterend',
+			'<img class="file-expanded" src="' + linkEl.href + '" width="' + wrapEl.dataset.width +
+			'" alt="Full image" style="max-width: 100%; height: auto;">');
+	} else {
+		return true;
+	}
 	return false;
 }
 

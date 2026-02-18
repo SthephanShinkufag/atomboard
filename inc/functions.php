@@ -380,7 +380,7 @@ function deleteAllPosts($ip, $parentId) {
 	foreach ($posts as $post) {
 		$id = $post['id'];
 		$thrId = $post['parent'];
-		if(!isset($parentId) || $thrId === (int)$parentId) {
+		if (!isset($parentId) || $thrId === (int)$parentId) {
 			deletePost($id);
 			$deletedPosts .= ($count ? ', ' : '') . $id;
 			if (!isOp($post) && !in_array($thrId, $updThreads)) {
@@ -628,7 +628,7 @@ function addVideoOverlay($thumb_location) {
 		$overlay_type,
 		$overlay_attr
 	) = getimagesize('icons/video_overlay.png');
-	if (substr($thumb_location, -4) == ".png") {
+	if (substr($thumb_location, -4) == '.png') {
 		imagecolortransparent($thumbnail, imagecolorallocatealpha($thumbnail, 0, 0, 0, 127));
 		imagealphablending($thumbnail, true);
 		imagesavealpha($thumbnail, true);
@@ -643,16 +643,16 @@ function addVideoOverlay($thumb_location) {
 		$overlay_width,
 		$overlay_height
 	);
-	if (substr($thumb_location, -4) == ".jpg") {
+	if (substr($thumb_location, -4) == '.jpg') {
 		imagejpeg($thumbnail, $thumb_location);
 	} else {
 		imagepng($thumbnail, $thumb_location);
 	}
 }
 
-function isEmbed($file_hex) {
+function isEmbed($fileHex) {
 	global $atom_embeds;
-	return in_array($file_hex, array_keys($atom_embeds));
+	return in_array($fileHex, array_keys($atom_embeds));
 }
 
 function getEmbed($url) {
@@ -660,7 +660,7 @@ function getEmbed($url) {
 	if (sizeof($atom_embeds) != 0) {
 		foreach ($atom_embeds as $service => $service_url) {
 			if (strpos(strtolower($url), strtolower($service)) !== false) {
-				$service_url = str_ireplace("ATOM_EMBED", urlencode($url), $service_url);
+				$service_url = str_ireplace('ATOM_EMBED', urlencode($url), $service_url);
 				$result = json_decode(url_get_contents($service_url), true);
 				if (!empty($result)) {
 					return [$service, $result];

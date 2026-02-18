@@ -179,10 +179,9 @@ legend {
 	margin: 1px 1px 1px 23px;
 }
 
-.report > .message {
+.report > .post-message {
 	color: #ff2020;
 }
-
 
 .table, .table-status {
 	width: 100%;
@@ -254,38 +253,11 @@ legend {
 	margin-bottom: 3px;
 }
 
-.filesize {
-	font-size: 80%;
-}
-
-.filetitle {
-	background: inherit;
-	font-size: 1.1em;
-	color: var(--filititle-color);
-	font-weight: bold;
-}
-
-.image-container {
-	display: inline-block;
-	vertical-align: top;
-}
-
-.image-container > .filesize {
-	margin-left: 20px;
-	display: block;
-}
-
-.message {
-	margin: 1em 20px 5px 20px;
-	line-height: 19px;
-	word-break: break-word;
-}
-
 .oppost > .backlinks {
 	margin: 10px 0 4px 20px;
 }
 
-.oppost > .filesize {
+.oppost > .file-info {
 	margin-left: 20px;
 	display: block;
 }
@@ -305,6 +277,12 @@ legend {
 	padding: 0 4px;
 }
 
+.post-message {
+	margin: 1em 20px 5px 20px;
+	line-height: 19px;
+	word-break: break-word;
+}
+
 .post-reflink {
 	font-weight: bold;
 	font-size: 13px;
@@ -316,6 +294,13 @@ legend {
 
 .post-reflink a:hover {
 	color: var(--link-hover);
+}
+
+.post-subject {
+	background: inherit;
+	font-size: 1.1em;
+	color: var(--filititle-color);
+	font-weight: bold;
 }
 
 .poster-achievement {
@@ -373,11 +358,11 @@ legend {
 	border-top: 1px solid #80808052;
 }
 
-.reply > .filesize {
+.reply > .file-info {
 	margin-left: 20px;
 }
 
-.reply > .message {
+.reply > .post-message {
 	min-width: 325px;
 }
 
@@ -387,17 +372,42 @@ legend {
 	color: black;
 }
 
-.thumb {
+/* ==[ Post files ]======================================================================================== */
+
+.file-extension {
+	flex-shrink: 0;
+}
+
+.file-fullname {
+	display: inline-flex;
+	max-width: 230px;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+.file-info {
+	display: block;
+	margin-left: 20px;
+	font-size: 80%;
+}
+
+.file-name {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.file-thumb {
 	border: none;
 	float: left;
 	margin: 4px 20px;
 }
 
-.thumb + .message:not(:empty) {
+.file-thumb + .post-message:not(:empty) {
 	min-width: 450px;
 }
 
-.thumb-video {
+.file-thumb-video {
 	border-left: 5px dashed #555;
 	border-right: 5px dashed #555;
 	background-color: inherit;
@@ -405,9 +415,9 @@ legend {
 	max-height: 230px;
 }
 
-.thumbnailmsg {
-	font-size: small;
-	color: #800000;
+.post-file {
+	display: inline-block;
+	vertical-align: top;
 }
 
 /* ==[ Posts text formatting ]============================================================================= */
@@ -660,13 +670,13 @@ button:not([disabled]):active, input[type="submit"]:not([disabled]):active {
 /* ==[ Mobile devices ]==================================================================================== */
 
 @media only screen and (max-width: 770px) {
-	div[id^="thumbfile"] > a {
+	.file-wrap > a {
 		display: inline-block;
 	}
 	.navigation-separator {
 		flex-grow: 0;
 	}
-	.message {
+	.post-message {
 		min-width: auto !important;
 	}
 	.reply {
