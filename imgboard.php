@@ -641,7 +641,8 @@ function postingRequest() {
 
 	/* --------[ Post submission check ]-------- */
 
-	global $access, $atom_banned_countries, $atom_embeds, $atom_hidefields, $atom_hidefieldsop, $atom_uploads;
+	global $access, $atom_banned_countries, $atom_embeds, $atom_hidefields, $atom_hidefieldsop,
+		$atom_text_replace, $atom_uploads;
 	$hasAccess = $access != 'disabled';
 	$passcode = checkForPasscode(true);
 	$validPasscode = $passcode[0];
@@ -878,6 +879,9 @@ function postingRequest() {
 							'>' . str_replace(ATOM_WORDBREAK_IDENTIFIER, '<br>', $matches[4]) . '</a>';
 					}, $msg)
 				);
+			}
+			if(count($atom_text_replace)) {
+				$msg = preg_replace(array_keys($atom_text_replace), array_values($atom_text_replace), $msg);
 			}
 			$post['message'] = $msg;
 		}
