@@ -642,7 +642,7 @@ function postingRequest() {
 	/* --------[ Post submission check ]-------- */
 
 	global $access, $atom_banned_countries, $atom_embeds, $atom_hidefields, $atom_hidefieldsop,
-		$atom_text_replace, $atom_uploads;
+		$atom_replace_text, $atom_replace_rand, $atom_uploads;
 	$hasAccess = $access != 'disabled';
 	$passcode = checkForPasscode(true);
 	$validPasscode = $passcode[0];
@@ -778,113 +778,129 @@ function postingRequest() {
 		$post['subject'] = escapeHTML(mb_substr($_POST['subject'], 0, 100));
 	}
 
-	// Get message with markup and >>links
+	// Get message
 	if (!in_array('message', $hideFields)) {
 		$post['message'] = $_POST['message'];
-		// Markup text formatting
-		if (!$isStaffPost) {
-			$msg = escapeHTML(rtrim($post['message']));
-			if (ATOM_WORDBREAK > 0) {
-				$msg = preg_replace(
-					'/([^\s]{' . ATOM_WORDBREAK . '})(?=[^\s])/',
-					'$1' . ATOM_WORDBREAK_IDENTIFIER,
-					$msg);
-			}
-			// [code]Block code[/code]
-			$msg = preg_replace_callback('/\[code\]\r?\n?([\s\S]*?)\r?\n?\[\/code\]/i', function($matches) {
-				$m = $matches[1];
-				$m = str_replace("\r\n", '@!@ATOM_LINE_END@!@', $m);
-				$m = str_replace("\r", '@!@ATOM_LINE_END@!@', $m);
-				$m = str_replace("\n", '@!@ATOM_LINE_END@!@', $m);
-				$m = str_replace('`', '&#96;', $m);
-				$m = str_replace('<', '&lt;', $m);
-				$m = preg_replace('/>|&gt;/', '@!@ATOM_GT@!@', $m);
-				$m = str_replace('/', '&#47;', $m);
-				$m = str_replace('[', '&#91;', $m);
-				$m = str_replace(']', '&#93;', $m);
-				$m = str_replace('*', '&#42;', $m);
-				$m = str_replace('__', '&#95;&#95;', $m);
-				$m = str_replace('~~', '&#126;&#126;', $m);
-				$m = str_replace('%%', '&#37;&#37;', $m);
-				return '<pre>' . $m . '</pre>';
-			}, $msg);
-			// `Inline code`
-			$msg = preg_replace_callback('/`([^\`\r\n]+)`/', function($matches) {
-				$m = $matches[1];
-				$m = str_replace('<', '&lt;', $m);
-				$m = preg_replace('/>|&gt;/', '@!@ATOM_GT@!@', $m);
-				$m = str_replace('/', '&#47;', $m);
-				$m = str_replace('[', '&#91;', $m);
-				$m = str_replace(']', '&#93;', $m);
-				$m = str_replace('*', '&#42;', $m);
-				$m = str_replace('__', '&#95;&#95;', $m);
-				$m = str_replace('~~', '&#126;&#126;', $m);
-				$m = str_replace('%%', '&#37;&#37;', $m);
-				return '<code>' . $m . '</code>';
-			}, $msg);
-			// Post >>links
-			$msg = preg_replace_callback('/&gt;&gt;([0-9]+)/', function($matches) {
-				$post = getPost($matches[1]);
-				if ($post) {
-					return '<a class="' . (isOp($post) ? 'refop' : 'refreply') . '" href="/' . ATOM_BOARD .
-						'/res/' . getThreadId($post) . '.html#' . $matches[1] . '">' . $matches[0] . '</a>';
-				}
-				return $matches[0];
-			}, $msg);
-			// > Quote
-			$msg = preg_replace('/^(&gt;.*?)\r?\n?$/m', '<span class="unkfunc">$1</span>', $msg);
-			// **Bold**
-			$msg = preg_replace('/\*\*([^\*\r\n]+)\*\*/', '<b>$1</b>', $msg);
-			// [b]Bold[/b]
-			$msg = preg_replace('/\[b\]\r?\n?([\s\S]*?)\r?\n?\[\/b\]/i', '<b>$1</b>', $msg);
-			// *Italic*
-			$msg = preg_replace('/\*([^\*\r\n]+)\*/', '<i>$1</i>', $msg);
-			// [i]Italic[/i]
-			$msg = preg_replace('/\[i\]\r?\n?([\s\S]*?)\r?\n?\[\/i\]/i', '<i>$1</i>', $msg);
-			// __Underline__
-			$msg = preg_replace('/__([^~\r\n]+)__/', '<span class="underline">$1</span>', $msg);
-			// [u]Underline[/u]
-			$msg = preg_replace('/\[u\]\r?\n?([\s\S]*?)\r?\n?\[\/u\]/i',
-				'<span class="underline">$1</span>', $msg);
-			// ~~Strike~~
-			$msg = preg_replace('/~~([^~\r\n]+)~~/', '<del>$1</del>', $msg);
-			// [s]Strike[/s]
-			$msg = preg_replace('/\[s\]\r?\n?([\s\S]*?)\r?\n?\[\/s\]/i', '<del>$1</del>', $msg);
-			// %%Spoiler%%
-			$msg = preg_replace('/%%([^\%\r\n]+)%%/', '<span class="spoiler">$1</span>', $msg);
-			// [spoiler]Spoiler[/spoiler]
-			$msg = preg_replace('/\[spoiler\]\r?\n?([\s\S]*?)\r?\n?\[\/spoiler\]/i',
-				'<span class="spoiler">$1</span>', $msg);
-			// Clickable links
-			$msg = preg_replace(
-				'/((?:f|ht)tps?:\/\/)(.*?)($|\s|<|[,.?!):]+(?:[\s<]|$))/i',
-				'<a href="$1$2" target="_blank">$1$2</a>$3', $msg);
-			$msg = preg_replace(
-				'/\[(.*?)\]\(<a href="(.*?)" target="_blank">(.*?)<\/a>\)/i',
-				'<a href="$2" target="_blank">$1</a>', $msg);
-			// Linebreaks
-			$msg = str_replace("\r\n", '<br>', $msg);
-			$msg = str_replace("\r", '<br>', $msg);
-			$msg = str_replace("\n", '<br>', $msg);
-			$msg = str_replace('<br>', "<br>\r\n", $msg);
-			$msg = str_replace('@!@ATOM_GT@!@', '&gt;', $msg);
-			$msg = str_replace('@!@ATOM_LINE_END@!@', "\r\n", $msg);
-			if (ATOM_WORDBREAK > 0) {
-				$msg = str_replace(
-					ATOM_WORDBREAK_IDENTIFIER,
-					'<br>',
-					preg_replace_callback('/<a(.*?)href="([^"]*?)"(.*?)>(.*?)<\/a>/', function($matches) {
-						return '<a' . $matches[1] . 'href="' .
-							str_replace(ATOM_WORDBREAK_IDENTIFIER, '', $matches[2]) . '"' . $matches[3] .
-							'>' . str_replace(ATOM_WORDBREAK_IDENTIFIER, '<br>', $matches[4]) . '</a>';
-					}, $msg)
-				);
-			}
-			if(count($atom_text_replace)) {
-				$msg = preg_replace(array_keys($atom_text_replace), array_values($atom_text_replace), $msg);
-			}
-			$post['message'] = $msg;
+	}
+	// Text formatting
+	if($post['message'] && !$isStaffPost) {
+		// Message length limit
+		$messageLen = mb_strlen($post['message']);
+		if ($messageLen > ATOM_POSTING_MAXLEN) {
+			fancyDie('Your message is too long - ' . $messageLen .
+				' (maximum ' . ATOM_POSTING_MAXLEN . ' characters).');
 		}
+
+		$msg = escapeHTML(rtrim($post['message']));
+
+		// [code]Block code[/code], `Inline code`
+		// Temporarily cut out the code (protection from processing)
+		$codePrefix = ":::ATOMCODE" . bin2hex(random_bytes(2)) . ":::";
+		$codeBlocks = [];
+		$msg = preg_replace_callback('/\[code\](?:\r?\n)?([\s\S]*?)\[\/code\]|`([^`\r\n]+)`/iu',
+			function($m) use (&$codeBlocks, $codePrefix) {
+				$codeBlocksCount = count($codeBlocks);
+				if ($codeBlocksCount > ATOM_POSTING_MAXCODE) {
+					fancyDie('Too many code blocks in one message - ' . $codeBlocksCount .
+						' (maximum ' . ATOM_POSTING_MAXCODE . ').');
+				}
+				$isBlock = !empty($m[1]); // $m[1] is [code], $m[2] is `inline`
+				$content = $isBlock ? $m[1] : $m[2];
+				if ($content === null) {
+					$content = '';
+				}
+				// Replacing line breaks with temporary tags
+				$content = str_replace(["\r\n", "\r", "\n"], '@!@LINE@!@', $content);
+				// Save to a temporary array, X at the end as a stopper
+				$id = $codePrefix . count($codeBlocks) . ":::";
+				$codeBlocks[$id] = $isBlock ? '<pre>' . $content . '</pre>' : '<code>' . $content . '</code>';
+				return $id;
+			}, $msg);
+
+		// Forced wordbreaks for long words (before the main markings)
+		if (ATOM_WORDBREAK > 0) {
+			$msg = preg_replace('/([^\s]{' . ATOM_WORDBREAK . '})(?=[^\s])/u',
+				'$1' . ATOM_WORDBREAK_IDENTIFIER, $msg);
+		}
+
+		// Post >>links
+		$refLinkCount = 0;
+		$msg = preg_replace_callback('/&gt;&gt;([0-9]+)/u', function($m) use (&$refLinkCount) {
+			if (++$refLinkCount > ATOM_POSTING_MAXLINKS) {
+				fancyDie('Too many references to other posts - ' . ++$refLinkCount .
+					' (maximum ' . ATOM_POSTING_MAXLINKS . ').');
+			}
+			static $cache = [];
+			$id = $m[1];
+			if (!isset($cache[$id])) {
+				$cache[$id] = getPost($id);
+			}
+			if ($p = $cache[$id]) {
+				return sprintf('<a class="%s" href="/%s/res/%s.html#%s">%s</a>', 
+					isOp($p) ? 'refop' : 'refreply', ATOM_BOARD, getThreadId($p), $id, $m[0]);
+			}
+			return $m[0];
+		}, $msg);
+
+		// Inline markdown and multiline BBcode
+		$rules = [
+			'/\*\*([^\*\r\n]+)\*\*/u'    => '<b>$1</b>', // **Bold**
+			'/\*([^\*\r\n]+)\*/u'        => '<i>$1</i>', // *Italic*
+			'/__([^_\r\n]+)__/u'         => '<span class="underline">$1</span>', //__Underline__
+			'/~~([^~\r\n]+)~~/u'         => '<del>$1</del>', // ~~Strike~~
+			'/%%([^%\r\n]+)%%/u'         => '<span class="spoiler">$1</span>', // %%Spoiler%%
+			'/^(&gt;.*?)\r?\n?$/mu'      => '<span class="unkfunc">$1</span>', // > Quotes
+			'/\[b\]([\s\S]*?)\[\/b\]/iu' => '<b>$1</b>', // [b]Bold[/b]
+			'/\[i\]([\s\S]*?)\[\/i\]/iu' => '<i>$1</i>', // [i]Italic[/i]
+			'/\[u\]([\s\S]*?)\[\/u\]/iu' => '<span class="underline">$1</span>', // [u]Underline[/u]
+			'/\[s\]([\s\S]*?)\[\/s\]/iu' => '<del>$1</del>', // [s]Strike[/s]
+			'/\[spoiler\]([\s\S]*?)\[\/spoiler\]/iu' =>
+				'<span class="spoiler">$1</span>', // [spoiler]Spoier[/spoiler]
+		];
+		$msg = preg_replace(array_keys($rules), array_values($rules), $msg);
+
+		// [Markdown links](url) and hyperlinks (with protection from javascript:)
+		$urlCount = 0;
+		$msg = preg_replace_callback(
+			'/\[(.*?)\]\((https?:\/\/[^\s\)]+)\)|((?:f|ht)tps?:\/\/[^\s<\[]+?)(?=[,.?!:;)]?(?:\s|$|<|\[))/iu',
+			function($m) use (&$urlCount) {
+				if (++$urlCount > ATOM_POSTING_MAXURL) {
+					fancyDie('Too many external links - ' . ++$urlCount .
+						' (maximum ' . ATOM_POSTING_MAXURL . ').');
+				}
+				return !empty($m[3]) ? 
+					'<a href="'.$m[3].'" target="_blank">'.$m[3].'</a>' : // 3=hyperlink
+					'<a href="'.$m[2].'" target="_blank">'.$m[1].'</a>'; // 2=markdown URL, 1=markdown text
+			}, $msg);
+
+		// Line breaks
+		$msg = str_replace(["\r\n", "\r", "\n"], '<br>', $msg);
+		// Code: Restoring saved blocks back
+		if (!empty($codeBlocks)) {
+			$msg = strtr($msg, $codeBlocks);
+		}
+		// Code: Recovering line breaks in code blocks
+		$msg = str_replace('@!@LINE@!@', "\r\n", $msg);
+
+		// Handling wordbreaks in links
+		if (ATOM_WORDBREAK > 0 && str_contains($msg, ATOM_WORDBREAK_IDENTIFIER)) {
+			$msg = preg_replace_callback('/<a[^>]+>.*?<\/a>/su',
+				fn($m) => str_replace(ATOM_WORDBREAK_IDENTIFIER, '', $m[0]), $msg);
+			$msg = str_replace(ATOM_WORDBREAK_IDENTIFIER, '<br>', $msg);
+		}
+
+		// Text replacement from settings.php
+		if(!empty($atom_replace_text)) {
+			$msg = preg_replace(array_keys($atom_replace_text), array_values($atom_replace_text), $msg);
+		}
+		if(!empty($atom_replace_rand)) {
+			foreach ($atom_replace_rand as $pattern => $replacements) {
+				$msg = preg_replace_callback($pattern, fn() => 
+					'<span style="color: hsl(' . mt_rand(0, 360) . ', ' . mt_rand(70, 100) . '%, 50%)">' .
+					$replacements[array_rand($replacements)] . '</span>', $msg);
+			}
+		}
+		$post['message'] = $msg;
 	}
 
 	// Get password
@@ -1266,7 +1282,7 @@ function postingRequest() {
 	if ($post['moderated'] == '1') {
 		$id = $post['id'];
 		$thrId = getThreadId($post);
-		if (ATOM_ALWAYSNOKO || strtolower($post['email']) == 'noko') {
+		if (ATOM_POSTING_REDIRECT || strtolower($post['email']) == 'noko') {
 			$redirectPath = '/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $id;
 		}
 		trimThreadsCount();

@@ -24,11 +24,6 @@ define('ATOM_HTML_NAVIGATION', '
 			<span class="navigation-separator"></span>
 			<a class="navigation-link" href="/' . ATOM_BOARD . '/" title="' . ATOM_BOARD_DESCRIPTION . '">' .
 				ATOM_BOARD . '</a>');
-// Text replacement
-$atom_text_replace = [
-	// '/regex1/i' => 'Replacement1',
-	// '/regex2/' => 'Replacement2'
-];
 
 /* ==[ Administration staff ]============================================================================== */
 // Administrator password. Administrator has full access to the board
@@ -36,15 +31,13 @@ define('ATOM_ADMINPASS', '');
 // Moderators have access to ban posters and delete posts
 $atom_moderators = [
 	// 'Mod1' => 'Password1',
-	// 'Mod2' => 'Password2',
-	// 'Mod3' => 'Password3'
+	// 'Mod2' => 'Password2'
 ];
 // Janitors only have access to delete posts (and moderate if ATOM_REQMOD is set)
 // If the array is not empty, the janitorlog.html will be generated
 $atom_janitors = [
 	// 'Janitor1' => 'Password1',
-	// 'Janitor2' => 'Password2',
-	// 'Janitor3' => 'Password3'
+	// 'Janitor2' => 'Password2'
 ];
 // Require moderation before displaying posts
 // Values: 'files', 'all' (see README for instructions, only MySQL is supported), '' to disable
@@ -119,8 +112,7 @@ define('ATOM_IPLOOKUPS_BLOCK_VPN', true);
 // Ban reason templates. Empty array [] to disable
 $atom_ban_reasons = [
 	// 'Spamming',
-	// 'Abusive post',
-	// 'Breaking the rules'
+	// 'Abusive post'
 ];
 // List of countries from which it is prohibited to post. ATOM_GEOIP must be set.
 // See ISO-3166 alpha2 at http://www.geonames.org/countries/
@@ -168,13 +160,31 @@ define('ATOM_THREAD_LIMIT', 500);
 /* ==[ Reply form and posting ]============================================================================ */
 // Delay (in seconds) between posts from the same IP address to help control flooding, 0 to disable
 define('ATOM_POSTING_DELAY', 30);
+// Maximum message length (in symbols)
+define('ATOM_POSTING_MAXLEN', 15000);
+// Maximum code blocks in message
+define('ATOM_POSTING_MAXCODE', 30);
+// Maximum >>links in message
+define('ATOM_POSTING_MAXLINKS', 30);
+// Maximum external links in message
+define('ATOM_POSTING_MAXURL', 30);
 // Redirect to thread after posting
-define('ATOM_ALWAYSNOKO', true);
+define('ATOM_POSTING_REDIRECT', true);
 // Fields to hide when creating a new thread
 // e.g. ['name', 'email', 'subject', 'message', 'file', 'embed', 'password']
 $atom_hidefieldsop = [];
 // Fields to hide when replying
 $atom_hidefields = [];
+// Text replacement when posting
+$atom_replace_text = [
+	// '/regex1/ui' => 'Replacement1',
+	// '/regex2/ui' => 'Replacement2'
+];
+// Random replacement from array
+$atom_replace_rand = [
+	// '/regex1/ui' => ['Replacement1_1', 'Replacement1_2'],
+	// '/regex2/ui' => ['Replacement2_1', 'Replacement2_2']
+];
 
 /* ==[ Upload mime types ]================================================================================= */
 // Empty array [] to disable

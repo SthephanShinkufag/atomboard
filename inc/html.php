@@ -451,14 +451,11 @@ function buildPost($post, $res, $mode = '') {
 						($showIP || $isEditPost ? '&nbsp;' . getIpUserInfoLink($ip) : '') . '
 						' . $post['nameblock'] . '
 					</label>
-					<span class="post-reflink">' . ($res == ATOM_RESPAGE ? '
-						<a href="' . $thrId . '.html#' . $postId . '" title="Click to link to this post">№</a>
-						<a href="' . $thrId . '.html#' . $postId . '" title="Click to reply to this post">' .
-							$postId . '</a>' : '
+					<span class="post-reflink">
 						<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $postId .
-							'" title="Go to this post">№</a>
+							'" title="Click to link to this post">№</a>
 						<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $postId .
-							'" title="Go to to this post">' . $postId . '</a>') . '
+							'" title="Click to reply to this post">' . $postId . '</a>
 					</span>
 					<span class="post-buttons">' .
 						(ATOM_LIKES ? '
