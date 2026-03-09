@@ -158,11 +158,16 @@ legend {
 	text-align: center;
 }
 
-.manageinfo {
-	background: #00B930;
+.manage-error {
+	color: #ff2020;
+	text-align: center;
+	margin-bottom: 10px;
+}
+
+.manage-info {
+	color: #00B930;
 	text-align: center;
 	padding: 2px;
-	color: #fff;
 	width: 100%;
 }
 

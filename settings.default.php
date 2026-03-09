@@ -25,20 +25,10 @@ define('ATOM_HTML_NAVIGATION', '
 			<a class="navigation-link" href="/' . ATOM_BOARD . '/" title="' . ATOM_BOARD_DESCRIPTION . '">' .
 				ATOM_BOARD . '</a>');
 
-/* ==[ Administration staff ]============================================================================== */
-// Administrator password. Administrator has full access to the board
+/* ==[ Administration ]==================================================================================== */
+// Administrator default password.
+// Change the administrator password later in the management panel, and erase ATOM_ADMINPASS with '' here
 define('ATOM_ADMINPASS', '');
-// Moderators have access to ban posters and delete posts
-$atom_moderators = [
-	// 'Mod1' => 'Password1',
-	// 'Mod2' => 'Password2'
-];
-// Janitors only have access to delete posts (and moderate if ATOM_REQMOD is set)
-// If the array is not empty, the janitorlog.html will be generated
-$atom_janitors = [
-	// 'Janitor1' => 'Password1',
-	// 'Janitor2' => 'Password2'
-];
 // Require moderation before displaying posts
 // Values: 'files', 'all' (see README for instructions, only MySQL is supported), '' to disable
 define('ATOM_REQMOD', '');
@@ -52,6 +42,8 @@ define('ATOM_DBPOSTS', ATOM_BOARD . '_posts');
 // Modlog table name in database (use the same modlog table across boards for global modlog)
 // define('ATOM_DBMODLOG', 'modlog');
 define('ATOM_DBMODLOG', ATOM_BOARD . '_modlog');
+// Staff table name in database (administrators, moderators and janitors)
+define('ATOM_DBSTAFF', 'staff');
 // Bans table name in database
 define('ATOM_DBBANS', 'bans');
 // Database for dirty IP lookups
@@ -65,7 +57,7 @@ define('ATOM_DBLIKES', 'likes');
 // Enable database migration tool (see README for instructions)
 define('ATOM_DBMIGRATE', false);
 
-/* ==[ Database configuration - MySQL / pgSQL ]============================================================ */
+/* ==[ Database configuration ]============================================================================ */
 // The following only apply when ATOM_DBMODE is set to 'mysqli' or 'pdo' with ATOM_DBDSN = ''
 // Hostname
 define('ATOM_DBHOST', 'localhost');
@@ -114,7 +106,7 @@ $atom_ban_reasons = [
 	// 'Spamming',
 	// 'Abusive post'
 ];
-// List of countries from which it is prohibited to post. ATOM_GEOIP must be set.
+// List of countries from which it is prohibited to post. ATOM_GEOIP must be set
 // See ISO-3166 alpha2 at http://www.geonames.org/countries/
 $atom_banned_countries = [
 	// 'RU',
@@ -129,7 +121,7 @@ define('ATOM_POSTERNAME', 'Anonymous');
 define('ATOM_GEOIP', '');
 // Unique ID's based on IP
 define('ATOM_UNIQUEID', false);
-// Generate unique poster names instead of ID's. Requires ATOM_UNIQUEID = true.
+// Generate unique poster names instead of ID's. Requires ATOM_UNIQUEID = true
 // Values: 'ua', 'custom', 'ru', '' to disable
 // First names array is in inc/usernames/ATOM_UNIQUENAME/firstnames.php
 // Last names array is in inc/usernames/ATOM_UNIQUENAME/lastnames.php

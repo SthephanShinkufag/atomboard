@@ -21,6 +21,11 @@ if ($result->num_rows == 0) {
 	$mysqli->query($postsQuery);
 }
 $result->close();
+$result = $mysqli->query("SHOW TABLES LIKE '" . ATOM_DBSTAFF . "'");
+if ($result->num_rows == 0) {
+	$mysqli->query($staffQuery);
+}
+$result->close();
 $result = $mysqli->query("SHOW TABLES LIKE '" . ATOM_DBBANS . "'");
 if ($result->num_rows == 0) {
 	$mysqli->query($bansQuery);
@@ -275,7 +280,7 @@ function deletePost($id) {
 	$posts = getThreadPosts((int)$id, false);
 	foreach ($posts as $post) {
 		if ($post['id'] != $id) {
-			deletePostImagesFiles($post);
+			deletePostImageFiles($post);
 			$mysqli->execute_query(
 				"DELETE FROM " . ATOM_DBPOSTS . "
 				WHERE id = ? LIMIT 1",
@@ -288,7 +293,7 @@ function deletePost($id) {
 		if ($thispost['parent'] == ATOM_NEWTHREAD) {
 			@unlink('res/' . $thispost['id'] . '.html');
 		}
-		deletePostImagesFiles($thispost);
+		deletePostImageFiles($thispost);
 		$mysqli->execute_query(
 			"DELETE FROM " . ATOM_DBPOSTS . "
 			WHERE id = ? LIMIT 1",
@@ -300,7 +305,7 @@ function deletePost($id) {
 
 function deletePostImages($post, $imgList) {
 	global $mysqli;
-	deletePostImagesFiles($post, $imgList);
+	deletePostImageFiles($post, $imgList);
 	if ($imgList && count($imgList) <= ATOM_FILES_COUNT) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
@@ -324,7 +329,7 @@ function deletePostImages($post, $imgList) {
 
 function hidePostImages($post, $imgList) {
 	global $mysqli;
-	deletePostImagesFilesThumbFiles($post, $imgList);
+	deletePostThumbFiles($post, $imgList);
 	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT) ) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
@@ -749,7 +754,49 @@ function deleteLikes($id) {
 		[ATOM_BOARD, (int)$id]);
 }
 
-/* ==[ Modlog ]============================================================================================ */
+/* ==[ Administration and moderation ]===================================================================== */
+
+function getStaffMember($userName) {
+	global $mysqli;
+	$result = $mysqli->execute_query(
+		"SELECT username, password_hash, role FROM " . ATOM_DBSTAFF . "
+		WHERE username = ?",
+		[$userName]);
+	return $result->fetch_assoc();
+}
+
+function getAllStaffMembers() {
+	global $mysqli;
+	return $mysqli->execute_query(
+		"SELECT id, username, role FROM " . ATOM_DBSTAFF . "
+		ORDER BY role, username")->fetch_all();
+}
+
+function addStaffMember($userName, $passw, $role) {
+	global $mysqli;
+	$mysqli->execute_query(
+		"INSERT INTO " . ATOM_DBSTAFF . "
+		(username, password_hash, role)
+		VALUES (?, ?, ?)",
+		[trim($userName), password_hash($passw, PASSWORD_DEFAULT), $role]);
+}
+
+function deleteStaffMember($id) {
+	global $mysqli;
+	$mysqli->execute_query(
+		"DELETE FROM " . ATOM_DBSTAFF . "
+		WHERE id = ? AND role != 'admin'",
+		[$id]);
+}
+
+function changeStaffMember($id, $passw) {
+	global $mysqli;
+	$mysqli->execute_query(
+		"UPDATE " . ATOM_DBSTAFF . "
+		SET password_hash = ?
+		WHERE username = ?",
+		[password_hash($passw, PASSWORD_DEFAULT), $id]);
+}
 
 function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	global $mysqli;
@@ -798,12 +845,12 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 	return $records;
 }
 
-function modLog($action, $private = '1', $color = 'Black') {
+// modLog('Text to show in modlog', '1/0', 'Color');
+// '1/0': 1 = Private record, 0 = Public record.
+// 'Color': The color for this record
+function modLog($action, $private = '0', $color = 'Black') {
 	global $mysqli;
-	// modLog('Text to show in modlog', '[1, 0]', 'Color');
-	// '[1, 0]': 1 = Private record. 0 = Public record.
-	// 'Color': Choose what to put in style="color: " for this record
-	$userName = isset($_SESSION['atom_user']) ? $_SESSION['atom_user'] : 'UNKNOWN';
+	$userName = $_SESSION['atom_user'] ?? 'UNKNOWN';
 	$mysqli->execute_query(
 		"INSERT INTO " . ATOM_DBMODLOG . "
 		(timestamp, boardname, username, action, color, private)

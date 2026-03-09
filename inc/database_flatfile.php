@@ -292,7 +292,7 @@ function deletePost($id) {
 	$posts = getThreadPosts($id, false);
 	foreach ($posts as $post) {
 		if ($post['id'] != $id) {
-			deletePostImagesFiles($post);
+			deletePostImageFiles($post);
 			$GLOBALS['db']->deleteWhere(
 				POSTS_FILE,
 				new SimpleWhereClause(POST_ID, '=', $post['id'], INTEGER_COMPARISON));
@@ -306,14 +306,14 @@ function deletePost($id) {
 	if ($thispost['parent'] == 0) {
 		@unlink('res/' . $thispost['id'] . '.html');
 	}
-	deletePostImagesFiles($thispost);
+	deletePostImageFiles($thispost);
 	$GLOBALS['db']->deleteWhere(
 		POSTS_FILE,
 		new SimpleWhereClause(POST_ID, '=', $thispost['id'], INTEGER_COMPARISON));
 }
 
 function deletePostImages($post, $imgList) {
-	deletePostImagesFiles($post, $imgList);
+	deletePostImageFiles($post, $imgList);
 	if (!$imgList || count($imgList) > ATOM_FILES_COUNT) {
 		return;
 	}
@@ -343,7 +343,7 @@ function deletePostImages($post, $imgList) {
 }
 
 function hidePostImages($post, $imgList) {
-	deletePostImagesFilesThumbFiles($post, $imgList);
+	deletePostThumbFiles($post, $imgList);
 	if (!$imgList || count($imgList) > ATOM_FILES_COUNT) {
 		return;
 	}
@@ -613,7 +613,7 @@ function toggleLike($id, $ip) {
 	return [!$isAlreadyLiked, $countOfPostLikes];
 }
 
-/* ==[ Modlog ]============================================================================================ */
+/* ==[ Administration and moderation ]===================================================================== */
 
 function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	$records = [];

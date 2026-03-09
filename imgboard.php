@@ -21,7 +21,7 @@ function fancyDie($message) {
 
 <html data-theme="' . ATOM_THEME . '">
 <head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026021701">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026030900">
 </head>
 <body align="center">
 	<br>
@@ -33,17 +33,17 @@ function fancyDie($message) {
 </body>');
 }
 
-/* ==[ Administration requests ]=========================================================================== */
+/* ==[ Administration and moderation requests ]============================================================ */
 
 function managementRequest() {
-	global $access;
-	$isAdmin = $access == 'admin';
-	$isJanitor = $access == 'janitor';
+	global $loginStatus;
+	$isAdmin = $loginStatus === 'admin';
+	$isJanitor = $loginStatus === 'janitor';
 
-	/* --------[ Show login or post report form if not logged ]-------- */
+	/* --------[ Show the login form or the post report form if not logged ]-------- */
 
-	if ($access == 'disabled') {
-		if (isset($_GET['moderate']) && $_GET['moderate'] > 0) {
+	if ($loginStatus == 'disabled') {
+		if (!empty($_GET['moderate']) && is_numeric($_GET['moderate'])) {
 			$post = getPost($_GET['moderate']);
 			if (!$post) {
 				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
@@ -51,6 +51,62 @@ function managementRequest() {
 			die(managePage(buildReportPostForm($post)));
 		}
 		die(managePage(buildManageLoginForm(), 'login'));
+	}
+
+	/* --------[ Create an admin account if logged in with a temporary password ]-------- */
+	if ($loginStatus === 'admin' && $_SESSION['atom_user'] === 'TemporaryAdmin') {
+		if (isset($_POST['new_admin_user'], $_POST['new_admin_pass'])) {
+			addStaffMember($_POST['new_admin_user'], $_POST['new_admin_pass'], 'admin');
+			session_destroy();
+			die(managePage(manageInfo(
+				'Admin account created! Please <a href="?manage">log in</a> with new credentials.')));
+		}
+		die(managePage(buildAdminCreateForm()));
+	}
+
+	/* --------[ Manage staff accounts ]-------- */
+
+	if (isset($_GET['staff']) && $isAdmin) {
+		// Add account
+		if (isset($_POST['add_user'], $_POST['add_pass'], $_POST['add_role'])) {
+			$role = $_POST['add_role'];
+			if (in_array($role, ['moderator', 'janitor'])) {
+				addStaffMember($_POST['add_user'], $_POST['add_pass'], $role);
+			}
+		}
+		// Delete account
+		if (isset($_GET['delete_staff']) && is_numeric($_GET['delete_staff'])) {
+			deleteStaffMember($_GET['delete_staff']);
+		}
+		die(managePage(buildStaffManager()));
+	}
+
+	/* --------[ Change account password ]-------- */
+
+	if (isset($_GET['account'], $_SESSION['atom_user'])) {
+		$msg = '';
+		if (isset($_POST['old_pass'], $_POST['new_pass'], $_POST['confirm_pass'])) {
+			$newPassw = $_POST['new_pass'];
+			if ($newPassw === $_POST['confirm_pass']) {
+				if (strlen($newPassw) >= 8) {
+					$userName = $_SESSION['atom_user'];
+					$user = getStaffMember($userName);
+					if ($user && password_verify($_POST['old_pass'], $user['password_hash'])) {
+						changeStaffMember($userName, $newPassw);
+						deleteSession();
+						die(managePage(manageInfo('Password changed successfully!' .
+							' Please <a href="?manage">log in</a> with new credentials.')));
+					} else {
+						$msg = 'Old password is incorrect!';
+					}
+				} else {
+					$msg = 'New password must be at least 8 characters long!';
+				}
+			} else {
+				$msg = 'New password and confirmation do not match!';
+			}
+		}
+		die(managePage(buildAccountForm($msg)));
 	}
 
 	/* --------[ Rebuild all posts ]-------- */
@@ -81,27 +137,6 @@ function managementRequest() {
 		}
 
 		die(managePage(manageInfo('The board has been rebuilt.')));
-	}
-
-	/* --------[ Update board ]-------- */
-
-	if (isset($_GET['update']) && $isAdmin) {
-		if (is_dir('.git')) {
-			die(managePage('<blockquote class="reply" style="padding: 7px;font-size: 1.25em;">
-	<pre style="margin: 0;padding: 0;">Attempting update...' . "\n\n" . shell_exec('git pull 2>&1') . '</pre>
-</blockquote>
-<p><b>Note:</b> If atomboard updates and you have made custom modifications,
-	<a href="https://github.com/SthephanShinkufag/atomboard/commits/master" target="_blank">
-		review the changes</a> which have been merged into your installation.<br>
-	Ensure that your modifications do not interfere with any new/modified files.<br>
-	See the <a href="https://github.com/SthephanShinkufag/atomboard#readme">README</a> for more information.
-</p>'));
-		}
-		die(managePage('<p><b>atomboard was not installed via Git!</b></p>
-<p>If you installed atomboard without Git, you must
-	<a href="https://github.com/SthephanShinkufag/atomboard/#updating">update manually</a><br>
-	If you did install with Git, ensure the script has read and write access to the <b>.git</b> folder.
-</p>'));
 	}
 
 	/* --------[ Flatfile to MySQLi migration ]-------- */
@@ -341,12 +376,12 @@ function managementRequest() {
 			' ensure everything looks the way it should.</p>'));
 	}
 
-	/* --------[ Show ban form and list of bans ]-------- */
+	/* --------[ Show the ban form and the list of bans ]-------- */
 
 	if (isset($_GET['bans']) && !$isJanitor) {
 		clearExpiredBans();
 		$text = '';
-		if (isset($_POST['ip']) && $_POST['ip'] != '') {
+		if (!empty($_POST['ip'])) {
 			$ip = $_POST['ip'];
 			$banexists = banByIP(long2ip(cidr2ip($ip)[0]));
 			if ($banexists) {
@@ -367,24 +402,22 @@ function managementRequest() {
 			$ban['expire'] = $expire;
 			$ban['reason'] = $_POST['reason'];
 			insertBan($ban);
-			modLog('Ban record (' . $expireType . ') added for ' . $ip . ', reason: ' . $ban['reason'],
-				'0', 'Black');
+			modLog('Ban record (' . $expireType . ') added for ' . $ip . ', reason: ' . $ban['reason']);
 			$text = 'Ban record added for ' . $ip . (isset($_POST['ban_delall']) ?
-				'<br>Posts are deleted: №' .
-				deleteAllPosts($ip, $_POST['thrid'] ? $_POST['thrid'] : NULL) . '.' : '');
+				'<br>Posts are deleted: №' . deleteAllPosts($ip, $_POST['thrid'] ?: NULL) . '.' : '');
 		} elseif (isset($_GET['lift'])) {
 			$ban = banByID($_GET['lift']);
 			if ($ban) {
 				$ip = ip2cidr($ban['ip_from'], $ban['ip_to']);
 				deleteBan($_GET['lift']);
-				modLog('Ban record lifted for ' . $ip, '0', 'Black');
+				modLog('Ban record lifted for ' . $ip);
 				$text = 'Ban record lifted for ' . $ip;
 			}
 		}
 		die(managePage(($text ? manageInfo($text) . PHP_EOL : '') . buildBansPage(), 'bans'));
 	}
 
-	/* --------[ Show passcodes form ]-------- */
+	/* --------[ Show the passcodes form ]-------- */
 
 	if (ATOM_PASSCODES_ENABLED && isset($_GET['passcodes']) && !$isJanitor) {
 		if ($_GET['passcodes'] == 'new') {
@@ -397,7 +430,7 @@ function managementRequest() {
 	/* --------[ Issue a new passcode ]-------- */
 
 	if (ATOM_PASSCODES_ENABLED && isset($_GET['issuepasscode']) && $isAdmin) {
-		if (isset($_POST['expires']) && $_POST['expires'] != '') {
+		if (!empty($_POST['expires'])) {
 			die(managePage(manageInfo('New passcode issued:<br>' . insertPass($_POST['expires'],
 				$_POST['meta']))));
 		}
@@ -409,18 +442,18 @@ function managementRequest() {
 		changePass(
 			$_POST['id'],
 			$_POST['meta'],
-			isset($_POST['expires']) && $_POST['expires'] ? strtotime($_POST['expires']) : 0,
+			!empty($_POST['expires']) ? strtotime($_POST['expires']) : 0,
 			$_POST['block_till'] ? strtotime($_POST['block_till']) : 0,
 			$_POST['block_reason']);
 		die(managePage(manageInfo('Passcode ' . $_POST['id'] . ' has been changed.')));
 	}
 
-	/* --------[ Show moderation log ]-------- */
+	/* --------[ Show the moderation log ]-------- */
 
-	if (isset($_GET['modlog']) && !$isJanitor) {
+	if (isset($_GET['modlog'])) {
 		$fromtime = 0;
 		$totime = 0;
-		if (isset($_POST['from']) && isset($_POST['to'])) {
+		if (isset($_POST['from'], $_POST['to'])) {
 			if (($fromtime = strtotime($_POST['from'])) === false ||
 				($totime = strtotime($_POST['to'])) === false
 			) {
@@ -442,7 +475,7 @@ function managementRequest() {
 		die(managePage(buildUserInfoPage($ip, getPostsByIP($ip))));
 	}
 
-	/* --------[ Delete post or thread ]-------- */
+	/* --------[ Delete a post or thread ]-------- */
 
 	if (isset($_GET['delete'])) {
 		$post = getPost($_GET['delete']);
@@ -452,11 +485,11 @@ function managementRequest() {
 		$id = $post['id'];
 		deletePost($id);
 		if (isOp($post)) {
-			modLog('Deleted thread №' . $id . '.', '0', 'Black');
+			modLog('Deleted thread №' . $id . '.');
 		} else {
 			$thrId = $post['parent'];
 			rebuildThreadPage($thrId);
-			modLog('Deleted post №' . $id . ' in thread №' . $thrId . '.', '0', 'Black');
+			modLog('Deleted post №' . $id . ' in thread №' . $thrId . '.');
 		}
 		rebuildIndexPages();
 		die(managePage(manageInfo('Post №' . $id . ' has been deleted.')));
@@ -478,7 +511,7 @@ function managementRequest() {
 
 	/* --------[ Delete/hide images ]-------- */
 
-	if (isset($_GET['delete-img']) && isset($_GET['delete-img-mod']) && isset($_GET['action'])) {
+	if (isset($_GET['delete-img'], $_GET['delete-img-mod'], $_GET['action'])) {
 		$post = getPost($_GET['delete-img']);
 		if (!$post) {
 			fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
@@ -489,22 +522,22 @@ function managementRequest() {
 			deletePostImages($post, $_GET['delete-img-mod']);
 			rebuildThread($thrId);
 			modLog('Deleted image(s) of ' . (isOp($post) ? 'OP-post in thread №' . $id :
-				'post №' . $id . ' in thread №' . $thrId) . '.', '0', 'Black');
+				'post №' . $id . ' in thread №' . $thrId) . '.');
 			die(managePage(manageInfo('Selected images from post №' . $id . ' have been deleted.')));
 		}
 		if ($_GET['action'] == 'hide') {
 			hidePostImages($post, $_GET['delete-img-mod']);
 			rebuildThread($thrId);
 			modLog('Hidden thumbnail(s) of ' . (isOp($post) ? 'OP-post in thread №' . $id :
-				'post №' . $id . ' in thread №' . $thrId) . '.', '0', 'Black');
+				'post №' . $id . ' in thread №' . $thrId) . '.');
 			die(managePage(manageInfo('Thumbnails for selected images from post №' . $id .
 				' have been changed.')));
 		}
 	}
 
-	/* --------[ Edit message in post ]-------- */
+	/* --------[ Edit a message in post ]-------- */
 
-	if (isset($_GET['editpost']) && isset($_POST['message'])) {
+	if (isset($_GET['editpost'], $_POST['message'])) {
 		$post = getPost($_GET['editpost']);
 		if (!$post) {
 			fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
@@ -515,13 +548,13 @@ function managementRequest() {
 			date('d.m.y D H:i:s', time()) . '</span>');
 		rebuildThread($thrId);
 		modLog('Edited message of ' . (isOp($post) ? 'OP-post in thread №' . $id :
-			'post №' . $id . ' in thread №' . $thrId) . '.', '0', 'Black');
+			'post №' . $id . ' in thread №' . $thrId) . '.');
 		die(managePage(manageInfo('Message in post №' . $id . ' have been changed.')));
 	}
 
-	/* --------[ Approve post if premoderation enabled (see ATOM_REQMOD) ]-------- */
+	/* --------[ Approve a post if premoderation enabled (see ATOM_REQMOD) ]-------- */
 
-	if (isset($_GET['approve']) && $_GET['approve'] > 0) {
+	if (!empty($_GET['approve']) && is_numeric($_GET['approve'])) {
 		$post = getPost($_GET['approve']);
 		if (!$post) {
 			fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
@@ -540,7 +573,7 @@ function managementRequest() {
 		die(managePage(manageInfo('Post №' . $id . ' has been approved.')));
 	}
 
-	/* --------[ Show post moderation form ]-------- */
+	/* --------[ Show the post moderation form ]-------- */
 
 	if (isset($_GET['moderate'])) {
 		if ($_GET['moderate'] > 0) {
@@ -553,9 +586,9 @@ function managementRequest() {
 		die(managePage(buildModeratePostForm(), 'moderate'));
 	}
 
-	/* --------[ Sticky thread ]-------- */
+	/* --------[ Stick a thread ]-------- */
 
-	if (isset($_GET['sticky']) && isset($_GET['setsticky'])) {
+	if (isset($_GET['sticky'], $_GET['setsticky'])) {
 		if ($_GET['sticky'] <= 0) {
 			fancyDie('Form data was lost. Please go back and try again.');
 		}
@@ -568,13 +601,13 @@ function managementRequest() {
 		toggleStickyThread($id, $isStickied);
 		rebuildThread($id);
 		$stickiedText = $isStickied == 1 ? 'stickied' : 'un-stickied';
-		modLog(ucfirst($stickiedText) . ' thread №' . $id . '.', '0', 'Black');
+		modLog(ucfirst($stickiedText) . ' thread №' . $id . '.');
 		die(managePage(manageInfo('Thread №' . $id . ' has been ' . $stickiedText . '.')));
 	}
 
-	/* --------[ Lock thread ]--------= */
+	/* --------[ Lock a thread ]--------= */
 
-	if (isset($_GET['locked']) && isset($_GET['setlocked'])) {
+	if (isset($_GET['locked'], $_GET['setlocked'])) {
 		if ($_GET['locked'] <= 0) {
 			fancyDie('Form data was lost. Please go back and try again.');
 		}
@@ -587,13 +620,13 @@ function managementRequest() {
 		toggleLockThread($id, $isLocked);
 		rebuildThread($id);
 		$lockedText = $isLocked == 1 ? 'locked' : 'un-locked';
-		modLog(ucfirst($lockedText) . ' thread №' . $id . '.', '0', 'Black');
+		modLog(ucfirst($lockedText) . ' thread №' . $id . '.');
 		die(managePage(manageInfo('Thread №' . $id . ' has been ' . $lockedText . '.')));
 	}
 
-	/* --------[ Make endless threads ]-------- */
+	/* --------[ Make an endless thread ]-------- */
 
-	if (isset($_GET['endless']) && isset($_GET['setendless'])) {
+	if (isset($_GET['endless'], $_GET['setendless'])) {
 		if ($_GET['endless'] <= 0) {
 			fancyDie('Form data was lost. Please go back and try again.');
 		}
@@ -606,7 +639,7 @@ function managementRequest() {
 		toggleEndlessThread($id, $isEndless);
 		rebuildThread($id);
 		$endlessText = $isEndless == 1 ? 'made endless' : 'made non-endless';
-		modLog(ucfirst($endlessText) . ' thread №' . $id . '.', '0', 'Black');
+		modLog(ucfirst($endlessText) . ' thread №' . $id . '.');
 		die(managePage(manageInfo('Thread №' . $id . ' has been ' . $endlessText . '.')));
 	}
 
@@ -619,12 +652,11 @@ function managementRequest() {
 	/* --------[ Log out ]-------- */
 
 	if (isset($_GET['logout'])) {
-		$_SESSION['atomboard'] = '';
-		session_destroy();
 		if (!$isAdmin) {
-			modLog('Logout', '1', 'BlueViolet');
+			modLog(ucfirst($_SESSION['atom_role']) . ' logout', '1', 'BlueViolet');
 		};
-		die('<meta http-equiv="refresh" content="0;url=' . basename($_SERVER['PHP_SELF']) . '?manage">');
+		deleteSession();
+		header('Location: ?manage');
 	}
 
 	/* --------[ Show status for posts ]-------- */
@@ -641,10 +673,10 @@ function postingRequest() {
 
 	/* --------[ Post submission check ]-------- */
 
-	global $access, $atom_banned_countries, $atom_embeds, $atom_hidefields, $atom_hidefieldsop,
+	global $loginStatus, $atom_banned_countries, $atom_embeds, $atom_hidefields, $atom_hidefieldsop,
 		$atom_replace_text, $atom_replace_rand, $atom_uploads;
-	$hasAccess = $access != 'disabled';
-	$passcode = checkForPasscode(true);
+	$hasAccess = $loginStatus != 'disabled';
+	$passcode = checkPasscode(true);
 	$validPasscode = $passcode[0];
 
 	if (!$hasAccess) {
@@ -696,13 +728,11 @@ function postingRequest() {
 
 	// Check for parent thread
 	$parentId = ATOM_NEWTHREAD;
-	if (isset($_POST['parent'])) {
-		if ($_POST['parent'] != ATOM_NEWTHREAD) {
-			if (!isThreadExists($_POST['parent'])) {
-				fancyDie('Invalid parent thread ID supplied, unable to create post.');
-			}
-			$parentId = $_POST['parent'];
+	if (isset($_POST['parent']) && $_POST['parent'] != ATOM_NEWTHREAD) {
+		if (!isThreadExists($_POST['parent'])) {
+			fancyDie('Invalid parent thread ID supplied, unable to create post.');
 		}
+		$parentId = $_POST['parent'];
 	}
 
 	/* --------[ Filling post fields ]-------- */
@@ -783,7 +813,7 @@ function postingRequest() {
 		$post['message'] = $_POST['message'];
 	}
 	// Text formatting
-	if($post['message'] && !$isStaffPost) {
+	if ($post['message'] && !$isStaffPost) {
 		// Message length limit
 		$messageLen = mb_strlen($post['message']);
 		if ($messageLen > ATOM_POSTING_MAXLEN) {
@@ -890,10 +920,10 @@ function postingRequest() {
 		}
 
 		// Text replacement from settings.php
-		if(!empty($atom_replace_text)) {
+		if (!empty($atom_replace_text)) {
 			$msg = preg_replace(array_keys($atom_replace_text), array_values($atom_replace_text), $msg);
 		}
-		if(!empty($atom_replace_rand)) {
+		if (!empty($atom_replace_rand)) {
 			foreach ($atom_replace_rand as $pattern => $replacements) {
 				$msg = preg_replace_callback($pattern, fn() => 
 					'<span style="color: hsl(' . mt_rand(0, 360) . ', ' . mt_rand(70, 100) . '%, 50%)">' .
@@ -916,11 +946,11 @@ function postingRequest() {
 		($validPasscode && $passcode[1] ? '<img class="poster-achievement" height="18"' .
 			' title="Donator" src="/' . ATOM_BOARD . '/icons/donator.png"> ' : '') .
 		'<span class="postername' . ($hasAccess && $postName ?
-			($access == 'admin' ? ' postername-admin' : ' postername-mod') : '') . '">' .
+			($loginStatus == 'admin' ? ' postername-admin' : ' postername-mod') : '') . '">' .
 		(!$postName && !$postTripcode ? ATOM_POSTERNAME : $postName) .
 		($postTripcode != '' ? '</span><span class="postertrip">!' . $postTripcode : '') . '</span>';
 	if ($hasAccess && ($postName || $postTripcode)) {
-		switch($access) {
+		switch($loginStatus) {
 		case 'admin': $postNameBlock .= ' <span class="postername-admin">## Admin</span>'; break;
 		case 'janitor': $postNameBlock .= ' <span class="postername-mod">## Janitor</span>'; break;
 		case 'moderator': $postNameBlock .= ' <span class="postername-mod">## Mod</span>'; break;
@@ -978,11 +1008,7 @@ function postingRequest() {
 			fancyDie('Embedding a URL and uploading a file at the same time is not supported.');
 		}
 		list($service, $embed) = getEmbed(trim($_POST['embed']));
-		if (empty($embed) ||
-			!isset($embed['html']) ||
-			!isset($embed['title']) ||
-			!isset($embed['thumbnail_url'])
-		) {
+		if (empty($embed) || !isset($embed['html'], $embed['title'], $embed['thumbnail_url'])) {
 			fancyDie('Invalid embed URL.<br>Only ' .
 				(implode(' / ', array_keys($atom_embeds))) . ' URLs are supported.');
 		}
@@ -1350,7 +1376,7 @@ function bannedRequest() {
 	$ip = $_SERVER['REMOTE_ADDR'];
 	$ban = banByIP($ip);
 	if ($ban) {
-		checkForBans($ip, $ban, checkForPasscode(false)[0], true, false);
+		checkForBans($ip, $ban, checkPasscode(false)[0], true, false);
 	} else {
 		fancyDie('Your IP address ' . $ip . ' is not banned at this time.');
 	}
@@ -1359,7 +1385,7 @@ function bannedRequest() {
 /* ==[ Deletion request ]================================================================================== */
 
 function deletionRequest() {
-	global $access;
+	global $loginStatus;
 	if (!isset($_POST['delete'])) {
 		fancyDie('Tick the box next to a post and click "Delete" to delete it.');
 	}
@@ -1371,7 +1397,7 @@ function deletionRequest() {
 		fancyDie('Sorry, an invalid post identifier was sent.<br>' .
 			'Please go back, refresh the page, and try again.');
 	}
-	if ($access != 'disabled' && $_POST['password'] == '') {
+	if ($loginStatus != 'disabled' && $_POST['password'] == '') {
 		// Redirect to post moderation page
 		die('<meta http-equiv="refresh" content="0;url=' . basename($_SERVER['PHP_SELF']) .
 			'?manage&moderate=' . $_POST['delete'] . '">');
@@ -1387,12 +1413,12 @@ function deletionRequest() {
 /* ==[ Post report request ]=============================================================================== */
 
 function reportRequest() {
-	global $access;
+	global $loginStatus;
 	$isJson = isset($_GET['json']) && $_GET['json'] == '1';
 	$ip = $_SERVER['REMOTE_ADDR'];
 	$ban = banByIP($ip);
 	if ($ban) {
-		checkForBans($ip, $ban, checkForPasscode(false)[0], false, $isJson);
+		checkForBans($ip, $ban, checkPasscode(false)[0], false, $isJson);
 	}
 
 	// Check for dirty ip
@@ -1407,7 +1433,7 @@ function reportRequest() {
 	}
 
 	if (isset($_GET['addreport'])) {
-		if (!checkForPasscode(false)[0]) {
+		if (!checkPasscode(false)[0]) {
 			checkCaptcha();
 		}
 		$id = $_POST['id'];
@@ -1431,7 +1457,7 @@ function reportRequest() {
 		} else {
 			fancyDie('An error occurred while sending the report.');
 		}
-	} else if ($access != 'disabled') {
+	} else if ($loginStatus != 'disabled') {
 		if (isset($_GET['deletereports'])) {
 			$id = $_GET['id'];
 			deleteReports($id);
@@ -1451,8 +1477,8 @@ function reportRequest() {
 
 /* ==[ Passcode requests ]================================================================================= */
 
-function checkForPasscode($showMessages) {
-	if (!ATOM_PASSCODES_ENABLED || !isset($_SESSION['passcode']) || $_SESSION['passcode'] == '') {
+function checkPasscode($showMessages) {
+	if (!ATOM_PASSCODES_ENABLED || empty($_SESSION['passcode'])) {
 		return [0];
 	}
 	$pass = passByID($_SESSION['passcode']);
@@ -1596,8 +1622,8 @@ if (ATOM_TIMEZONE != '') {
 	date_default_timezone_set(ATOM_TIMEZONE);
 }
 
-// Check for access role [admin/moderator/janitor/disabled]
-$access = checkAccessRights();
+// Check for login status [admin/moderator/janitor/disabled]
+$loginStatus = checkLogin();
 
 // Requests processing
 if (isset($_GET['manage'])) {
@@ -1606,9 +1632,8 @@ if (isset($_GET['manage'])) {
 if (isset($_GET['delete'])) { // Must be before postingRequest()
 	deletionRequest();
 }
-if (
-	isset($_POST['name']) || isset($_POST['email']) || isset($_POST['subject']) || isset($_POST['message']) ||
-	isset($_POST['file']) || isset($_POST['embed']) || isset($_POST['password'])
+if (array_intersect_key($_POST,
+	array_flip(['name', 'email', 'subject', 'message', 'file', 'embed', 'password']))
 ) {
 	postingRequest();
 }

@@ -20,6 +20,8 @@ try {
 if (ATOM_DBDRIVER === 'pgsql') {
 	$isPostsExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
 		$dbh->quote(ATOM_DBPOSTS))->fetchColumn() != 0;
+	$isStaffExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
+		$dbh->quote(ATOM_DBSTAFF))->fetchColumn() != 0;
 	$isBansExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
 		$dbh->quote(ATOM_DBBANS))->fetchColumn() != 0;
 	$isIplookupExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
@@ -35,6 +37,8 @@ if (ATOM_DBDRIVER === 'pgsql') {
 } else {
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBPOSTS));
 	$isPostsExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBSTAFF));
+	$isStaffExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBBANS));
 	$isBansExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBIPLOOKUPS));
@@ -50,6 +54,9 @@ if (ATOM_DBDRIVER === 'pgsql') {
 }
 if (!$isPostsExists) {
 	$dbh->exec($postsQuery);
+}
+if (!$isStaffExists) {
+	$dbh->exec($staffQuery);
 }
 if (!$isBansExists) {
 	$dbh->exec($bansQuery);
@@ -289,7 +296,7 @@ function deletePost($id) {
 	$posts = getThreadPosts((int)$id, false);
 	foreach ($posts as $post) {
 		if ($post['id'] != $id) {
-			deletePostImagesFiles($post);
+			deletePostImageFiles($post);
 			pdoQuery(
 				"DELETE FROM " . ATOM_DBPOSTS . "
 				WHERE id = ? LIMIT 1",
@@ -302,7 +309,7 @@ function deletePost($id) {
 		if ($thispost['parent'] == ATOM_NEWTHREAD) {
 			@unlink('res/' . $thispost['id'] . '.html');
 		}
-		deletePostImagesFiles($thispost);
+		deletePostImageFiles($thispost);
 		pdoQuery(
 			"DELETE FROM " . ATOM_DBPOSTS . "
 			WHERE id = ? LIMIT 1",
@@ -313,7 +320,7 @@ function deletePost($id) {
 }
 
 function deletePostImages($post, $imgList) {
-	deletePostImagesFiles($post, $imgList);
+	deletePostImageFiles($post, $imgList);
 	if ($imgList && count($imgList) <= ATOM_FILES_COUNT) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
@@ -336,7 +343,7 @@ function deletePostImages($post, $imgList) {
 }
 
 function hidePostImages($post, $imgList) {
-	deletePostImagesFilesThumbFiles($post, $imgList);
+	deletePostThumbFiles($post, $imgList);
 	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT) ) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = intval(trim(basename($index)));
@@ -704,7 +711,44 @@ function deleteLikes($id) {
 		[ATOM_BOARD, (int)$id]);
 }
 
-/* ==[ Modlog ]============================================================================================ */
+/* ==[ Administration and moderation ]===================================================================== */
+
+function getStaffMember($userName) {
+	$result = pdoQuery(
+		"SELECT username, password_hash, role FROM " . ATOM_DBSTAFF . "
+		WHERE username = ?",
+		[$userName]);
+	return $result->fetch(PDO::FETCH_ASSOC);
+}
+
+function getAllStaffMembers() {
+	return pdoQuery(
+		"SELECT id, username, role FROM " . ATOM_DBSTAFF . "
+		ORDER BY role, username")->fetchAll();
+}
+
+function addStaffMember($userName, $passw, $role) {
+	pdoQuery(
+		"INSERT INTO " . ATOM_DBSTAFF . "
+		(username, password_hash, role)
+		VALUES (?, ?, ?)",
+		[trim($userName), password_hash($passw, PASSWORD_DEFAULT), $role]);
+}
+
+function deleteStaffMember($id) {
+	pdoQuery(
+		"DELETE FROM " . ATOM_DBSTAFF . "
+		WHERE id = ? AND role != 'admin'",
+		[$id]);
+}
+
+function changeStaffMember($id, $passw) {
+	pdoQuery(
+		"UPDATE " . ATOM_DBSTAFF . "
+		SET password_hash = ?
+		WHERE username = ?",
+		[password_hash($passw, PASSWORD_DEFAULT), $id]);
+}
 
 function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	$records = [];
@@ -743,11 +787,11 @@ function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate =
 	return $records;
 }
 
-function modLog($action, $private = '1', $color = 'Black') {
-	// modLog('Text to show in modlog', '[1, 0]', 'Color');
-	// '[1, 0]': 1 = Private record. 0 = Public record.
-	// 'Color': Choose what to put in style="color: " for this record
-	$userName = isset($_SESSION['atom_user']) ? $_SESSION['atom_user'] : 'UNKNOWN';
+// modLog('Text to show in modlog', '1/0', 'Color');
+// '1/0': 1 = Private record, 0 = Public record.
+// 'Color': The color for this record
+function modLog($action, $private = '0', $color = 'Black') {
+	$userName = $_SESSION['atom_user'] ?? 'UNKNOWN';
 	pdoQuery(
 		"INSERT INTO " . ATOM_DBMODLOG . "
 		(timestamp, boardname, username, action, color, private)

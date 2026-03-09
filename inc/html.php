@@ -27,10 +27,10 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026021701">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2026021701"></script>
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026030900">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2026030900"></script>
 	<script src="/' . ATOM_BOARD .
-		'/js/extension/Dollchan_Extension_Tools.user.js?2026021701" async defer></script>' .
+		'/js/extension/Dollchan_Extension_Tools.user.js?2026030900" async defer></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -571,7 +571,6 @@ function rebuildThreadPage($thrId) {
 }
 
 function rebuildIndexPages() {
-	global $atom_janitors;
 	$page = 0;
 	$i = 0;
 	$htmlPosts = '';
@@ -604,10 +603,6 @@ function rebuildIndexPages() {
 	}
 	// Create catalog
 	writePage('catalog.html', buildCatalogPage());
-	// Create janitor log
-	if (count($atom_janitors) != 0) {
-		writePage('janitorlog.html', buildModLogPage());
-	}
 }
 
 function rebuildThread($thrId) {
@@ -618,41 +613,42 @@ function rebuildThread($thrId) {
 /* ==[ Manage ]============================================================================================ */
 
 function manageInfo($text) {
-	return '<div class="manageinfo">' . $text . '</div>';
+	return '<div class="manage-info">' . $text . '</div>';
 }
 
 function managePage($text, $action = '') {
-	global $access, $atom_janitors;
+	global $loginStatus;
 	$onload = '';
 	switch ($action) {
 	case 'bans': $onload = ' onload="document.form_bans.ip.focus();"'; break;
 	case 'ipinfo': $onload = ' onload="document.form_ipinfo.ipinfo.focus();"'; break;
-	case 'login': $onload = ' onload="document.form_login_staff.managepassword.focus();"'; break;
+	case 'login': $onload = ' onload="document.form_login_staff.manage_password.focus();"'; break;
 	case 'moderate': $onload = ' onload="document.form_moderate_post.moderate.focus();"'; break;
 	case 'passcode': $onload = ' onload="document.form_login_passcode.passcode.focus();"'; break;
 	case 'passcode_manage': $onload = ' onload="document.form_passcode_manage.block_reason.focus();"'; break;
 	case 'passcode_new': $onload = ' onload="document.form_passcode_new.meta.focus();"'; break;
 	case 'staffpost': $onload = ' onload="document.postform.parent.focus();"'; break;
 	}
+	$isAdmin = $loginStatus == 'admin';
 	return pageHeader() . '<body' . $onload . '>' .
 		pageWrapper(ATOM_BOARD_DESCRIPTION, true) .
 		'<hr>
 		<div id="panel-adminbar" class="panel">' . (
-			$access == 'disabled' ? '' : '
+			$loginStatus == 'disabled' ? '' : '
 			<a class="link-button" href="?manage">Status</a>' .
-			($access == 'admin' || $access == 'moderator' ? '
+			($isAdmin || $loginStatus == 'moderator' ? '
 			<a class="link-button" href="?manage&bans">Bans</a>
-			<a class="link-button" href="?manage&passcodes=new">Passcodes</a>
-			<a class="link-button" href="?manage&modlog">ModLog</a>' : '') . '
-			<a class="link-button" href="?manage&ipinfo=manage">IP info</a>' .
-			(count($atom_janitors) != 0 && $access == 'janitor' ? '
-			<a class="link-button" href="/' . ATOM_BOARD . '/janitorlog.html">JanitorLog</a>' : '') . '
+			<a class="link-button" href="?manage&passcodes=new">Passcodes</a>' : '') . '
+			<a class="link-button" href="?manage&modlog">ModLog</a>
+			<a class="link-button" href="?manage&ipinfo=manage">IP info</a>
 			<a class="link-button" href="?manage&moderate">Manage post</a>
 			<a class="link-button" href="?manage&staffpost">Raw post</a>' .
-			($access == 'admin' ? '
-			<a class="link-button" href="?manage&rebuildall">Rebuild All</a>' : '') .
-			($access == 'admin' && ATOM_DBMIGRATE ? '
+			($isAdmin ? '
+			<a class="link-button" href="?manage&rebuildall">Rebuild All</a>
+			<a class="link-button" href="?manage&staff">Staff</a>' : '') .
+			($isAdmin && ATOM_DBMIGRATE ? '
 			<a class="link-button" href="?manage&dbmigrate"><b>Migrate Database</b></a>' : '') . '
+			<a class="link-button" href="?manage&account">Account</a>
 			<a class="link-button" href="?manage&logout">Log Out</a>
 		') . '</div>
 		' . $text . '
@@ -663,9 +659,11 @@ function managePage($text, $action = '') {
 function buildManageLoginForm() {
 	return '<form id="form_login_staff" name="form_login_staff" method="post" action="?manage">
 			<fieldset>
-				<legend align="center">Enter an administrator or moderator password</legend>
+				<legend align="center">Login</legend>
 				<div class="login">
-					<input type="password" id="managepassword" name="managepassword"><br>
+					<input type="text" name="manage_user" placeholder="Username" required><br>
+					<input type="password" id="manage_password" name="manage_password"' .
+						' placeholder="Password" required><br>
 					<input type="submit" class="button-manage" value="Log In">
 				</div>
 			</fieldset>
@@ -693,6 +691,71 @@ function buildPasscodeLoginForm($action, $pass = NULL) {
 			'<br>Expires: ' . date('d.m.Y D H:i:s', $pass['expires']) .
 			'<br><a href="/' . ATOM_BOARD . '/imgboard.php?passcode&logout">Log Out.</a></div>';
 	}
+}
+
+function buildAdminCreateForm() {
+	return '<div class="manage-error">No admins found in the database.</div>
+		<form method="post" action="?manage=staff">
+			<fieldset>
+				<legend align="center">Initial Setup: Create admin account</legend>
+				<input type="text" name="new_admin_user" placeholder="Admin Username" required>
+				<input type="password" name="new_admin_pass" placeholder="Admin Password" required>
+				<input type="submit" value="Create account">
+			</fieldset>
+		</form>';
+}
+
+function buildStaffManager() {
+	$html = '<form method="post" action="?manage&staff">
+			<fieldset>
+				<legend>Add new staff member</legend>
+				<input type="text" name="add_user" placeholder="Username" required>
+				<input type="password" name="add_pass" placeholder="Password" required>
+				<select name="add_role">
+					<option value="moderator">Moderator</option>
+					<option value="janitor">Janitor</option>
+				</select>
+				<input type="submit" value="Create account">
+			</fieldset>
+		</form>
+		<h3>Staff Management</h3>
+		<table class="table"><tbody>
+			<tr>
+				<th>Username</th>
+				<th>Role</th>
+				<th>Action</th>
+			</tr>';
+	$staffList = getAllStaffMembers();
+	foreach ($staffList as $person) {
+		$html .= '
+			<tr>
+				<td>' . $person['username'] . '</td>
+				<td>' . ucfirst($person['role']) . '</td>
+				<td>' . (
+					$person['role'] === 'admin' ? '---' :
+					'<a href="?manage&staff&delete_staff=' . $person['id'] .
+						'" onclick="return confirm(\'Are you sure to delete this staff member?\')">' .
+						'Delete</a>') . '</td>
+			</tr>';
+	}
+	$html .= '</tbody></table>';
+	return $html;
+}
+
+function buildAccountForm($message) {
+    return ($message ? '<div class="manage-error">' . htmlspecialchars($message) . '</div>' : '') . '
+		<form method="post" action="?manage&account">
+			<fieldset>
+				<legend>Account settings (' . htmlspecialchars($_SESSION['atom_user']) . ')</legend>
+				<table style="text-align: left;">
+					<tr><td>Old password:</td><td><input type="password" name="old_pass" required></td></tr>
+					<tr><td>New password:</td><td><input type="password" name="new_pass" required></td></tr>
+					<tr><td>Confirm password:</td><td><input type="password" name="confirm_pass" required>' .
+						'</td></tr>
+					<tr><td></td><td><input type="submit" value="Update Password"></td></tr>
+				</table>
+			</fieldset>
+		</form>';
 }
 
 function buildBansPage() {
@@ -776,7 +839,7 @@ function buildBansPage() {
 						</td>
 						<td>
 							<input type="text" name="thrid" placeholder="Thread number" value="' .
-								(isset($_GET['thrid']) ? $_GET['thrid'] : '') . '">
+								($_GET['thrid'] ?? '') . '">
 							<small>Leave empty to delete all posts and threads</small>
 						</td>
 					</tr>
@@ -826,8 +889,8 @@ function buildBansPage() {
 }
 
 function buildPasscodesPage() {
-	global $access;
-	$isAdmin = $access == 'admin';
+	global $loginStatus;
+	$isAdmin = $loginStatus == 'admin';
 	$passHtml = '';
 	if ($isAdmin) {
 		$passHtml .= '<form id="form_passcode_new" name="form_passcode_new" method="post"' .
@@ -863,7 +926,7 @@ function buildPasscodesPage() {
 		<br>
 		';
 	}
-	$passNum = isset($_GET['passcode']) ? $_GET['passcode'] : NULL;
+	$passNum = $_GET['passcode'] ?? NULL;
 	if ($passNum) {
 		$editPass = passByNum($passNum);
 	}
@@ -881,7 +944,7 @@ function buildPasscodesPage() {
 					<tr>
 						<td><label for="meta">Meta (related info):</label></td>
 						<td><input type="text" name="meta" id="meta" value="' .
-							(isset($editPass['meta']) ? $editPass['meta'] : '') . '" size="50"></td>
+							($editPass['meta'] ?? '') . '" size="50"></td>
 					</tr>' .
 					($isAdmin ? '
 					<tr>
@@ -917,8 +980,7 @@ function buildPasscodesPage() {
 					<tr>
 						<td><label for="block_reason">Block reason:</label></td>
 						<td><input type="text" name="block_reason" id="block_reason" value="' .
-							(isset($editPass['blocked_reason']) ? $editPass['blocked_reason'] : '') .
-							'" size="50"></td>
+							($editPass['blocked_reason'] ?? '') . '" size="50"></td>
 					</tr>
 					<tr>
 						<td><input type="submit" class="button-manage" value="Submit"></td>
@@ -926,7 +988,10 @@ function buildPasscodesPage() {
 					</tr>
 				</tbody></table>
 			</fieldset>
-		</form>
+		</form>';
+	$passcodes = getAllPasscodes();
+	if (count($passcodes) > 0) {
+		$passHtml .= '
 		<br>
 		<table class="table"><tbody>
 			<tr>
@@ -942,16 +1007,16 @@ function buildPasscodesPage() {
 				<th>Last used</th>
 				<th>Last used IP</th>
 			</tr>';
-	$passcodes = getAllPasscodes();
-	$geoipReader = ATOM_GEOIP == 'geoip2' ?
-		new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
-	foreach ($passcodes as $pass) {
-		$ip = $pass['last_used_ip'];
-		$countryIcon = '';
-		$passcodeNum = $pass['number'];
-		$blockedTill = $pass['blocked_till'];
-		$nowTime = time();
-		$passHtml .= '
+		$passcodes = getAllPasscodes();
+		$geoipReader = ATOM_GEOIP == 'geoip2' ?
+			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
+		foreach ($passcodes as $pass) {
+			$ip = $pass['last_used_ip'];
+			$countryIcon = '';
+			$passcodeNum = $pass['number'];
+			$blockedTill = $pass['blocked_till'];
+			$nowTime = time();
+			$passHtml .= '
 			<tr' . ($nowTime > $pass['expires'] ? ' class="passcode-expired"' :
 				($nowTime < $blockedTill ? ' class="passcode-blocked"' : '')) . '>
 				<td><a target="_blank" href="/' . ATOM_BOARD . '/imgboard.php?manage=&passcode=' .
@@ -971,9 +1036,14 @@ function buildPasscodesPage() {
 					(ATOM_GEOIP ? getCountryIcon($ip, $geoipReader) . '&nbsp;' : '') .
 					getIpUserInfoLink($ip) : '') . '</td>
 			</tr>';
-	}
-	$passHtml .= '
+		}
+		$passHtml .= '
 		</tbody></table>';
+	} else {
+		$passHtml .= '
+		<br>
+		<div>No passcodes issued yet.</div>';
+	}
 	return $passHtml;
 }
 
@@ -1007,10 +1077,9 @@ function buildUserInfoForm($ip = '') {
 		<br>';
 }
 
-
 function buildUserInfoPage($ip, $posts) {
-	global $access;
-	$isMod = $access == 'admin' || $access == 'moderator';
+	global $loginStatus;
+	$isMod = $loginStatus == 'admin' || $loginStatus == 'moderator';
 	$postsHtml = '';
 	foreach ($posts as $post) {
 		$postsHtml .= '
@@ -1185,14 +1254,14 @@ function getPostReports($reports, $geoipReader) {
 }
 
 function buildModeratePostPage($post) {
-	global $access;
+	global $loginStatus;
 	$postId = $post['id'];
 	$ip = $post['ip'];
 	$thrId = $post['parent'] !== 0 ? $post['parent'] : $postId;
 	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
 	$isOp = isOp($post);
 	$ban = banByIP($ip);
-	$isMod = $access == 'admin' || $access == 'moderator';
+	$isMod = $loginStatus == 'admin' || $loginStatus == 'moderator';
 	$reports = reportsByPostID($postId);
 	$reportsCount = count($reports);
 	$stickyHtml = '';
@@ -1355,7 +1424,7 @@ function buildModeratePostPage($post) {
 }
 
 function getPostManageButtons($post) {
-	global $access;
+	global $loginStatus;
 	$postId = $post['id'];
 	$thrId = $post['parent'] !== 0 ? $post['parent'] : $postId;
 	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
@@ -1377,7 +1446,7 @@ function getPostManageButtons($post) {
 						'if (confirm(\'Are you sure to delete ALL POSTS AND THERADS from ' . $ip . '?\'))' .
 						' { return true; } else { event.stopPropagation(); event.preventDefault(); };"' .
 						' title="This will delete all posts and threads from ip ' . $ip . '">Delete all</a>' .
-					($access == 'admin' || $access == 'moderator' ? '
+					($loginStatus == 'admin' || $loginStatus == 'moderator' ? '
 					' . $a . 'manage=&bans=' . $ip . '&thrid=' . $thrId . '" title="' .
 						(banByIP($ip) ? 'Ban record already exists for ' . $ip : 'Ban ip ' . $ip) .
 						'">Ban user</a>' : '') .
@@ -1387,7 +1456,7 @@ function getPostManageButtons($post) {
 }
 
 function buildStatusPage() {
-	global $access;
+	global $loginStatus;
 
 	// Build reports table
 	$reports = getAllReports();
@@ -1462,7 +1531,7 @@ function buildStatusPage() {
 	$bans = count(getAllBans());
 	$uniquePostersCount = getUniquePostersCount();
 	$uniquePosters = $uniquePostersCount > 0 ? $uniquePostersCount . ' unique users' : '';
-	return ($access == 'admin' && ATOM_DBMODE == 'mysql' && function_exists('mysqli_connect') ?
+	return ($loginStatus == 'admin' && ATOM_DBMODE == 'mysql' && function_exists('mysqli_connect') ?
 		'<fieldset>
 			<legend>Notice</legend>
 			<p><b>ATOM_DBMODE</b> is currently <b>mysql</b> in <b>settings.php</b>, but
@@ -1475,12 +1544,7 @@ function buildStatusPage() {
 				<td>' . $threads . ' ' . plural('thread', $threads) . ', ' .
 						$bans . ' ' . plural('ban', $bans) . ', ' .
 						$reportsCount . ' ' . plural('report', $reportsCount) . ', ' .
-						$uniquePosters . '</td>' .
-				($access == 'admin' ? '
-				<td align="right">
-					<a class="link-button" target="_blank" href="/' . ATOM_BOARD .
-						'/imgboard.php?manage=&update=">Update atomboard</a>
-				</td>' : '') . '
+						$uniquePosters . '</td>
 			</tr></tbody></table>
 		</fieldset>' .
 		($reportsCount ? '
@@ -1569,8 +1633,8 @@ function buildCatalogPage() {
 /* ==[ Modlog ]============================================================================================ */
 
 function buildModLogForm() {
-	$periodStartDate = isset($_POST['from']) ? $_POST['from'] : date("Y-m-d", strtotime("-2 day"));
-	$periodEndDate = isset($_POST['to']) ? $_POST['to'] : date("Y-m-d", strtotime("+1 day"));
+	$periodStartDate = $_POST['from'] ?? date("Y-m-d", strtotime("-2 day"));
+	$periodEndDate = $_POST['to'] ?? date("Y-m-d", strtotime("+1 day"));
 	return '<form method="post" action="?manage&modlog">
 			<fieldset>
 				<legend>Select moderation period</legend>
@@ -1604,7 +1668,6 @@ function buildModLogTable($isModerators = false, $fromtime = '0', $totime = '0')
 				<th>Action:</th>
 			</tr>';
 		foreach ($records as $record) {
-			$action = $record['action'];
 			$text .= '
 			<tr' . ($isModerators ? ' style="color: ' .
 				($record['color'] != 'Black' ? $record['color'] : '') . '"' : '') . '>
@@ -1615,7 +1678,10 @@ function buildModLogTable($isModerators = false, $fromtime = '0', $totime = '0')
 			</tr>';
 		}
 		$text .= '
-		</tbody></table><br>';
+		</tbody></table>';
+	} else {
+		$text .= '
+		<div>No moderation records found for the selected period.</div>';
 	}
 	return $text;
 }

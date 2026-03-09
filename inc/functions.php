@@ -6,146 +6,143 @@ if (!defined('ATOM_BOARD')) {
 /* ==[ Queries for creatsng new tables ]=================================================================== */
 
 if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
-	$postsQuery = 'CREATE TABLE "' . ATOM_DBPOSTS . '" (
-		"id" bigserial NOT NULL,
-		"parent" integer NOT NULL,
-		"timestamp" integer NOT NULL,
-		"bumped" integer NOT NULL,
-		"ip" varchar(39) NOT NULL,
-		"name" varchar(75) NOT NULL,
-		"tripcode" varchar(10) NOT NULL,
-		"email" varchar(75) NOT NULL,
-		"nameblock" text NOT NULL,
-		"subject" varchar(100) NOT NULL,
-		"message" text NOT NULL,
-		"password" varchar(255) NOT NULL,
-		"file0" text NOT NULL,
-		"file0_hex" varchar(75) NOT NULL,
-		"file0_original" varchar(255) NOT NULL,
-		"file0_size" integer NOT NULL DEFAULT 0,
-		"file0_size_formatted" varchar(75) NOT NULL,
-		"image0_width" smallint NOT NULL DEFAULT 0,
-		"image0_height" smallint NOT NULL DEFAULT 0,
-		"thumb0" varchar(255) NOT NULL,
-		"thumb0_width" smallint NOT NULL DEFAULT 0,
-		"thumb0_height" smallint NOT NULL DEFAULT 0,
-		"file1" text NOT NULL,
-		"file1_hex" varchar(75) NOT NULL,
-		"file1_original" varchar(255) NOT NULL,
-		"file1_size" integer NOT NULL DEFAULT 0,
-		"file1_size_formatted" varchar(75) NOT NULL,
-		"image1_width" smallint NOT NULL DEFAULT 0,
-		"image1_height" smallint NOT NULL DEFAULT 0,
-		"thumb1" varchar(255) NOT NULL,
-		"thumb1_width" smallint NOT NULL DEFAULT 0,
-		"thumb1_height" smallint NOT NULL DEFAULT 0,
-		"file2" text NOT NULL,
-		"file2_hex" varchar(75) NOT NULL,
-		"file2_original" varchar(255) NOT NULL,
-		"file2_size" integer NOT NULL DEFAULT 0,
-		"file2_size_formatted" varchar(75) NOT NULL,
-		"image2_width" smallint NOT NULL DEFAULT 0,
-		"image2_height" smallint NOT NULL DEFAULT 0,
-		"thumb2" varchar(255) NOT NULL,
-		"thumb2_width" smallint NOT NULL DEFAULT 0,
-		"thumb2_height" smallint NOT NULL DEFAULT 0,
-		"file3" text NOT NULL,
-		"file3_hex" varchar(75) NOT NULL,
-		"file3_original" varchar(255) NOT NULL,
-		"file3_size" integer NOT NULL DEFAULT 0,
-		"file3_size_formatted" varchar(75) NOT NULL,
-		"image3_width" smallint NOT NULL DEFAULT 0,
-		"image3_height" smallint NOT NULL DEFAULT 0,
-		"thumb3" varchar(255) NOT NULL,
-		"thumb3_width" smallint NOT NULL DEFAULT 0,
-		"thumb3_height" smallint NOT NULL DEFAULT 0,
-		"likes" smallint NOT NULL DEFAULT 0,
-		"moderated" smallint NOT NULL DEFAULT 1,
-		"stickied" smallint NOT NULL DEFAULT 0,
-		"locked" smallint NOT NULL DEFAULT 0,
-		"endless" smallint NOT NULL DEFAULT 0,
-		"pass" smallint NOT NULL DEFAULT 0,
-		PRIMARY KEY ("id")
+	$postsQuery = 'CREATE TABLE ' . ATOM_DBPOSTS . ' (
+		id bigserial NOT NULL PRIMARY KEY,
+		parent integer NOT NULL,
+		timestamp integer NOT NULL,
+		bumped integer NOT NULL,
+		ip varchar(39) NOT NULL,
+		name varchar(75) NOT NULL,
+		tripcode varchar(10) NOT NULL,
+		email varchar(75) NOT NULL,
+		nameblock text NOT NULL,
+		subject varchar(100) NOT NULL,
+		message text NOT NULL,
+		password varchar(255) NOT NULL,
+		file0 text NOT NULL,
+		file0_hex varchar(75) NOT NULL,
+		file0_original varchar(255) NOT NULL,
+		file0_size integer NOT NULL DEFAULT 0,
+		file0_size_formatted varchar(75) NOT NULL,
+		image0_width smallint NOT NULL DEFAULT 0,
+		image0_height smallint NOT NULL DEFAULT 0,
+		thumb0 varchar(255) NOT NULL,
+		thumb0_width smallint NOT NULL DEFAULT 0,
+		thumb0_height smallint NOT NULL DEFAULT 0,
+		file1 text NOT NULL,
+		file1_hex varchar(75) NOT NULL,
+		file1_original varchar(255) NOT NULL,
+		file1_size integer NOT NULL DEFAULT 0,
+		file1_size_formatted varchar(75) NOT NULL,
+		image1_width smallint NOT NULL DEFAULT 0,
+		image1_height smallint NOT NULL DEFAULT 0,
+		thumb1 varchar(255) NOT NULL,
+		thumb1_width smallint NOT NULL DEFAULT 0,
+		thumb1_height smallint NOT NULL DEFAULT 0,
+		file2 text NOT NULL,
+		file2_hex varchar(75) NOT NULL,
+		file2_original varchar(255) NOT NULL,
+		file2_size integer NOT NULL DEFAULT 0,
+		file2_size_formatted varchar(75) NOT NULL,
+		image2_width smallint NOT NULL DEFAULT 0,
+		image2_height smallint NOT NULL DEFAULT 0,
+		thumb2 varchar(255) NOT NULL,
+		thumb2_width smallint NOT NULL DEFAULT 0,
+		thumb2_height smallint NOT NULL DEFAULT 0,
+		file3 text NOT NULL,
+		file3_hex varchar(75) NOT NULL,
+		file3_original varchar(255) NOT NULL,
+		file3_size integer NOT NULL DEFAULT 0,
+		file3_size_formatted varchar(75) NOT NULL,
+		image3_width smallint NOT NULL DEFAULT 0,
+		image3_height smallint NOT NULL DEFAULT 0,
+		thumb3 varchar(255) NOT NULL,
+		thumb3_width smallint NOT NULL DEFAULT 0,
+		thumb3_height smallint NOT NULL DEFAULT 0,
+		likes smallint NOT NULL DEFAULT 0,
+		moderated smallint NOT NULL DEFAULT 1,
+		stickied smallint NOT NULL DEFAULT 0,
+		locked smallint NOT NULL DEFAULT 0,
+		endless smallint NOT NULL DEFAULT 0,
+		pass smallint NOT NULL DEFAULT 0
 	);
-	CREATE INDEX ON "' . ATOM_DBPOSTS . '"("parent");
-	CREATE INDEX ON "' . ATOM_DBPOSTS . '"("bumped");
-	CREATE INDEX ON "' . ATOM_DBPOSTS . '"("stickied");
-	CREATE INDEX ON "' . ATOM_DBPOSTS . '"("moderated");';
+	CREATE INDEX ON ' . ATOM_DBPOSTS . ' (parent);
+	CREATE INDEX ON ' . ATOM_DBPOSTS . ' (bumped);
+	CREATE INDEX ON ' . ATOM_DBPOSTS . ' (stickied);
+	CREATE INDEX ON ' . ATOM_DBPOSTS . ' (moderated);';
 
-	$bansQuery = 'CREATE TABLE "' . ATOM_DBBANS . '" (
-		"id" bigserial NOT NULL,
-		"ip_from" bigint NOT NULL,
-		"ip_to" bigint NOT NULL,
-		"timestamp" integer NOT NULL,
-		"expire" integer NOT NULL,
-		"reason" text NOT NULL,
-		PRIMARY KEY ("id")
+	$staffQuery = 'CREATE TYPE user_role AS ENUM (\'admin\', \'moderator\', \'janitor\');
+	CREATE TABLE ' . ATOM_DBSTAFF . ' (
+		id bigserial NOT NULL PRIMARY KEY,
+		username varchar(50) UNIQUE NOT NULL,
+		password_hash varchar(255) NOT NULL,
+		role user_role NOT NULL
+	)';
+
+	$bansQuery = 'CREATE TABLE ' . ATOM_DBBANS . ' (
+		id bigserial NOT NULL PRIMARY KEY,
+		ip_from bigint NOT NULL,
+		ip_to bigint NOT NULL,
+		timestamp integer NOT NULL,
+		expire integer NOT NULL,
+		reason text NOT NULL
 	);
-	CREATE INDEX ON "' . ATOM_DBBANS . '"("ip_from");
-	CREATE INDEX ON "' . ATOM_DBBANS . '"("ip_to");';
+	CREATE INDEX ON ' . ATOM_DBBANS . '(ip_from);
+	CREATE INDEX ON ' . ATOM_DBBANS . '(ip_to);';
 
-	$ipLookupsQuery = 'CREATE TABLE "' . ATOM_DBIPLOOKUPS . '" (
-		"ip" varchar(39) NOT NULL,
-		"abuser" smallint NOT NULL DEFAULT 0,
-		"vps" smallint NOT NULL DEFAULT 0,
-		"proxy" smallint NOT NULL DEFAULT 0,
-		"tor" smallint NOT NULL DEFAULT 0,
-		"vpn" smallint NOT NULL DEFAULT 0,
-		PRIMARY KEY ("ip")
+	$ipLookupsQuery = 'CREATE TABLE ' . ATOM_DBIPLOOKUPS . ' (
+		ip varchar(39) NOT NULL PRIMARY KEY,
+		abuser smallint NOT NULL DEFAULT 0,
+		vps smallint NOT NULL DEFAULT 0,
+		proxy smallint NOT NULL DEFAULT 0,
+		tor smallint NOT NULL DEFAULT 0,
+		vpn smallint NOT NULL DEFAULT 0
 	);';
 
-	$reportsQuery = 'CREATE TABLE "' . ATOM_DBREPORTS . '" (
-		"id" bigserial NOT NULL,
-		"ip" varchar(39) NOT NULL,
-		"board" varchar(16) NOT NULL,
-		"postnum" integer NOT NULL,
-		"timestamp" integer NOT NULL,
-		"reason" text NOT NULL,
-		PRIMARY KEY ("id")
+	$reportsQuery = 'CREATE TABLE ' . ATOM_DBREPORTS . ' (
+		id bigserial NOT NULL PRIMARY KEY,
+		ip varchar(39) NOT NULL,
+		board varchar(16) NOT NULL,
+		postnum integer NOT NULL,
+		timestamp integer NOT NULL,
+		reason text NOT NULL
 	);
-	CREATE INDEX ON "' . ATOM_DBREPORTS . '"("ip");';
+	CREATE INDEX ON ' . ATOM_DBREPORTS . '(ip);';
 
-	$passQuery = 'CREATE TABLE "' . ATOM_DBPASS . '" (
-		"number" bigserial NOT NULL,
-		"id" varchar(64) NOT NULL,
-		"issued" integer NOT NULL,
-		"expires" integer NOT NULL,
-		"blocked_till" integer NOT NULL DEFAULT 0,
-		"blocked_reason" text,
-		"meta" text NOT NULL,
-		"last_used" integer NOT NULL DEFAULT 0,
-		"last_used_ip" varchar(64),
-		PRIMARY KEY ("number"),
-			KEY ("id")
+	$passQuery = 'CREATE TABLE ' . ATOM_DBPASS . ' (
+		number bigserial NOT NULL PRIMARY KEY,
+		id varchar(64) NOT NULL,
+		issued integer NOT NULL,
+		expires integer NOT NULL,
+		blocked_till integer NOT NULL DEFAULT 0,
+		blocked_reason text,
+		meta text NOT NULL,
+		last_used integer NOT NULL DEFAULT 0,
+		last_used_ip varchar(64)
 	);
-	CREATE INDEX ON "' . ATOM_DBPASS . '"("number");
-	CREATE INDEX ON "' . ATOM_DBPASS . '"("id");';
+	CREATE INDEX ON ' . ATOM_DBPASS . '(id);';
 
-	$likesQuery = 'CREATE TABLE "' . ATOM_DBLIKES . '" (
-		"id" bigserial NOT NULL,
-		"ip" varchar(39) NOT NULL,
-		"board" varchar(16) NOT NULL,
-		"postnum" integer NOT NULL,
-		"islike" smallint NOT NULL DEFAULT 1,
-		PRIMARY KEY ("id")
-	);
-	CREATE INDEX ON "' . ATOM_DBLIKES . '"("ip");';
+	$likesQuery = 'CREATE TABLE ' . ATOM_DBLIKES . ' (
+		id bigserial NOT NULL PRIMARY KEY,
+		ip varchar(39) NOT NULL,
+		board varchar(16) NOT NULL,
+		postnum integer NOT NULL,
+		islike smallint NOT NULL DEFAULT 1
+	);';
 
-	$modlogQuery = 'CREATE TABLE "' . ATOM_DBMODLOG . '" (
-		"id" bigserial NOT NULL,
-		"timestamp" integer NOT NULL,
-		"boardname" varchar(255) NOT NULL,
-		"username" varchar(75) NOT NULL,
-		"action" text NOT NULL,
-		"color" varchar(75) NOT NULL,
-		"private" smallint NOT NULL DEFAULT 1,
-		PRIMARY KEY ("id")
-	);
-	CREATE INDEX ON "' . ATOM_DBMODLOG . '"("boardname");';
+	$modlogQuery = 'CREATE TABLE ' . ATOM_DBMODLOG . ' (
+		id bigserial NOT NULL PRIMARY KEY,
+		timestamp integer NOT NULL,
+		boardname varchar(255) NOT NULL,
+		username varchar(75) NOT NULL,
+		action text NOT NULL,
+		color varchar(75) NOT NULL,
+		private smallint NOT NULL DEFAULT 1
+	);';
 
 } else {
-	$postsQuery = "CREATE TABLE `" . ATOM_DBPOSTS . "` (
-		`id` mediumint(7) unsigned NOT NULL auto_increment,
+	$postsQuery = "CREATE TABLE IF NOT EXISTS `" . ATOM_DBPOSTS . "` (
+		`id` mediumint(7) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
 		`parent` mediumint(7) unsigned NOT NULL,
 		`timestamp` int(20) NOT NULL,
 		`bumped` int(20) NOT NULL,
@@ -203,48 +200,51 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		`locked` tinyint(1) NOT NULL DEFAULT 0,
 		`endless` tinyint(1) NOT NULL DEFAULT 0,
 		`pass` mediumint(7) unsigned NOT NULL DEFAULT 0,
-		PRIMARY KEY (`id`),
-			KEY `parent`(`parent`),
-			KEY `bumped`(`bumped`),
-			KEY `moderated`(`moderated`),
-			KEY `stickied`(`stickied`)
+		INDEX `parent` (`parent`),
+		INDEX `bumped` (`bumped`),
+		INDEX `moderated` (`moderated`),
+		INDEX `stickied` (`stickied`)
 	)";
 
-	$bansQuery = "CREATE TABLE `" . ATOM_DBBANS . "` (
-		`id` mediumint(7) unsigned NOT NULL auto_increment,
+	$staffQuery = "CREATE TABLE IF NOT EXISTS `" . ATOM_DBSTAFF . "` (
+		`id` INT AUTO_INCREMENT PRIMARY KEY,
+		`username` VARCHAR(50) UNIQUE NOT NULL,
+		`password_hash` VARCHAR(255) NOT NULL,
+		`role` ENUM('admin', 'moderator', 'janitor') NOT NULL
+	)";
+
+	$bansQuery = "CREATE TABLE IF NOT EXISTS `" . ATOM_DBBANS . "` (
+		`id` mediumint(7) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
 		`ip_from` bigint(20) NOT NULL,
 		`ip_to` bigint(20) NOT NULL,
 		`timestamp` int(20) NOT NULL,
 		`expire` int(20) NOT NULL,
 		`reason` text NOT NULL,
-		PRIMARY KEY (`id`),
-			KEY `ip_from`(`ip_from`),
-			KEY `ip_to`(`ip_to`)
+		INDEX `ip_from` (`ip_from`),
+		INDEX `ip_to` (`ip_to`)
 	)";
 
-	$ipLookupsQuery = "CREATE TABLE `" . ATOM_DBIPLOOKUPS . "` (
-		`ip` varchar(39) NOT NULL,
+	$ipLookupsQuery = "CREATE TABLE IF NOT EXISTS `" . ATOM_DBIPLOOKUPS . "` (
+		`ip` varchar(39) NOT NULL PRIMARY KEY,
 		`abuser` tinyint(1) NOT NULL DEFAULT 0,
 		`vps` tinyint(1) NOT NULL DEFAULT 0,
 		`proxy` tinyint(1) NOT NULL DEFAULT 0,
 		`tor` tinyint(1) NOT NULL DEFAULT 0,
-		`vpn` tinyint(1) NOT NULL DEFAULT 0,
-		PRIMARY KEY (`ip`)
+		`vpn` tinyint(1) NOT NULL DEFAULT 0
 	)";
 
-	$reportsQuery = "CREATE TABLE `" . ATOM_DBREPORTS . "` (
-		`id` mediumint(7) unsigned NOT NULL auto_increment,
+	$reportsQuery = "CREATE TABLE IF NOT EXISTS `" . ATOM_DBREPORTS . "` (
+		`id` mediumint(7) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
 		`ip` varchar(39) NOT NULL,
 		`board` varchar(16) NOT NULL,
 		`postnum` mediumint(7) unsigned NOT NULL,
 		`timestamp` int(20) NOT NULL,
 		`reason` text NOT NULL,
-		PRIMARY KEY (`id`),
-			KEY `ip`(`ip`)
+		INDEX `ip` (`ip`)
 	)";
 
-	$passQuery = "CREATE TABLE `" . ATOM_DBPASS . "` (
-		`number` mediumint(7) unsigned NOT NULL auto_increment,
+	$passQuery = "CREATE TABLE IF NOT EXISTS `" . ATOM_DBPASS . "` (
+		`number` mediumint(7) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
 		`id` varchar(64) NOT NULL,
 		`issued` int(20) NOT NULL,
 		`expires` int(20) NOT NULL,
@@ -253,28 +253,25 @@ if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
 		`meta` text NOT NULL,
 		`last_used` int(20) NOT NULL DEFAULT 0,
 		`last_used_ip` varchar(64),
-		PRIMARY KEY (`number`),
-			KEY `id`(`id`)
+		INDEX `id` (`id`)
 	)";
 
-	$likesQuery = "CREATE TABLE `" . ATOM_DBLIKES . "` (
-		`id` mediumint(7) unsigned NOT NULL auto_increment,
+	$likesQuery = "CREATE TABLE IF NOT EXISTS `" . ATOM_DBLIKES . "` (
+		`id` mediumint(7) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
 		`ip` varchar(39) NOT NULL,
 		`board` varchar(16) NOT NULL,
 		`postnum` mediumint(7) unsigned NOT NULL,
-		`islike` tinyint(1) NOT NULL DEFAULT 1,
-		PRIMARY KEY (`id`)
+		`islike` tinyint(1) NOT NULL DEFAULT 1
 	)";
 
-	$modlogQuery = "CREATE TABLE `" . ATOM_DBMODLOG . "` (
-		`id` mediumint(7) unsigned NOT NULL auto_increment,
+	$modlogQuery = "CREATE TABLE IF NOT EXISTS `" . ATOM_DBMODLOG . "` (
+		`id` mediumint(7) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
 		`timestamp` int(20) NOT NULL,
 		`boardname` varchar(255) NOT NULL,
 		`username` varchar(75) NOT NULL,
 		`action` text NOT NULL,
 		`color` varchar(75) NOT NULL,
-		`private` tinyint(1) NOT NULL DEFAULT 1,
-		PRIMARY KEY (`id`)
+		`private` tinyint(1) NOT NULL DEFAULT 1
 	)";
 }
 
@@ -392,14 +389,14 @@ function deleteAllPosts($ip, $parentId) {
 	foreach ($updThreads as $updThreadId) {
 		rebuildThreadPage($updThreadId);
 	}
-	modLog('Deleted all posts from ip ' . $ip . ': №' . $deletedPosts . '.', '0', 'Black');
+	modLog('Deleted all posts from ip ' . $ip . ': №' . $deletedPosts . '.');
 	rebuildIndexPages();
 	return $deletedPosts;
 }
 
 /* ==[ Images/video files ]================================================================================ */
 
-function deletePostImagesFiles($post, $imgList = []) {
+function deletePostImageFiles($post, $imgList = []) {
 	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT)) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = (int)trim(basename($index));
@@ -424,7 +421,7 @@ function deletePostImagesFiles($post, $imgList = []) {
 	}
 }
 
-function deletePostImagesFilesThumbFiles($post, $imgList) {
+function deletePostThumbFiles($post, $imgList) {
 	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT)) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = (int)trim(basename($index));
@@ -691,59 +688,44 @@ function getThreadId($post) {
 	return $post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent'];
 }
 
-/* ==[ Posting ]=========================================================================================== */
+/* ==[ Administration and moderation ]===================================================================== */
 
-function checkAccessRights() {
-	global $atom_moderators, $atom_janitors;
-	if (isset($_POST['managepassword'])) {
-		$providedPassword = substr($_POST['managepassword'], 0, 256);
-		if ($providedPassword != '' && $providedPassword === ATOM_ADMINPASS) {
-			$_SESSION['atomboard'] = ATOM_ADMINPASS;
-			$_SESSION['atom_user'] = 'Admin';
-		} elseif ($providedPassword != '' &&
-			count($atom_moderators) != 0 &&
-			$modname = array_search($providedPassword, $atom_moderators, true)
-		) {
-			$_SESSION['atomboard'] = $atom_moderators[$modname];
-			$_SESSION['atom_user'] = $modname;
-			modLog('Moderator login', '1', 'BlueViolet');
-		} elseif ($providedPassword != '' &&
-			count($atom_janitors) != 0 &&
-			$modname = array_search($providedPassword, $atom_janitors, true)
-		) {
-			$_SESSION['atomboard'] = $atom_janitors[$modname];
-			$_SESSION['atom_user'] = $modname;
-			modLog('Janitor login', '1', 'BlueViolet');
+function checkLogin() {
+	if (isset($_POST['manage_password'])) {
+		$passw = $_POST['manage_password'];
+		if (empty(getAllStaffMembers())) {
+			if ($passw === ATOM_ADMINPASS && ATOM_ADMINPASS !== '') {
+				$_SESSION['atom_user'] = 'TemporaryAdmin';
+				$_SESSION['atom_role'] = 'admin';
+			}
 		} else {
-			// Uncomment if you want a lot of "failed login" records in modLog
-			// modLog('Failed login attempt', '1', 'Orange');
+			$staff = getStaffMember($_POST['manage_user'] ?? '');
+			if ($staff && password_verify($passw, $staff['password_hash'])) {
+				$_SESSION['atom_user'] = $staff['username'];
+				$_SESSION['atom_role'] = $staff['role'];
+				modLog(ucfirst($staff['role']) . ' login', '1', 'BlueViolet');
+			}
 		}
 	}
-	$access = 'disabled';
-	if (isset($_SESSION['atomboard'])) {
-		if ($_SESSION['atomboard'] === ATOM_ADMINPASS) {
-			$access = 'admin';
-		} elseif (count($atom_moderators) != 0 &&
-			array_search($_SESSION['atomboard'], $atom_moderators, true)
-		) {
-			$access = 'moderator';
-		} elseif (count($atom_janitors) != 0 &&
-			array_search($_SESSION['atomboard'], $atom_janitors, true)
-		) {
-			$access = 'janitor';
-		}
-	}
-	if ($access == 'disabled') {
+	$loginStatus = $_SESSION['atom_role'] ?? 'disabled';
+	if ($loginStatus == 'disabled') {
 		setcookie('atom_access', '', time() - 3600, '/' . ATOM_BOARD . '/');
 		unset($_COOKIE['atom_access']);
 	} else {
 		setcookie('atom_access', '1', time() + 2592000, '/' . ATOM_BOARD . '/'); // 30 days
 	}
-	return $access;
+	return $loginStatus;
 }
 
 function isStaffPost() {
-	return isset($_POST['staffpost']) && checkAccessRights() != 'disabled';
+	return isset($_POST['staffpost']) && checkLogin() != 'disabled';
+}
+
+function deleteSession() {
+	session_unset();
+	session_destroy();
+	setcookie('atom_access', '', time() - 3600, '/' . ATOM_BOARD . '/');
+	unset($_COOKIE['atom_access']);
 }
 
 /* ==[ File reading/writing ]============================================================================== */
@@ -774,7 +756,7 @@ function writePage($filename, $contents) {
 	chmod($filename, 0664); /* it was created 0600 */
 }
 
-/* ==[ Pass codes ]======================================================================================== */
+/* ==[ Passcodes ]========================================================================================= */
 
 function isPassExpired($pass) {
 	return time() > $pass['expires'];
@@ -888,7 +870,7 @@ function checkCaptcha() {
 	// Check for recaptcha
 	if (ATOM_CAPTCHA == 'recaptcha') {
 		require_once 'inc/recaptcha/autoload.php';
-		$captcha = isset($_POST['g-recaptcha-response']) ? $_POST['g-recaptcha-response'] : '';
+		$captcha = $_POST['g-recaptcha-response'] ?? '';
 		$failedCaptcha = true;
 		$recaptcha = new \ReCaptcha\ReCaptcha(ATOM_RECAPTCHA_SECRET);
 		$resp = $recaptcha->verify($captcha, $_SERVER['REMOTE_ADDR']);
@@ -920,7 +902,7 @@ function checkCaptcha() {
 
 	// Check for simple captcha
 	elseif (ATOM_CAPTCHA) {
-		$captcha = isset($_POST['captcha']) ? strtolower(trim($_POST['captcha'])) : '';
+		$captcha = strtolower(trim($_POST['captcha'] ?? ''));
 		if ($captcha == '') {
 			$captchaError = 'Please enter the CAPTCHA text.';
 			if ($isJson) {
@@ -929,9 +911,7 @@ function checkCaptcha() {
 				fancyDie($captchaError);
 			}
 		}
-		if ($captcha != (isset($_SESSION['atom_captcha']) ?
-			strtolower(trim($_SESSION['atom_captcha'])) : '')
-		) {
+		if ($captcha != strtolower(trim($_SESSION['atom_captcha'] ?? ''))) {
 			$captchaError = 'Incorrect CAPTCHA text entered, please try again.<br>' .
 				'Click the image to retrieve a new CAPTCHA.';
 			if ($isJson) {
