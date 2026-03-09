@@ -1586,8 +1586,8 @@ require 'settings.php';
 if (ATOM_GEOIP == 'geoip2') {
 	require 'vendor/autoload.php';
 }
-if (ATOM_TRIPSEED == '' || ATOM_ADMINPASS == '') {
-	fancyDie('settings.php: ATOM_TRIPSEED and ATOM_ADMINPASS must be configured.');
+if (ATOM_TRIPSEED == '') {
+	fancyDie('settings.php: ATOM_TRIPSEED must be configured.');
 }
 if (ATOM_CAPTCHA == 'recaptcha' && (ATOM_RECAPTCHA_SITE == '' || ATOM_RECAPTCHA_SECRET == '')) {
 	fancyDie('settings.php: ATOM_RECAPTCHA_SITE and ATOM_RECAPTCHA_SECRET must be configured.');

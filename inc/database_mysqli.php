@@ -769,7 +769,7 @@ function getAllStaffMembers() {
 	global $mysqli;
 	return $mysqli->execute_query(
 		"SELECT id, username, role FROM " . ATOM_DBSTAFF . "
-		ORDER BY role, username")->fetch_all();
+		ORDER BY role, username")->fetch_all(MYSQLI_ASSOC);
 }
 
 function addStaffMember($userName, $passw, $role) {
