@@ -89,6 +89,8 @@ define('ATOM_PASSCODES_USE_LIMIT', 900);
 /* ==[ Dirty IP Lookups ]================================================================================== */
 // IP lookups, using ipregistry.co. Set ATOM_IPLOOKUPS_KEY to '' to disable, othwerise provide a key
 define('ATOM_IPLOOKUPS_KEY', '');
+// Number of days to cache IP lookup results in the database
+define('ATOM_IPLOOKUPS_TIMEOUT', 90);
 // Block abusive IPs
 define('ATOM_IPLOOKUPS_BLOCK_ABUSER', true);
 // Block IPs under cloud providers

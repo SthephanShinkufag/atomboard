@@ -705,11 +705,28 @@ function buildAdminCreateForm() {
 		</form>';
 }
 
+function formatTimestamp($time) {
+	if ($time == 0) {
+		return 'Never';
+	}
+	$diff = time() - $time;
+	if ($diff < 60) {
+		return 'Just now';
+	}
+	if ($diff < 3600) {
+		return floor($diff / 60) . 'm ago';
+	}
+	if ($diff < 86400) {
+		return floor($diff / 3600) . 'h ago';
+	}
+	return date('d.m.Y H:i', $time);
+}
+
 function buildStaffManager() {
 	$html = '<form method="post" action="?manage&staff">
 			<fieldset>
 				<legend>Add new staff member</legend>
-				<input type="text" name="add_user" placeholder="Username" required>
+				<input type="text" name="add_user" placeholder="Username" required autocomplete="off">
 				<input type="password" name="add_pass" placeholder="Password" required>
 				<select name="add_role">
 					<option value="moderator">Moderator</option>
@@ -719,22 +736,27 @@ function buildStaffManager() {
 			</fieldset>
 		</form>
 		<h3>Staff Management</h3>
-		<table class="table"><tbody>
+		<table class="table"><thead>
 			<tr>
 				<th>Username</th>
 				<th>Role</th>
+				<th>Last Login</th>
 				<th>Action</th>
-			</tr>';
+			</tr></thead><tbody>';
 	$staffList = getAllStaffMembers();
 	foreach ($staffList as $person) {
+		$lastSeen = formatTimestamp($person['last_login']);
+		$username = htmlspecialchars($person['username']);
 		$html .= '
 			<tr>
-				<td>' . $person['username'] . '</td>
+				<td>' . $username . '</td>
 				<td>' . ucfirst($person['role']) . '</td>
+				<td title="' . date('Y-m-d H:i:s', $person['last_login']) . '">' .
+					$lastSeen . '</td>
 				<td>' . (
 					$person['role'] === 'admin' ? '---' :
-					'<a href="?manage&staff&delete_staff=' . $person['id'] .
-						'" onclick="return confirm(\'Are you sure to delete this staff member?\')">' .
+					'<a href="?manage&staff&delete_staff=' . (int)$person['id'] .
+						'" onclick="return confirm(\'Delete ' . $username . '?\')">' .
 						'Delete</a>') . '</td>
 			</tr>';
 	}
@@ -743,7 +765,7 @@ function buildStaffManager() {
 }
 
 function buildAccountForm($message) {
-    return ($message ? '<div class="manage-error">' . htmlspecialchars($message) . '</div>' : '') . '
+	return ($message ? '<div class="manage-error">' . htmlspecialchars($message) . '</div>' : '') . '
 		<form method="post" action="?manage&account">
 			<fieldset>
 				<legend>Account settings (' . htmlspecialchars($_SESSION['atom_user']) . ')</legend>
@@ -852,14 +874,14 @@ function buildBansPage() {
 		$geoipReader = ATOM_GEOIP == 'geoip2' ?
 			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
 		$text .= '
-		<table class="table"><tbody>
+		<table class="table"><thead>
 			<tr>
 				<th>IP-address</th>
 				<th>Set at</th>
 				<th>Expires</th>
 				<th>Reason provided</th>
 				<th>&nbsp;</th>
-			</tr>';
+			</tr></thead><tbody>';
 		foreach ($getAllBans as $ban) {
 			if ($ban['expire'] == 1) {
 				$expire = 'Warning';
@@ -915,6 +937,10 @@ function buildPasscodesPage() {
 					<tr>
 						<td><label for="meta">Meta (related info):</label></td>
 						<td><input type="text" name="meta" id="meta">&nbsp;<small>optional</small></td>
+					</tr>
+					<tr>
+						<td><label for="meta_admin">Meta for Admin:</label></td>
+						<td><input type="text" name="meta_admin">&nbsp;<small>optional</small></td>
 					</tr>
 					<tr>
 						<td><input type="submit" class="button-manage" value="Submit"></td>
@@ -993,7 +1019,7 @@ function buildPasscodesPage() {
 	if (count($passcodes) > 0) {
 		$passHtml .= '
 		<br>
-		<table class="table"><tbody>
+		<table class="table"><thead>
 			<tr>
 				<th>№</th>' .
 				($isAdmin ? '
@@ -1006,7 +1032,7 @@ function buildPasscodesPage() {
 				<th>Blocked reason</th>
 				<th>Last used</th>
 				<th>Last used IP</th>
-			</tr>';
+			</tr></thead><tbody>';
 		$passcodes = getAllPasscodes();
 		$geoipReader = ATOM_GEOIP == 'geoip2' ?
 			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
@@ -1104,7 +1130,7 @@ function buildUserInfoPage($ip, $posts) {
 						<th>Expires</th>
 						<th>Reason provided</th>
 						<th>&nbsp;</th>
-					</tr>
+					</tr></thead><tbody>
 					<tr>
 						<td>' . date('d.m.Y D H:i:s', $ban['timestamp']) . '</td>
 						<td>' . $expire . '</td><td>' . ($ban['reason'] == '' ?
@@ -1118,14 +1144,14 @@ function buildUserInfoPage($ip, $posts) {
 		if ($ipLookup) {
 			$red = ' style="background: #ff000060;">1';
 			$ipLookupHtml = '
-				<table class="table"><tbody>
+				<table class="table"><thead>
 					<tr>
 						<th>Abuser</th>
 						<th>VPS</th>
 						<th>Proxy</th>
 						<th>TOR</th>
 						<th>VPN</th>
-					</tr>
+					</tr></thead><tbody>
 					<tr>
 						<td' . ($ipLookup['abuser'] ? $red : '>0') . '</td>
 						<td' . ($ipLookup['vps'] ? $red : '>0') . '</td>
@@ -1174,7 +1200,7 @@ function buildUserInfoPage($ip, $posts) {
 			<fieldset>
 				<legend>Bans and warnings</legend>' .
 				($ban ? '
-				<table class="table"><tbody>' .
+				<table class="table"><thead>' .
 					$banHtml . '
 				</tbody></table>' : 'This IP has no bans or warnings.') . '
 			</fieldset>' .
@@ -1648,42 +1674,40 @@ function buildModLogForm() {
 		<br>';
 }
 
-function buildModLogTable($isModerators = false, $fromtime = '0', $totime = '0') {
-	$periodEndDate = '0';
-	$periodStartDate = '0';
-	if ($isModerators && $fromtime !== '0' && $totime !== '0') {
-		$periodEndDate = max($fromtime, $totime);
-		$periodStartDate = min($fromtime, $totime);
+function buildModLogTable($isModerators = false, $fromtime = 0, $totime = 0) {
+	$periodEndDate = 0;
+	$periodStartDate = 0;
+	if ($isModerators && $fromtime > 0 && $totime > 0) {
+		$periodEndDate = max((int)$fromtime, (int)$totime);
+		$periodStartDate = min((int)$fromtime, (int)$totime);
 	}
-	$text = '';
 	$records = getModLogRecords($isModerators ? '1' : '0', $periodEndDate, $periodStartDate);
-	$recordsCount = count($records);
-	if ($recordsCount > 0) {
-		$text .= ($isModerators ? 'Total Records: ' . $recordsCount : '') . '
-		<table class="table"><tbody>
+	if (empty($records)) {
+		return '<div class="notice">No moderation records found for the selected period.</div>';
+	}
+	$html = ($isModerators ? '<p>Total Records: ' . count($records) . '</p>' : '') . '
+		<table class="table"><thead>
 			<tr>
-				<th>Date / Time:</th>' .
+				<th>Date / Time</th>' .
 				($isModerators ? '
-				<th>User:</th>' : '') . '
-				<th>Action:</th>
-			</tr>';
-		foreach ($records as $record) {
-			$text .= '
-			<tr' . ($isModerators ? ' style="color: ' .
-				($record['color'] != 'Black' ? $record['color'] : '') . '"' : '') . '>
+				<th>User</th>' : '') . '
+				<th>Action</th>
+			</tr></thead><tbody>';
+	foreach ($records as $record) {
+		$style = '';
+		if ($isModerators && !empty($record['color']) && $record['color'] !== 'Black') {
+			$style = ' style="color: ' . htmlspecialchars($record['color']) . '"';
+		}
+		$html .= '
+			<tr' . $style . '>
 				<td>' . date('d.m.y D H:i:s', $record['timestamp']) . '</td>' .
 				($isModerators ? '
-				<td>' . $record['username'] . '</td>' : '') . '
-				<td>' . $record['action'] . '</td>
+				<td>' . ($isModerators ? htmlspecialchars($record['username']) : '') . '</td>' : '') . '
+				<td>' . htmlspecialchars($record['action']) . '</td>
 			</tr>';
-		}
-		$text .= '
-		</tbody></table>';
-	} else {
-		$text .= '
-		<div>No moderation records found for the selected period.</div>';
 	}
-	return $text;
+	return $html . '
+		</tbody></table>';
 }
 
 function buildModLogPage() {

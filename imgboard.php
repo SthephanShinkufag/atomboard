@@ -117,6 +117,7 @@ function managementRequest() {
 			rebuildThreadPage($thread['id']);
 		}
 		rebuildIndexPages();
+		deleteOldLookups();
 
 		// Delete likes for deleted posts
 		$likes = getAllLikes();
@@ -431,8 +432,8 @@ function managementRequest() {
 
 	if (ATOM_PASSCODES_ENABLED && isset($_GET['issuepasscode']) && $isAdmin) {
 		if (!empty($_POST['expires'])) {
-			die(managePage(manageInfo('New passcode issued:<br>' . insertPass($_POST['expires'],
-				$_POST['meta']))));
+			die(managePage(manageInfo('New passcode issued:<br>' .
+				insertPass($_POST['expires'], $_POST['meta'], $_POST['meta_admin']))));
 		}
 	}
 
@@ -1069,25 +1070,21 @@ function postingRequest() {
 			// Check for upload errors
 			switch ($error) {
 			case UPLOAD_ERR_OK: break;
-			case UPLOAD_ERR_FORM_SIZE:
-				fancyDie($fileSizeErrorText);
-				break;
+			case UPLOAD_ERR_FORM_SIZE: fancyDie($fileSizeErrorText); break;
 			case UPLOAD_ERR_INI_SIZE:
-				fancyDie($fileIdxTxt . ' exceeds the upload_max_filesize directive (' .
-					ini_get('upload_max_filesize') . ') in php.ini.');
+				fancyDie($fileIdxTxt . ' error: exceeds the upload_max_filesize directive (' .
+					ini_get('upload_max_filesize') . ').');
 				break;
-			case UPLOAD_ERR_PARTIAL: fancyDie($fileIdxTxt . ' was only partially uploaded.'); break;
-			case UPLOAD_ERR_NO_FILE: fancyDie('No file was uploaded.'); break;
-			case UPLOAD_ERR_NO_TMP_DIR: fancyDie('Missing a temporary folder.'); break;
-			case UPLOAD_ERR_CANT_WRITE: fancyDie('Failed to write ' . $fileIdxTxt . ' to disk.'); break;
-			case UPLOAD_ERR_EXTENSION:
-				fancyDie('Unable to save the uploaded ' . $fileIdxTxt . '. Extension error.');
-				break;
-			default: fancyDie('Unable to save the uploaded ' . $fileIdxTxt . '.');
+			case UPLOAD_ERR_PARTIAL: fancyDie($fileIdxTxt . ' error: was only partially uploaded.'); break;
+			case UPLOAD_ERR_NO_FILE: fancyDie($fileIdxTxt . ' error: no file was uploaded.'); break;
+			case UPLOAD_ERR_NO_TMP_DIR: fancyDie($fileIdxTxt . ' error: missing a temporary folder.'); break;
+			case UPLOAD_ERR_CANT_WRITE: fancyDie($fileIdxTxt . ' error: failed to write to disk.'); break;
+			case UPLOAD_ERR_EXTENSION: fancyDie($fileIdxTxt . ' error: file extension error.'); break;
+			default: fancyDie($fileIdxTxt . ' error: unable to save the uploaded file.');
 			}
 			$file = $_FILES['file']['tmp_name'][$index];
 			if (!is_file($file) || !is_readable($file)) {
-				fancyDie($fileIdxTxt . ' transfer failure.<br>Please retry the submission.');
+				fancyDie($fileIdxTxt . ' error: file transfer failure. Please retry the submission.');
 			}
 
 			// Check for bytes size restriction (but it only applies to passcode users)
@@ -1126,13 +1123,11 @@ function postingRequest() {
 			// Check for file duplicates
 			if (ATOM_FILE_DUPLICATE === false) {
 				$hex = $post['file' . $index . '_hex'];
-				$hexMatches = getPostsByImageHex($hex);
-				if (count($hexMatches) > 0) {
-					foreach ($hexMatches as $hexMatch) {
-						fancyDie('Duplicate ' . $fileIdxTxt .
-							' uploaded.<br>That file has already been posted <a href="' .
-							'res/' . getThreadId($hexMatch) . '.html#' . $hexMatch['id'] . '">here</a>.');
-					}
+				$hexMatch = getPostsByImageHex($hex);
+				if ($hexMatch) {
+					fancyDie('Duplicate ' . $fileIdxTxt .
+						' uploaded.<br>That file has already been posted <a href="res/' .
+						getThreadId($hexMatch) . '.html#' . $hexMatch['id'] . '">here</a>.');
 				}
 			}
 

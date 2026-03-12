@@ -198,7 +198,7 @@ legend {
 	border: 1px solid var(--table-border);
 }
 
-.table > tbody > tr > th {
+.table > thead > tr > th {
 	padding: 3px;
 	background: var(--table-th-bg);
 	border: 1px solid var(--table-border);

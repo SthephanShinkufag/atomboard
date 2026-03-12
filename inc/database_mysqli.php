@@ -195,7 +195,6 @@ function getPost($id) {
 
 function getPostsByIP($ip) {
 	global $mysqli;
-	$posts = [];
 	$ipArr = cidr2ip($ip);
 	$result = $ipArr[0] == $ipArr[1] ?
 		$mysqli->execute_query(
@@ -207,47 +206,28 @@ function getPostsByIP($ip) {
 			"SELECT * FROM " . ATOM_DBPOSTS . "
 			WHERE INET_ATON(ip) >= ? AND INET_ATON(ip) <= ?
 			ORDER BY timestamp DESC",
-			cidr2ip($ip));
-	if ($result) {
-		while ($post = $result->fetch_assoc()) {
-			$posts[] = $post;
-		}
-	}
-	return $posts;
+			$ipArr);
+	return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
 function getPostsByImageHex($hex) {
 	global $mysqli;
-	$posts = [];
 	$result = $mysqli->execute_query(
-		"SELECT * FROM " . ATOM_DBPOSTS . "
+		"SELECT id, parent FROM " . ATOM_DBPOSTS . "
 		WHERE (file0_hex = ? OR file1_hex = ? OR file2_hex = ? OR file3_hex = ?)
 			AND moderated = 1 LIMIT 1",
 		[$hex, $hex, $hex, $hex]);
-	if ($result) {
-		while ($post = $result->fetch_assoc()) {
-			$posts[] = $post;
-		}
-		$result->close();
-	}
-	return $posts;
+	return $result->fetch_assoc();
 }
 
 function getLatestPosts($moderated, $limit) {
 	global $mysqli;
-	$posts = [];
 	$result = $mysqli->execute_query(
 		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE moderated = ?
 		ORDER BY timestamp DESC LIMIT " . (int)$limit,
 		[$moderated ? '1' : '0']);
-	if ($result) {
-		while ($post = $result->fetch_assoc()) {
-			$posts[] = $post;
-		}
-		$result->close();
-	}
-	return $posts;
+	return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
 function getLastPostByIP() {
@@ -283,8 +263,8 @@ function deletePost($id) {
 			deletePostImageFiles($post);
 			$mysqli->execute_query(
 				"DELETE FROM " . ATOM_DBPOSTS . "
-				WHERE id = ? LIMIT 1",
-				[$post['id']]);
+				WHERE id = ?",
+				[(int)$post['id']]);
 		} else {
 			$thispost = $post;
 		}
@@ -296,8 +276,8 @@ function deletePost($id) {
 		deletePostImageFiles($thispost);
 		$mysqli->execute_query(
 			"DELETE FROM " . ATOM_DBPOSTS . "
-			WHERE id = ? LIMIT 1",
-			[$thispost['id']]);
+			WHERE id = ?",
+			[(int)$thispost['id']]);
 	}
 	deleteReports($id);
 	deleteLikes($id);
@@ -366,18 +346,11 @@ function isThreadExists($id) {
 
 function getThreads() {
 	global $mysqli;
-	$threads = [];
 	$result = $mysqli->query(
 		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE parent = 0 AND moderated = 1
 		ORDER BY stickied DESC, bumped DESC");
-	if ($result) {
-		while ($thread = $result->fetch_assoc()) {
-			$threads[] = $thread;
-		}
-		$result->close();
-	}
-	return $threads;
+	return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
 function getThreadsCount() {
@@ -400,27 +373,19 @@ function trimThreadsCount() {
 			while ($post = $result->fetch_assoc()) {
 				deletePost($post['id']);
 			}
-			$result->close();
 		}
 	}
 }
 
 function getThreadPosts($id, $moderatedOnly = true) {
 	global $mysqli;
-	$posts = [];
 	$result = $mysqli->execute_query(
 		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE (id = ? OR parent = ?)" .
 		($moderatedOnly ? " AND moderated = 1" : "") . "
 		ORDER BY id ASC",
 		[(int)$id, (int)$id]);
-	if ($result) {
-		while ($post = $result->fetch_assoc()) {
-			$posts[] = $post;
-		}
-		$result->close();
-	}
-	return $posts;
+	return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
 function getThreadPostsCount($id) {
@@ -473,7 +438,7 @@ function bumpThread($id) {
 function banByID($id) {
 	global $mysqli;
 	$result = $mysqli->execute_query(
-		"SELECT * FROM " . ATOM_DBBANS . "
+		"SELECT ip_from, ip_to FROM " . ATOM_DBBANS . "
 		WHERE id = ? LIMIT 1",
 		[(int)$id]);
 	return $result->fetch_assoc();
@@ -481,26 +446,20 @@ function banByID($id) {
 
 function banByIP($ip) {
 	global $mysqli;
+	$ip_long = ip2long($ip);
 	$result = $mysqli->execute_query(
 		"SELECT * FROM " . ATOM_DBBANS . "
-		WHERE ? BETWEEN ip_from AND ip_to LIMIT 1",
-		[ip2long($ip)]);
+		WHERE ip_from <= ? AND ip_to >= ? LIMIT 1",
+		[$ip_long, $ip_long]);
 	return $result->fetch_assoc();
 }
 
 function getAllBans() {
 	global $mysqli;
-	$bans = [];
 	$result = $mysqli->query(
 		"SELECT * FROM " . ATOM_DBBANS . "
 		ORDER BY timestamp DESC");
-	if ($result) {
-		while ($ban = $result->fetch_assoc()) {
-			$bans[] = $ban;
-		}
-		$result->close();
-	}
-	return $bans;
+	return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
 function insertBan($ban) {
@@ -537,64 +496,61 @@ function lookupByIP($ip) {
 	global $mysqli;
 	$result = $mysqli->execute_query(
 		"SELECT * FROM " . ATOM_DBIPLOOKUPS . "
-		WHERE ip = ? LIMIT 1",
-		[$ip]);
+		WHERE ip = ? AND last_updated > ? LIMIT 1",
+		[$ip, (int)(time() - (ATOM_IPLOOKUPS_TIMEOUT * 86400))]);
 	return $result->fetch_assoc();
 }
 
 function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
 	global $mysqli;
+	$now = time();
 	$mysqli->execute_query(
 		"INSERT INTO " . ATOM_DBIPLOOKUPS . "
-		(ip, abuser, vps, proxy, tor, vpn)
-		VALUES (?, ?, ?, ?, ?, ?)",
-		[$ip, (int)$abuser, (int)$vps, (int)$proxy, (int)$tor, (int)$vpn]);
-	return $mysqli->insert_id;
+		(ip, abuser, vps, proxy, tor, vpn, last_updated)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE
+		abuser = VALUES(abuser), vps = VALUES(vps), proxy = VALUES(proxy),
+		tor = VALUES(tor), vpn = VALUES(vpn), last_updated = VALUES(last_updated)",
+		[$ip, (int)$abuser, (int)$vps, (int)$proxy, (int)$tor, (int)$vpn, $now]);
+}
+
+function deleteOldLookups() {
+	global $mysqli;
+	$mysqli->execute_query(
+		"DELETE FROM " . ATOM_DBIPLOOKUPS . "
+		WHERE last_updated < ?",
+		[(int)(time() - (ATOM_IPLOOKUPS_TIMEOUT * 86400))]);
 }
 
 /* ==[ Posts reports ]===================================================================================== */
 
 function reportsByPostID($id) {
 	global $mysqli;
-	$reports = [];
 	$result = $mysqli->execute_query(
 		"SELECT * FROM " . ATOM_DBREPORTS . "
 		WHERE postnum = ?
 		ORDER BY timestamp DESC",
 		[(int)$id]);
-	if ($result) {
-		while ($report = $result->fetch_assoc()) {
-			$reports[] = $report;
-		}
-		$result->close();
-	}
-	return $reports;
+	return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
 function getAllReports() {
 	global $mysqli;
-	$reports = [];
 	$result = $mysqli->execute_query(
 		"SELECT * FROM " . ATOM_DBREPORTS . "
 		WHERE board = ?
 		ORDER BY postnum DESC, timestamp DESC",
 		[ATOM_BOARD]);
-	if ($result) {
-		while ($report = $result->fetch_assoc()) {
-			$reports[] = $report;
-		}
-		$result->close();
-	}
-	return $reports;
+	return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
 function insertReport($id, $board, $ip, $reason) {
 	global $mysqli;
-	$result = $mysqli->execute_query(
-		"SELECT * FROM " . ATOM_DBREPORTS . "
-		WHERE ip = ? AND board = ? AND postnum = ?",
+	$check = $mysqli->execute_query(
+		"SELECT id FROM " . ATOM_DBREPORTS . "
+		WHERE ip = ? AND board = ? AND postnum = ? LIMIT 1",
 		[$ip, $board, (int)$id]);
-	if ((int)$result->fetch_column()) {
+	if ($check->fetch_row()) {
 		return 'exists';
 	}
 	$mysqli->execute_query(
@@ -635,28 +591,21 @@ function passByNum($passNum) {
 
 function getAllPasscodes() {
 	global $mysqli;
-	$passcodes = [];
 	$result = $mysqli->query(
 		"SELECT * FROM " . ATOM_DBPASS . "
 		ORDER BY number ASC");
-	if ($result) {
-		while ($passcode = $result->fetch_assoc()) {
-			$passcodes[] = $passcode;
-		}
-		$result->close();
-	}
-	return $passcodes;
+	return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
-function insertPass($expires, $meta) {
+function insertPass($expires, $meta, $metaAdmin) {
 	global $mysqli;
 	$passId = bin2hex(random_bytes(32));
 	$now = time();
 	$mysqli->execute_query(
 		"INSERT INTO " . ATOM_DBPASS . "
-		(id, issued, expires, blocked_till, meta)
-		VALUES (?, ?, ?, ?, ?)",
-		[$passId, $now, $now + $expires, 0, $meta]);
+		(id, issued, expires, blocked_till, meta, meta_admin)
+		VALUES (?, ?, ?, ?, ?, ?)",
+		[$passId, $now, $now + (int)$expires, 0, $meta, $metaAdmin]);
 	return $passId;
 }
 
@@ -671,16 +620,19 @@ function usePass($passId, $ip) {
 
 function changePass($passNum, $meta, $expires, $blockTill, $blockReason) {
 	global $mysqli;
-	$mysqli->execute_query(
-		"UPDATE " . ATOM_DBPASS . "
-		SET meta = ?,
-			" . ($expires ? "expires = ?," : "") . "
-			blocked_till = ?,
-			blocked_reason = ?
-		WHERE number = ?",
-		$expires ?
-			[$meta, $expires, $blockTill, $blockReason, (int)$passNum] :
-			[$meta, $blockTill, $blockReason, (int)$passNum]);
+	if ($expires) {
+		$mysqli->execute_query(
+			"UPDATE " . ATOM_DBPASS . "
+			SET meta = ?, expires = ?, blocked_till = ?, blocked_reason = ?
+			WHERE number = ?",
+			[$meta, (int)$expires, (int)$blockTill, $blockReason, (int)$passNum]);
+	} else {
+		$mysqli->execute_query(
+			"UPDATE " . ATOM_DBPASS . "
+			SET meta = ?, blocked_till = ?, blocked_reason = ?
+			WHERE number = ?",
+			[$meta, (int)$blockTill, $blockReason, (int)$passNum]);
+	}
 }
 
 function deletePass($passId) {
@@ -695,55 +647,56 @@ function deletePass($passId) {
 
 function getAllLikes() {
 	global $mysqli;
-	$likes = [];
 	$result = $mysqli->execute_query(
 		"SELECT * FROM " . ATOM_DBLIKES . "
 		WHERE board = ?
-		ORDER BY board ASC, postnum ASC",
+		ORDER BY postnum ASC",
 		[ATOM_BOARD]);
-	if ($result) {
-		while ($like = $result->fetch_assoc()) {
-			$likes[] = $like;
-		}
-		$result->close();
-	}
-	return $likes;
+	return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
 function toggleLike($id, $ip) {
 	global $mysqli;
+	$id = (int)$id;
 
 	// Check is like exists for a post from this ip
-	$result = $mysqli->execute_query(
-		"SELECT COUNT(*) FROM " . ATOM_DBLIKES . "
-		WHERE ip = ? AND board = ? AND postnum = ?",
-		[$ip, ATOM_BOARD, (int)$id]);
-	$isAlreadyLiked = (int)$result->fetch_column();
-	$result->close();
+	$res = $mysqli->execute_query(
+		"SELECT id FROM " . ATOM_DBLIKES . "
+		WHERE ip = ? AND board = ? AND postnum = ? LIMIT 1",
+		[$ip, ATOM_BOARD, $id]);
+	$existingLike = $res->fetch_row();
 
-	// Delete existing post like or insert new
-	$mysqli->execute_query($isAlreadyLiked ?
-		"DELETE FROM " . ATOM_DBLIKES . "
-			WHERE ip = ? AND board = ? AND postnum = ?" :
-		"INSERT INTO " . ATOM_DBLIKES . "
+	// Inverting: if there is a like, delete it by ID; if not, create it
+	if ($existingLike) {
+		$mysqli->execute_query(
+			"DELETE FROM " . ATOM_DBLIKES . "
+			WHERE id = ?",
+			[$existingLike[0]]);
+		$status = false;
+	} else {
+		$mysqli->execute_query(
+			"INSERT INTO " . ATOM_DBLIKES . "
 			(ip, board, postnum)
 			VALUES (?, ?, ?)",
-		[$ip, ATOM_BOARD, (int)$id]);
+			[$ip, ATOM_BOARD, $id]);
+		$status = true;
+	}
 
-	// Get the number of likes for a post
-	$result = $mysqli->execute_query(
+	// Count the number of likes for a post
+	$res = $mysqli->execute_query(
 		"SELECT COUNT(*) FROM " . ATOM_DBLIKES . "
 		WHERE board = ? AND postnum = ?",
 		[ATOM_BOARD, $id]);
-	$countOfPostLikes = (int)$result->fetch_column();
-	$result->close();
+	$count = (int)$res->fetch_column();
 
 	// Update the likes counter for a post in the post table
 	$mysqli->execute_query(
 		"UPDATE " . ATOM_DBPOSTS . "
-		SET likes = ? WHERE id = ?",
-		[$countOfPostLikes, (int)$id]);
-	return [!$isAlreadyLiked, $countOfPostLikes];
+		SET likes = ?
+		WHERE id = ?",
+		[$count, $id]);
+
+	return [$status, $count];
 }
 
 function deleteLikes($id) {
@@ -760,16 +713,17 @@ function getStaffMember($userName) {
 	global $mysqli;
 	$result = $mysqli->execute_query(
 		"SELECT username, password_hash, role FROM " . ATOM_DBSTAFF . "
-		WHERE username = ?",
+		WHERE username = ? LIMIT 1",
 		[$userName]);
 	return $result->fetch_assoc();
 }
 
 function getAllStaffMembers() {
 	global $mysqli;
-	return $mysqli->execute_query(
-		"SELECT id, username, role FROM " . ATOM_DBSTAFF . "
-		ORDER BY role, username")->fetch_all(MYSQLI_ASSOC);
+	$result = $mysqli->execute_query(
+		"SELECT id, username, role, last_login FROM " . ATOM_DBSTAFF . "
+		ORDER BY role ASC, last_login DESC");
+	return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
 function addStaffMember($userName, $passw, $role) {
@@ -786,63 +740,46 @@ function deleteStaffMember($id) {
 	$mysqli->execute_query(
 		"DELETE FROM " . ATOM_DBSTAFF . "
 		WHERE id = ? AND role != 'admin'",
-		[$id]);
+		[(int)$id]);
 }
 
-function changeStaffMember($id, $passw) {
+function changeStaffMember($userName, $passw) {
 	global $mysqli;
 	$mysqli->execute_query(
 		"UPDATE " . ATOM_DBSTAFF . "
 		SET password_hash = ?
 		WHERE username = ?",
-		[password_hash($passw, PASSWORD_DEFAULT), $id]);
+		[password_hash($passw, PASSWORD_DEFAULT), $userName]);
+}
+
+function updateStaffLogin($username) {
+	global $mysqli;
+	$mysqli->execute_query(
+		"UPDATE " . ATOM_DBSTAFF . "
+		SET last_login = ?
+		WHERE username = ?",
+		[time(), $username]);
 }
 
 function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
 	global $mysqli;
-	$records = [];
-	// If we need a modlog for the admin panel with all public+private records
-	if ($private === '1') {
-		if ($periodEndDate === 0 || $periodStartDate === 0) { // If the date range is not set
-			$result = $mysqli->execute_query(
-				"SELECT timestamp, username, action, color FROM " . ATOM_DBMODLOG . "
-				WHERE boardname = ?
-				ORDER BY timestamp DESC LIMIT 100",
-				[ATOM_BOARD]);
-			if ($result) {
-				while ($record = $result->fetch_assoc()) {
-					$records[] = $record;
-				}
-				$result->close();
-			}
-		} elseif ($periodEndDate !== 0 && $periodStartDate !== 0) { // If the date range is set
-			$result = $mysqli->execute_query(
-				"SELECT timestamp, username, action, color FROM " . ATOM_DBMODLOG . "
-				WHERE boardname = ? AND timestamp >= ? AND timestamp <= ?
-				ORDER BY timestamp DESC",
-				[ATOM_BOARD, $periodStartDate, $periodEndDate]);
-			if ($result) {
-				while ($record = $result->fetch_assoc()) {
-					$records[] = $record;
-				}
-				$result->close();
-			}
-		}
-	// If we need only public records
-	} elseif ($private === '0') {
-		$result = $mysqli->execute_query(
-			"SELECT timestamp, action FROM " . ATOM_DBMODLOG . "
-			WHERE boardname = ? AND private = ?
-			ORDER BY timestamp DESC LIMIT 100",
-			[ATOM_BOARD, '0']);
-		if ($result) {
-			while ($record = $result->fetch_assoc()) {
-				$records[] = $record;
-			}
-			$result->close();
+	$sql = "SELECT timestamp, username, action, color FROM " . ATOM_DBMODLOG . " WHERE boardname = ?";
+	$params = [ATOM_BOARD];
+	if ($private === '0') {
+		// Public posts only (no date filter, last 100)
+		$sql .= " AND private = '0' ORDER BY timestamp DESC LIMIT 100";
+	} else {
+		// Admin panel (private + public records)
+		if ($periodStartDate > 0 && $periodEndDate > 0) {
+			$sql .= " AND timestamp >= ? AND timestamp <= ? ORDER BY timestamp DESC";
+			$params[] = (int)$periodStartDate;
+			$params[] = (int)$periodEndDate;
+		} else {
+			$sql .= " ORDER BY timestamp DESC LIMIT 100";
 		}
 	}
-	return $records;
+	$result = $mysqli->execute_query($sql, $params);
+	return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
 // modLog('Text to show in modlog', '1/0', 'Color');
