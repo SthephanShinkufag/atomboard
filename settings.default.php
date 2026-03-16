@@ -1,5 +1,5 @@
 <?php
-# See README for instructions on setting up the board.
+// See README for instructions on setting up the board
 
 /* ==[ Board description and customization ]=============================================================== */
 // Unique identifier for this board using only letters and numbers
@@ -230,7 +230,7 @@ define('ATOM_FILE_MAXH', 230); // Height
 
 /* ==[ Captcha ]=========================================================================================== */
 // Requiring users to pass a CAPTCHA when posting
-// valuse: 'simple', 'recaptcha', '' to disable
+// Values: 'simple', 'recaptcha', '' to disable
 // Click [Rebuild All] in the management panel after enabling
 define('ATOM_CAPTCHA', 'simple');
 // The following only apply when ATOM_CAPTCHA is set to recaptcha

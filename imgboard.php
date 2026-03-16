@@ -681,12 +681,18 @@ function postingRequest() {
 
 		// Text replacement from settings.php
 		if (!empty($atom_replace_text)) {
-			$msg = preg_replace(array_keys($atom_replace_text), array_values($atom_replace_text), $msg);
+			$callbacks = [];
+			foreach ($atom_replace_text as $pattern => $replacement) {
+				$callbacks[$pattern] = fn($m) => 
+					'<span class="autoreplace" style="color: hsl(' . mt_rand(0, 360) . ', 90%, 50%)">' .
+					preg_replace_callback('/\$(\d+)/', fn($i) => $m[$i[1]] ?? '', $replacement) . '</span>';
+			}
+			$msg = preg_replace_callback_array($callbacks, $msg);
 		}
 		if (!empty($atom_replace_rand)) {
 			foreach ($atom_replace_rand as $pattern => $replacements) {
 				$msg = preg_replace_callback($pattern, fn() => 
-					'<span style="color: hsl(' . mt_rand(0, 360) . ', ' . mt_rand(70, 100) . '%, 50%)">' .
+					'<span class="autoreplace" style="color: hsl(' . mt_rand(0, 360) . ', 90%, 50%)">' .
 					$replacements[array_rand($replacements)] . '</span>', $msg);
 			}
 		}
