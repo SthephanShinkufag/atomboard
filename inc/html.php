@@ -645,9 +645,7 @@ function managePage($text, $action = '') {
 			<a class="link-button" href="?manage&staffpost">Raw post</a>' .
 			($isAdmin ? '
 			<a class="link-button" href="?manage&rebuildall">Rebuild All</a>
-			<a class="link-button" href="?manage&staff">Staff</a>' : '') .
-			($isAdmin && ATOM_DBMIGRATE ? '
-			<a class="link-button" href="?manage&dbmigrate"><b>Migrate Database</b></a>' : '') . '
+			<a class="link-button" href="?manage&staff">Staff</a>' : '') . '
 			<a class="link-button" href="?manage&account">Account</a>
 			<a class="link-button" href="?manage&logout">Log Out</a>
 		') . '</div>

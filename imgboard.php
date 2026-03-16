@@ -140,243 +140,6 @@ function managementRequest() {
 		die(managePage(manageInfo('The board has been rebuilt.')));
 	}
 
-	/* --------[ Flatfile to MySQLi migration ]-------- */
-
-	if (isset($_GET['dbmigrate']) && $isAdmin) {
-		if (!ATOM_DBMIGRATE) {
-			fancyDie('settings.php: Set ATOM_DBMIGRATE to true to use this feature.');
-		}
-		if (!isset($_GET['go'])) {
-			die(managePage('<p>
-	This tool currently only supports migration from a flat file database to MySQL.<br>
-	Your original database will not be deleted.<br>
-	If the migration fails, disable the tool and your board will be unaffected.<br>
-	See the <a href="https://github.com/SthephanShinkufag/atomboard#migrating" target="_blank">README</a>
-	<small>(<a href="README.md" target="_blank">alternate link</a>)</small> for instructions.<br><br>
-	<a href="?manage&dbmigrate&go"><b>Start the migration</b></a>
-</p>'));
-		}
-		if (ATOM_DBMODE != 'flatfile') {
-			fancyDie('settings.php: Set ATOM_DBMODE to "flatfile" and enter your MySQL' .
-				' settings before migrating.');
-		}
-		if (!function_exists('mysqli_connect')) {
-			fancyDie('Please install the <a href="http://php.net/manual/en/book.mysqli.php">' .
-				'MySQLi extension</a> and try again.');
-		}
-		$link = @mysqli_connect(ATOM_DBHOST, ATOM_DBUSERNAME, ATOM_DBPASSWORD);
-		if (!$link) {
-			fancyDie('Could not connect to database: ' . (
-				is_object($link) ? mysqli_error($link) :
-				(($linkError = mysqli_connect_error()) ? $linkError : '(unknown error)')
-			));
-		}
-		if (!@mysqli_query($link, 'USE ' . constant('ATOM_DBNAME'))) {
-			fancyDie('Could not select database: ' . (
-				is_object($link) ? mysqli_error($link) :
-				(($linkError = mysqli_connect_error()) ? $linkError : '(unknown error)')
-			));
-		}
-		mysqli_set_charset($link, 'utf8mb4');
-		if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBPOSTS . "'")) != 0) {
-			fancyDie('Posts table (' . ATOM_DBPOSTS . ') already exists!<br>' .
-				'Please DROP this table and try again.');
-		}
-		if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBBANS . "'")) != 0) {
-			fancyDie('Bans table (' . ATOM_DBBANS . ') already exists!<br>' .
-				'Please DROP this table and try again.');
-		}
-		if (mysqli_num_rows(mysqli_query($link, "SHOW TABLES LIKE '" . ATOM_DBLIKES . "'")) != 0) {
-			fancyDie('Likes table (' . ATOM_DBLIKES . ') already exists!<br>' .
-				'Please DROP this table and try again.');
-		}
-		mysqli_query($link, $postsQuery);
-		mysqli_query($link, $bansQuery);
-		mysqli_query($link, $likesQuery);
-		$maxId = 0;
-		$threads = getThreads();
-		foreach ($threads as $thread) {
-			$posts = getThreadPosts($thread['id']);
-			foreach ($posts as $post) {
-				mysqli_query($link, 'INSERT INTO `' . ATOM_DBPOSTS . '` (
-					`id`,
-					`parent`,
-					`timestamp`,
-					`bumped`,
-					`ip`,
-					`name`,
-					`tripcode`,
-					`email`,
-					`nameblock`,
-					`subject`,
-					`message`,
-					`password`,
-					`file0`,
-					`file0_hex`,
-					`file0_original`,
-					`file0_size`,
-					`file0_size_formatted`,
-					`image0_width`,
-					`image0_height`,
-					`thumb0`,
-					`thumb0_width`,
-					`thumb0_height`,
-					`file1`,
-					`file1_hex`,
-					`file1_original`,
-					`file1_size`,
-					`file1_size_formatted`,
-					`image1_width`,
-					`image1_height`,
-					`thumb1`,
-					`thumb1_width`,
-					`thumb1_height`,
-					`file2`,
-					`file2_hex`,
-					`file2_original`,
-					`file2_size`,
-					`file2_size_formatted`,
-					`image2_width`,
-					`image2_height`,
-					`thumb2`,
-					`thumb2_width`,
-					`thumb2_height`,
-					`file3`,
-					`file3_hex`,
-					`file3_original`,
-					`file3_size`,
-					`file3_size_formatted`,
-					`image3_width`,
-					`image3_height`,
-					`thumb3`,
-					`thumb3_width`,
-					`thumb3_height`,
-					`stickied`,
-					`likes`
-				) VALUES (' .
-					$post['id'] . ', ' .
-					$post['parent'] . ', ' .
-					time() . ', ' .
-					time() . ", '" .
-					$_SERVER['REMOTE_ADDR'] . "', '" .
-					mysqli_real_escape_string($link, $post['name']) . "', '" .
-					mysqli_real_escape_string($link, $post['tripcode']) . "', '" .
-					mysqli_real_escape_string($link, $post['email']) . "', '" .
-					mysqli_real_escape_string($link, $post['nameblock']) . "', '" .
-					mysqli_real_escape_string($link, $post['subject']) . "', '" .
-					mysqli_real_escape_string($link, $post['message']) . "', '" .
-					mysqli_real_escape_string($link, $post['password']) . "', '" .
-					$post['file0'] . "', '" .
-					$post['file0_hex'] . "', '" .
-					mysqli_real_escape_string($link, $post['file0_original']) . "', " .
-					$post['file0_size'] . ", '" .
-					$post['file0_size_formatted'] . "', " .
-					$post['image0_width'] . ", " .
-					$post['image0_height'] . ", '" .
-					$post['thumb0'] . "', " .
-					$post['thumb0_width'] . ', ' .
-					$post['thumb0_height'] . ", '" .
-					$post['file1'] . "', '" .
-					$post['file1_hex'] . "', '" .
-					mysqli_real_escape_string($link, $post['file1_original']) . "', " .
-					$post['file1_size'] . ", '" .
-					$post['file1_size_formatted'] . "', " .
-					$post['image1_width'] . ", " .
-					$post['image1_height'] . ", '" .
-					$post['thumb1'] . "', " .
-					$post['thumb1_width'] . ', ' .
-					$post['thumb1_height'] . ", '" .
-					$post['file2'] . "', '" .
-					$post['file2_hex'] . "', '" .
-					mysqli_real_escape_string($link, $post['file2_original']) . "', " .
-					$post['file2_size'] . ", '" .
-					$post['file2_size_formatted'] . "', " .
-					$post['image2_width'] . ", " .
-					$post['image2_height'] . ", '" .
-					$post['thumb2'] . "', " .
-					$post['thumb2_width'] . ', ' .
-					$post['thumb2_height'] . ", '" .
-					$post['file3'] . "', '" .
-					$post['file3_hex'] . "', '" .
-					mysqli_real_escape_string($link, $post['file3_original']) . "', " .
-					$post['file3_size'] . ", '" .
-					$post['file3_size_formatted'] . "', " .
-					$post['image3_width'] . ", " .
-					$post['image3_height'] . ", '" .
-					$post['thumb3'] . "', " .
-					$post['thumb3_width'] . ', ' .
-					$post['thumb3_height'] . ', ' .
-					$post['stickied'] . ', ' .
-					$post['likes'] .
-				')');
-				$maxId = max($maxId, $post['id']);
-			}
-		}
-		if ($maxId > 0 && !mysqli_query($link,
-			'ALTER TABLE `' . ATOM_DBPOSTS . '` AUTO_INCREMENT = ' . ($maxId + 1))
-		) {
-			die(managePage('<p><b>Warning!</b></p>' .
-				'<p>Unable to update the <code>AUTO_INCREMENT</code> value for table <code>' .
-				ATOM_DBPOSTS . '</code>, please set it to ' . ($maxId + 1) . '.</p>'));
-		}
-		$maxId = 0;
-		$bans = getAllBans();
-		foreach ($bans as $ban) {
-			$maxId = max($maxId, $ban['id']);
-			mysqli_query($link,
-				'INSERT INTO `' . ATOM_DBBANS . "` (
-					`id`,
-					`ip_from`,
-					`ip_to`,
-					`timestamp`,
-					`expire`,
-					`reason`
-				) VALUES ('" .
-					mysqli_real_escape_string($link, $ban['id']) . "', '" .
-					mysqli_real_escape_string($link, $ban['ip_from']) . "', '" .
-					mysqli_real_escape_string($link, $ban['ip_to']) . "', '" .
-					mysqli_real_escape_string($link, $ban['timestamp']) . "', '" .
-					mysqli_real_escape_string($link, $ban['expire']) . "', '" .
-					mysqli_real_escape_string($link, $ban['reason']) . "')");
-		}
-		if ($maxId > 0 && !mysqli_query($link,
-			'ALTER TABLE `' . ATOM_DBBANS . '` AUTO_INCREMENT = ' . ($maxId + 1))
-		) {
-			die(managePage('<p><b>Warning!</b></p>' .
-				'<p>Unable to update the <code>AUTO_INCREMENT</code> value for table <code>' .
-				ATOM_DBBANS . '</code>, please set it to ' . ($maxId + 1) . '.</p>'));
-		}
-		$maxId = 0;
-		$likes = getAllLikes();
-		foreach ($likes as $like) {
-			$maxId = max($maxId, $like['id']);
-			mysqli_query($link,
-				'INSERT INTO `' . ATOM_DBLIKES . "` (
-					`id`,
-					`ip`,
-					`board`,
-					`postnum`,
-					`islike`
-				) VALUES ('" .
-					mysqli_real_escape_string($link, $like['id']) . "', '" .
-					mysqli_real_escape_string($link, $like['ip']) . "', '" .
-					mysqli_real_escape_string($link, $like['board']) . "', '" .
-					mysqli_real_escape_string($link, $like['postnum']) . "', '" .
-					mysqli_real_escape_string($link, $like['islike']) . "')");
-		}
-		if ($maxId > 0 && !mysqli_query($link,
-			'ALTER TABLE `' . ATOM_DBLIKES . '` AUTO_INCREMENT = ' . ($maxId + 1))
-		) {
-			die(managePage('<p><b>Warning!</b></p>' .
-				'<p>Unable to update the <code>AUTO_INCREMENT</code> value for table <code>' .
-				ATOM_DBLIKES . '</code>, please set it to ' . ($maxId + 1) . '.</p>'));
-		}
-		die(managePage('<p><b>Database migration complete!</b></p>' .
-			'<p>Set <code>ATOM_DBMODE</code> to <code>mysqli</code> and <code>ATOM_DBMIGRATE</code> to' .
-			' <code>false</code> in your settings.php file,<br>Then click <b>[Rebuild All]</b> above and' .
-			' ensure everything looks the way it should.</p>'));
-	}
-
 	/* --------[ Show the ban form and the list of bans ]-------- */
 
 	if (isset($_GET['bans']) && !$isJanitor) {
@@ -668,10 +431,6 @@ function managementRequest() {
 /* ==[ Posting requests ]================================================================================== */
 
 function postingRequest() {
-	if (ATOM_DBMIGRATE) {
-		fancyDie('Posting is currently disabled.<br>Please try again in a few moments.');
-	}
-
 	/* --------[ Post submission check ]-------- */
 
 	global $loginStatus, $atom_banned_countries, $atom_embeds, $atom_hidefields, $atom_hidefieldsop,
@@ -1384,9 +1143,6 @@ function deletionRequest() {
 	if (!isset($_POST['delete'])) {
 		fancyDie('Tick the box next to a post and click "Delete" to delete it.');
 	}
-	if (ATOM_DBMIGRATE) {
-		fancyDie('Post deletion is currently disabled.<br>Please try again in a few moments.');
-	}
 	$post = getPost($_POST['delete']);
 	if (!$post) {
 		fancyDie('Sorry, an invalid post identifier was sent.<br>' .
@@ -1589,29 +1345,30 @@ if (ATOM_CAPTCHA == 'recaptcha' && (ATOM_RECAPTCHA_SITE == '' || ATOM_RECAPTCHA_
 }
 
 // Check if directories are writable by the script
-$writedirs = ['res', 'src', 'thumb'];
-if (ATOM_DBMODE == 'flatfile') {
-	$writedirs[] = 'inc/flatfile';
-}
-foreach ($writedirs as $dir) {
+foreach (['res', 'src', 'thumb'] as $dir) {
 	if (!is_writable($dir)) {
 		fancyDie('Directory "' . $dir . '" can not be written to.<br>Please modify its permissions.');
 	}
 }
 
-// Include php files
-$includes = ['inc/defines.php', 'inc/functions.php', 'inc/html.php'];
-if (in_array(ATOM_DBMODE, ['flatfile', 'mysqli', 'sqlite', 'sqlite3', 'pdo'])) {
-	$includes[] = 'inc/database_' . ATOM_DBMODE . '.php';
+// Dynamic connection of PHP scripts
+$incPath = __DIR__ . '/inc/';
+$includes = [$incPath . 'defines.php', $incPath . 'functions.php', $incPath . 'html.php'];
+if (in_array(ATOM_DBMODE, ['mysqli', 'pdo'])) {
+	$includes[] = $incPath . 'database_' . ATOM_DBMODE . '.php';
 } else {
 	fancyDie('settings.php: Unknown database mode in ATOM_DBMODE specified.');
 }
-foreach ($includes as $include) {
-	include $include;
+if (defined('ATOM_UNIQUENAME') && ATOM_UNIQUENAME) {
+	$namesDir = $incPath . 'usernames/' . ATOM_UNIQUENAME . '/';
+	$includes[] = $namesDir . 'firstnames.php';
+	$includes[] = $namesDir . 'lastnames.php';
 }
-if (ATOM_UNIQUENAME) {
-	include 'inc/usernames/' . ATOM_UNIQUENAME . '/firstnames.php';
-	include 'inc/usernames/' . ATOM_UNIQUENAME . '/lastnames.php';
+foreach ($includes as $file) {
+	if (!file_exists($file)) {
+		fancyDie('Critical file missing: ' . basename($file));
+	}
+	require_once $file;
 }
 if (ATOM_TIMEZONE != '') {
 	date_default_timezone_set(ATOM_TIMEZONE);

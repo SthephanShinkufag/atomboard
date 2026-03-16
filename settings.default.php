@@ -1,7 +1,5 @@
 <?php
-# See README for instructions on configuring, moderating and upgrading your board.
-# Set ATOM_DBMODE to a PDO-related mode if it's available.
-# By default it's set to 'flatfile', which can be very slow.
+# See README for instructions on setting up the board.
 
 /* ==[ Board description and customization ]=============================================================== */
 // Unique identifier for this board using only letters and numbers
@@ -30,35 +28,16 @@ define('ATOM_HTML_NAVIGATION', '
 // Change the administrator password later in the management panel, and erase ATOM_ADMINPASS with '' here
 define('ATOM_ADMINPASS', '');
 // Require moderation before displaying posts
-// Values: 'files', 'all' (see README for instructions, only MySQL is supported), '' to disable
+// Values: 'files', 'all', '' to disable
 define('ATOM_REQMOD', '');
 
-/* ==[ Database ]========================================================================================== */
-// Recommended database modes from best to worst: 'pdo', 'mysqli', 'flatfile'
-// 'flatfile' is only useful if you need portability or lack any kind of database
-define('ATOM_DBMODE', 'flatfile');
-// Posts table name in database
-define('ATOM_DBPOSTS', ATOM_BOARD . '_posts');
-// Modlog table name in database (use the same modlog table across boards for global modlog)
-// define('ATOM_DBMODLOG', 'modlog');
-define('ATOM_DBMODLOG', ATOM_BOARD . '_modlog');
-// Staff table name in database (administrators, moderators and janitors)
-define('ATOM_DBSTAFF', 'staff');
-// Bans table name in database
-define('ATOM_DBBANS', 'bans');
-// Database for dirty IP lookups
-define('ATOM_DBIPLOOKUPS', 'iplookups');
-// Reports table name in database
-define('ATOM_DBREPORTS', 'reports');
-// Passcodes table name in database
-define('ATOM_DBPASS', 'pass');
-// Likes table name in database
-define('ATOM_DBLIKES', 'likes');
-// Enable database migration tool (see README for instructions)
-define('ATOM_DBMIGRATE', false);
-
 /* ==[ Database configuration ]============================================================================ */
-// The following only apply when ATOM_DBMODE is set to 'mysqli' or 'pdo' with ATOM_DBDSN = ''
+// Library mode
+// Values: 'pdo', 'mysqli'
+define('ATOM_DBMODE', 'pdo');
+// PDO driver - MySQL or PostgreSQL. Apply only when the ATOM_DBMODE is set to 'pdo'
+// Values: 'mysql', 'pgsql'
+define('ATOM_DBDRIVER', 'mysql');
 // Hostname
 define('ATOM_DBHOST', 'localhost');
 // Port (set to 0 if you are using a UNIX socket as the host)
@@ -69,15 +48,27 @@ define('ATOM_DBUSERNAME', '');
 define('ATOM_DBPASSWORD', '');
 // Database name
 define('ATOM_DBNAME', '');
-
-/* ==[ Database configuration - PDO ]====================================================================== */
-// The following only apply when ATOM_DBMODE is set to 'pdo' (see README for instructions)
-// PDO driver to use: 'mysql', 'pgsql'
-define('ATOM_DBDRIVER', 'mysql');
-// Enter a custom DSN to override all of the connection/driver settings above (see README for instructions)
-// When changing this, you should still set ATOM_DBDRIVER appropriately
-// If you're using PDO with a MySQL or pgSQL database, you should leave this blank
+// A custom DSN to override all of the connection/driver settings above
+// Apply only when ATOM_DBMODE is set to 'pdo'
 define('ATOM_DBDSN', '');
+
+/* ==[ Database table names ]============================================================================== */
+// Posts
+define('ATOM_DBPOSTS', ATOM_BOARD . '_posts');
+// Staff (administrators, moderators and janitors)
+define('ATOM_DBSTAFF', 'staff');
+// Bans
+define('ATOM_DBBANS', 'bans');
+// Dirty IP lookups
+define('ATOM_DBIPLOOKUPS', 'iplookups');
+// Complaints about posts
+define('ATOM_DBREPORTS', 'reports');
+// Passcodes
+define('ATOM_DBPASS', 'pass');
+// Post likes
+define('ATOM_DBLIKES', 'likes');
+// Modlog
+define('ATOM_DBMODLOG', ATOM_BOARD . '_modlog');
 
 /* ==[ Passcodes ]========================================================================================= */
 // Enable passcode system
@@ -217,7 +208,8 @@ define('ATOM_FILE_MAXKB_PASS', 40960);
 define('ATOM_FILE_MAXKBDESC_PASS', '40 MB');
 // Maximum number of uploaded files (up to 4)
 define('ATOM_FILES_COUNT', 4);
-// Thumbnail method to use: 'gd', 'imagemagick' (see README for instructions)
+// Thumbnail method
+// Values: 'gd', 'imagemagick' (see README for instructions)
 // Please note that the GD library does not support animated WebP files
 define('ATOM_FILE_THUMBDRIVER', 'gd');
 // Add icons/video_overlay.png play icon over video and embedded thumbnails
@@ -237,7 +229,8 @@ define('ATOM_FILE_MAXW', 230); // Width
 define('ATOM_FILE_MAXH', 230); // Height
 
 /* ==[ Captcha ]=========================================================================================== */
-// Requiring users to pass a CAPTCHA when posting: 'simple', 'recaptcha', '' to disable
+// Requiring users to pass a CAPTCHA when posting
+// valuse: 'simple', 'recaptcha', '' to disable
 // Click [Rebuild All] in the management panel after enabling
 define('ATOM_CAPTCHA', 'simple');
 // The following only apply when ATOM_CAPTCHA is set to recaptcha
