@@ -739,7 +739,7 @@ function postingRequest() {
 		$postNameBlock .= sprintf(
 			' <span class="poster-uid" data-uid="%s" style="color: %s;">%s</span>',
 			$ipHashHex,
-			hslToHex($ipHashInt % 360, .9, .5),
+			hslToHex($ipHashInt % 360, 1, .3),
 			htmlspecialchars($uidLabel, ENT_QUOTES, 'UTF-8'));
 	}
 	if ($post['email'] !== '') {
