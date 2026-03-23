@@ -8,7 +8,7 @@ if (!defined('ATOM_BOARD')) {
 function getCountryIcon($ip, $geoipReader) {
 	$countryCode = getCountryCode(filter_var($ip, FILTER_VALIDATE_IP), $geoipReader);
 	return '<img class="poster-country" title="' . $countryCode . '" src="/' . ATOM_BOARD .
-		'/icons/flag-icons/' . $countryCode . '.png">';
+		'/icons/flag-icons/' . $countryCode . '.png" alt="' . $countryCode . ' flag">';
 }
 
 function getIpUserInfoLink($ip) {
@@ -27,10 +27,10 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026030900">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2026030900"></script>
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026032300">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2026032300"></script>
 	<script src="/' . ATOM_BOARD .
-		'/js/extension/Dollchan_Extension_Tools.user.js?2026030900" async defer></script>' .
+		'/js/extension/Dollchan_Extension_Tools.user.js?2026032300" async defer></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -39,25 +39,23 @@ function pageHeader() {
 
 function pageWrapper($description, $needReturn) {
 	return '
-	<div class="wrapper">
-		<div id="navigation-top" class="navigation">' . ATOM_HTML_NAVIGATION . '
-			<a class="navigation-link" href="/' . ATOM_BOARD .
-				'/catalog.html" title="Go to catalog">Catalog</a>
-			<a class="navigation-link" href="/' . ATOM_BOARD .
-				'/' . basename($_SERVER['PHP_SELF']) . '?passcode">Passcode</a>
-			<a class="navigation-link" href="/' . ATOM_BOARD .
-				'/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
-			<select class="select-style navigation-link" onchange="setThemeStyle(this);">
-				<option value="Dark">Dark</option>
-				<option value="Light">Light</option>
-			</select>
-		</div>
-		<div class="description">' . $description . '</div>
+	<nav id="navigation-top" class="navigation" aria-label="Top menu">' . ATOM_HTML_NAVIGATION . '
+		<a class="navigation-link" href="/' . ATOM_BOARD . '/catalog.html" title="Go to catalog">Catalog</a>
+		<a class="navigation-link" href="/' . ATOM_BOARD .
+			'/' . basename($_SERVER['PHP_SELF']) . '?passcode">Passcode</a>
+		<a class="navigation-link" href="/' . ATOM_BOARD .
+			'/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
+		<select class="select-style navigation-link" onchange="setThemeStyle(this);">
+			<option value="Dark">Dark</option>
+			<option value="Light">Light</option>
+		</select>
+	</nav>
+	<main class="wrapper">
+		<header><h1 class="description">' . $description . '</h1></header>
 		<hr>
 		<div id="panel-top" class="panel">' .
 			($needReturn ? '
-			<a class="link-button" href="/' . ATOM_BOARD . '/"' .
-				' title="Return to board">Return</a>' : '') . '
+			<a class="link-button" href="/' . ATOM_BOARD . '/" title="Return to board">Return</a>' : '') . '
 			<a class="link-button" href="#" title="Navigate to bottom"' .
 				' onclick="window.scroll(0, document.body.scrollHeight); return false;">To bottom</a>
 		</div>
@@ -68,34 +66,32 @@ function pageFooter($needReturn) {
 	return '
 		<div id="panel-bottom" class="panel">' .
 			($needReturn ? '
-			<a class="link-button" href="/' . ATOM_BOARD . '/"' .
-				' title="Return to board">Return</a>' : '') . '
+			<a class="link-button" href="/' . ATOM_BOARD . '/" title="Return to board">Return</a>' : '') . '
 			<a class="link-button" href="#" title="Navigate to top"' .
 				' onclick="window.scroll(0, 0); return false;">To top</a>
 		</div>
 		<hr>
-		<div class="footer">
-			<div>
+		<footer>
+			<p>
 				We are not responsible for the content posted on this site.
 				Any information posted here is the responsibility of the user who uploaded it.<br>
 				The content on the site is intended for persons over 18 years of age.
-			</div>
-			- <a href="https://github.com/SthephanShinkufag/atomboard">atomboard</a> -
-		</div>
-		<div id="navigation-bottom" class="navigation"> ' . ATOM_HTML_NAVIGATION . '
-			<a class="navigation-link" href="/' . ATOM_BOARD .
-				'/catalog.html" title="Go to catalog">Catalog</a>
-			<a class="navigation-link" href="/' . ATOM_BOARD .
-				'/' . basename($_SERVER['PHP_SELF']) . '?passcode">Passcode</a>
-			<a class="navigation-link" href="/' . ATOM_BOARD .
-				'/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
-			<select class="select-style navigation-link" onchange="setThemeStyle(this);">
-				<option value="Snow" selected>Snow</option>
-				<option value="Dark">Dark</option>
-				<option value="Light">Light</option>
-			</select>
-		</div>
-	</div>
+			</p>
+			<p>- <a href="https://github.com/SthephanShinkufag/atomboard">atomboard</a> -</p>
+		</footer>
+	</main>
+	<nav id="navigation-bottom" class="navigation" aria-label="Bottom menu"> ' . ATOM_HTML_NAVIGATION . '
+		<a class="navigation-link" href="/' . ATOM_BOARD . '/catalog.html" title="Go to catalog">Catalog</a>
+		<a class="navigation-link" href="/' . ATOM_BOARD .
+			'/' . basename($_SERVER['PHP_SELF']) . '?passcode">Passcode</a>
+		<a class="navigation-link" href="/' . ATOM_BOARD .
+			'/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
+		<select class="select-style navigation-link" onchange="setThemeStyle(this);">
+			<option value="Snow" selected>Snow</option>
+			<option value="Dark">Dark</option>
+			<option value="Light">Light</option>
+		</select>
+	</nav>
 	<div id="svg-icons" style="height: 0; width: 0; overflow: hidden;">
 		<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 			<symbol viewBox="0 0 16 16" id="symbol-like">
@@ -339,18 +335,16 @@ function buildPost($post, $res, $mode = '') {
 		$post['omitted'] = 0;
 	}
 
-	// Build post file
+	// Post files
 	$postId = $post['id'];
 	$thrId = getThreadId($post);
 	$isOp = isOp($post);
 	$fileHtml = '';
-	$filesCount = 0;
 	for ($i = 0; $i < ATOM_FILES_COUNT; $i++) {
 		$fileHex = $post['file' . $i . '_hex'];
 		if (!$fileHex) {
 			continue;
 		}
-		$filesCount++;
 		$fileWidth = $post['image' . $i . '_width'];
 		$fileHeight = $post['image' . $i . '_height'];
 		$hasSize = $fileWidth > 0 && $fileHeight > 0;
@@ -364,7 +358,7 @@ function buildPost($post, $res, $mode = '') {
 		$linkHtml = 'href="' . $fileUrl . '" target="_blank" onclick="return expandFile(event, this, \'' . 
 			($isEmbed ? 'embed' : ($isVideo ? 'video' : ($isImage ? 'image' : 'file'))) . '\');"' .
 			($origName != '' ? ' download="' . $origName . '"' : '');
-		$fileInfoHtml = '<a class="file-fullname" ' . $linkHtml . '"><span class="file-name">';
+		$fileInfoHtml = '<a class="file-fullname" ' . $linkHtml . '><span class="file-name">';
 		if ($isEmbed) {
 			$fileInfoHtml .= $origName . '</span></a>,&nbsp;' . $fileHex;
 		} elseif ($fileName != '') {
@@ -375,39 +369,30 @@ function buildPost($post, $res, $mode = '') {
 		} else {
 			continue;
 		}
-		/*
-		// Use to view unused files that missed in database when rebuildall executed
-		if ($fileName != '') {
-			rename('src/' . $fileName, 'src_copy/' . $fileName);
-		}
-		if ($post['thumb' . $i] != '') {
-			rename('thumb/' . $post['thumb' . $i], 'thumb_copy/' . $post['thumb' . $i]);
-		}
-		*/
 		$fileHtml .= '
-					<div class="post-file">
-						<div class="file-info">' .
-							($isEditPost ? '
-							<input type="checkbox" name="delete-img-mod[]" value="' . $i . '">' : '') . '
-							' . $fileInfoHtml . '
-						</div>
-						<div class="file-wrap"' .
-							($isEmbed ? ' data-embed="' . rawurlencode($fileName) . '"' :
-							($hasSize ? ' data-width="' . $fileWidth . '" data-height="' . $fileHeight . '"' :
-							'')) .'>' .
-							($post['thumb' . $i] != '' ? '
-							<a ' . $linkHtml . '>
-								<img class="file-thumb' . ($isVideo ? ' file-thumb-video' : '') .
-									'" src="/' . ATOM_BOARD . '/thumb/' . $post['thumb' . $i] .
-									'" width="' . $post['thumb' . $i . '_width'] .
-									'" height="' . $post['thumb' . $i . '_height'] . '" alt="Thumbnail">
-							</a>' :
-							($isVideo /* If a video has no thumbnail (ffmpeg error) */ ? '
-							<a ' . $linkHtml . '>
-								<video src="' . $fileUrl . '" class="file-thumb file-thumb-video"></video>
-							</a>' : '')) . '
-						</div>
-					</div>';
+						<figure class="post-file">
+							<figcaption class="file-info">' .
+								($isEditPost ? '
+								<input type="checkbox" name="delete-img-mod[]" value="' . $i . '">' : '') . '
+								' . $fileInfoHtml . '
+							</figcaption>
+							<div class="file-wrap"' .
+								($isEmbed ? ' data-embed="' . rawurlencode($fileName) . '"' :
+								($hasSize ? ' data-width="' . $fileWidth . '" data-height="' .
+									$fileHeight . '"' : '')) .'>' .
+								($post['thumb' . $i] !== '' ? '
+								<a ' . $linkHtml . '>
+									<img class="file-thumb' . ($isVideo ? ' file-thumb-video' : '') .
+										'" src="/' . ATOM_BOARD . '/thumb/' . $post['thumb' . $i] .
+										'" width="' . $post['thumb' . $i . '_width'] .
+										'" height="' . $post['thumb' . $i . '_height'] . '" alt="Thumbnail">
+								</a>' :
+								($isVideo /* If a video has no thumbnail (ffmpeg error) */ ? '
+								<a ' . $linkHtml . '>
+									<video src="' . $fileUrl . '" class="file-thumb file-thumb-video"></video>
+								</a>' : '')) . '
+							</div>
+						</figure>';
 	}
 
 	// Truncate messages on board index pages for readability
@@ -437,76 +422,72 @@ function buildPost($post, $res, $mode = '') {
 	$ip = $post['ip'];
 	$omitted = $post['omitted'];
 	$likes = $post['likes'];
-	$replyBtn = ($isOp && $res == ATOM_INDEXPAGE ? '<a class="link-button" href="res/' .
-		$postId . '.html" title="Reply to thread №' . $postId . '">Reply</a>' : '');
-	return ($isOp ? '
-				<div class="oppost" id="op' . $postId . '">' : '
-				<table border="0"><tbody><tr><td class="reply" id="reply' . $postId . '">') . '
-					<a id="' . $postId . '"></a>
-					<label>
+	$replyBtn = $isOp && $res == ATOM_INDEXPAGE ? '<a class="link-button" href="res/' .
+		$postId . '.html" title="Reply to thread №' . $postId . '">Reply</a>' : '';
+	$reflink = '<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $postId . '"';
+	return '
+				<article class="post ' . ($isOp ? 'op' : 'reply') . '" id="post' . $postId . '">
+					<header class="post-meta">
 						<input type="checkbox" name="delete" value="' . $postId . '">' .
 						($post['subject'] != '' ? '
 						<span class="post-subject">' . $post['subject'] . '</span>' : '') . '
 						' . (ATOM_GEOIP ? getCountryIcon($ip, NULL) : '') .
 						($showIP || $isEditPost ? '&nbsp;' . getIpUserInfoLink($ip) : '') . '
 						' . $post['nameblock'] . '
-					</label>
-					<span class="post-reflink">
-						<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $postId .
-							'" title="Click to link to this post">№</a>
-						<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $postId .
-							'" title="Click to reply to this post">' . $postId . '</a>
-					</span>
-					<span class="post-buttons">' .
-						(ATOM_LIKES ? '
-						<span class="like-container">
-							<span class="like-icon' . ($likes ? ' like-enabled' : ' like-disabled') .
-								'" onclick="sendLike(this, ' . $postId . ');">
-								<svg><use xlink:href="#symbol-like"></use></svg>
-							</span><span class="like-counter">' . ($likes ? $likes : '') . '</span>
-						</span>' : '') .
-						($post['stickied'] == 1 ? '
-						<img src="/' . ATOM_BOARD . '/icons/sticky.png"' .
-							' title="Thread is stickied to top" width="16" height="16">' : '') .
-						($post['locked'] == 1 ? '
-						<img src="/' . ATOM_BOARD . '/icons/locked.png"' .
-							' title="Thread is locked for posting" width="11" height="16">' : '') .
-						($post['endless'] == 1 ? '
-						<img src="/' . ATOM_BOARD . '/icons/endless.png"' .
-							' title="Thread is endless" width="16" height="16">' : '') .
-						$replyBtn . '
-					</span>
-					<br>' .
-					($isEditPost && $filesCount ? '
-					<form method="get" action="?">
-						<input type="hidden" name="manage" value="">
-						<input type="hidden" name="delete-img" value="' . $postId . '">
-						<select name="action" class="button-manage" style="margin-left: 20px;">
-							<option value="delete" selected>Delete images</option>
-							<option value="hide">Hide thumbnails</option>
-						</select>
-						<input type="submit" class="button-manage" value="Apply to selected">
-						<br>' : '') .
-						($filesCount > 1 ? '<div class="post-files">' . $fileHtml . '</div>' : $fileHtml) .
-						($isEditPost && $filesCount ? '
-					</form>' : '') . '
-					<div class="post-message">' .
+						<span class="post-id">
+							' . $reflink . ' title="Click to link to post" aria-label="Link to post">№</a>
+							' . $reflink . ' title="Click to reply to post" aria-label="Reply to post">' .
+							$postId . '</a>
+						</span>
+						<span class="post-buttons">' .
+							(ATOM_LIKES ? '
+							<span class="like-container">
+								<span class="like-icon' . ($likes ? ' like-enabled' : ' like-disabled') .
+									'" onclick="sendLike(this, ' . $postId . ');">
+									<svg><use xlink:href="#symbol-like"></use></svg>
+								</span><span class="like-counter">' . ($likes ? $likes : '') . '</span>
+							</span>' : '') .
+							($post['stickied'] === '1' ? '
+							<img src="/' . ATOM_BOARD . '/icons/sticky.png"' .
+								' title="Thread is stickied to top" width="16" height="16">' : '') .
+							($post['locked'] === '1' ? '
+							<img src="/' . ATOM_BOARD . '/icons/locked.png"' .
+								' title="Thread is locked for posting" width="11" height="16">' : '') .
+							($post['endless'] === '1' ? '
+							<img src="/' . ATOM_BOARD . '/icons/endless.png"' .
+								' title="Thread is endless" width="16" height="16">' : '') . '
+							' . $replyBtn . '
+						</span>
+					</header>
+					<div class="post-body">' .
 						($isEditPost ? '
-						<form method="post" action="?manage&editpost=' . $postId .
+						<form class="post-files-edit" method="get" action="?">
+							<input type="hidden" name="manage" value="">
+							<input type="hidden" name="delete-img" value="' . $postId . '">
+							<select name="action" class="button-manage" style="margin-left: 20px;">
+								<option value="delete" selected>Delete images</option>
+								<option value="hide">Hide thumbnails</option>
+							</select>
+							<input type="submit" class="button-manage" value="Apply to selected">
+							<br>' .
+							$fileHtml . '
+						</form>
+						<form class="post-message-edit" method="post" action="?manage&editpost=' . $postId .
 							'" enctype="multipart/form-data">
 							<textarea id="message" name="message">' .
 								htmlspecialchars($message) .
 							'</textarea>
 							<br>
 							<input type="submit" class="button-manage" value="Edit">
-						</form>' : $message) .
-					'</div>
-				' . (!$isOp ? '</td></tr></tbody></table>' : '</div>' .
-				($res == ATOM_INDEXPAGE && $omitted > 0 ? '
+						</form>' :
+						$fileHtml . '
+						<blockquote class="post-message">' .$message . '</blockquote>') . '
+					</div>
+				</article>' . ($isOp && $res == ATOM_INDEXPAGE && $omitted > 0 ? '
 				<div class="omittedposts">
 					' . $omitted . ' ' . plural('post', $omitted) .
 					' omitted. Click ' . $replyBtn . ' to view.
-				</div>' : ''));
+				</div>' : '');
 }
 
 /* ==[ Page ]============================================================================================== */
@@ -541,14 +522,14 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 		<form id="delform" action="/' . ATOM_BOARD . '/imgboard.php?delete" method="post">
 			<input type="hidden" name="board" value="' . ATOM_BOARD . '">' .
 			$htmlPosts . '
-			<div class="userdelete">
+			<menu class="userdelete">
 				Delete Post <input type="password" name="password" id="deletepostpassword" size="8"' .
 					' placeholder="Password">&nbsp;<input name="deletepost" value="Delete" type="submit">
-			</div>
+			</menu>
 		</form>
-		<div class="pagelist">
+		<nav class="pagelist" aria-label="Pages">
 			' . $pagelinks . '
-		</div>' .
+		</nav>' .
 		(ATOM_HTML_INFO_BOTTOM ? '
 		<hr>
 		' . ATOM_HTML_INFO_BOTTOM : '') .
@@ -559,13 +540,13 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 
 function rebuildThreadPage($thrId) {
 	$htmlPosts = '
-			<div class="thread" id="thread' . $thrId . '">';
+			<section class="thread" id="thread' . $thrId . '">';
 	$posts = getThreadPosts($thrId);
 	foreach ($posts as $post) {
 		$htmlPosts .= buildPost($post, ATOM_RESPAGE);
 	}
 	$htmlPosts .= '
-			</div>
+			</section>
 			<hr>';
 	writePage('res/' . $thrId . '.html', buildPage($htmlPosts, $thrId));
 }
@@ -585,9 +566,9 @@ function rebuildIndexPages() {
 			$htmlReplies[] = buildPost($replies[$j], ATOM_INDEXPAGE);
 		}
 		$htmlPosts .= '
-			<div class="thread" id="thread' . $thread['id'] . '">' .
+			<section class="thread" id="thread' . $thread['id'] . '">' .
 				buildPost($thread, ATOM_INDEXPAGE) . implode('', array_reverse($htmlReplies)) . '
-			</div>
+			</section>
 			<hr>';
 		if (++$i >= ATOM_THREADSPERPAGE) {
 			$file = $page == 0 ? ATOM_INDEX : $page . '.html';
@@ -1270,7 +1251,7 @@ function getPostReports($reports, $geoipReader) {
 						getIpUserInfoLink($ip) . '
 						(' . date('d.m.y D H:i:s', $report['timestamp']) . ')
 						<br>
-						<div class="post-message">' . $report['reason'] . '</div>
+						<blockquote class="post-message">' . $report['reason'] . '</blockquote>
 					</div>
 					<br>';
 	}
@@ -1407,8 +1388,9 @@ function buildModeratePostPage($post) {
 						$ban ? 'Ban record already exists for ' . $ip :
 						($isMod ? 'Ban ip ' . $ip : 'Janitors can\'t ban an IP address.')
 					) . '</small></td>
-				</tr>
-				' . ($passcodeNum ? '<tr>
+				</tr>' .
+				($passcodeNum ? '
+				<tr>
 					<td align="right" width="50%;">
 						<form method="get" action="?">
 							<input type="hidden" name="manage" value="">
@@ -1418,8 +1400,9 @@ function buildModeratePostPage($post) {
 						</form>
 					</td>
 					<td><small>Manage passcode №' . $passcodeNum . '</small></td>
-				</tr>' : '') . '
-				' . ($reportsCount ? '<tr>
+				</tr>' : '') .
+				($reportsCount ? '
+				<tr>
 					<td align="right" width="50%;">
 						<form method="get" action="?">
 							<input type="hidden" name="report" value="">
@@ -1617,8 +1600,8 @@ function buildCatalogPage() {
 				['quiet' => true, 'show-body-only' => true],
 				'utf8');
 		}
-		$OPpostSubject = $post['subject'];
-		$OPuserName = $post['name'] != '' ? $post['name'] : ATOM_POSTERNAME;
+		$opSubject = $post['subject'];
+		$opUserName = $post['name'] ?: ATOM_POSTERNAME;
 		if ($post['thumb0'] != '' && $post['thumb0_width'] > 0 && $post['thumb0_height'] > 0) {
 			$thumb = 'thumb/' . $post['thumb0'];
 			$thumbWidth = $post['thumb0_width'];
@@ -1635,14 +1618,14 @@ function buildCatalogPage() {
 				</a>
 				<br>
 				<center>' .
-					($OPpostSubject ? '
-					<span class="post-subject">' . $OPpostSubject . '</span>
+					($opSubject ? '
+					<span class="post-subject">' . $opSubject . '</span>
 					<br>' : '') . '
-					<span class="postername">' . $OPuserName . '</span>
+					<span class="poster-name">' . $opUserName . '</span>
 					<span>replies: ' . $numOfReplies . '</span>
 					<br>
 				</center>
-				<div class="post-message" style="text-align: left">' . $OPpostMessage . '</div>
+				<blockquote class="post-message" style="text-align: left">' . $OPpostMessage . '</blockquote>
 				<br>
 			</div>';
 	}

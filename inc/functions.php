@@ -334,6 +334,24 @@ function strallpos($haystack, $needle, $offset = 0) {
 	return $result;
 }
 
+function hslToHex($h, $s, $l) {
+	$h /= 360;
+	$q = $l < 0.5 ? $l * (1 + $s) : $l + $s - $l * $s;
+	$p = 2 * $l - $q;
+	$f = function($t) use ($p, $q) {
+		if ($t < 0) $t += 1;
+		if ($t > 1) $t -= 1;
+		if ($t < 1/6) return $p + ($q - $p) * 6 * $t;
+		if ($t < 1/2) return $q;
+		if ($t < 2/3) return $p + ($q - $p) * (2/3 - $t) * 6;
+		return $p;
+	};
+	return sprintf('#%02x%02x%02x', 
+		round($f($h + 1/3) * 255), 
+		round($f($h) * 255), 
+		round($f($h - 1/3) * 255));
+}
+
 /* ==[ Posts ]============================================================================================= */
 
 function newPost($parent) {

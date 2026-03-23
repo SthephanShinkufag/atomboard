@@ -21,7 +21,7 @@ function fancyDie($message) {
 
 <html data-theme="' . ATOM_THEME . '">
 <head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026030900">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026032300">
 </head>
 <body align="center">
 	<br>
@@ -435,7 +435,8 @@ function postingRequest() {
 
 	global $loginStatus, $atom_banned_countries, $atom_embeds, $atom_hidefields, $atom_hidefieldsop,
 		$atom_replace_text, $atom_replace_rand, $atom_uploads;
-	$hasAccess = $loginStatus != 'disabled';
+	$hasAccess = $loginStatus !== 'disabled';
+	$isAdmin = $loginStatus === 'admin';
 	$passcode = checkPasscode(true);
 	$validPasscode = $passcode[0];
 
@@ -503,7 +504,6 @@ function postingRequest() {
 	if (!$isOp && !$hasAccess && getPost($post['parent'])['locked']) {
 		fancyDie('Posting in this thread is currently disabled.<br>Thread is locked.');
 	}
-
 	$hideFields = $isOp ? $atom_hidefieldsop : $atom_hidefields;
 	$post['ip'] = $_SERVER['REMOTE_ADDR'];
 	$post['pass'] = $validPasscode;
@@ -511,46 +511,42 @@ function postingRequest() {
 
 	// Get name/tripcode
 	if ($isStaffPost || !in_array('name', $hideFields)) {
-		$postName = $_POST['name'];
-		if (preg_match('/(#|!)(.*)/', $postName, $regs)) {
-			$cap = $regs[2];
-			if (function_exists('mb_convert_encoding')) {
-				$recodedCap = mb_convert_encoding($cap, 'SJIS', 'UTF-8');
-				if ($recodedCap != '') {
-					$cap = $recodedCap;
+		$postName = $_POST['name'] ?? '';
+		// Look for the first separator (# or !)
+		$delimPos = strpbrk($postName, '#!');
+		if ($delimPos !== false) {
+			$capDelimiter = $delimPos[0];
+			list($namePart, $capPart) = explode($capDelimiter, $postName, 2);
+			$tripcode = '';
+			$isSecure = false;
+			// Check for a second level (secure trip) within the tail. For example: name#cap#secure
+			if (strpos($capPart, $capDelimiter) !== false) {
+				list($cap, $capSecure) = explode($capDelimiter, $capPart, 2);
+				$isSecure = true;
+			} else {
+				$cap = $capPart;
+			}
+			// Regular tripcode (DES crypt)
+			if ($cap !== '') {
+				// Convert to SJIS for compatibility with older Japanese boards
+				if (function_exists('mb_convert_encoding')) {
+					$cap = mb_convert_encoding($cap, 'SJIS', 'UTF-8') ?: $cap;
 				}
-			}
-			if (strpos($postName, '#') === false) {
-				$capDelimiter = '!';
-			} elseif (strpos($postName, '!') === false) {
-				$capDelimiter = '#';
-			} else {
-				$capDelimiter = strpos($postName, '#') < strpos($postName, '!') ? '#' : '!';
-			}
-			if (preg_match('/(.*)(' . $capDelimiter . ')(.*)/', $cap, $regsSecure)) {
-				$cap = $regsSecure[1];
-				$capSecure = $regsSecure[3];
-				$isSecureTrip = true;
-			} else {
-				$isSecureTrip = false;
-			}
-			$postTripcode = '';
-			if ($cap != '') {
-				$cap = strtr($cap, '&amp;', '&');
-				$cap = strtr($cap, '&#44;', ', ');
+				$cap = str_replace(['&amp;', ','], ['&', ', '], $cap);
 				$salt = substr($cap . 'H.', 1, 2);
 				$salt = preg_replace('/[^\.-z]/', '.', $salt);
 				$salt = strtr($salt, ':;<=>?@[\\]^_`', 'ABCDEFGabcdef');
-				$postTripcode = substr(crypt($cap, $salt), -10);
+				$tripcode = substr(crypt($cap, $salt), -10);
 			}
-			if ($isSecureTrip) {
-				if ($cap != '') {
-					$postTripcode .= '!';
+			// Secure tripcode (based on MD5 + SALT)
+			if ($isSecure) {
+				if ($tripcode !== '') {
+					$tripcode .= '!';
 				}
-				$postTripcode .= '!' . substr(md5($capSecure . ATOM_TRIPSEED), 2, 10);
+				$tripcode .= '!' . substr(md5($capSecure . ATOM_TRIPSEED), 2, 10);
 			}
-			$post['name'] = preg_replace('/(' . $capDelimiter . ')(.*)/', '', $postName);
-			$post['tripcode'] = $postTripcode;
+			$post['name'] = $namePart;
+			$post['tripcode'] = $tripcode;
 		} else {
 			$post['name'] = $postName;
 			$post['tripcode'] = '';
@@ -572,6 +568,7 @@ function postingRequest() {
 	if (!in_array('message', $hideFields)) {
 		$post['message'] = $_POST['message'];
 	}
+
 	// Text formatting
 	if ($post['message'] && !$isStaffPost) {
 		// Message length limit
@@ -684,15 +681,16 @@ function postingRequest() {
 			$callbacks = [];
 			foreach ($atom_replace_text as $pattern => $replacement) {
 				$callbacks[$pattern] = fn($m) => 
-					'<span class="autoreplace" style="color: hsl(' . mt_rand(0, 360) . ', 90%, 50%)">' .
-					preg_replace_callback('/\$(\d+)/', fn($i) => $m[$i[1]] ?? '', $replacement) . '</span>';
+					'<span class="autoreplace" style="color: ' . hslToHex(mt_rand(0, 360), .9, .5) . ';">' .
+					preg_replace_callback('/\$(\d+)/', fn($idx) => $m[$idx[1]] ?? '', $replacement) .
+					'</span>';
 			}
 			$msg = preg_replace_callback_array($callbacks, $msg);
 		}
 		if (!empty($atom_replace_rand)) {
 			foreach ($atom_replace_rand as $pattern => $replacements) {
 				$msg = preg_replace_callback($pattern, fn() => 
-					'<span class="autoreplace" style="color: hsl(' . mt_rand(0, 360) . ', 90%, 50%)">' .
+					'<span class="autoreplace" style="color: ' . hslToHex(mt_rand(0, 360), .9, .5) . '">' .
 					$replacements[array_rand($replacements)] . '</span>', $msg);
 			}
 		}
@@ -704,65 +702,60 @@ function postingRequest() {
 		$post['password'] = $_POST['password'] != '' ? md5(md5($_POST['password'])) : '';
 	}
 
-	// Get Nameblock
-	$postName = $post['name'];
-	$postTripcode = $post['tripcode'];
-	$postEmail = $post['email'];
-	$postNameBlock =
-		($validPasscode && $passcode[1] ? '<img class="poster-achievement" height="18"' .
-			' title="Donator" src="/' . ATOM_BOARD . '/icons/donator.png"> ' : '') .
-		'<span class="postername' . ($hasAccess && $postName ?
-			($loginStatus == 'admin' ? ' postername-admin' : ' postername-mod') : '') . '">' .
-		(!$postName && !$postTripcode ? ATOM_POSTERNAME : $postName) .
-		($postTripcode != '' ? '</span><span class="postertrip">!' . $postTripcode : '') . '</span>';
-	if ($hasAccess && ($postName || $postTripcode)) {
-		switch($loginStatus) {
-		case 'admin': $postNameBlock .= ' <span class="postername-admin">## Admin</span>'; break;
-		case 'janitor': $postNameBlock .= ' <span class="postername-mod">## Janitor</span>'; break;
-		case 'moderator': $postNameBlock .= ' <span class="postername-mod">## Mod</span>'; break;
+	// Get Nameblock (name, tripcode, passcode, uid, email, time)
+	$pass = $post['pass'] && $passcode[1] ?
+		'<img class="poster-achievement" height="18" title="Donator" src="/' .
+		ATOM_BOARD . '/icons/donator.png"> ' : '';
+	$nameClass = 'poster-name' .
+		($hasAccess && $post['name'] ? ($isAdmin ? ' poster-name-admin' : ' poster-name-mod') : '');
+	$posterName = htmlspecialchars(($post['name'] || $post['tripcode']) ? $post['name'] : ATOM_POSTERNAME);
+	$posterTrip = $post['tripcode'] !== '' ?
+		'<span class="poster-trip">!' . $post['tripcode'] . '</span>' : '';
+	$postNameBlock = sprintf('%s<span class="%s">%s</span>%s', $pass, $nameClass, $posterName, $posterTrip);
+	if ($hasAccess && ($post['name'] || $post['tripcode'])) {
+		$roles = ['admin' => '## Admin', 'janitor' => '## Janitor', 'moderator' => '## Mod'];
+		if (isset($roles[$loginStatus])) {
+			$roleClass = $isAdmin ? 'poster-name-admin' : 'poster-name-mod';
+			$postNameBlock .= ' <span class="' . $roleClass . '">' . $roles[$loginStatus] . '</span>';
 		}
-	} else if (ATOM_UNIQUEID) {
+	} elseif (ATOM_UNIQUEID) {
 		$ip = $post['ip'];
-		$ipHash = substr(md5($ip . (int)$post['parent'] . ATOM_TRIPSEED), 0, 8);
-		$ipHashInt = (int)hexdec('0x' . $ipHash);
-		$uid = '';
+		$parentId = (int)$post['parent'];
+		// Generate a main hash from IP for the ID and name
+		$fullHash = hash_hmac('sha256', $ip . $parentId, ATOM_TRIPSEED);
+		$ipHashHex = substr($fullHash, 0, 8);
+		$ipHashInt = hexdec($ipHashHex);
+		$uidLabel = $ipHashHex;
 		if (ATOM_UNIQUENAME) {
 			global $firstNames, $lastNames;
-			$firstNamesLen = count($firstNames);
-			$lastNamesLen = count($lastNames);
-			$firstName = '';
-			$lastName = '';
-
-			// Generate firstname by IP
-			if ($firstNamesLen) {
-				srand($ipHashInt);
-				$firstName = $firstNames[rand() % $firstNamesLen];
-			}
-
-			// Generate lastname by subnet /20
-			if ($lastNamesLen) {
-				$subnet = long2ip(cidr2ip($ip . '/20')[0]);
-				srand((int)hexdec('0x' . substr(md5($subnet . (int)$post['parent'] . ATOM_TRIPSEED), 0, 8)));
-				$lastName = $lastNames[rand() % $lastNamesLen];
-			}
-
-			$uid = $firstName . ($firstName && $lastName ? ' ' : '') . $lastName;
+			// Generate firstname by main hash
+			$fName = !empty($firstNames) ? $firstNames[$ipHashInt % count($firstNames)] : '';
+			// Generate lastname by subnet /20 (using mask)
+			$subnet = long2ip(ip2long($ip) & 0xFFFFF000);
+			$subHashInt = hexdec(substr(hash_hmac('sha256', $subnet . $parentId, ATOM_TRIPSEED), 0, 8));
+			$lName = !empty($lastNames) ? $lastNames[$subHashInt % count($lastNames)] : '';
+			$uidLabel = trim($fName . ' ' . $lName) ?: $ipHashHex;
 		}
-		$hue = 2 * pi() * ($ipHashInt / 0xFFFFFF);
-		$saturation = '100%';
-		$lightness = '25%';
-		$postNameBlock .= ' <span class="posteruid" data-uid="' . $ipHash . '" style="color: hsl(' .
-			$hue . ', ' . $saturation . ', ' . $lightness . ');">' . ($uid ? $uid : $ipHash) . '</span>';
+		$postNameBlock .= sprintf(
+			' <span class="poster-uid" data-uid="%s" style="color: %s;">%s</span>',
+			$ipHashHex,
+			hslToHex($ipHashInt % 360, .9, .5),
+			htmlspecialchars($uidLabel, ENT_QUOTES, 'UTF-8'));
 	}
-	$lowEmail = strtolower($postEmail);
-	if ($postEmail != '' && $lowEmail != 'noko') {
-		$postNameBlock = '<a href="mailto:' . $postEmail . '"' .
-			($lowEmail == 'sage' ? ' class="sage"' : '') . '>' . $postNameBlock . '</a>';
+	if ($post['email'] !== '') {
+		$lowEmail = strtolower($post['email']);
+		if ($lowEmail !== 'noko') {
+			$postNameBlock = sprintf('<a href="mailto:%s"%s>%s</a>',
+				htmlspecialchars($post['email'], ENT_QUOTES),
+				($lowEmail === 'sage' ? ' class="sage"' : ''),
+				$postNameBlock);
+		}
 	}
-	$tt = time();
-	$postDateBlock = '<span class="posterdate" data-timestamp="' . $tt . '">' .
-		date('d.m.y D H:i:s', $tt) . '</span>';
-	$post['nameblock'] = $postNameBlock . ' ' . $postDateBlock;
+	$timestamp = time();
+	$post['nameblock'] = sprintf('%s <time class="post-date" datetime="%s">%s</time>',
+		$postNameBlock,
+		date('c', $timestamp),
+		date('d.m.y D H:i:s', $timestamp));
 
 	/* --------[ Embed URL upload ]-------- */
 
