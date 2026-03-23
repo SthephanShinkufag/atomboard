@@ -118,7 +118,7 @@ function initPostsHighlighting() {
 	var highlightedUID = null;
 	var handleEvent = function(e) {
 		var targetEl = e.target;
-		if (!targetEl.classList.contains('posteruid')) {
+		if (!targetEl.matches('.poster-uid, .posteruid')) {
 			return;
 		}
 		if (e.type === 'click') {
@@ -134,13 +134,9 @@ function initPostsHighlighting() {
 				return;
 			}
 			highlightedUID = uid;
-			var matchedEls = $Q('.posteruid[data-uid="' + uid + '"]');
+			var matchedEls = $Q('[data-uid="' + uid + '"]');
 			for (var i = 0, len = matchedEls.length; i < len; ++i) {
-				var post = matchedEls[i];
-				while (!post.classList.contains('reply') && !post.classList.contains('oppost')) {
-					post = post.parentNode;
-				}
-				post.classList.add('highlighted');
+				matchedEls[i].closest('.post').classList.add('highlighted');
 			}
 			e.preventDefault();
 		} else if (e.type === 'mouseover') {
