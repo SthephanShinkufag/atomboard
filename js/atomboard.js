@@ -200,14 +200,16 @@ function sendLike(likeEl, num) {
 		}
 		try {
 			var obj = JSON.parse(xhr.responseText);
-			if (obj.status === 'ok') {
-				console.log(obj.message);
+			if (obj.result === 'ok') {
+				// alert(obj.message);
 				likeEl.classList.toggle('like-enabled', obj.likes);
 				likeEl.classList.toggle('like-disabled', !obj.likes);
 				likeEl.nextElementSibling.textContent = obj.likes || '';
+			} else if(obj.result === 'error') {
+				alert(obj.message);
 			}
 		} catch(err) {
-			console.log('Invalid response:\n' + err);
+			alert('Like error: Invalid response:\n' + err);
 		}
 	});
 }

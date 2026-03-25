@@ -21,7 +21,7 @@ function fancyDie($message) {
 
 <html data-theme="' . ATOM_THEME . '">
 <head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026032301">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026032500">
 </head>
 <body align="center">
 	<br>
@@ -1172,7 +1172,7 @@ function reportRequest() {
 	}
 
 	// Check for dirty ip
-	if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY && isDirtyIP($ip)) {
+	if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY && !checkPasscode(false)[0] && isDirtyIP($ip)) {
 		$message = 'Your IP address ' . $ip .
 			' is not allowed to report due to abuse (proxy, Tor, VPN, VPS).';
 		if ($isJson) {
@@ -1312,13 +1312,18 @@ function passcodeRequest() {
 /* ==[ Like request ]====================================================================================== */
 
 function likeRequest() {
+	$ip = $_SERVER['REMOTE_ADDR'];
+	if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY && !checkPasscode(false)[0] && isDirtyIP($ip)) {
+		die('{ "result": "error", "message": "Like error: Your IP address ' . $ip .
+			' is not allowed to like due to abuse (proxy, Tor, VPN, VPS)." }');
+	}
 	$postNum = $_GET['like'];
-	$result = toggleLike($postNum, $_SERVER['REMOTE_ADDR']);
+	$result = toggleLike($postNum, $ip);
 	$post = getPost($postNum);
 	$post['likes'] = $result;
 	rebuildThread(getThreadId($post));
 	die('{
-		"status": "ok",
+		"result": "ok",
 		"message": "' . (
 			$result[0] ? 'Post №' . $postNum . ' has been liked!' :
 			'The like to post №' . $postNum . ' has been cancelled!'
