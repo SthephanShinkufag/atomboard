@@ -443,7 +443,7 @@ function buildPost($post, $res, $mode = '') {
 							(ATOM_LIKES ? '
 							<span class="like-container">
 								<span class="like-icon' . ($likes ? ' like-enabled' : ' like-disabled') .
-									'" onclick="sendLike(this, ' . $postId . ');">
+									'" onclick="sendLike(this, \'' . ATOM_BOARD . '\', ' . $postId . ');">
 									<svg><use xlink:href="#symbol-like"></use></svg>
 								</span><span class="like-counter">' . ($likes ? $likes : '') . '</span>
 							</span>' : '') .
@@ -848,7 +848,7 @@ function buildBansPage() {
 			</fieldset>
 		</form>
 		<br>
-		Total bans: ' . $bansCount . '<br>';
+		<p>Total bans: ' . $bansCount . '</p>';
 	if ($bansCount > 0) {
 		$geoipReader = ATOM_GEOIP == 'geoip2' ?
 			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
@@ -995,9 +995,11 @@ function buildPasscodesPage() {
 			</fieldset>
 		</form>';
 	$passcodes = getAllPasscodes();
-	if (count($passcodes) > 0) {
+	$passCount = count($passcodes);
+	if ($passCount > 0) {
 		$passHtml .= '
 		<br>
+		<p>Total passcodes: ' . $passCount . '</p>
 		<table class="table"><thead>
 			<tr>
 				<th>№</th>' .
@@ -1260,15 +1262,25 @@ function getPostReports($reports, $geoipReader) {
 
 function buildModeratePostPage($post) {
 	global $loginStatus;
+	$isMod = $loginStatus == 'admin' || $loginStatus == 'moderator';
+	$geoipReader = ATOM_GEOIP == 'geoip2' ?
+		new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
 	$postId = $post['id'];
 	$ip = $post['ip'];
 	$thrId = $post['parent'] !== 0 ? $post['parent'] : $postId;
-	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
 	$isOp = isOp($post);
 	$ban = banByIP($ip);
-	$isMod = $loginStatus == 'admin' || $loginStatus == 'moderator';
+	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
 	$reports = reportsByPostID($postId);
 	$reportsCount = count($reports);
+	$likes = likesByPostID($postId);
+	$likesHtml = '';
+	foreach ($likes as $like) {
+		$likeIP = $like['ip'];
+		$likesHtml .= '
+				<tr><td>' . (ATOM_GEOIP ? getCountryIcon($likeIP, $geoipReader) . '&nbsp;' : '') .
+					getIpUserInfoLink($likeIP) . '</td></tr>';
+	}
 	$stickyHtml = '';
 	$lockedHtml = '';
 	$endlessHtml = '';
@@ -1419,14 +1431,22 @@ function buildModeratePostPage($post) {
 		<fieldset>
 			<legend>Reports</legend>
 			<table class="table-status"><tbody>' .
-				getPostReports($reports, ATOM_GEOIP == 'geoip2' ?
-					new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL) . '
+				getPostReports($reports, $geoipReader) . '
 			</tbody></table>
 		</fieldset>' : '') . '
 		<fieldset>
 			<legend>' . ($isOp ? 'OP-post' : 'Post') . '</legend>' .
 			buildPost($post, ATOM_INDEXPAGE, 'edit') . '
-		</fieldset>
+		</fieldset>' .
+		($likesHtml ? '
+		<fieldset>
+			<legend>Likes: ' . count($likes) . '</legend>
+			<table class="table"><thead>
+				<tr><th>IP</th></tr>
+			</thead><tbody>' .
+				$likesHtml . '
+			</tbody></table>
+		</fieldset>' : '') . '
 		<br>';
 }
 

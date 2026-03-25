@@ -645,6 +645,15 @@ function deletePass($passId) {
 
 /* ==[ Likes ]============================================================================================= */
 
+function likesByPostID($id) {
+	global $mysqli;
+	$result = $mysqli->execute_query(
+		"SELECT * FROM " . ATOM_DBLIKES . "
+		WHERE board = ? AND postnum = ?",
+		[ATOM_BOARD, (int)$id]);
+	return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+}
+
 function getAllLikes() {
 	global $mysqli;
 	$result = $mysqli->execute_query(

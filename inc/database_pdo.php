@@ -643,6 +643,14 @@ function deletePass($passId) {
 
 /* ==[ Likes ]============================================================================================= */
 
+function likesByPostID($id) {
+	$result = pdoQuery(
+		"SELECT * FROM " . ATOM_DBLIKES . "
+		WHERE board = ? AND postnum = ?",
+		[ATOM_BOARD, (int)$id]);
+	return $result->fetchAll(PDO::FETCH_ASSOC) ?: [];
+}
+
 function getAllLikes() {
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBLIKES . "

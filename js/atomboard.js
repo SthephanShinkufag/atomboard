@@ -192,8 +192,8 @@ function expandFile(e, linkEl, type) {
 /* ==[ Posts likes ]======================================================================================= */
 
 // Used in html.php
-function sendLike(likeEl, num) {
-	$ajax('POST', window.location.href.split('/res/')[0] + '/imgboard.php?like=' + num, function(e) {
+function sendLike(likeEl, board, num) {
+	$ajax('POST', '/' + board + '/imgboard.php?like=' + num, function(e) {
 		var xhr = e.target;
 		if (xhr.readyState !== 4 || xhr.status !== 200 && xhr.status !== 304) {
 			return;
