@@ -21,7 +21,7 @@ function fancyDie($message) {
 
 <html data-theme="' . ATOM_THEME . '">
 <head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026032500">
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026040900">
 </head>
 <body align="center">
 	<br>
@@ -39,46 +39,66 @@ function managementRequest() {
 	global $loginStatus;
 	$isAdmin = $loginStatus === 'admin';
 	$isJanitor = $loginStatus === 'janitor';
+	$token = $_SESSION['atom_token'] ?? '';
+
+	/* --------[ CSRF checking for all POST requests ]-------- */
+
+	if ($_SERVER['REQUEST_METHOD'] === 'POST' &&
+		!(isset($_POST['manage_password']) || isset($_POST['new_admin_pass']))
+	) {
+		if (empty($token) || !hash_equals($token, $_POST['token'] ?? '')) {
+			fancyDie('Security error: Invalid CSRF token. Try refreshing the page.');
+		}
+	}
 
 	/* --------[ Show the login form or the post report form if not logged ]-------- */
 
-	if ($loginStatus == 'disabled') {
-		if (!empty($_GET['moderate']) && is_numeric($_GET['moderate'])) {
+	if ($loginStatus === 'disabled') {
+		if (is_numeric($_GET['moderate'] ?? null)) {
 			$post = getPost($_GET['moderate']);
 			if (!$post) {
 				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 			}
-			die(managePage(buildReportPostForm($post)));
+			die(managePage(makeReportPostForm($post)));
 		}
-		die(managePage(buildManageLoginForm(), 'login'));
+		die(managePage(makeManageLoginForm(), 'login'));
 	}
 
 	/* --------[ Create an admin account if logged in with a temporary password ]-------- */
-	if ($loginStatus === 'admin' && $_SESSION['atom_user'] === 'TemporaryAdmin') {
+
+	if ($isAdmin && $_SESSION['atom_user'] === 'TemporaryAdmin') {
 		if (isset($_POST['new_admin_user'], $_POST['new_admin_pass'])) {
 			addStaffMember($_POST['new_admin_user'], $_POST['new_admin_pass'], 'admin');
 			session_destroy();
 			die(managePage(manageInfo(
 				'Admin account created! Please <a href="?manage">log in</a> with new credentials.')));
 		}
-		die(managePage(buildAdminCreateForm()));
+		die(managePage(manageError('No admins found in the database.') . makeAdminCreateForm()));
 	}
 
 	/* --------[ Manage staff accounts ]-------- */
 
 	if (isset($_GET['staff']) && $isAdmin) {
+		$msg = '';
 		// Add account
 		if (isset($_POST['add_user'], $_POST['add_pass'], $_POST['add_role'])) {
 			$role = $_POST['add_role'];
 			if (in_array($role, ['moderator', 'janitor'])) {
-				addStaffMember($_POST['add_user'], $_POST['add_pass'], $role);
+				if (addStaffMember($_POST['add_user'], $_POST['add_pass'], $role)) {
+					$msg = manageInfo('Staff account added for user "' .
+						htmlspecialchars($_POST['add_user']) . '" with "' . $role . '" role.');
+				} else {
+					$msg = manageError('Error: User "' .
+						htmlspecialchars($_POST['add_user']) . '" already exists!');
+				}
 			}
 		}
 		// Delete account
-		if (isset($_GET['delete_staff']) && is_numeric($_GET['delete_staff'])) {
+		if (is_numeric($_GET['delete_staff'] ?? null)) {
 			deleteStaffMember($_GET['delete_staff']);
+			$msg = manageInfo('Staff account with ID ' . $_GET['delete_staff'] . ' has been deleted.');
 		}
-		die(managePage(buildStaffManager()));
+		die(managePage($msg . makeStaffManager($token), 'staff'));
 	}
 
 	/* --------[ Change account password ]-------- */
@@ -106,7 +126,7 @@ function managementRequest() {
 				$msg = 'New password and confirmation do not match!';
 			}
 		}
-		die(managePage(buildAccountForm($msg)));
+		die(managePage(($msg ? manageError(htmlspecialchars($msg)) : '') . makeChangePasswForm($token)));
 	}
 
 	/* --------[ Rebuild all posts ]-------- */
@@ -178,16 +198,36 @@ function managementRequest() {
 				$text = 'Ban record lifted for ' . $ip;
 			}
 		}
-		die(managePage(($text ? manageInfo($text) . PHP_EOL : '') . buildBansPage(), 'bans'));
+		die(managePage(($text ? manageInfo($text) : '') . makeBansManager($token), 'bans'));
+	}
+
+	/* --------[ Close reports for the post ]-------- */
+
+	if (is_numeric($_POST['deletereports'] ?? null)) {
+		$id = $_POST['deletereports'];
+		deleteReports($id);
+		fancyDie('Post №' . $id . ' approved. Reports are closed.');
+	}
+
+	/* --------[ Close all reports on the board ]-------- */
+
+	if (isset($_POST['deleteallreports'])) {
+		$reports = getAllReports();
+		if (count($reports)) {
+			foreach ($reports as $report) {
+				deleteReports($report['postnum']);
+			}
+			fancyDie('All reports on board /' . ATOM_BOARD . ' are closed.');
+		}
 	}
 
 	/* --------[ Show the passcodes form ]-------- */
 
 	if (ATOM_PASSCODES_ENABLED && isset($_GET['passcodes']) && !$isJanitor) {
-		if ($_GET['passcodes'] == 'new') {
-			die(managePage(buildPasscodesPage(), 'passcode_new'));
-		} else if ($_GET['passcodes'] == 'manage') {
-			die(managePage(buildPasscodesPage(), 'passcode_manage'));
+		if ($_GET['passcodes'] === 'new') {
+			die(managePage(makePasscodesManager($token), 'passcode_new'));
+		} else if ($_GET['passcodes'] === 'manage') {
+			die(managePage(makePasscodesManager($token), 'passcode_manage'));
 		}
 	}
 
@@ -196,7 +236,8 @@ function managementRequest() {
 	if (ATOM_PASSCODES_ENABLED && isset($_GET['issuepasscode']) && $isAdmin) {
 		if (!empty($_POST['expires'])) {
 			die(managePage(manageInfo('New passcode issued:<br>' .
-				insertPass($_POST['expires'], $_POST['meta'], $_POST['meta_admin']))));
+				insertPass($_POST['expires'], $_POST['meta'], $_POST['meta_admin'])) .
+				makePasscodesManager($token)));
 		}
 	}
 
@@ -209,44 +250,36 @@ function managementRequest() {
 			!empty($_POST['expires']) ? strtotime($_POST['expires']) : 0,
 			$_POST['block_till'] ? strtotime($_POST['block_till']) : 0,
 			$_POST['block_reason']);
-		die(managePage(manageInfo('Passcode ' . $_POST['id'] . ' has been changed.')));
+		die(managePage(manageInfo('Passcode ' . $_POST['id'] . ' has been changed.') .
+			makePasscodesManager($token)));
 	}
 
 	/* --------[ Show the moderation log ]-------- */
 
 	if (isset($_GET['modlog'])) {
-		$fromtime = 0;
-		$totime = 0;
-		if (isset($_POST['from'], $_POST['to'])) {
-			if (($fromtime = strtotime($_POST['from'])) === false ||
-				($totime = strtotime($_POST['to'])) === false
-			) {
-				fancyDie('Wrong time format. Use yyyy-mm-dd format.');
-			}
-			$fromtime = (int)strtotime($_POST['from']);
-			$totime = (int)strtotime($_POST['to']);
-		}
-		die(managePage(buildModLogForm() . buildModLogTable(true, $fromtime, $totime)));
+		die(managePage(makeModLogManager($token,
+			$_POST['from'] ?? date("Y-m-d", strtotime("-30 day")),
+			$_POST['to'] ?? date("Y-m-d", strtotime("+1 day")))));
 	}
 	
 	/* --------[ View all posts from ip ]-------- */
 
 	if (isset($_GET['ipinfo'])) {
 		$ip = $_GET['ipinfo'];
-		if ($ip == 'manage') {
-			die(managePage(buildUserInfoForm(), 'ipinfo'));
+		if ($ip === 'manage') {
+			die(managePage(makeUserInfoForm(), 'ipinfo'));
 		}
-		die(managePage(buildUserInfoPage($ip, getPostsByIP($ip))));
+		die(managePage(makeUserInfoManager($token, $ip, getPostsByIP($ip))));
 	}
 
 	/* --------[ Delete a post or thread ]-------- */
 
-	if (isset($_GET['delete'])) {
-		$post = getPost($_GET['delete']);
+	if (is_numeric($_POST['delete'] ?? null)) {
+		$id = $_POST['delete'];
+		$post = getPost($id);
 		if (!$post) {
 			fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 		}
-		$id = $post['id'];
 		deletePost($id);
 		if (isOp($post)) {
 			modLog('Deleted thread №' . $id . '.');
@@ -261,10 +294,10 @@ function managementRequest() {
 
 	/* --------[ Delete all posts from ip ]-------- */
 
-	if (isset($_GET['delall'])) {
-		$ip = $_GET['delall'];
-		if (isset($_GET['thrid'])) {
-			$thrid = $_GET['thrid'];
+	if (isset($_POST['delall'])) {
+		$ip = $_POST['delall'];
+		if (is_numeric($_POST['thrid'] ?? null)) {
+			$thrid = $_POST['thrid'];
 			die(managePage(manageInfo('Posts from ip ' . $ip . ' in thread №' . $thrid .
 				' have been deleted: №' . deleteAllPosts($ip, $thrid) . '.')));
 		} else {
@@ -275,22 +308,25 @@ function managementRequest() {
 
 	/* --------[ Delete/hide images ]-------- */
 
-	if (isset($_GET['delete-img'], $_GET['delete-img-mod'], $_GET['action'])) {
-		$post = getPost($_GET['delete-img']);
+	if (is_numeric($_GET['delete-files'] ?? null)) {
+		if(!isset($_GET['delete-file-mod'], $_GET['action'])) {
+			fancyDie('Invalid request. No files or actions selected.');
+		}
+		$id = $_GET['delete-files'];
+		$post = getPost($id);
 		if (!$post) {
 			fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 		}
-		$id = $post['id'];
 		$thrId = getThreadId($post);
-		if ($_GET['action'] == 'delete') {
-			deletePostImages($post, $_GET['delete-img-mod']);
+		if ($_GET['action'] === 'delete') {
+			deletePostImages($post, $_GET['delete-file-mod']);
 			rebuildThread($thrId);
 			modLog('Deleted image(s) of ' . (isOp($post) ? 'OP-post in thread №' . $id :
 				'post №' . $id . ' in thread №' . $thrId) . '.');
 			die(managePage(manageInfo('Selected images from post №' . $id . ' have been deleted.')));
 		}
-		if ($_GET['action'] == 'hide') {
-			hidePostImages($post, $_GET['delete-img-mod']);
+		if ($_GET['action'] === 'hide') {
+			hidePostImages($post, $_GET['delete-file-mod']);
 			rebuildThread($thrId);
 			modLog('Hidden thumbnail(s) of ' . (isOp($post) ? 'OP-post in thread №' . $id :
 				'post №' . $id . ' in thread №' . $thrId) . '.');
@@ -300,13 +336,12 @@ function managementRequest() {
 	}
 
 	/* --------[ Edit a message in post ]-------- */
-
-	if (isset($_GET['editpost'], $_POST['message'])) {
-		$post = getPost($_GET['editpost']);
+	if (is_numeric($_GET['editpost'] ?? null) && isset($_POST['message'])) {
+		$id = $_GET['editpost'];
+		$post = getPost($id);
 		if (!$post) {
 			fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 		}
-		$id = $post['id'];
 		$thrId = getThreadId($post);
 		editPostMessage($id, $_POST['message'] . '<br><br><span style="color: purple;">Message edited: ' .
 			date('d.m.y D H:i:s', time()) . '</span>');
@@ -318,16 +353,16 @@ function managementRequest() {
 
 	/* --------[ Approve a post if premoderation enabled (see ATOM_REQMOD) ]-------- */
 
-	if (!empty($_GET['approve']) && is_numeric($_GET['approve'])) {
-		$post = getPost($_GET['approve']);
+	if (is_numeric($_POST['approve'] ?? null)) {
+		$id = $_POST['approve'];
+		$post = getPost($id);
 		if (!$post) {
 			fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 		}
-		$id = $post['id'];
 		$thrId = getThreadId($post);
 		approvePost($id);
 		if (ATOM_THREAD_LIMIT == 0 || getThreadPostsCount($thrId) <= ATOM_THREAD_LIMIT) {
-			if (strtolower($post['email']) != 'sage') {
+			if (strtolower($post['email']) !== 'sage') {
 				bumpThread($thrId);
 			}
 		} elseif (ATOM_THREAD_LIMIT != 0) {
@@ -340,28 +375,26 @@ function managementRequest() {
 	/* --------[ Show the post moderation form ]-------- */
 
 	if (isset($_GET['moderate'])) {
-		if ($_GET['moderate'] > 0) {
-			$post = getPost($_GET['moderate']);
+		$id = $_GET['moderate'];
+		if (is_numeric($id) && $id > 0) {
+			$post = getPost($id);
 			if (!$post) {
 				fancyDie('Sorry, there doesn\'t appear to be a post with that ID.');
 			}
-			die(managePage(buildModeratePostPage($post)));
+			die(managePage(makePostModManager($token, $post)));
 		}
-		die(managePage(buildModeratePostForm(), 'moderate'));
+		die(managePage(makePostModForm(), 'moderate'));
 	}
 
 	/* --------[ Stick a thread ]-------- */
 
-	if (isset($_GET['sticky'], $_GET['setsticky'])) {
-		if ($_GET['sticky'] <= 0) {
-			fancyDie('Form data was lost. Please go back and try again.');
-		}
-		$post = getPost($_GET['sticky']);
+	if (is_numeric($_POST['stick'] ?? null) && is_numeric($_POST['setsticky'] ?? null)) {
+		$id = $_POST['stick'];
+		$post = getPost($id);
 		if (!$post || !isOp($post)) {
 			fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
 		}
-		$isStickied = (int)$_GET['setsticky'];
-		$id = $post['id'];
+		$isStickied = (int)$_POST['setsticky'];
 		toggleStickyThread($id, $isStickied);
 		rebuildThread($id);
 		$stickiedText = $isStickied == 1 ? 'stickied' : 'un-stickied';
@@ -371,16 +404,13 @@ function managementRequest() {
 
 	/* --------[ Lock a thread ]--------= */
 
-	if (isset($_GET['locked'], $_GET['setlocked'])) {
-		if ($_GET['locked'] <= 0) {
-			fancyDie('Form data was lost. Please go back and try again.');
-		}
-		$post = getPost($_GET['locked']);
+	if (is_numeric($_POST['lock'] ?? null) && is_numeric($_POST['setlocked'] ?? null)) {
+		$id = $_POST['lock'];
+		$post = getPost($id);
 		if (!$post || !isOp($post)) {
 			fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
 		}
-		$isLocked = (int)$_GET['setlocked'];
-		$id = $post['id'];
+		$isLocked = (int)$_POST['setlocked'];
 		toggleLockThread($id, $isLocked);
 		rebuildThread($id);
 		$lockedText = $isLocked == 1 ? 'locked' : 'un-locked';
@@ -390,16 +420,13 @@ function managementRequest() {
 
 	/* --------[ Make an endless thread ]-------- */
 
-	if (isset($_GET['endless'], $_GET['setendless'])) {
-		if ($_GET['endless'] <= 0) {
-			fancyDie('Form data was lost. Please go back and try again.');
-		}
-		$post = getPost($_GET['endless']);
+	if (is_numeric($_POST['endless'] ?? null) && is_numeric($_POST['setendless'] ?? null)) {
+		$id = $_POST['endless'];
+		$post = getPost($id);
 		if (!$post || !isOp($post)) {
 			fancyDie('Sorry, there doesn\'t appear to be a thread with that ID.');
 		}
-		$isEndless = (int)$_GET['setendless'];
-		$id = $post['id'];
+		$isEndless = (int)$_POST['setendless'];
 		toggleEndlessThread($id, $isEndless);
 		rebuildThread($id);
 		$endlessText = $isEndless == 1 ? 'made endless' : 'made non-endless';
@@ -425,7 +452,7 @@ function managementRequest() {
 
 	/* --------[ Show status for posts ]-------- */
 
-	die(managePage(buildStatusPage()));
+	die(managePage(makeStatusManager($token)));
 }
 
 /* ==[ Posting requests ]================================================================================== */
@@ -449,7 +476,7 @@ function postingRequest() {
 		// Check for banned countries
 		$ip = $_SERVER['REMOTE_ADDR'];
 		if (ATOM_GEOIP && !empty($atom_banned_countries)) {
-			$geoipReader = ATOM_GEOIP == 'geoip2' ?
+			$geoipReader = ATOM_GEOIP === 'geoip2' ?
 				new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
 			$countryCode = getCountryCode($ip, $geoipReader);
 			if (in_array($countryCode, $atom_banned_countries)) {
@@ -699,7 +726,7 @@ function postingRequest() {
 
 	// Get password
 	if ($isStaffPost || !in_array('password', $hideFields)) {
-		$post['password'] = $_POST['password'] != '' ? md5(md5($_POST['password'])) : '';
+		$post['password'] = $_POST['password'] !== '' ? md5(md5($_POST['password'])) : '';
 	}
 
 	// Get Nameblock (name, tripcode, passcode, uid, email, time)
@@ -760,10 +787,10 @@ function postingRequest() {
 	/* --------[ Embed URL upload ]-------- */
 
 	if (isset($_POST['embed']) &&
-		trim($_POST['embed']) != '' &&
+		trim($_POST['embed']) !== '' &&
 		($isStaffPost || !in_array('embed', $hideFields))
 	) {
-		if (isset($_FILES['file']) && $_FILES['file']['name'][0] != '') {
+		if (isset($_FILES['file']) && $_FILES['file']['name'][0] !== '') {
 			fancyDie('Embedding a URL and uploading a file at the same time is not supported.');
 		}
 		list($service, $embed) = getEmbed(trim($_POST['embed']));
@@ -801,7 +828,7 @@ function postingRequest() {
 		$post['thumb0_height'] = $thumbInfo[1];
 		$post['file0_original'] = escapeHTML($embed['title']);
 		$embedHtml = $embed['html'];
-		if ($service == 'YouTube.com') {
+		if ($service === 'YouTube.com') {
 			$embedHtml = preg_replace('/width="\d+"/', 'width="' . $fileInfo[0] . '"', $embedHtml);
 			$embedHtml = preg_replace('/height="\d+"/', 'height="' . $fileInfo[1] . '"', $embedHtml);
 		}
@@ -810,7 +837,7 @@ function postingRequest() {
 
 	/* --------[ Images upload ]-------- */
 
-	elseif (isset($_FILES['file']) && $_FILES['file']['name'][0] != '' &&
+	elseif (isset($_FILES['file']) && $_FILES['file']['name'][0] !== '' &&
 		($isStaffPost || !in_array('file', $hideFields))
 	) {
 		$fileIdx = 0;
@@ -919,10 +946,10 @@ function postingRequest() {
 			}
 
 			// Get video info and its thumbnail
-			if ($fileMime == 'audio/webm' ||
-				$fileMime == 'video/webm' ||
-				$fileMime == 'video/mp4' ||
-				$fileMime == 'video/quicktime'
+			if ($fileMime === 'audio/webm' ||
+				$fileMime === 'video/webm' ||
+				$fileMime === 'video/mp4' ||
+				$fileMime === 'video/quicktime'
 			) {
 				preg_match('/^%(\d+)%/',
 					shell_exec('mediainfo --Inform="Video;%%Width%%" ' . $fileLocation), $match);
@@ -954,7 +981,7 @@ function postingRequest() {
 					$mins = floor(round($duration / 1000) / 60);
 					$secs = str_pad(floor(round($duration / 1000) % 60), 2, '0', STR_PAD_LEFT);
 					$post['file' . $index . '_original'] = $mins . ':' . $secs .
-						($post['file' . $index . '_original'] != '' ?
+						($post['file' . $index . '_original'] !== '' ?
 							(', ' . $post['file' . $index . '_original']) : '');
 				}
 			}
@@ -1006,7 +1033,7 @@ function postingRequest() {
 			}
 
 			// Get thumbnail info
-			if ($post['thumb' . $index] != '') {
+			if ($post['thumb' . $index] !== '') {
 				$thumbInfo = @getimagesize('thumb/' . $post['thumb' . $index]);
 				$post['thumb' . $index . '_width'] = $thumbInfo[0];
 				$post['thumb' . $index . '_height'] = $thumbInfo[1];
@@ -1018,26 +1045,26 @@ function postingRequest() {
 
 	/* --------[ No file upload ]-------- */
 
-	if ($post['file0'] == '') {
+	if ($post['file0'] === '') {
 		$allowed = '';
 		if (!empty($atom_uploads) && ($isStaffPost || !in_array('file', $hideFields))) {
 			$allowed = 'file';
 		}
 		if (!empty($atom_embeds) && ($isStaffPost || !in_array('embed', $hideFields))) {
-			if ($allowed != '') {
+			if ($allowed !== '') {
 				$allowed .= ' or ';
 			}
 			$allowed .= 'embed URL';
 		}
-		if (isOp($post) && $allowed != '' && !ATOM_NOFILEOK) {
+		if (isOp($post) && $allowed !== '' && !ATOM_NOFILEOK) {
 			fancyDie('A ' . $allowed . ' is required to start a thread.');
 		}
-		if (!$isStaffPost && str_replace('<br>', '', $post['message']) == '') {
+		if (!$isStaffPost && str_replace('<br>', '', $post['message']) === '') {
 			$dieMsg = '';
 			if (!in_array('message', $hideFields)) {
-				$dieMsg .= 'enter a message ' . ($allowed != '' ? ' and/or ' : '');
+				$dieMsg .= 'enter a message ' . ($allowed !== '' ? ' and/or ' : '');
 			}
-			if ($allowed != '') {
+			if ($allowed !== '') {
 				$dieMsg .= 'upload a ' . $allowed;
 			}
 			fancyDie('Please ' . $dieMsg . '.');
@@ -1045,7 +1072,7 @@ function postingRequest() {
 	}
 
 	$slowRedirect = false;
-	if (!$hasAccess && (($post['file0'] != '' && ATOM_REQMOD == 'files') || ATOM_REQMOD == 'all')) {
+	if (!$hasAccess && (($post['file0'] !== '' && ATOM_REQMOD === 'files') || ATOM_REQMOD === 'all')) {
 		$slowRedirect = true;
 		$post['moderated'] = '0';
 		echo 'Your ' . (isOp($post) ? 'thread' : 'post') .
@@ -1061,14 +1088,14 @@ function postingRequest() {
 	if ($post['moderated'] == '1') {
 		$id = $post['id'];
 		$thrId = getThreadId($post);
-		if (ATOM_POSTING_REDIRECT || strtolower($post['email']) == 'noko') {
+		if (ATOM_POSTING_REDIRECT || strtolower($post['email']) === 'noko') {
 			$redirectPath = '/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $id;
 		}
 		trimThreadsCount();
 		rebuildThreadPage($thrId);
 		if (!isOp($post)) {
 			if (ATOM_THREAD_LIMIT == 0 || getThreadPostsCount($thrId) <= ATOM_THREAD_LIMIT) {
-				if (strtolower($post['email']) != 'sage') {
+				if (strtolower($post['email']) !== 'sage') {
 					bumpThread($thrId);
 				}
 			} elseif (ATOM_THREAD_LIMIT != 0) {
@@ -1094,7 +1121,7 @@ function checkForBans($ip, $ban, $validPasscode, $isCloseWarning, $isJson) {
 		return;
 	}
 	$message = '';
-	$reason = $ban['reason'] == '' ? '' : '<br><br>Reason: ' . $ban['reason'];
+	$reason = $ban['reason'] !== '' ? '<br><br>Reason: ' . $ban['reason'] : '';
 	if ($ban['expire'] == 1) {
 		if ($isCloseWarning) {
 			deleteBan($ban['id']);
@@ -1147,11 +1174,11 @@ function deletionRequest() {
 		fancyDie('Sorry, an invalid post identifier was sent.<br>' .
 			'Please go back, refresh the page, and try again.');
 	}
-	if ($loginStatus != 'disabled' && $_POST['password'] == '') {
+	if ($loginStatus !== 'disabled' && $_POST['password'] === '') {
 		// Redirect to post moderation page
 		die('<meta http-equiv="refresh" content="0;url=' . basename($_SERVER['PHP_SELF']) .
 			'?manage&moderate=' . $_POST['delete'] . '">');
-	} elseif ($post['password'] == '' || md5(md5($_POST['password'])) != $post['password']) {
+	} elseif ($post['password'] === '' || md5(md5($_POST['password'])) != $post['password']) {
 		fancyDie('Invalid password.');
 	}
 	$id = $post['id'];
@@ -1163,7 +1190,6 @@ function deletionRequest() {
 /* ==[ Post report request ]=============================================================================== */
 
 function reportRequest() {
-	global $loginStatus;
 	$isJson = isset($_GET['json']) && $_GET['json'] == '1';
 	$ip = $_SERVER['REMOTE_ADDR'];
 	$ban = banByIP($ip);
@@ -1189,7 +1215,7 @@ function reportRequest() {
 		$id = $_POST['id'];
 		$report = insertReport($id, ATOM_BOARD, $ip, $_POST['reason']);
 		if ($report) {
-			if ($report == 'exists') {
+			if ($report === 'exists') {
 				if ($isJson) {
 					die('{ "result": "alreadysent" }');
 				} else {
@@ -1206,21 +1232,6 @@ function reportRequest() {
 			die('{ "result": "error" }');
 		} else {
 			fancyDie('An error occurred while sending the report.');
-		}
-	} else if ($loginStatus != 'disabled') {
-		if (isset($_GET['deletereports'])) {
-			$id = $_GET['id'];
-			deleteReports($id);
-			fancyDie('Post №' . $id . ' approved. All reports are closed.');
-		} else if (isset($_GET['deleteallreports'])) {
-			$reports = getAllReports();
-			$reportsCount = count($reports);
-			if ($reportsCount) {
-				foreach ($reports as $report) {
-					deleteReports($report['postnum']);
-				}
-				fancyDie('All reports on board /' . ATOM_BOARD . ' are closed.');
-			}
 		}
 	}
 }
@@ -1259,19 +1270,19 @@ function passcodeRequest() {
 		$passId = $_POST['passcode'];
 		$pass = passByID($passId);
 		if (!$pass) {
-			die(managePage('<div align="center"><b>Could not log in the provided passcode:</b><br>' .
-				'<br>This passcode is not found in database.</div>'));
+			die(managePage(manageError('<b>Could not log in the provided passcode:</b><br>' .
+				'<br>This passcode is not found in database.')));
 		}
 		$blocked = isPassBlocked($pass);
 		if (isPassExpired($pass)) {
 			clearPass();
-			die(managePage('<div align="center"><b>Could not log in the provided passcode:</b><br>' .
-				'<br>This passcode has expired on ' . date('d.m.Y D H:i:s', $pass['expires']) . '.</div>'));
+			die(managePage(manageError('<b>Could not log in the provided passcode:</b><br>' .
+				'<br>This passcode has expired on ' . date('d.m.Y D H:i:s', $pass['expires']))));
 		} else if ($blocked) {
 			clearPass();
-			die(managePage('<div align="center"><b>Could not log in the provided passcode:</b><br>' .
+			die(managePage(manageError('<b>Could not log in the provided passcode:</b><br>' .
 				'<br>This passcode has been blocked till ' . date('d.m.y D H:i:s', $pass['blocked_till']) .
-				'<br>Reason: ' . $blocked . '</div>'));
+				'<br>Reason: ' . $blocked)));
 		}
 		setcookie('passcode', '1', $pass['expires'], '/');
 		$_SESSION['passcode'] = $passId;
@@ -1301,12 +1312,12 @@ function passcodeRequest() {
 	if (isset($_SESSION['passcode'])) {
 		$pass = passByID($_SESSION['passcode']);
 		if ($pass && !isPassExpired($pass) && !isPassBlocked($pass)) {
-			die(managePage(buildPasscodeLoginForm('valid', $pass)));
+			die(managePage(makePasscodeLoginForm('valid', $pass)));
 		}
 	}
 
 	// Show passcode login form
-	die(managePage(buildPasscodeLoginForm('login'), 'passcode'));
+	die(managePage(makePasscodeLoginForm('login'), 'passcode'));
 }
 
 /* ==[ Like request ]====================================================================================== */
@@ -1338,13 +1349,13 @@ if (!file_exists('settings.php')) {
 	fancyDie('Please copy the file settings.default.php to settings.php');
 }
 require 'settings.php';
-if (ATOM_GEOIP == 'geoip2') {
+if (ATOM_GEOIP === 'geoip2') {
 	require 'vendor/autoload.php';
 }
-if (ATOM_TRIPSEED == '') {
+if (ATOM_TRIPSEED === '') {
 	fancyDie('settings.php: ATOM_TRIPSEED must be configured.');
 }
-if (ATOM_CAPTCHA == 'recaptcha' && (ATOM_RECAPTCHA_SITE == '' || ATOM_RECAPTCHA_SECRET == '')) {
+if (ATOM_CAPTCHA === 'recaptcha' && (ATOM_RECAPTCHA_SITE === '' || ATOM_RECAPTCHA_SECRET === '')) {
 	fancyDie('settings.php: ATOM_RECAPTCHA_SITE and ATOM_RECAPTCHA_SECRET must be configured.');
 }
 
@@ -1374,7 +1385,7 @@ foreach ($includes as $file) {
 	}
 	require_once $file;
 }
-if (ATOM_TIMEZONE != '') {
+if (ATOM_TIMEZONE !== '') {
 	date_default_timezone_set(ATOM_TIMEZONE);
 }
 

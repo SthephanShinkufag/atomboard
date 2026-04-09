@@ -737,11 +737,20 @@ function getAllStaffMembers() {
 
 function addStaffMember($userName, $passw, $role) {
 	global $mysqli;
-	$mysqli->execute_query(
-		"INSERT INTO " . ATOM_DBSTAFF . "
-		(username, password_hash, role)
-		VALUES (?, ?, ?)",
-		[trim($userName), password_hash($passw, PASSWORD_DEFAULT), $role]);
+	try {
+		$mysqli->execute_query(
+			"INSERT INTO " . ATOM_DBSTAFF . "
+			(username, password_hash, role)
+			VALUES (?, ?, ?)",
+			[trim($userName), password_hash($passw, PASSWORD_DEFAULT), $role]
+		);
+		return true;
+	} catch (mysqli_sql_exception $e) {
+		if ($e->getCode() === 1062) { // Unique key conflict - user already exists
+			return false; 
+		}
+		throw $e;
+	}
 }
 
 function deleteStaffMember($id) {
@@ -770,7 +779,7 @@ function updateStaffLogin($username) {
 		[time(), $username]);
 }
 
-function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
+function getModLogRecords($private = '0', $periodStartDate = 0, $periodEndDate = 0) {
 	global $mysqli;
 	$sql = "SELECT timestamp, username, action, color FROM " . ATOM_DBMODLOG . " WHERE boardname = ?";
 	$params = [ATOM_BOARD];

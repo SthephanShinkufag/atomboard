@@ -6,9 +6,7 @@ html[data-theme="Dark"] {
 	--button-bg-hover: #33445e;
 	--code-bg: rgba(255, 255, 255, 0.2);
 	--code-color: #fff;
-	--description-color: #a3c1fb;
-	--fieldset-border: #62707b;
-	--filititle-color: #eaba4b;
+	--filetitle-color: #eaba4b;
 	--focus: #8173bf;
 	--highlighted-bg: #2b2f40;
 	--highlighted-border: #6464ff;
@@ -22,11 +20,13 @@ html[data-theme="Dark"] {
 	--link-color: #89c2ff;
 	--link-button-bg: linear-gradient(to bottom, #596375, #153864);
 	--link-button-bg-active: #223a57;
-	--link-button-bg-hover: #45689f;
+	--link-button-bg-hover: #3e5e88;
 	--link-button-color: #ccc;
+	--link-button-color-hover: #bed1ff;
 	--link-hover: #ed88fb;
 	--navigation-bg: linear-gradient(to bottom, #5070b5, #0f2037);
 	--navigation-link-border: #002b60;
+	--page-title-color: #a3c1fb;
 	--poster-name-color: #71b6ff;
 	--poster-opacity: .9;
 	--poster-uid-filter: invert(100%);
@@ -44,9 +44,7 @@ html[data-theme="Light"] {
 	--button-bg-hover: #f1f1f1;
 	--code-bg: rgba(27,31,35,0.07);
 	--code-color: #000;
-	--description-color: #71819f;
-	--fieldset-border: #9f9f9f;
-	--filititle-color: #506a81;
+	--filetitle-color: #506a81;
 	--focus: #4d87c4;
 	--highlighted-bg: #d4daf0;
 	--highlighted-border: #00f;
@@ -59,12 +57,14 @@ html[data-theme="Light"] {
 	--legend-color: #71819f;
 	--link-color: #0f73c8;
 	--link-button-bg: linear-gradient(to bottom, #c9d4e6, #577dae);
-	--link-button-bg-active: #435e82;
-	--link-button-bg-hover: #5f83bb;
+	--link-button-bg-active: #5b7ca9;
+	--link-button-bg-hover: #7f9cc2;
 	--link-button-color: #fff;
+	--link-button-color-hover: #fff;
 	--link-hover: #dd0000;
 	--navigation-bg: linear-gradient(to top, #c1d3fb, #375a88);
 	--navigation-link-border: #c0ccd7;
+	--page-title-color: #71819f;
 	--poster-name-color: #438ad7;
 	--poster-opacity: 1;
 	--pre-bg: rgba(255,255,255,0.4);
@@ -106,53 +106,33 @@ body, html {
 	font: 14px Helvetica, Arial, sans-serif;
 }
 
-.description {
-	margin: 7px 0;
+h2 {
+	margin: 20px 0 10px 0;
+	font-weight: bold;
+	font-size: 1.3rem;
 	text-align: center;
-	font-size: 2em;
-	line-height: 1em;
-	color: var(--description-color);
-	width: 100%;
+	color: var(--legend-color);
 }
 
 hr {
-	margin: 10px 0;
-	clear: both;
+	margin: 20px 0;
 	border: none;
 	background-image: var(--hr-bg);
 	height: 2px;
+	clear: both;
 }
 
-input[type="password"], input[type="text"], textarea {
+input[type="password"],
+input[type="text"],
+textarea {
 	background-color: var(--inputs-bg);
 	color: var(--inputs-color);
 	border: var(--inputs-border);
 	border-radius: 3px;
 }
 
-.input-controls {
-	display: inline-block;
-}
-
-fieldset {
-	border: 1px solid var(--fieldset-border);
-}
-
-fieldset + fieldset {
-	margin-top: 20px;
-}
-
 footer {
 	font: 12px serif;
-	text-align: center;
-}
-
-legend {
-	color: var(--legend-color);
-	font-weight: bold;
-}
-
-.login {
 	text-align: center;
 }
 
@@ -166,6 +146,15 @@ legend {
 	color: #00B930;
 	text-align: center;
 	padding: 2px;
+	width: 100%;
+}
+
+.page-title {
+	margin: 7px 0;
+	text-align: center;
+	font-size: 2em;
+	line-height: 1em;
+	color: var(--page-title-color);
 	width: 100%;
 }
 
@@ -184,35 +173,6 @@ legend {
 
 .report > .post-message {
 	color: #ff2020;
-}
-
-.table, .table-status {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.table > tbody > tr > td {
-	padding: 1px 3px;
-	border: 1px solid var(--table-border);
-}
-
-.table > thead > tr > th {
-	padding: 3px;
-	background: var(--table-th-bg);
-	border: 1px solid var(--table-border);
-}
-
-.table-status > tbody > tr > td {
-	padding: 1px 2px 2px 2px;
-	border: 1px solid var(--table-border);
-	border-top: none;
-}
-
-.table-status > tbody > tr > th {
-	padding: 4px;
-	background: var(--table-th-bg);
-	border: 1px solid var(--table-border);
-	border-bottom: none;
 }
 
 .userdelete {
@@ -263,9 +223,8 @@ article.reply {
 }
 
 .post-buttons > .link-button {
-	height: 16px;
 	margin-left: 4px;
-	padding: 0 4px;
+	padding: 2px 8px;
 }
 
 .post-id {
@@ -290,7 +249,7 @@ article.reply {
 .post-subject {
 	background: inherit;
 	font-size: 1.1em;
-	color: var(--filititle-color);
+	color: var(--filetitle-color);
 	font-weight: bold;
 }
 
@@ -518,66 +477,56 @@ pre + br {
 
 /* ==[ Links and buttons ]================================================================================= */
 
-button, input[type="submit"] {
+button:not(.link-button),
+input[type="submit"]:not(.link-button) {
 	padding: 2px 4px;
-	background-color: var(--button-bg);
+	background: var(--button-bg);
 	color: var(--inputs-color);
 	border: var(--inputs-border);
 	border-radius: 3px;
 	cursor: pointer;
 }
 
-button:not([disabled]):hover, input[type="submit"]:not([disabled]):hover {
-	background-color: var(--button-bg-hover);
+button:not(.link-button):not([disabled]):hover,
+input[type="submit"]:not(.link-button):not([disabled]):hover {
+	background: var(--button-bg-hover);
 }
 
-button:not([disabled]):active, input[type="submit"]:not([disabled]):active {
-	background-color: var(--button-bg-active);
-}
-
-.button-action {
-	min-width: 160px;
-	margin: 2px 4px 2px 0;
-	padding: 2px 10px !important;
-}
-
-.button-action[disabled] {
-	opacity: .5;
-}
-
-.button-manage {
-	margin: 2px 0;
+button:not(.link-button):not([disabled]):active,
+input[type="submit"]:not(.link-button):not([disabled]):active {
+	background: var(--button-bg-active);
 }
 
 .link-button {
 	display: inline-block;
-	padding: 2px 4px;
-	min-width: 8px;
-	background-image: var(--link-button-bg);
+	padding: 4px 10px;
+	background: var(--link-button-bg);
 	color: var(--link-button-color) !important;
-	border-radius: 3px;
-	text-align: center;
+	border: none;
+	border-radius: 4px;
 	font-weight: bold;
 	font-size: 13px;
+	text-decoration: none;
+	cursor: pointer;
 }
 
-.link-button:hover {
+.link-button:not([disabled]):hover {
 	background: var(--link-button-bg-hover);
+  	color: var(--link-button-color-hover) !important;
 }
 
-.link-button:active {
+.link-button:not([disabled]):active {
 	background: var(--link-button-bg-active);
+	transform: translateY(1px);
 }
+
+/* ==[ Navigation panels ]================================================================================= */
 
 .navigation {
 	display: flex;
 	justify-content: center;
 	flex-wrap: wrap;
 	background-image: var(--navigation-bg);
-}
-
-#navigation-bottom {
-	margin-top: 8px;
 }
 
 .navigation-link {
@@ -610,6 +559,116 @@ button:not([disabled]):active, input[type="submit"]:not([disabled]):active {
 	background: none;
 	font: bold 13px Helvetica, Arial, sans-serif;
 	cursor: pointer;
+}
+
+/* ==[ Moderation forms and tables ]======================================================================= */
+
+.form-container {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	width: fit-content;
+	margin: 0 auto;
+	padding: 10px;
+	background: var(--reply-bg);
+	border: 1px solid var(--reply-border);
+	border-radius: 6px;
+	color: var(--html-color);
+}
+
+.form-container > input.link-button[type="submit"] {
+	margin-top: 6px;
+	padding: 10px;
+	font-size: 14px;
+}
+
+.form-notes {
+	margin-top: 10px;
+	text-align: center;
+	font-size: 85%;
+}
+
+.form-row {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.form-row > input[type="text"],
+.form-row > input[type="password"],
+.form-row > input[type="date"],
+.form-row > input[type="datetime-local"],
+.form-row > select {
+	padding: 8px;
+	background: var(--inputs-bg);
+	border: var(--inputs-border);
+	color: var(--inputs-color);
+	border-radius: 4px;
+	font-size: 15px;
+	outline: none;
+}
+
+.form-row > input:focus,
+.form-row > select:focus {
+	border-color: var(--focus);
+	box-shadow: 0 0 0 2px var(--focus);
+}
+
+.form-row-label {
+	font-size: 13px;
+	font-weight: bold;
+	color: var(--legend-color);
+}
+
+.mod-button {
+	min-width: 160px;
+}
+
+.mod-button[disabled] {
+	opacity: .5;
+	cursor: default;
+}
+
+.mod-description {
+	font-size: 85%;
+}
+
+.mod-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.table, .table-posts {
+	margin-top: 10px;
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.table > tbody > tr > td {
+	padding: 1px 3px;
+	border: 1px solid var(--table-border);
+}
+
+.table > thead > tr > th {
+	padding: 3px;
+	background: var(--table-th-bg);
+	border: 1px solid var(--table-border);
+}
+
+.table-posts > tbody > tr > td {
+	padding: 1px 2px 2px 2px;
+	border: 1px solid var(--table-border);
+	border-top: none;
+}
+
+.table-posts > tbody > tr > th {
+	display: flex;
+	gap: 4px;
+	padding: 4px;
+	background: var(--table-th-bg);
+	border: 1px solid var(--table-border);
+	border-bottom: none;
 }
 
 /* ==[ Like post button ]================================================================================== */

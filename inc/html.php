@@ -27,10 +27,10 @@ function pageHeader() {
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>' . ATOM_BOARD_DESCRIPTION . '</title>
 	<link rel="shortcut icon" href="/' . ATOM_BOARD . '/icons/favicon.png">
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026032500">
-	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2026032500"></script>
+	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026040900">
+	<script src="/' . ATOM_BOARD . '/js/atomboard.js?2026040900"></script>
 	<script src="/' . ATOM_BOARD .
-		'/js/extension/Dollchan_Extension_Tools.user.js?2026032500" async defer></script>' .
+		'/js/extension/Dollchan_Extension_Tools.user.js?2026040900" async defer></script>' .
 	(ATOM_CAPTCHA === 'recaptcha' ? '
 	<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : '') . '
 </head>
@@ -51,7 +51,7 @@ function pageWrapper($description, $needReturn) {
 		</select>
 	</nav>
 	<main class="wrapper">
-		<header><h1 class="description">' . $description . '</h1></header>
+		<h1 class="page-title">' . $description . '</h1>
 		<hr>
 		<div id="panel-top" class="panel">' .
 			($needReturn ? '
@@ -208,8 +208,8 @@ function buildPostForm($parent, $isStaffPost = false) {
 					</tr>';
 	}
 	$reqModHtml = '';
-	if (ATOM_REQMOD == 'files' || ATOM_REQMOD == 'all') {
-		$reqModHtml = '<li>All posts' . (ATOM_REQMOD == 'files' ? ' with a file attached' : '') .
+	if (ATOM_REQMOD === 'files' || ATOM_REQMOD === 'all') {
+		$reqModHtml = '<li>All posts' . (ATOM_REQMOD === 'files' ? ' with a file attached' : '') .
 			' will be moderated before being shown.</li>';
 	}
 	$thumbnailsHtml = '';
@@ -231,8 +231,8 @@ function buildPostForm($parent, $isStaffPost = false) {
 
 	// Build postform
 	return '<div class="postarea">
-			<form name="postform" id="postform" action="/' . ATOM_BOARD .
-				'/imgboard.php" method="post" enctype="multipart/form-data">
+			<form name="postform" id="postform" method="post" action="/' . ATOM_BOARD .
+				'/imgboard.php" enctype="multipart/form-data">
 				' . $maxFileSizeInputHtml .
 			(!$isStaffPost ? '
 				<input type="hidden" name="parent" value="' . $parent . '">' : '') . '
@@ -312,7 +312,7 @@ function buildPostForm($parent, $isStaffPost = false) {
 						</td>
 					</tr>' .
 				(
-					$postformExtra['footer'] != '' ? '
+					$postformExtra['footer'] !== '' ? '
 					<tr>
 						<td>&nbsp;</td>
 						<td>' .
@@ -329,8 +329,8 @@ function buildPostForm($parent, $isStaffPost = false) {
 /* ==[ Post ]============================================================================================== */
 
 function buildPost($post, $res, $mode = '') {
-	$isEditPost = $mode == 'edit';
-	$showIP = $mode == 'ip';
+	$isEditPost = $mode === 'edit';
+	$showIP = $mode === 'ip';
 	if (!isset($post['omitted'])) {
 		$post['omitted'] = 0;
 	}
@@ -357,12 +357,12 @@ function buildPost($post, $res, $mode = '') {
 		$origName = $post['file' . $i . '_original'];
 		$linkHtml = 'href="' . $fileUrl . '" target="_blank" onclick="return expandFile(event, this, \'' . 
 			($isEmbed ? 'embed' : ($isVideo ? 'video' : ($isImage ? 'image' : 'file'))) . '\');"' .
-			($origName != '' ? ' download="' . $origName . '"' : '');
+			($origName !== '' ? ' download="' . $origName . '"' : '');
 		$fileInfoHtml = '<a class="file-fullname" ' . $linkHtml . '><span class="file-name">';
 		if ($isEmbed) {
 			$fileInfoHtml .= $origName . '</span></a>,&nbsp;' . $fileHex;
-		} elseif ($fileName != '') {
-			$fileInfoHtml .= pathinfo($origName != '' ? $origName : $fileName, PATHINFO_FILENAME) .
+		} elseif ($fileName !== '') {
+			$fileInfoHtml .= pathinfo($origName !== '' ? $origName : $fileName, PATHINFO_FILENAME) .
 				'</span>.<span class="file-extension">' . $fileExt . '</span></a><br>(' .
 				$post['file' . $i . '_size_formatted'] .
 				($hasSize ? ',&nbsp;' . $fileWidth . 'x' . $fileHeight : '') . ')';
@@ -373,13 +373,13 @@ function buildPost($post, $res, $mode = '') {
 						<figure class="post-file">
 							<figcaption class="file-info">' .
 								($isEditPost ? '
-								<input type="checkbox" name="delete-img-mod[]" value="' . $i . '">' : '') . '
+								<input type="checkbox" name="delete-file-mod[]" value="' . $i . '">' : '') . '
 								' . $fileInfoHtml . '
 							</figcaption>
 							<div class="file-wrap"' .
 								($isEmbed ? ' data-embed="' . rawurlencode($fileName) . '"' :
 								($hasSize ? ' data-width="' . $fileWidth . '" data-height="' .
-									$fileHeight . '"' : '')) .'>' .
+									$fileHeight . '"' : '')) . '>' .
 								($post['thumb' . $i] !== '' ? '
 								<a ' . $linkHtml . '>
 									<img class="file-thumb' . ($isVideo ? ' file-thumb-video' : '') .
@@ -425,11 +425,45 @@ function buildPost($post, $res, $mode = '') {
 	$replyBtn = $isOp && $res == ATOM_INDEXPAGE ? '<a class="link-button" href="res/' .
 		$postId . '.html" title="Reply to thread №' . $postId . '">Reply</a>' : '';
 	$reflink = '<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $postId . '"';
+	$messageHtml = '';
+	if ($isEditPost) {
+		$token = $_SESSION['atom_token'] ?? '';
+		if ($fileHtml !== '') {
+			$messageHtml .= '
+						<form class="post-files-edit" method="get" action="?">
+							<input type="hidden" name="token" value="' . $token . '">
+							<input type="hidden" name="manage" value="">
+							<input type="hidden" name="delete-files" value="' . $postId . '">' .
+							$fileHtml . '
+							<div style="margin-left: 20px;">
+								<small>Select the checkboxes and action to remove images or make spoilers:
+								</small><br>
+								<select name="action">
+									<option value="delete" selected>Delete files</option>
+									<option value="hide">Make spoilers</option>
+								</select>
+								<input type="submit" value="Apply to selected">
+							</div>
+						</form>';
+		}
+		$messageHtml .= '
+						<form class="post-message-edit" method="post" action="?manage&editpost=' . $postId .
+							'" enctype="multipart/form-data">
+							<input type="hidden" name="token" value="' . $token . '">
+							<textarea id="message" name="message">' .
+								htmlspecialchars($message) .
+							'</textarea>
+							<input type="submit" value="Save message">
+						</form>';
+	} else {
+		$messageHtml = $fileHtml . '
+						<blockquote class="post-message">' .$message . '</blockquote>';
+	}
 	return '
 				<article class="post ' . ($isOp ? 'op' : 'reply') . '" id="post' . $postId . '">
 					<header class="post-meta">
 						<input type="checkbox" name="delete" value="' . $postId . '">' .
-						($post['subject'] != '' ? '
+						($post['subject'] !== '' ? '
 						<span class="post-subject">' . $post['subject'] . '</span>' : '') . '
 						' . (ATOM_GEOIP ? getCountryIcon($ip, NULL) : '') .
 						($showIP || $isEditPost ? '&nbsp;' . getIpUserInfoLink($ip) : '') . '
@@ -460,28 +494,7 @@ function buildPost($post, $res, $mode = '') {
 						</span>
 					</header>
 					<div class="post-body">' .
-						($isEditPost ? '
-						<form class="post-files-edit" method="get" action="?">
-							<input type="hidden" name="manage" value="">
-							<input type="hidden" name="delete-img" value="' . $postId . '">
-							<select name="action" class="button-manage" style="margin-left: 20px;">
-								<option value="delete" selected>Delete images</option>
-								<option value="hide">Hide thumbnails</option>
-							</select>
-							<input type="submit" class="button-manage" value="Apply to selected">
-							<br>' .
-							$fileHtml . '
-						</form>
-						<form class="post-message-edit" method="post" action="?manage&editpost=' . $postId .
-							'" enctype="multipart/form-data">
-							<textarea id="message" name="message">' .
-								htmlspecialchars($message) .
-							'</textarea>
-							<br>
-							<input type="submit" class="button-manage" value="Edit">
-						</form>' :
-						$fileHtml . '
-						<blockquote class="post-message">' .$message . '</blockquote>') . '
+						$messageHtml . '
 					</div>
 				</article>' . ($isOp && $res == ATOM_INDEXPAGE && $omitted > 0 ? '
 				<div class="omittedposts">
@@ -519,7 +532,7 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 		' : '') .
 		buildPostForm($parent) . '
 		<hr>
-		<form id="delform" action="/' . ATOM_BOARD . '/imgboard.php?delete" method="post">
+		<form id="delform" method="post" action="/' . ATOM_BOARD . '/imgboard.php?delete">
 			<input type="hidden" name="board" value="' . ATOM_BOARD . '">' .
 			$htmlPosts . '
 			<menu class="userdelete">
@@ -578,12 +591,12 @@ function rebuildIndexPages() {
 			$htmlPosts = '';
 		}
 	}
-	if ($page == 0 || $htmlPosts != '') {
+	if ($page == 0 || $htmlPosts !== '') {
 		$file = $page == 0 ? ATOM_INDEX : $page . '.html';
 		writePage($file, buildPage($htmlPosts, 0, $pages, $page));
 	}
 	// Create catalog
-	writePage('catalog.html', buildCatalogPage());
+	writePage('catalog.html', makeCatalogPage());
 }
 
 function rebuildThread($thrId) {
@@ -594,7 +607,13 @@ function rebuildThread($thrId) {
 /* ==[ Manage ]============================================================================================ */
 
 function manageInfo($text) {
-	return '<div class="manage-info">' . $text . '</div>';
+	return '<div class="manage-info">' . $text . '</div>
+		';
+}
+
+function manageError($text) {
+	return '<div class="manage-error">' . $text . '</div>
+		';
 }
 
 function managePage($text, $action = '') {
@@ -603,21 +622,20 @@ function managePage($text, $action = '') {
 	switch ($action) {
 	case 'bans': $onload = ' onload="document.form_bans.ip.focus();"'; break;
 	case 'ipinfo': $onload = ' onload="document.form_ipinfo.ipinfo.focus();"'; break;
-	case 'login': $onload = ' onload="document.form_login_staff.manage_password.focus();"'; break;
+	case 'login': $onload = ' onload="document.form_login_staff.manage_user.focus();"'; break;
 	case 'moderate': $onload = ' onload="document.form_moderate_post.moderate.focus();"'; break;
-	case 'passcode': $onload = ' onload="document.form_login_passcode.passcode.focus();"'; break;
+	case 'passcode': $onload = ' onload="document.form_passcode_login.passcode.focus();"'; break;
 	case 'passcode_manage': $onload = ' onload="document.form_passcode_manage.block_reason.focus();"'; break;
 	case 'passcode_new': $onload = ' onload="document.form_passcode_new.meta.focus();"'; break;
 	case 'staffpost': $onload = ' onload="document.postform.parent.focus();"'; break;
 	}
-	$isAdmin = $loginStatus == 'admin';
+	$isAdmin = $loginStatus === 'admin';
 	return pageHeader() . '<body' . $onload . '>' .
-		pageWrapper(ATOM_BOARD_DESCRIPTION, true) .
-		'<hr>
-		<div id="panel-adminbar" class="panel">' . (
-			$loginStatus == 'disabled' ? '' : '
+		pageWrapper(ATOM_BOARD_DESCRIPTION, true)  . (
+			$loginStatus === 'disabled' ? '' : '<hr>
+		<div id="panel-adminbar" class="panel">
 			<a class="link-button" href="?manage">Status</a>' .
-			($isAdmin || $loginStatus == 'moderator' ? '
+			($isAdmin || $loginStatus === 'moderator' ? '
 			<a class="link-button" href="?manage&bans">Bans</a>
 			<a class="link-button" href="?manage&passcodes=new">Passcodes</a>' : '') . '
 			<a class="link-button" href="?manage&modlog">ModLog</a>
@@ -629,58 +647,69 @@ function managePage($text, $action = '') {
 			<a class="link-button" href="?manage&staff">Staff</a>' : '') . '
 			<a class="link-button" href="?manage&account">Account</a>
 			<a class="link-button" href="?manage&logout">Log Out</a>
-		') . '</div>
+		</div>
+		') . '<hr>
 		' . $text . '
 		<hr>' .
 	pageFooter(true);
 }
 
-function buildManageLoginForm() {
-	return '<form id="form_login_staff" name="form_login_staff" method="post" action="?manage">
-			<fieldset>
-				<legend align="center">Login</legend>
-				<div class="login">
-					<input type="text" name="manage_user" placeholder="Username" required><br>
-					<input type="password" id="manage_password" name="manage_password"' .
-						' placeholder="Password" required><br>
-					<input type="submit" class="button-manage" value="Log In">
+function makeManageLoginForm() {
+	return '<h2>Login</h2>
+		<form name="form_login_staff" method="post" action="?manage">
+			<div class="form-container">
+				<div class="form-row">
+					<div class="form-row-label">Username:</div>
+					<input type="text" name="manage_user" required>
 				</div>
-			</fieldset>
-		</form>
-		<br>';
+				<div class="form-row">
+					<div class="form-row-label">Password:</div>
+					<input type="password" name="manage_password" required>
+				</div>
+				<input class="link-button" type="submit" value="Log In">
+			</div>
+		</form>';
 }
 
-function buildPasscodeLoginForm($action, $pass = NULL) {
-	if ($action == 'login') {
-		return '<form id="form_login_passcode" name="form_login_passcode" method="post" action="?passcode">
-			<fieldset>
-				<legend align="center">Enter passcode</legend>
-				<div class="login">
-					<input type="text" id="passcode" name="passcode"' .
-						'style="width: 400px; padding: 4px; margin: 4px;" ><br>
-					<input type="submit" class="button-manage" value="Use Passcode">
+function makePasscodeLoginForm($action, $pass = NULL) {
+	if ($action === 'login') {
+		return '<h2>Enter your passcode</h2>
+		<form name="form_passcode_login" method="post" action="?passcode">
+			<div class="form-container">
+				<div class="form-row">
+					<div class="form-row-label">Passcode:</div>
+					<input type="text" name="passcode" style="width: 400px;" required>
 				</div>
-			</fieldset>
+				<input class="link-button" type="submit" value="Use Passcode">
+			</div>
 		</form>
 		<br>';
-	}
-	if ($action == 'valid') {
-		return '<div align="center"><b>You are using a valid passcode.</b><br>' .
+	} else if ($action === 'valid') {
+		return '<center><b>You are using a valid passcode.</b><br>' .
 			'<br>Issued: ' . date('d.m.Y D H:i:s', $pass['issued']) .
 			'<br>Expires: ' . date('d.m.Y D H:i:s', $pass['expires']) .
-			'<br><a href="/' . ATOM_BOARD . '/imgboard.php?passcode&logout">Log Out.</a></div>';
+			'<br><a href="/' . ATOM_BOARD . '/imgboard.php?passcode&logout">Log Out.</a></center>';
 	}
 }
 
-function buildAdminCreateForm() {
-	return '<div class="manage-error">No admins found in the database.</div>
-		<form method="post" action="?manage=staff">
-			<fieldset>
-				<legend align="center">Initial Setup: Create admin account</legend>
-				<input type="text" name="new_admin_user" placeholder="Admin Username" required>
-				<input type="password" name="new_admin_pass" placeholder="Admin Password" required>
-				<input type="submit" value="Create account">
-			</fieldset>
+function makeAdminCreateForm() {
+	return '<h2>Initial Setup: Create admin account</h2>
+		<form method="post" action="?manage">
+			<div class="form-container">
+				<div class="form-row">
+					<div class="form-row-label">Admin username:</div>
+					<input type="text" name="new_admin_user" required>
+				</div>
+				<div class="form-row">
+					<div class="form-row-label">Admin password:</div>
+					<input type="password" name="new_admin_pass" required>
+				</div>
+				<input class="link-button" type="submit" value="Create account">
+			</div>
+			<div class="form-notes">
+				Don\' forget to erase ATOM_ADMINPASS with empty string in settings.php<br>
+				after you create the administrator account.
+			</div>
 		</form>';
 }
 
@@ -701,20 +730,31 @@ function formatTimestamp($time) {
 	return date('d.m.Y H:i', $time);
 }
 
-function buildStaffManager() {
-	$html = '<form method="post" action="?manage&staff">
-			<fieldset>
-				<legend>Add new staff member</legend>
-				<input type="text" name="add_user" placeholder="Username" required autocomplete="off">
-				<input type="password" name="add_pass" placeholder="Password" required>
-				<select name="add_role">
-					<option value="moderator">Moderator</option>
-					<option value="janitor">Janitor</option>
-				</select>
-				<input type="submit" value="Create account">
-			</fieldset>
+function makeStaffManager($token) {
+	$html = '<h2>Add new staff member</h2>
+		<form method="post" action="?manage&staff">
+			<input type="hidden" name="token" value="' . $token . '">
+			<div class="form-container">
+				<div class="form-row">
+					<div class="form-row-label">Username:</div>
+					<input type="text" name="add_user" required autocomplete="off">
+				</div>
+				<div class="form-row">
+					<div class="form-row-label">Password:</div>
+					<input type="password" name="add_pass" required>
+				</div>
+				<div class="form-row">
+					<div class="form-row-label">Role:</div>
+					<select name="add_role">
+						<option value="moderator">Moderator</option>
+						<option value="janitor">Janitor</option>
+					</select>
+				</div>
+				<input class="link-button" type="submit" value="Create account">
+			</div>
 		</form>
-		<h3>Staff Management</h3>
+		<hr>
+		<h2>Staff Management</h2>
 		<table class="table"><thead>
 			<tr>
 				<th>Username</th>
@@ -739,27 +779,34 @@ function buildStaffManager() {
 						'Delete</a>') . '</td>
 			</tr>';
 	}
-	$html .= '</tbody></table>';
+	$html .= '
+		</tbody></table>';
 	return $html;
 }
 
-function buildAccountForm($message) {
-	return ($message ? '<div class="manage-error">' . htmlspecialchars($message) . '</div>' : '') . '
+function makeChangePasswForm($token) {
+	return '<h2>Account settings (' . htmlspecialchars($_SESSION['atom_user']) . ')</h2>
 		<form method="post" action="?manage&account">
-			<fieldset>
-				<legend>Account settings (' . htmlspecialchars($_SESSION['atom_user']) . ')</legend>
-				<table style="text-align: left;">
-					<tr><td>Old password:</td><td><input type="password" name="old_pass" required></td></tr>
-					<tr><td>New password:</td><td><input type="password" name="new_pass" required></td></tr>
-					<tr><td>Confirm password:</td><td><input type="password" name="confirm_pass" required>' .
-						'</td></tr>
-					<tr><td></td><td><input type="submit" value="Update Password"></td></tr>
-				</table>
-			</fieldset>
+			<input type="hidden" name="token" value="' . $token . '">
+			<div class="form-container">
+				<div class="form-row">
+					<div class="form-row-label">Old password:</div>
+					<input type="password" name="old_pass" required>
+				</div>
+				<div class="form-row">
+					<div class="form-row-label">New password:</div>
+					<input type="password" name="new_pass" required>
+				</div>
+				<div class="form-row">
+					<div class="form-row-label">Confirm password:</div>
+					<input type="password" name="confirm_pass" required>
+				</div>
+				<input class="link-button" type="submit" value="Update Password">
+			</div>
 		</form>';
 }
 
-function buildBansPage() {
+function makeBansManager($token) {
 	global $atom_ban_reasons;
 	$banReasons = '';
 	if (!empty($atom_ban_reasons)) {
@@ -772,85 +819,67 @@ function buildBansPage() {
 	}
 	$getAllBans = getAllBans();
 	$bansCount = count($getAllBans);
-	$text = '<form id="form_bans" name="form_bans" method="post" action="?manage&bans">
-			<fieldset>
-				<legend>Ban an IP-address</legend>
-				<table><tbody>
-					<tr>
-						<td><label for="ip">IP-address:</label></td>
-						<td><input type="text" name="ip" id="ip" value="' . $_GET['bans'] . '">
-							<small class="input-controls">
-								[<a href="#" onclick="document.form_bans.ip.value+=\'/24\'; return false;">
-									subnet /24
-								</a> |
-								<a href="#" onclick="document.form_bans.ip.value+=\'/16\'; return false;">
-									subnet /16
-								</a>] CIDR format
-							</small>
-						</td>
-					</tr>
-					<tr>
-						<td><label for="expire">Expire (sec):</label></td>
-						<td>
-							<input type="text" name="expire" id="expire" value="0">
-							<small class="input-controls">
-								[ <a href="#" onclick="document.form_bans.expire.value=' .
-									'\'3600\'; return false;">1hr</a> |
-								<a href="#" onclick="document.form_bans.expire.value=' .
-									'\'86400\'; return false;">1d</a> |
-								<a href="#" onclick="document.form_bans.expire.value=' .
-									'\'172800\'; return false;">2d</a> |
-								<a href="#" onclick="document.form_bans.expire.value=' .
-									'\'604800\'; return false;">1w</a> |
-								<a href="#" onclick="document.form_bans.expire.value=' .
-									'\'1209600\'; return false;">2w</a> |
-								<a href="#" onclick="document.form_bans.expire.value=' .
-									'\'2592000\'; return false;">30d</a> |
-								<a href="#" onclick="document.form_bans.expire.value=' .
-									'\'0\'; return false;">never</a> |
-								<a href="#" onclick="document.form_bans.expire.value=' .
-									'\'1\'; return false;">warning</a> ]
-							</small>
-						</td>
-					</tr>
-					<tr>
-						<td><label for="reason">Reason:</label></td>
-						<td>
-							<input type="text" name="reason" id="reason">' .
-							($banReasons ? '
-							<select onchange="this.parentNode.firstElementChild.value = this.value;">
-								<option value="">- Select ban reason -</option>' .
-								$banReasons . '
-							</select>' : '') . '
-							<small>optional</small>
-						</td>
-					</tr>
-					<tr>
-						<td>
-							<input type="submit" class="button-manage"' .
-								' name="ban" value="Ban" style="width: 100%;">
-						</td>
-						<td></td>
-					</tr>
-					<tr>
-						<td>
-							<input type="submit" class="button-manage"' .
-								' name="ban_delall" value="Ban + DelAll" style="width: 100%;"' .
-								' onclick="return confirm(\'Are you sure to ban and delete all posts?\')">
-						</td>
-						<td>
-							<input type="text" name="thrid" placeholder="Thread number" value="' .
-								($_GET['thrid'] ?? '') . '">
-							<small>Leave empty to delete all posts and threads</small>
-						</td>
-					</tr>
-				</tbody></table>
-			</fieldset>
+	$text = '<h2>Ban an IP-address</h2>
+		<form name="form_bans" method="post" action="?manage&bans">
+			<input type="hidden" name="token" value="' . $token . '">
+			<div class="form-container">
+				<div class="form-row">
+					<div class="form-row-label">IP-address (CIDR format):</div>
+					<input type="text" name="ip" value="' . $_GET['bans'] . '" placeholder="0.0.0.0" required>
+					<div>
+						<a class="link-button" href="#" onclick="var el = document.form_bans.ip;' .
+						' el.value = el.value.split(\'/\')[0] + \'/24\'; return false;">subnet /24</a>
+						<a class="link-button" href="#" onclick="var el = document.form_bans.ip;' .
+						' el.value = el.value.split(\'/\')[0] + \'/16\'; return false;">subnet /16 </a>
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-row-label">Expire (sec):</div>
+					<input type="text" name="expire" value="0">
+					<div>
+						<a class="link-button" href="#" onclick="document.form_bans.expire.value=' .
+							'\'3600\'; return false;">1hr</a>
+						<a class="link-button" href="#" onclick="document.form_bans.expire.value=' .
+							'\'86400\'; return false;">1d</a>
+						<a class="link-button" href="#" onclick="document.form_bans.expire.value=' .
+							'\'172800\'; return false;">2d</a>
+						<a class="link-button" href="#" onclick="document.form_bans.expire.value=' .
+							'\'604800\'; return false;">1w</a>
+						<a class="link-button" href="#" onclick="document.form_bans.expire.value=' .
+							'\'1209600\'; return false;">2w</a>
+						<a class="link-button" href="#" onclick="document.form_bans.expire.value=' .
+							'\'2592000\'; return false;">30d</a>
+						<a class="link-button" href="#" onclick="document.form_bans.expire.value=' .
+							'\'0\'; return false;">never</a>
+						<a class="link-button" href="#" onclick="document.form_bans.expire.value=' .
+							'\'1\'; return false;">warning</a>
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-row-label">Reason (optional):</div>
+					<input type="text" name="reason">' .
+					($banReasons ? '
+					<select onchange="var el = document.form_bans.reason; el.value = this.value;' .
+						' el.style.display = el.value ? \'none\' : \'\'">
+						<option value="">- Select ban reason -</option>' .
+						$banReasons . '
+					</select>' : '') . '
+				</div>
+				<div class="form-row">
+					<div class="form-row-label">Thread number (empty to delete all posts / threads):</div>
+					<input type="text" name="thrid" value="' . ($_GET['thrid'] ?? '') . '">
+				</div>
+				<input class="link-button" type="submit"' .
+					' name="ban_delall" value="Ban + DelAll" style="width: 100%;"' .
+					' onclick="return confirm(\'Are you sure to ban and delete all posts?\')">
+				<input class="link-button" type="submit" name="ban" value="Ban" style="width: 100%;">
+			</div>
 		</form>
-		<br>
-		<p>Total bans: ' . $bansCount . '</p>';
+		<hr>
+		<h2>Current bans</h2>
+		<center>Total bans: ' . $bansCount . '</center>';
 	if ($bansCount > 0) {
-		$geoipReader = ATOM_GEOIP == 'geoip2' ?
+		$geoipReader = ATOM_GEOIP === 'geoip2' ?
 			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
 		$text .= '
 		<table class="table"><thead>
@@ -878,8 +907,8 @@ function buildBansPage() {
 					(ATOM_GEOIP ? getCountryIcon(long2ip($ipFrom), $geoipReader) . '&nbsp;' : '') .
 					($ipFrom == $ipTo ? getIpUserInfoLink($cidrIP) : $cidrIP) . '</td>
 				<td>' . date('d.m.Y D H:i:s', $ban['timestamp']) . '</td>
-				<td>' . $expire . '</td><td>' . ($ban['reason'] == '' ?
-					'&nbsp;' : htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8')) . '</td>
+				<td>' . $expire . '</td><td>' . ($ban['reason'] !== '' ?
+					htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8') : '&nbsp;') . '</td>
 				<td><a href="?manage&bans&lift=' . $ban['id'] . '">lift</a></td>
 			</tr>';
 		}
@@ -889,117 +918,102 @@ function buildBansPage() {
 	return $text;
 }
 
-function buildPasscodesPage() {
+function makePasscodesManager($token) {
 	global $loginStatus;
-	$isAdmin = $loginStatus == 'admin';
+	$isAdmin = $loginStatus === 'admin';
 	$passHtml = '';
 	if ($isAdmin) {
-		$passHtml .= '<form id="form_passcode_new" name="form_passcode_new" method="post"' .
-			' action="?manage&issuepasscode">
-			<fieldset>
-				<legend>Issue a new passcode</legend>
-				<table><tbody>
-					<tr>
-						<td><label for="expires">Passcode duration (sec):</label></td>
-						<td>
-							<input type="text" name="expires" id="expires" value="31536000">
-							<small class="input-controls">
-								[ <a href="#" onclick="document.form_passcode_new.expires.value=' .
-									'\'2592000\'; return false;">30d</a> |
-								<a href="#" onclick="document.form_passcode_new.expires.value=' .
-									'\'15780000\'; return false;">6m</a> |
-								<a href="#" onclick="document.form_passcode_new.expires.value=' .
-									'\'31536000\'; return false;">1y</a> ]
-							</small>
-						</td>
-					</tr>
-					<tr>
-						<td><label for="meta">Meta (related info):</label></td>
-						<td><input type="text" name="meta" id="meta">&nbsp;<small>optional</small></td>
-					</tr>
-					<tr>
-						<td><label for="meta_admin">Meta for Admin:</label></td>
-						<td><input type="text" name="meta_admin">&nbsp;<small>optional</small></td>
-					</tr>
-					<tr>
-						<td><input type="submit" class="button-manage" value="Submit"></td>
-						<td></td>
-					</tr>
-				</tbody></table>
-			</fieldset>
+		$passHtml .= '<h2>Issue a new passcode</h2>
+		<form name="form_passcode_new" method="post" action="?manage&issuepasscode">
+			<input type="hidden" name="token" value="' . $token . '">
+			<div class="form-container">
+				<div class="form-row">
+					<div class="form-row-label">Passcode duration (sec):</div>
+					<input type="text" name="expires" value="31536000" required>
+					<div>
+						<a class="link-button" href="#" onclick="document.form_passcode_new.expires.value=' .
+							'\'2592000\'; return false;">30d</a>
+						<a class="link-button" href="#" onclick="document.form_passcode_new.expires.value=' .
+							'\'15780000\'; return false;">6m</a>
+						<a class="link-button" href="#" onclick="document.form_passcode_new.expires.value=' .
+							'\'31536000\'; return false;">1y</a>
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-row-label">Meta (optional info):</div>
+					<input type="text" name="meta">
+				</div>
+				<div class="form-row">
+					<div class="form-row-label">Meta for Admin (optional):</div>
+					<input type="text" name="meta_admin">
+				</div>
+				<input class="link-button" type="submit" value="Submit">
+			</div>
 		</form>
-		<br>
+		<hr>
 		';
 	}
 	$passNum = $_GET['passcode'] ?? NULL;
 	if ($passNum) {
 		$editPass = passByNum($passNum);
 	}
-	$passHtml .= '<form id="form_passcode_manage" name="form_passcode_manage" method="post"' .
-			' action="?manage&managepasscode">
-			<fieldset>
-				<legend>Manage passcode</legend>
-				<table><tbody>
-					<tr>
-						<td><label for="id">Passcode number:</label></td>
-						<td>
-							<input type="text" name="id" id="id" value="' . ($passNum ? $passNum : '') . '">
-						</td>
-					</tr>
-					<tr>
-						<td><label for="meta">Meta (related info):</label></td>
-						<td><input type="text" name="meta" id="meta" value="' .
-							($editPass['meta'] ?? '') . '" size="50"></td>
-					</tr>' .
-					($isAdmin ? '
-					<tr>
-						<td><label for="expires">Expires:</label></td>
-						<td><input type="datetime-local" name="expires" id="expires" value="' .
-							(isset($editPass['expires']) ? date('Y-m-d\TH:i', $editPass['expires']) : '') .
-							'"></td>
-					</tr>' : '') . '
-					<tr>
-						<td><label for="block_till">Block till:</label></td>
-						<td>
-							<input type="datetime-local" name="block_till" id="block_till" value="' .
-								(isset($editPass['blocked_till']) && $editPass['blocked_till'] ?
-									date('Y-m-d\TH:i', $editPass['blocked_till']) : '') . '">
-							<small class="input-controls">
-								[ <a href="#" onclick="this.parentNode.previousElementSibling.value=' .
-									'new Date(Date.now()+36E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">1hr</a> |
-								<a href="#" onclick="this.parentNode.previousElementSibling.value=' .
-									'new Date(Date.now()+864E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">1d</a> |
-								<a href="#" onclick="this.parentNode.previousElementSibling.value=' .
-									'new Date(Date.now()+1728E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">2d</a> |
-								<a href="#" onclick="this.parentNode.previousElementSibling.value=' .
-									'new Date(Date.now()+6048E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">1w</a> |
-								<a href="#" onclick="this.parentNode.previousElementSibling.value=' .
-									'new Date(Date.now()+12096E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">2w</a> |
-								<a href="#" onclick="this.parentNode.previousElementSibling.value=' .
-									'new Date(Date.now()+2592E6-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">30d</a> |
-								<a href="#" onclick="this.parentNode.previousElementSibling.value=' .
-									'\'\'; return false;">unblock</a> ]
-							</small>
-						</td>
-					</tr>
-					<tr>
-						<td><label for="block_reason">Block reason:</label></td>
-						<td><input type="text" name="block_reason" id="block_reason" value="' .
-							($editPass['blocked_reason'] ?? '') . '" size="50"></td>
-					</tr>
-					<tr>
-						<td><input type="submit" class="button-manage" value="Submit"></td>
-						<td></td>
-					</tr>
-				</tbody></table>
-			</fieldset>
+	$passHtml .= '<h2>Manage the passcode</h2>
+		<form name="form_passcode_manage" method="post" action="?manage&managepasscode">
+			<input type="hidden" name="token" value="' . $token . '">
+			<div class="form-container">
+				<div class="form-row">
+					<div class="form-row-label">Passcode number:</div>
+					<input type="text" name="id" value="' . ($passNum ? $passNum : '') . '" required>
+				</div>
+				<div class="form-row">
+					<div class="form-row-label">Meta (related info):</div>
+					<input type="text" name="meta" value="' .
+						($editPass['meta'] ?? '') . '" size="50">
+				</div>' .
+				($isAdmin ? '
+				<div class="form-row">
+					<div class="form-row-label">Expires:</div>
+					<input type="datetime-local" name="expires" value="' .
+						(isset($editPass['expires']) ? date('Y-m-d\TH:i', $editPass['expires']) : '') .
+						'" required>
+				</div>' : '') . '
+				<div class="form-row">
+					<div class="form-row-label">Block till:</div>
+					<input type="datetime-local" name="block_till" value="' .
+						(isset($editPass['blocked_till']) && $editPass['blocked_till'] ?
+							date('Y-m-d\TH:i', $editPass['blocked_till']) : '') . '">
+					<div>
+						<a class="link-button" href="#" onclick="this.parentNode.previousElementSibling.value=' .
+							'new Date(Date.now()+36E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">1hr</a>
+						<a class="link-button" href="#" onclick="this.parentNode.previousElementSibling.value=' .
+							'new Date(Date.now()+864E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">1d</a>
+						<a class="link-button" href="#" onclick="this.parentNode.previousElementSibling.value=' .
+							'new Date(Date.now()+1728E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">2d</a>
+						<a class="link-button" href="#" onclick="this.parentNode.previousElementSibling.value=' .
+							'new Date(Date.now()+6048E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">1w</a>
+						<a class="link-button" href="#" onclick="this.parentNode.previousElementSibling.value=' .
+							'new Date(Date.now()+12096E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">2w</a>
+						<a class="link-button" href="#" onclick="this.parentNode.previousElementSibling.value=' .
+							'new Date(Date.now()+2592E6-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">30d</a>
+						<a class="link-button" href="#" onclick="this.parentNode.previousElementSibling.value=' .
+							'\'\'; return false;">unblock</a>
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-row-label">Block reason:</div>
+					<input type="text" name="block_reason" value="' .
+						($editPass['blocked_reason'] ?? '') . '" size="50">
+				</div>
+				<input class="link-button" type="submit" value="Submit">
+			</div>
 		</form>';
 	$passcodes = getAllPasscodes();
 	$passCount = count($passcodes);
 	if ($passCount > 0) {
 		$passHtml .= '
-		<br>
-		<p>Total passcodes: ' . $passCount . '</p>
+		<hr>
+		<h2>Issued passcodes</h2>
+		<center>Total passcodes: ' . $passCount . '</center>
 		<table class="table"><thead>
 			<tr>
 				<th>№</th>' .
@@ -1015,7 +1029,7 @@ function buildPasscodesPage() {
 				<th>Last used IP</th>
 			</tr></thead><tbody>';
 		$passcodes = getAllPasscodes();
-		$geoipReader = ATOM_GEOIP == 'geoip2' ?
+		$geoipReader = ATOM_GEOIP === 'geoip2' ?
 			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
 		foreach ($passcodes as $pass) {
 			$ip = $pass['last_used_ip'];
@@ -1048,52 +1062,41 @@ function buildPasscodesPage() {
 		</tbody></table>';
 	} else {
 		$passHtml .= '
-		<br>
-		<div>No passcodes issued yet.</div>';
+		<center>No passcodes issued yet.</center>';
 	}
 	return $passHtml;
 }
 
-function buildUserInfoForm($ip = '') {
-	return '<form name="form_ipinfo" method="get" action="?">
+function makeUserInfoForm($ip = '') {
+	return '<h2>View user IP info</h2>
+		<form name="form_ipinfo" method="get" action="?">
 			<input type="hidden" name="manage" value="">
-			<fieldset>
-				<legend>View user IP info</legend>
-				<table><tbody>
-					<tr>
-						<td><label for="ipinfo">IP address:</label></td>
-						<td>
-							<input type="text" name="ipinfo" id="ipinfo" value="' . $ip . '">
-							<small class="input-controls">
-								[<a href="#" onclick="document.form_ipinfo.ipinfo.value+=\'/24\';' .
-									' return false;"> subnet /24 </a> |
-								<a href="#" onclick="document.form_ipinfo.ipinfo.value+=\'/16\';' .
-									' return false;"> subnet /16 </a>] CIDR format
-							</small>
-						</td>
-					</tr>
-					<tr>
-						<td>
-							<input type="submit" class="button-manage" value="Submit" style="width: 100%;">
-						</td>
-						<td></td>
-					</tr>
-				</tbody></table>
-			</fieldset>
-		</form>
-		<br>';
+			<div class="form-container">
+				<div class="form-row">
+					<div class="form-row-label">IP-address (CIDR format):</div>
+					<input type="text" name="ipinfo" value="' . $ip . '" placeholder="0.0.0.0" required>
+					<div>
+						<a class="link-button" href="#" onclick="' .
+						'document.form_ipinfo.ipinfo.value+=\'/24\'; return false;">subnet /24</a>
+						<a class="link-button" href="#" onclick="' .
+						'document.form_ipinfo.ipinfo.value+=\'/16\'; return false;">subnet /16 </a>
+					</div>
+				</div>
+				<input class="link-button" type="submit" value="Submit">
+			</div>
+		</form>';
 }
 
-function buildUserInfoPage($ip, $posts) {
+function makeUserInfoManager($token, $ip, $posts) {
 	global $loginStatus;
-	$isMod = $loginStatus == 'admin' || $loginStatus == 'moderator';
+	$isMod = $loginStatus === 'admin' || $loginStatus === 'moderator';
 	$postsHtml = '';
 	foreach ($posts as $post) {
 		$postsHtml .= '
-					<tr><th>' . getPostManageButtons($post) . '
-					</th></tr>
-					<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . '
-					</td></tr>';
+			<tr><th>' . makePostManageButtons($token, $post) . '
+			</th></tr>
+			<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . '
+			</td></tr>';
 	}
 	$banHtml = '';
 	$ban = banByIP($ip);
@@ -1106,141 +1109,126 @@ function buildUserInfoPage($ip, $posts) {
 			$expire = 'Does not expire';
 		}
 		$banHtml = '
-					<tr>
-						<th>Set at</th>
-						<th>Expires</th>
-						<th>Reason provided</th>
-						<th>&nbsp;</th>
-					</tr></thead><tbody>
-					<tr>
-						<td>' . date('d.m.Y D H:i:s', $ban['timestamp']) . '</td>
-						<td>' . $expire . '</td><td>' . ($ban['reason'] == '' ?
-							'&nbsp;' : htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8')) . '</td>
-						<td><a href="?manage&bans&lift=' . $ban['id'] . '">lift</a></td>
-					</tr>';
+			<tr>
+				<th>Set at</th>
+				<th>Expires</th>
+				<th>Reason provided</th>
+				<th>&nbsp;</th>
+			</tr></thead><tbody>
+			<tr>
+				<td>' . date('d.m.Y D H:i:s', $ban['timestamp']) . '</td>
+				<td>' . $expire . '</td><td>' . ($ban['reason'] !== '' ?
+					htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8') : '&nbsp;') . '</td>
+				<td><a href="?manage&bans&lift=' . $ban['id'] . '">lift</a></td>
+			</tr>';
 	}
 	$ipLookupHtml = '';
 	if (ATOM_IPLOOKUPS_KEY) {
 		$ipLookup = lookupByIP($ip);
 		if ($ipLookup) {
 			$red = ' style="background: #ff000060;">1';
-			$ipLookupHtml = '
-				<table class="table"><thead>
-					<tr>
-						<th>Abuser</th>
-						<th>VPS</th>
-						<th>Proxy</th>
-						<th>TOR</th>
-						<th>VPN</th>
-					</tr></thead><tbody>
-					<tr>
-						<td' . ($ipLookup['abuser'] ? $red : '>0') . '</td>
-						<td' . ($ipLookup['vps'] ? $red : '>0') . '</td>
-						<td' . ($ipLookup['proxy'] ? $red : '>0') . '</td>
-						<td' . ($ipLookup['tor'] ? $red : '>0') . '</td>
-						<td' . ($ipLookup['vpn'] ? $red : '>0') . '</td>
-					</tr>
-				</tbody></table>';
+			$ipLookupHtml = '<table class="table" style="width: auto; margin: 0 auto;">
+		<thead><tr><th>Type</th><th>Status</th></tr></thead>
+		<tbody>
+			<tr><td>Abuser</td><td' . ($ipLookup['abuser'] ? $red : '>0') . '</td></tr>
+			<tr><td>VPS</td><td' . ($ipLookup['vps'] ? $red : '>0') . '</td></tr>
+			<tr><td>Proxy</td><td' . ($ipLookup['proxy'] ? $red : '>0') . '</td></tr>
+			<tr><td>TOR</td><td' . ($ipLookup['tor'] ? $red : '>0') . '</td></tr>
+			<tr><td>VPN</td><td' . ($ipLookup['vpn'] ? $red : '>0') . '</td></tr>
+		</tbody></table>';
 		} else {
-			$ipLookupHtml = 'This IP address has not yet been verified.';
+			$ipLookupHtml = '<center>This IP address has not yet been verified.</center>';
 		}
 	}
-	return 	buildUserInfoForm($ip) . '
-		<fieldset>
-			<legend>User IP: ' . $ip . '</legend>
-			<fieldset>
-				<legend>Action</legend>
-				<table border="0" cellspacing="0" cellpadding="0" width="100%"><tbody>
-					<tr>
-						<td align="right" width="50%;">
-							<form method="get" action="?">
-								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="delall" value="' . $ip . '">
-								<input type="submit" class="button-action" value="Delete all" onclick="' .
-									'return confirm(\'Are you sure to delete all from ' . $ip . '?\')">
-							</form>
-						</td>
-						<td><small>This will delete all posts and threads from ip ' . $ip . '</small></td>
-					</tr>
-					<tr>
-						<td align="right" width="50%;">
-							<form method="get" action="?">
-								<input type="hidden" name="manage" value="">
-								<input type="hidden" name="bans" value="' . $ip . '">
-								<input type="submit" class="button-action" value="Ban user"' .
-									($ban || !$isMod ? ' disabled' : '') . '>
-							</form>
-						</td>
-						<td><small>' . (
-							$ban ? 'Ban record already exists for ' . $ip : (
-							$isMod ? 'Ban ip ' . $ip : 'Janitors can\'t ban an IP address.'
-							)) . '</small></td>
-					</tr>
-				</tbody></table>
-			</fieldset>
-			<fieldset>
-				<legend>Bans and warnings</legend>' .
-				($ban ? '
-				<table class="table"><thead>' .
-					$banHtml . '
-				</tbody></table>' : 'This IP has no bans or warnings.') . '
-			</fieldset>' .
-			(ATOM_IPLOOKUPS_KEY ? '
-			<fieldset>
-				<legend>IP lookup</legend>
-				' . $ipLookupHtml . '
-			</fieldset>' : '') . '
-			<fieldset>
-				<legend>User posts and threads</legend>' .
-				($postsHtml ? '
-				<table class="table-status"><tbody>' .
-					$postsHtml . '
-				</tbody></table>' : 'No posts or threads from this IP on this board.') . '
-			</fieldset>
-		</fieldset>
+	return 	makeUserInfoForm($ip) . '
+		<hr>
+		<h2>Action</h2>
+		<table border="0" cellspacing="0" cellpadding="0" width="100%"><tbody>
+			<tr>
+				<td align="right" width="50%;">
+					<form method="get" action="?">
+						<input type="hidden" name="manage" value="">
+						<input type="hidden" name="delall" value="' . $ip . '">
+						<input type="submit" class="mod-button" value="Delete all" onclick="' .
+							'return confirm(\'Are you sure to delete all from ' . $ip . '?\')">
+					</form>
+				</td>
+				<td><small>This will delete all posts and threads from ip ' . $ip . '</small></td>
+			</tr>
+			<tr>
+				<td align="right" width="50%;">
+					<form method="get" action="?">
+						<input type="hidden" name="manage" value="">
+						<input type="hidden" name="bans" value="' . $ip . '">
+						<input type="submit" class="mod-button" value="Ban user"' .
+							($ban || !$isMod ? ' disabled' : '') . '>
+					</form>
+				</td>
+				<td><small>' . (
+					$ban ? 'Ban record already exists for ' . $ip : (
+					$isMod ? 'Ban ip ' . $ip : 'Janitors can\'t ban an IP address'
+					)) . '</small></td>
+			</tr>
+		</tbody></table>
+		<hr>
+		<h2>Bans and warnings</h2>' .
+		($ban ? '
+		<table class="table"><thead>' .
+			$banHtml . '
+		</tbody></table>' : '
+		<center>This IP has no bans or warnings.</center>') .
+		(ATOM_IPLOOKUPS_KEY ? '
+		<hr>
+		<h2>IP Lookup</h2>
+		' . $ipLookupHtml : '') . '
+		<hr>
+		<h2>User posts and threads</h2>' .
+		($postsHtml ? '
+		<table class="table-posts"><tbody>' .
+			$postsHtml . '
+		</tbody></table>' : '
+		No posts or threads from this IP on this board.') . '
 		<br>';
 }
 
-function buildReportPostForm($post) {
-	return '<form id="form_report_post" name="form_report_post" method="post" action="?report&addreport">
+function makeReportPostForm($post) {
+	$isOp = isOp($post);
+	return '<h2>Report a ' . ($isOp ? 'thread' : 'post') . ' to moderators</h2>
+		<form name="form_report_post" method="post" action="?report&addreport">
 			<input type="hidden" name="id" value="' . $post['id'] . '">
-			<fieldset>
-				<legend>Report a ' . (isOp($post) ? 'thread' : 'post') . ' to moderators</legend>
-				<label for="reason">Reason:</label>
-				<input type="text" name="reason" id="reason" style="width: 350px;">
+			<div class="form-container">
+				<div class="form-row">
+					<div class="form-row-label">Reason:</div>
+					<input type="text" name="reason" required>
+				</div>
 				<table><tbody>' .
 					getCaptcha() . '
 				</tbody></table>
-				<input type="submit" class="button-manage" value="Submit">
-			</fieldset>
-			<fieldset>
-				<legend>' . (isOp($post) ? 'OP-post' : 'Post') . '</legend>' .
-				buildPost($post, ATOM_INDEXPAGE) . '
-			</fieldset>
+				<input class="link-button" type="submit" value="Send a report">
+			</div>
 		</form>
-		<br>';
+		<hr>
+		<h2>' . ($isOp ? 'OP-post' : 'Post') . ' view</h2>' .
+		buildPost($post, ATOM_INDEXPAGE);
 }
 
-function buildModeratePostForm() {
-	return '<form id="form_moderate_post" name="form_moderate_post" method="get" action="?">
+function makePostModForm() {
+	return '<h2>Moderate a post</h2>
+		<form name="form_moderate_post" method="get" action="?">
 			<input type="hidden" name="manage" value="">
-			<fieldset>
-				<legend>Moderate a post</legend>
-				<div valign="top">
-					<label for="moderate">Post ID:</label>
-					<input type="text" name="moderate" id="moderate">
-					<input type="submit" class="button-manage" value="Submit">
+			<div class="form-container">
+				<div class="form-row">
+					<div class="form-row-label">Post ID:</div>
+					<input type="text" name="moderate" required>
 				</div>
-				<br>
-				<small>
-					<b>Tip:</b>
-					While browsing the image board, you can easily moderate a post if you are logged in:<br>
-					Tick the box next to a post and click "Delete"
-					at the bottom of the page with a blank password.
-				</small>
-			</fieldset>
-		</form>
-		<br>';
+				<input class="link-button" type="submit" value="Submit">
+			</div>
+			<div class="form-notes">
+				Tip: while browsing the imageboard, you can moderate a post if you\'re logged in.<br>
+				Check the box next to a post and click "Delete" at the bottom of the page,
+				with a blank password.
+			</div>
+		</form>';
 }
 
 function getPostReports($reports, $geoipReader) {
@@ -1248,241 +1236,205 @@ function getPostReports($reports, $geoipReader) {
 	foreach ($reports as $report) {
 		$ip = $report['ip'];
 		$reportsHtml .= '
-					<div class="reply report">
-						&nbsp;' . (ATOM_GEOIP ? getCountryIcon($ip, $geoipReader) . '&nbsp;' : '') .
-						getIpUserInfoLink($ip) . '
-						(' . date('d.m.y D H:i:s', $report['timestamp']) . ')
-						<br>
-						<blockquote class="post-message">' . $report['reason'] . '</blockquote>
-					</div>
-					<br>';
+				<div class="reply report">
+					&nbsp;' . (ATOM_GEOIP ? getCountryIcon($ip, $geoipReader) . '&nbsp;' : '') .
+					getIpUserInfoLink($ip) . '
+					(' . date('d.m.y D H:i:s', $report['timestamp']) . ')
+					<br>
+					<blockquote class="post-message">' . $report['reason'] . '</blockquote>
+				</div>
+				<br>';
 	}
 	return $reportsHtml;
 }
 
-function buildModeratePostPage($post) {
+function getPostModBtn($token, $label, $description, $params, $icon = '', $confirm = '') {
+	$hiddenInputs = '<input type="hidden" name="token" value="' . $token . '">';
+	foreach ($params as $name => $value) {
+		$hiddenInputs .= '
+					<input type="hidden" name="' . htmlspecialchars($name) .
+					'" value="' . htmlspecialchars($value) . '">';
+	}
+	$iconHtml = $icon ? '<img src="/' . ATOM_BOARD . '/icons/' . $icon .
+		'" width="16" height="16" style="vertical-align: -3px;"> ' : '';
+	return '
+			<div class="mod-row">
+				<form method="post" action="?manage"' .
+					($confirm ? ' onclick="return confirm(\'' . addslashes($confirm) . '\')"' : '') . '>
+					' . $hiddenInputs . '
+					<button type="submit" class="mod-button link-button">' . $iconHtml . $label . '</button>
+				</form>
+				<div class="mod-description">' . $description . '</div>
+			</div>';
+}
+
+function makePostModManager($token, $post) {
 	global $loginStatus;
-	$isMod = $loginStatus == 'admin' || $loginStatus == 'moderator';
-	$geoipReader = ATOM_GEOIP == 'geoip2' ?
-		new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
 	$postId = $post['id'];
-	$ip = $post['ip'];
-	$thrId = $post['parent'] !== 0 ? $post['parent'] : $postId;
 	$isOp = isOp($post);
-	$ban = banByIP($ip);
+
+	// Post modreation buttons
+	$modButtons = '';
+	if ($isOp) {
+		$isStickied = $post['stickied'] === 1;
+		$modButtons .= getPostModBtn($token,
+			($isStickied ? 'Unsticky' : 'Sticky') . ' thread',
+			$isStickied ? 'Return to normal state' : 'Keep at the top of the board',
+			['stick' => $postId, 'setsticky' => ($isStickied ? 0 : 1)],
+			'sticky.png');
+		$isLocked = $post['locked'] === 1;
+		$lockedValue = $isLocked ? 'Unlock' : 'Lock';
+		$modButtons .= getPostModBtn($token,
+			$lockedValue . ' thread',
+			$lockedValue . ' for posting',
+			['lock' => $postId, 'setlocked' => ($isLocked ? 0 : 1)],
+			'locked.png');
+		$isEndless = $post['endless'] === 1;
+		$modButtons .= getPostModBtn($token,
+			'Make ' . ($isEndless ? 'non-endless' : 'endless'),
+			($isEndless ? 'Disable' : 'Enable') . ' endless mode for this thread',
+			['endless' => $postId, 'setendless' => ($isEndless ? 0 : 1)],
+			'endless.png');
+	}
+	$modButtons .= getPostModBtn($token,
+		'Delete ' . ($isOp ? 'thread' : 'post'),
+		$isOp ? 'This will delete the entire thread' : 'This will delete the post',
+		['delete' => $postId]);
+	$ip = $post['ip'];
+	$thrId = $post['parent'] ?: $postId;
+	$modButtons .= getPostModBtn($token,
+		'DelAll in thread',
+		'Delete all posts from ip ' . $ip . ' in thread <a href="/' . ATOM_BOARD . '/res/' . $thrId .
+			'.html#' . $postId . '" target="_blank">№' . $thrId . '</a>',
+		['delall' => $ip, 'thrid' => $thrId],
+		'',
+		'Are you sure to delete all posts from ip ' . $ip . ' in thread №' . $thrId . '?');
+	$modButtons .= getPostModBtn($token,
+		'Delete all',
+		'Delete all posts and threads in /' . ATOM_BOARD . ' from ip ' . $ip,
+		['delall' => $ip],
+		'',
+		'Are you sure to delete ALL POSTS AND THERADS in /' . ATOM_BOARD . ' from ip ' . $ip . '?');
+	$isBanned = banByIP($ip);
+	$isMod = $loginStatus === 'admin' || $loginStatus === 'moderator';
+	$modButtons .= '
+			<div class="mod-row">
+				<form method="get" action="?">
+					<input type="hidden" name="manage" value="">
+					<input type="hidden" name="bans" value="' . $ip . '">
+					<input type="hidden" name="thrid" value="' . $thrId . '">
+					<button type="submit" class="mod-button link-button"' .
+						($isBanned || !$isMod ? ' disabled' : '') . '>' . 
+						($isBanned ? 'Already banned!' : 'Ban user') . '</button>
+				</form>
+				<div class="mod-description">' . ($isBanned ? 'Ban record exists for ip ' . $ip :
+					($isMod ? 'Ban ip ' . $ip : 'Janitors can\'t ban')) . '</div>
+			</div>';
 	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
+	if ($passcodeNum) {
+		$modButtons .= getPostModBtn($token,
+			'Manage passcode',
+			'Manage passcode №' . $passcodeNum,
+			['passcode' => $passcodeNum, 'passcodes' => 'manage']);
+	}
 	$reports = reportsByPostID($postId);
 	$reportsCount = count($reports);
+	if ($reportsCount) {
+		$modButtons .= getPostModBtn($token,
+			'Close reports',
+			'Delete all related reports',
+			['deletereports' => $postId]);
+	}
+
+	// Likes table
+	$geoipReader = ATOM_GEOIP === 'geoip2' ?
+		new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
 	$likes = likesByPostID($postId);
 	$likesHtml = '';
 	foreach ($likes as $like) {
 		$likeIP = $like['ip'];
 		$likesHtml .= '
-				<tr><td>' . (ATOM_GEOIP ? getCountryIcon($likeIP, $geoipReader) . '&nbsp;' : '') .
-					getIpUserInfoLink($likeIP) . '</td></tr>';
+			<tr><td>' . (ATOM_GEOIP ? getCountryIcon($likeIP, $geoipReader) . '&nbsp;' : '') .
+				getIpUserInfoLink($likeIP) . '</td></tr>';
 	}
-	$stickyHtml = '';
-	$lockedHtml = '';
-	$endlessHtml = '';
-	if ($isOp) {
-		$isStickied = $post['stickied'] == 1;
-		$stickyHtml = '
-				<tr>
-					<td align="right" width="50%;">
-						<form method="get" action="?">
-							<input type="hidden" name="manage" value="">
-							<input type="hidden" name="sticky" value="' . $postId . '">
-							<input type="hidden" name="setsticky" value="' . ($isStickied ? 0 : 1) . '">
-							<button type="submit" class="button-action">
-								<img src="/' . ATOM_BOARD .
-								'/icons/sticky.png" width="16" height="16" style="vertical-align: -3px;">
-								' . ($isStickied ? 'Unsticky' : 'Sticky') . ' thread
-							</button>
-						</form>
-					</td>
-					<td><small>' . ($isStickied ? 'Return this thread to a normal state.' :
-						'Keep this thread at the top of the board.') . '</small></td>
-				</tr>';
-		$isLocked = $post['locked'] == 1;
-		$lockedValue = $isLocked ? 'Unlock' : 'Lock';
-		$lockedHtml = '
-				<tr>
-					<td align="right" width="50%;">
-						<form method="get" action="?">
-							<input type="hidden" name="manage" value="">
-							<input type="hidden" name="locked" value="' . $postId . '">
-							<input type="hidden" name="setlocked" value="' . ($isLocked ? 0 : 1) . '">
-							<button type="submit" class="button-action">
-								<img src="/' . ATOM_BOARD .
-								'/icons/locked.png" width="11" height="16" style="vertical-align: -3px;">
-								' . $lockedValue . ' thread
-							</button>
-						</form>
-					</td>
-					<td><small>' . $lockedValue . ' this thread for posting.</small></td>
-				</tr>';
-		$isEndless = $post['endless'] == 1;
-		$endlessHtml = '
-				<tr>
-					<td align="right" width="50%;">
-						<form method="get" action="?">
-							<input type="hidden" name="manage" value="">
-							<input type="hidden" name="endless" value="' . $postId . '">
-							<input type="hidden" name="setendless" value="' . ($isEndless ? 0 : 1) . '">
-							<button type="submit" class="button-action">
-								<img src="/' . ATOM_BOARD .
-								'/icons/endless.png" width="16" height="16" style="vertical-align: -3px;">
-								Make ' . ($isEndless ? 'non-endless' : 'endless') . ' thread
-							</button>
-						</form>
-					</td>
-					<td><small>' . ($isEndless ? 'Disable' : 'Enable') .
-						' endless mode for this thread.</small></td>
-				</tr>';
-	}
-	return '<fieldset>
-			<legend>Moderating ' . ($isOp ? 'thread' : 'post') . ' №' . $postId . '</legend>
-			<table border="0" cellspacing="0" cellpadding="0" width="100%"><tbody>' .
-				$stickyHtml .
-				$lockedHtml .
-				$endlessHtml . '
-				<tr>
-					<td align="right" width="50%;">
-						<form method="get" action="?">
-							<input type="hidden" name="manage" value="">
-							<input type="hidden" name="delete" value="' . $postId . '">
-							<input type="submit" class="button-action" value="Delete ' .
-								($isOp ? 'thread' : 'post') . '">
-						</form>
-					</td>
-					<td><small>' .
-						($isOp ? 'This will delete the entire thread.' : 'This will delete the post.') .
-					'</small></td>
-				</tr>
-				<tr>
-					<td align="right" width="50%;">
-						<form method="get" action="?">
-							<input type="hidden" name="manage" value="">
-							<input type="hidden" name="delall" value="' . $ip . '">
-							<input type="hidden" name="thrid" value="' . $thrId . '">
-							<input type="submit" class="button-action" value="DelAll in thread" onclick="' .
-								'return confirm(\'Are you sure to delete all posts from ' . $ip .
-								' in thread №' . $thrId . '?\')">
-						</form>
-					</td>
-					<td><small>This will delete all posts from ip ' . $ip .
-						' in thread <a href="https://dollchan.net/test/res/' . $thrId .
-						'.html#' . $postId . '" target="_blank">№' . $thrId . '</a></small></td>
-				</tr>
-				<tr>
-					<td align="right" width="50%;">
-						<form method="get" action="?">
-							<input type="hidden" name="manage" value="">
-							<input type="hidden" name="delall" value="' . $ip . '">
-							<input type="submit" class="button-action" value="Delete all" onclick="' .
-								'return confirm(\'Are you sure to delete ALL POSTS AND THERADS from ' .
-								$ip . '?\')">
-						</form>
-					</td>
-					<td><small>This will delete all posts and threads from ip ' . $ip . '</small></td>
-				</tr>
-				<tr>
-					<td align="right" width="50%;">
-						<form method="get" action="?">
-							<input type="hidden" name="manage" value="">
-							<input type="hidden" name="bans" value="' . $ip . '">
-							<input type="hidden" name="thrid" value="' . $thrId . '">
-							<input type="submit" class="button-action" value="Ban user"' .
-								($ban || !$isMod ? ' disabled' : '') . '>
-						</form>
-					</td>
-					<td><small>' . (
-						$ban ? 'Ban record already exists for ' . $ip :
-						($isMod ? 'Ban ip ' . $ip : 'Janitors can\'t ban an IP address.')
-					) . '</small></td>
-				</tr>' .
-				($passcodeNum ? '
-				<tr>
-					<td align="right" width="50%;">
-						<form method="get" action="?">
-							<input type="hidden" name="manage" value="">
-							<input type="hidden" name="passcode" value="' . $passcodeNum . '">
-							<input type="hidden" name="passcodes" value="manage">
-							<input type="submit" class="button-action" value="Manage passcode">
-						</form>
-					</td>
-					<td><small>Manage passcode №' . $passcodeNum . '</small></td>
-				</tr>' : '') .
-				($reportsCount ? '
-				<tr>
-					<td align="right" width="50%;">
-						<form method="get" action="?">
-							<input type="hidden" name="report" value="">
-							<input type="hidden" name="deletereports">
-							<input type="hidden" name="id" value="' . $postId . '">
-							<input type="submit" class="button-action" value="Close reports">
-						</form>
-					</td>
-					<td><small>Delete all related reports</small></td>
-				</tr>' : '') . '
-			</tbody></table>
-		</fieldset>' .
+
+	return '<h2>Moderating ' . ($isOp ? 'thread' : 'post') . ' №' . $postId . '</h2>
+		<div class="form-container">' .
+			$modButtons . '
+		</div>' .
 		($reportsCount ? '
-		<fieldset>
-			<legend>Reports</legend>
-			<table class="table-status"><tbody>' .
-				getPostReports($reports, $geoipReader) . '
-			</tbody></table>
-		</fieldset>' : '') . '
-		<fieldset>
-			<legend>' . ($isOp ? 'OP-post' : 'Post') . '</legend>' .
-			buildPost($post, ATOM_INDEXPAGE, 'edit') . '
-		</fieldset>' .
+		<hr>
+		<h2>Reports</h2>' .
+		getPostReports($reports, $geoipReader) : '') . '
+		<hr>
+		<h2>' . ($isOp ? 'OP-post' : 'Post') . ' view</h2>' .
+		buildPost($post, ATOM_INDEXPAGE, 'edit') .
 		($likesHtml ? '
-		<fieldset>
-			<legend>Likes: ' . count($likes) . '</legend>
-			<table class="table"><thead>
-				<tr><th>IP</th></tr>
-			</thead><tbody>' .
-				$likesHtml . '
-			</tbody></table>
-		</fieldset>' : '') . '
-		<br>';
+		<hr>
+		<h2>Likes received: ' . count($likes) . '</h2>
+		<table class="table"><thead>
+			<tr><th>IP</th></tr>
+		</thead><tbody>' .
+			$likesHtml . '
+		</tbody></table>' : '');
 }
 
-function getPostManageButtons($post) {
+function getPostManageBtn($token, $label, $params, $title = '', $confirm = '') {
+	$inputs = '<input type="hidden" name="token" value="' . $token . '">';
+	foreach ($params as $name => $value) {
+		$inputs .= '
+					<input type="hidden" name="' . $name . '" value="' . $value . '">';
+	}
+	return '
+				<form method="post" action="?manage"' .
+					($confirm ? ' onclick="return confirm(\'' . addslashes($confirm) . '\')"' : '') . '>
+					' . $inputs . '
+					<button type="submit" class="link-button" title="' . htmlspecialchars($title) . '">' .
+						$label . '</button>
+				</form>';
+};
+
+function makePostManageButtons($token, $post) {
 	global $loginStatus;
 	$postId = $post['id'];
-	$thrId = $post['parent'] !== 0 ? $post['parent'] : $postId;
-	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
+	$thrId = $post['parent'] ?: $postId;
 	$ip = $post['ip'];
 	$isOp = isOp($post);
-	$a = '<a class="link-button" target="_blank" href="/' . ATOM_BOARD . '/imgboard.php?';
-	return '
-					' . $a . 'manage=&moderate=' . $postId . '" title="Advanced options.">Manage ' .
-						($isOp ? 'thread' : 'post') . '</a>
-					' . $a . 'manage=&delete=' . $postId . '" title="This will delete the ' .
-						($isOp ? 'entire thread.">Delete thread' : 'post.">Delete post') . '</a>
-					' . $a . 'manage=&delall=' . $ip . '&thrid=' . $thrId . '" onclick="' .
-						'if (confirm(\'Are you sure to delete all posts from ' . $ip .
-						' in thread №' . $thrId . '?\'))' .
-						' { return true; } else { event.stopPropagation(); event.preventDefault(); };"' .
-						' title="This will delete all posts from ip ' . $ip .
-						' in thread №' . $thrId . '">DelAll in thread</a>
-					' . $a . 'manage=&delall=' . $ip . '" onclick="' .
-						'if (confirm(\'Are you sure to delete ALL POSTS AND THERADS from ' . $ip . '?\'))' .
-						' { return true; } else { event.stopPropagation(); event.preventDefault(); };"' .
-						' title="This will delete all posts and threads from ip ' . $ip . '">Delete all</a>' .
-					($loginStatus == 'admin' || $loginStatus == 'moderator' ? '
-					' . $a . 'manage=&bans=' . $ip . '&thrid=' . $thrId . '" title="' .
-						(banByIP($ip) ? 'Ban record already exists for ' . $ip : 'Ban ip ' . $ip) .
-						'">Ban user</a>' : '') .
-					($passcodeNum ? '
-					' . $a . 'manage=&passcode=' . $passcodeNum . '&passcodes=manage"' .
-						' title="Manage passcode №' . $passcodeNum . '">Manage passcode</a>' : '');
+	$res = '
+				<a class="link-button" target="_blank" href="/' . ATOM_BOARD .
+					'/imgboard.php?manage&moderate=' . $postId . '" title="Advanced options">Manage ' .
+					($isOp ? 'thread' : 'post') . '</a>';
+	$res .= getPostManageBtn($token,
+		$isOp ? 'Delete thread' : 'Delete post',
+		['delete' => $postId],
+		$isOp ? 'Delete entire thread' : 'Delete post');
+	$res .= getPostManageBtn($token,
+		'DelAll in thread',
+		['delall' => $ip, 'thrid' => $thrId],
+		'Delete all posts from ip ' . $ip . ' in thread №' . $thrId, 
+		'Are you sure to delete all posts from ip ' . $ip . ' in thread №' . $thrId . '?');
+	$res .= getPostManageBtn($token, 'Delete all', ['delall' => $ip],
+		'Delete all posts and threads in /' . ATOM_BOARD . ' from ip ' . $ip, 
+		'Are you sure to delete ALL POSTS AND THERADS in /' . ATOM_BOARD . ' from ip ' . $ip . '?');
+	if ($loginStatus === 'admin' || $loginStatus === 'moderator') {
+		$isBanned = banByIP($ip);
+		$res .= '
+				<a class="link-button" target="_blank" href="/' . ATOM_BOARD .
+					'/imgboard.php?manage=&bans=' . $ip . '&thrid=' . $thrId . '" title="' . 
+					($isBanned ? 'Already banned!' : 'Ban ip ' . $ip) .'">' .
+					($isBanned ? 'Banned!' : 'Ban user') . '</a>';
+	}
+	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
+	if ($passcodeNum) {
+		$res .= getPostManageBtn($token,
+			'Manage passcode',
+			['passcode' => $passcodeNum, 'passcodes' => 'manage'],
+			'Manage passcode №' . $passcodeNum);
+	}
+	return $res;
 }
 
-function buildStatusPage() {
+function makeStatusManager($token) {
 	global $loginStatus;
 
 	// Build reports table
@@ -1490,13 +1442,7 @@ function buildStatusPage() {
 	$reportsCount = count($reports);
 	$reportsHtml = '';
 	if ($reportsCount) {
-		$reportsHtml .= '
-				<tr><td><center>
-					<a class="link-button" target="_blank" href="/' . ATOM_BOARD . '/imgboard.php' .
-					'?report=&amp;deleteallreports" title="Delete all reports from the board.">' .
-					'Close all reports</a>
-				</center><hr></td></tr>';
-		$geoipReader = ATOM_GEOIP == 'geoip2' ?
+		$geoipReader = ATOM_GEOIP === 'geoip2' ?
 			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
 		$reportsByPost = [];
 		foreach ($reports as $report) {
@@ -1512,32 +1458,35 @@ function buildStatusPage() {
 				continue;
 			}
 			$reportsHtml .= '
-				<tr><th>
-					<a class="link-button" target="_blank" href="/' . ATOM_BOARD .
-						'/imgboard.php?report=&deletereports=&id=' . $postId .
-						'" title="Delete all related reports.">Close reports</a>' .
-					getPostManageButtons($post) . '
-				</th></tr>
-				<tr><td>' .
-					buildPost($post, ATOM_INDEXPAGE, 'ip') .
-					getPostReports($reportsByPost[$postId], $geoipReader) . '
-				</td></tr>';
+			<tr><th>' .
+				getPostManageBtn($token,
+					'Close reports',
+					['deletereports' => $postId],
+					'Delete all related reports') .
+				makePostManageButtons($token, $post) . '
+			</th></tr>
+			<tr><td>' .
+				buildPost($post, ATOM_INDEXPAGE, 'ip') .
+				getPostReports($reportsByPost[$postId], $geoipReader) . '
+			</td></tr>';
 		}
 	}
 
 	// Build posts requiring premoderation
 	$reqModPostHtml = '';
-	if (ATOM_REQMOD == 'files' || ATOM_REQMOD == 'all') {
+	if (ATOM_REQMOD === 'files' || ATOM_REQMOD === 'all') {
 		$reqModPosts = getLatestPosts(false, 20);
 		foreach ($reqModPosts as $post) {
 			$reqModPostHtml .= '
-				<tr><th>
-					<a class="link-button" target="_blank" href="/' . ATOM_BOARD . '/imgboard.php?' .
-						'manage=&approve=' . $post['id'] . '" title="Allow to be published.">Approve</a>' .
-					getPostManageButtons($post) . '
-				</th></tr>
-				<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . '
-				</td></tr>';
+			<tr><th>' .
+				getPostManageBtn($token,
+					'Approve',
+					['approve' => $post['id']],
+					'Allow to be published') .
+				makePostManageButtons($token, $post) . '
+			</th></tr>
+			<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . '
+			</td></tr>';
 		}
 	}
 
@@ -1547,10 +1496,10 @@ function buildStatusPage() {
 	$posts = getLatestPosts(true, $recentCount);
 	foreach ($posts as $post) {
 		$postsHtml .= '
-				<tr><th>' . getPostManageButtons($post) . '
-				</th></tr>
-				<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . '
-				</td></tr>';
+			<tr><th>' . makePostManageButtons($token, $post) . '
+			</th></tr>
+			<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . '
+			</td></tr>';
 	}
 
 	// Build status page
@@ -1558,48 +1507,40 @@ function buildStatusPage() {
 	$bans = count(getAllBans());
 	$uniquePostersCount = getUniquePostersCount();
 	$uniquePosters = $uniquePostersCount > 0 ? $uniquePostersCount . ' unique users' : '';
-	return ($loginStatus == 'admin' && ATOM_DBMODE == 'mysql' && function_exists('mysqli_connect') ?
-		'<fieldset>
-			<legend>Notice</legend>
-			<p><b>ATOM_DBMODE</b> is currently <b>mysql</b> in <b>settings.php</b>, but
-				<a href="http://www.php.net/manual/en/book.mysqli.php">MySQLi</a> is installed.
-				Please change it to <b>mysqli</b>. This will not affect your data.</p>
-		</fieldset>' : '') .
-		'<fieldset>
-			<legend>Status</legend>
-			<table border="0" cellspacing="0" cellpadding="0" width="100%"><tbody><tr>
-				<td>' . $threads . ' ' . plural('thread', $threads) . ', ' .
-						$bans . ' ' . plural('ban', $bans) . ', ' .
-						$reportsCount . ' ' . plural('report', $reportsCount) . ', ' .
-						$uniquePosters . '</td>
-			</tr></tbody></table>
-		</fieldset>' .
+	return '<h2>Status</h2>
+		<center>' . $threads . ' ' . plural('thread', $threads) . ', ' . $bans . ' ' . plural('ban', $bans) .
+			', ' . $reportsCount . ' ' . plural('report', $reportsCount) . ', ' . $uniquePosters .
+		'</center>' .
 		($reportsCount ? '
-		<fieldset>
-			<legend>Reports</legend>
-			<table class="table-status"><tbody>' .
-				$reportsHtml . '
-			</tbody></table>
-		</fieldset>' : '') .
-		((ATOM_REQMOD == 'files' || ATOM_REQMOD == 'all') && $reqModPostHtml != '' ? '
-		<fieldset>
-			<legend>Pending posts</legend>
-			<table class="table-status"><tbody>' .
-				$reqModPostHtml . '
-			</tbody></table>
-		</fieldset>' : '') . '
-		<fieldset>
-			<legend>Recent ' . $recentCount . ' posts</legend>
-			<table class="table-status"><tbody>' .
-				$postsHtml . '
-			</tbody></table>
-		</fieldset>
-		<br>';
+		<hr>
+		<h2>Reports</h2>
+		<div class="form-container">' .
+			getPostModBtn($token,
+				'Close all',
+				'Clear all reports on the board',
+				['deleteallreports' => ''],
+				'',
+				'Are you sure to close ALL REPORTS on /' . ATOM_BOARD . '?') . '
+		</div>
+		<table class="table-posts"><tbody>' .
+			$reportsHtml . '
+		</tbody></table>' : '') .
+		((ATOM_REQMOD === 'files' || ATOM_REQMOD === 'all') && $reqModPostHtml !== '' ? '
+		<hr>
+		<h2>Pending posts</h2>
+		<table class="table-posts"><tbody>' .
+			$reqModPostHtml . '
+		</tbody></table>' : '') . '
+		<hr>
+		<h2>Recent ' . $recentCount . ' posts</h2>
+		<table class="table-posts"><tbody>' .
+			$postsHtml . '
+		</tbody></table>';
 }
 
 /* ==[ Catalog ]=========================================================================================== */
 
-function buildCatalogPage() {
+function makeCatalogPage() {
 	$catalogHtml = '';
 	$thumb = 'icons/noimage.png';
 	$thumbWidth = ATOM_FILE_MAXW;
@@ -1622,7 +1563,7 @@ function buildCatalogPage() {
 		}
 		$opSubject = $post['subject'];
 		$opUserName = $post['name'] ?: ATOM_POSTERNAME;
-		if ($post['thumb0'] != '' && $post['thumb0_width'] > 0 && $post['thumb0_height'] > 0) {
+		if ($post['thumb0'] !== '' && $post['thumb0_width'] > 0 && $post['thumb0_height'] > 0) {
 			$thumb = 'thumb/' . $post['thumb0'];
 			$thumbWidth = $post['thumb0_width'];
 			$thumbHeight = $post['thumb0_height'];
@@ -1659,63 +1600,50 @@ function buildCatalogPage() {
 
 /* ==[ Modlog ]============================================================================================ */
 
-function buildModLogForm() {
-	$periodStartDate = $_POST['from'] ?? date("Y-m-d", strtotime("-2 day"));
-	$periodEndDate = $_POST['to'] ?? date("Y-m-d", strtotime("+1 day"));
-	return '<form method="post" action="?manage&modlog">
-			<fieldset>
-				<legend>Select moderation period</legend>
-				<span>From:</span>
-				<input name="from" type="date" value="' . $periodStartDate . '">
-				<span>To: </span>
-				<input name="to" type="date" value="' . $periodEndDate . '">&nbsp;
-				<input type="submit" class="button-manage" value="Show records">
-			</fieldset>
+function makeModLogManager($token, $periodStartDate, $periodEndDate) {
+	$html = '<h2>Moderation period</h2>
+		<form method="post" action="?manage&modlog">
+			<input type="hidden" name="token" value="' . $token . '">
+			<div class="form-container">
+				<div class="form-row">
+					<div class="form-row-label">From:</div>
+					<input type="date" name="from" value="' . $periodStartDate . '">
+				</div>
+				<div class="form-row">
+					<div class="form-row-label">To:</div>
+					<input type="date" name="to" value="' . $periodEndDate . '">
+				</div>
+				<input class="link-button" type="submit" value="Show records">
+			</div>
 		</form>
-		<br>';
-}
-
-function buildModLogTable($isModerators = false, $fromtime = 0, $totime = 0) {
-	$periodEndDate = 0;
-	$periodStartDate = 0;
-	if ($isModerators && $fromtime > 0 && $totime > 0) {
-		$periodEndDate = max((int)$fromtime, (int)$totime);
-		$periodStartDate = min((int)$fromtime, (int)$totime);
-	}
-	$records = getModLogRecords($isModerators ? '1' : '0', $periodEndDate, $periodStartDate);
+		<hr>
+		';
+	$records = getModLogRecords('1', (int)strtotime($periodStartDate), (int)strtotime($periodEndDate));
 	if (empty($records)) {
-		return '<div class="notice">No moderation records found for the selected period.</div>';
+		return $html . '<div class="notice">No moderation records found for the selected period.</div>';
 	}
-	$html = ($isModerators ? '<p>Total Records: ' . count($records) . '</p>' : '') . '
+	$html .= '<h2>Modlog</h2>
+		<center>Records shown: ' . count($records) . '</center>
 		<table class="table"><thead>
 			<tr>
-				<th>Date / Time</th>' .
-				($isModerators ? '
-				<th>User</th>' : '') . '
+				<th>Date / Time</th>
+				<th>User</th>
 				<th>Action</th>
-			</tr></thead><tbody>';
+			</tr>
+		</thead>
+		<tbody>';
 	foreach ($records as $record) {
 		$style = '';
-		if ($isModerators && !empty($record['color']) && $record['color'] !== 'Black') {
+		if (!empty($record['color']) && $record['color'] !== 'Black') {
 			$style = ' style="color: ' . htmlspecialchars($record['color']) . '"';
 		}
 		$html .= '
 			<tr' . $style . '>
-				<td>' . date('d.m.y D H:i:s', $record['timestamp']) . '</td>' .
-				($isModerators ? '
-				<td>' . ($isModerators ? htmlspecialchars($record['username']) : '') . '</td>' : '') . '
+				<td>' . date('d.m.y D H:i:s', $record['timestamp']) . '</td>
+				<td>' . htmlspecialchars($record['username']) . '</td>
 				<td>' . htmlspecialchars($record['action']) . '</td>
 			</tr>';
 	}
 	return $html . '
 		</tbody></table>';
-}
-
-function buildModLogPage() {
-	return pageHeader() . '<body>' .
-		pageWrapper(ATOM_BOARD_DESCRIPTION . ' / Modlog', true) .
-		'<center>
-			' . buildModLogTable() . '
-		</center>' .
-		pageFooter(true);
 }

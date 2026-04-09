@@ -727,11 +727,20 @@ function getAllStaffMembers() {
 }
 
 function addStaffMember($userName, $passw, $role) {
-	pdoQuery(
-		"INSERT INTO " . ATOM_DBSTAFF . "
-		(username, password_hash, role)
-		VALUES (?, ?, ?)",
-		[trim($userName), password_hash($passw, PASSWORD_DEFAULT), $role]);
+	try {
+		pdoQuery(
+			"INSERT INTO " . ATOM_DBSTAFF . "
+			(username, password_hash, role)
+			VALUES (?, ?, ?)",
+			[trim($userName), password_hash($passw, PASSWORD_DEFAULT), $role]
+		);
+		return true; 
+	} catch (PDOException $e) {
+		if ($e->getCode() == 23505) { // Unique key conflict - user already exists
+			return false;
+		}
+		throw $e;
+	}
 }
 
 function deleteStaffMember($id) {
@@ -756,7 +765,7 @@ function updateStaffLogin($username) {
 		[time(), $username]);
 }
 
-function getModLogRecords($private = '0', $periodEndDate = 0, $periodStartDate = 0) {
+function getModLogRecords($private = '0', $periodStartDate = 0, $periodEndDate = 0) {
 	$sql = "SELECT timestamp, username, action, color FROM " . ATOM_DBMODLOG . " WHERE boardname = ?";
 	$params = [ATOM_BOARD];
 	if ($private === '0') {

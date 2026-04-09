@@ -5,7 +5,7 @@ if (!defined('ATOM_BOARD')) {
 
 /* ==[ Queries for creatsng new tables ]=================================================================== */
 
-if (ATOM_DBMODE == 'pdo' && ATOM_DBDRIVER == 'pgsql') {
+if (ATOM_DBMODE === 'pdo' && ATOM_DBDRIVER === 'pgsql') {
 	$postsQuery = 'CREATE TABLE ' . ATOM_DBPOSTS . ' (
 		id bigserial PRIMARY KEY,
 		parent integer NOT NULL,
@@ -313,7 +313,7 @@ function escapeHTML($string) {
 }
 
 function plural($singular, $count, $plural = 's') {
-	if ($plural == 's') {
+	if ($plural === 's') {
 		$plural = $singular . $plural;
 	}
 	return ($count == 1 ? $singular : $plural);
@@ -449,22 +449,22 @@ function deletePostImageFiles($post, $imgList = []) {
 	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT)) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = (int)trim(basename($index));
-			if (!isEmbed($post['file' . $index . '_hex']) && $post['file' . $index] != '') {
+			if (!isEmbed($post['file' . $index . '_hex']) && $post['file' . $index] !== '') {
 				@unlink('src/' . $post['file' . $index]);
 			}
 			$thumbName = $post['thumb' . $index];
-			if ($thumbName != '' && $thumbName != 'spoiler.png') {
+			if ($thumbName !== '' && $thumbName !== 'spoiler.png') {
 				@unlink('thumb/' . $thumbName);
 			}
 		}
 		return;
 	}
 	for ($index = 0; $index < ATOM_FILES_COUNT; $index++) {
-		if (!isEmbed($post['file' . $index . '_hex']) && $post['file' . $index] != '') {
+		if (!isEmbed($post['file' . $index . '_hex']) && $post['file' . $index] !== '') {
 			@unlink('src/' . $post['file' . $index]);
 		}
 		$thumbName = $post['thumb' . $index];
-		if ($thumbName != '' && $thumbName != 'spoiler.png') {
+		if ($thumbName !== '' && $thumbName !== 'spoiler.png') {
 			@unlink('thumb/' . $thumbName);
 		}
 	}
@@ -475,7 +475,7 @@ function deletePostThumbFiles($post, $imgList) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = (int)trim(basename($index));
 			$thumbName = $post['thumb' . $index];
-			if ($thumbName != '' && $thumbName != 'spoiler.png') {
+			if ($thumbName !== '' && $thumbName !== 'spoiler.png') {
 				@unlink('thumb/' . $thumbName);
 			}
 		}
@@ -566,7 +566,7 @@ function fastimagecopyresampled(
 }
 
 function createThumbnail($file_location, $thumb_location, $new_w, $new_h) {
-	if (ATOM_FILE_THUMBDRIVER == 'gd') {
+	if (ATOM_FILE_THUMBDRIVER === 'gd') {
 		$system = explode(".", $thumb_location);
 		$system = array_reverse($system);
 		if (preg_match("/jpg|jpeg/", $system[0])) {
@@ -653,7 +653,7 @@ function addVideoOverlay($thumb_location) {
 	if (!file_exists('icons/video_overlay.png')) {
 		return;
 	}
-	if (ATOM_FILE_THUMBDRIVER == 'imagemagick') {
+	if (ATOM_FILE_THUMBDRIVER === 'imagemagick') {
 		$discard = '';
 		$exit_status = 1;
 		exec('convert ' . $thumb_location .
@@ -662,7 +662,7 @@ function addVideoOverlay($thumb_location) {
 		return;
 	}
 	// gd
-	$thumbnail = substr($thumb_location, -4) == '.jpg' ? imagecreatefromjpeg($thumb_location) :
+	$thumbnail = substr($thumb_location, -4) === '.jpg' ? imagecreatefromjpeg($thumb_location) :
 		imagecreatefrompng($thumb_location);
 	list($width, $height, $type, $attr) = getimagesize($thumb_location);
 	$overlay_play = imagecreatefrompng('icons/video_overlay.png');
@@ -674,7 +674,7 @@ function addVideoOverlay($thumb_location) {
 		$overlay_type,
 		$overlay_attr
 	) = getimagesize('icons/video_overlay.png');
-	if (substr($thumb_location, -4) == '.png') {
+	if (substr($thumb_location, -4) === '.png') {
 		imagecolortransparent($thumbnail, imagecolorallocatealpha($thumbnail, 0, 0, 0, 127));
 		imagealphablending($thumbnail, true);
 		imagesavealpha($thumbnail, true);
@@ -689,7 +689,7 @@ function addVideoOverlay($thumb_location) {
 		$overlay_width,
 		$overlay_height
 	);
-	if (substr($thumb_location, -4) == '.jpg') {
+	if (substr($thumb_location, -4) === '.jpg') {
 		imagejpeg($thumbnail, $thumb_location);
 	} else {
 		imagepng($thumbnail, $thumb_location);
@@ -754,12 +754,16 @@ function checkLogin() {
 				$_SESSION['atom_user'] = $userName;
 				$_SESSION['atom_role'] = $staff['role'];
 				updateStaffLogin($userName);
+				 // Generate CSRF token if not already present
+				if (empty($_SESSION['atom_token'])) {
+					$_SESSION['atom_token'] = bin2hex(random_bytes(32));
+				}
 				modLog(ucfirst($staff['role']) . ' login', '1', 'BlueViolet');
 			}
 		}
 	}
 	$loginStatus = $_SESSION['atom_role'] ?? 'disabled';
-	if ($loginStatus == 'disabled') {
+	if ($loginStatus === 'disabled') {
 		setcookie('atom_access', '', time() - 3600, '/' . ATOM_BOARD . '/');
 		unset($_COOKIE['atom_access']);
 	} else {
@@ -769,7 +773,7 @@ function checkLogin() {
 }
 
 function isStaffPost() {
-	return isset($_POST['staffpost']) && checkLogin() != 'disabled';
+	return isset($_POST['staffpost']) && checkLogin() !== 'disabled';
 }
 
 function deleteSession() {
@@ -860,7 +864,7 @@ function ip2cidr($ipFrom, $ipTo) {
 function getCountryCode($ip, $geoipReader) {
 	$countryCode = '';
 	if ($ip) {
-		if (ATOM_GEOIP == 'geoip2') {
+		if (ATOM_GEOIP === 'geoip2') {
 			if (!$geoipReader) {
 				$geoipReader = new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
 			}
@@ -870,7 +874,7 @@ function getCountryCode($ip, $geoipReader) {
 			} catch (\GeoIp2\Exception\AddressNotFoundException $e) {
 				$countryCode = 'ANON';
 			}
-		} else if (ATOM_GEOIP == 'geoip') {
+		} else if (ATOM_GEOIP === 'geoip') {
 			$countryCode = geoip_country_code_by_name($ip);
 		}
 	}
@@ -919,7 +923,7 @@ function checkCaptcha() {
 	$isJson = isset($_GET['json']) && $_GET['json'] == '1';
 
 	// Check for recaptcha
-	if (ATOM_CAPTCHA == 'recaptcha') {
+	if (ATOM_CAPTCHA === 'recaptcha') {
 		require_once 'inc/recaptcha/autoload.php';
 		$captcha = $_POST['g-recaptcha-response'] ?? '';
 		$failedCaptcha = true;
@@ -935,7 +939,7 @@ function checkCaptcha() {
 			if (count($errCodes) == 1) {
 				$errReason = $errCodes[0];
 			}
-			if ($errReason == 'missing-input-response') {
+			if ($errReason === 'missing-input-response') {
 				$captchaError .= ' Please click the checkbox labeled "I\'m not a robot".';
 			} else {
 				$captchaError .= ' Reason:';
@@ -954,7 +958,7 @@ function checkCaptcha() {
 	// Check for simple captcha
 	elseif (ATOM_CAPTCHA) {
 		$captcha = strtolower(trim($_POST['captcha'] ?? ''));
-		if ($captcha == '') {
+		if ($captcha === '') {
 			$captchaError = 'Please enter the CAPTCHA text.';
 			if ($isJson) {
 				die('{ "result": "error", "message": "' . $captchaError . '" }');
