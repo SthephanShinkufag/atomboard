@@ -1142,34 +1142,10 @@ function makeUserInfoManager($token, $ip, $posts) {
 	}
 	return 	makeUserInfoForm($ip) . '
 		<hr>
-		<h2>Action</h2>
-		<table border="0" cellspacing="0" cellpadding="0" width="100%"><tbody>
-			<tr>
-				<td align="right" width="50%;">
-					<form method="get" action="?">
-						<input type="hidden" name="manage" value="">
-						<input type="hidden" name="delall" value="' . $ip . '">
-						<input type="submit" class="mod-button" value="Delete all" onclick="' .
-							'return confirm(\'Are you sure to delete all from ' . $ip . '?\')">
-					</form>
-				</td>
-				<td><small>This will delete all posts and threads from ip ' . $ip . '</small></td>
-			</tr>
-			<tr>
-				<td align="right" width="50%;">
-					<form method="get" action="?">
-						<input type="hidden" name="manage" value="">
-						<input type="hidden" name="bans" value="' . $ip . '">
-						<input type="submit" class="mod-button" value="Ban user"' .
-							($ban || !$isMod ? ' disabled' : '') . '>
-					</form>
-				</td>
-				<td><small>' . (
-					$ban ? 'Ban record already exists for ' . $ip : (
-					$isMod ? 'Ban ip ' . $ip : 'Janitors can\'t ban an IP address'
-					)) . '</small></td>
-			</tr>
-		</tbody></table>
+		<h2>Moderating ip ' . $ip . '</h2>
+		<div class="form-container">' .
+			getIpModBtns($token, $loginStatus, $ip) . '
+		</div>
 		<hr>
 		<h2>Bans and warnings</h2>' .
 		($ban ? '
@@ -1268,6 +1244,32 @@ function getPostModBtn($token, $label, $description, $params, $icon = '', $confi
 			</div>';
 }
 
+function getIpModBtns($token, $loginStatus, $ip, $thrId = NULL) {
+	$modButtons = getPostModBtn($token,
+		'Delete all',
+		'Delete all posts and threads in /' . ATOM_BOARD . ' from ip ' . $ip,
+		['delall' => $ip],
+		'',
+		'Are you sure to delete ALL POSTS AND THERADS in /' . ATOM_BOARD . ' from ip ' . $ip . '?');
+	$isBanned = banByIP($ip);
+	$isMod = $loginStatus === 'admin' || $loginStatus === 'moderator';
+	$modButtons .= '
+			<div class="mod-row">
+				<form method="get" action="?">
+					<input type="hidden" name="manage" value="">
+					<input type="hidden" name="bans" value="' . $ip . '">' .
+					(isset($thrId) ? '
+					<input type="hidden" name="thrid" value="' . $thrId . '">' : '') . '
+					<button type="submit" class="mod-button link-button"' .
+						($isBanned || !$isMod ? ' disabled' : '') . '>' . 
+						($isBanned ? 'Already banned!' : 'Ban user') . '</button>
+				</form>
+				<div class="mod-description">' . ($isBanned ? 'Ban record exists for ip ' . $ip :
+					($isMod ? 'Ban ip ' . $ip : 'Janitors can\'t ban')) . '</div>
+			</div>';
+	return $modButtons;
+}
+
 function makePostModManager($token, $post) {
 	global $loginStatus;
 	$postId = $post['id'];
@@ -1309,27 +1311,7 @@ function makePostModManager($token, $post) {
 		['delall' => $ip, 'thrid' => $thrId],
 		'',
 		'Are you sure to delete all posts from ip ' . $ip . ' in thread №' . $thrId . '?');
-	$modButtons .= getPostModBtn($token,
-		'Delete all',
-		'Delete all posts and threads in /' . ATOM_BOARD . ' from ip ' . $ip,
-		['delall' => $ip],
-		'',
-		'Are you sure to delete ALL POSTS AND THERADS in /' . ATOM_BOARD . ' from ip ' . $ip . '?');
-	$isBanned = banByIP($ip);
-	$isMod = $loginStatus === 'admin' || $loginStatus === 'moderator';
-	$modButtons .= '
-			<div class="mod-row">
-				<form method="get" action="?">
-					<input type="hidden" name="manage" value="">
-					<input type="hidden" name="bans" value="' . $ip . '">
-					<input type="hidden" name="thrid" value="' . $thrId . '">
-					<button type="submit" class="mod-button link-button"' .
-						($isBanned || !$isMod ? ' disabled' : '') . '>' . 
-						($isBanned ? 'Already banned!' : 'Ban user') . '</button>
-				</form>
-				<div class="mod-description">' . ($isBanned ? 'Ban record exists for ip ' . $ip :
-					($isMod ? 'Ban ip ' . $ip : 'Janitors can\'t ban')) . '</div>
-			</div>';
+	$modButtons .= getIpModBtns($token, $loginStatus, $ip, $thrId);
 	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
 	if ($passcodeNum) {
 		$modButtons .= getPostModBtn($token,
