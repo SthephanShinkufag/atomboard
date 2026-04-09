@@ -551,7 +551,7 @@ input[type="submit"]:not(.link-button):not([disabled]):active {
 	clear: both;
 }
 
-#panel-top, #panel-adminbar, #panel-bottom {
+#panel-top, #panel-bottom {
 	margin: 10px 0;
 }
 
@@ -639,6 +639,16 @@ input[type="submit"]:not(.link-button):not([disabled]):active {
 	gap: 10px;
 }
 
+.panel-adminbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+
+.wrapper > .panel-adminbar {
+	justify-content: center;
+}
+
 .table, .table-posts {
 	margin-top: 10px;
 	width: 100%;
@@ -663,8 +673,6 @@ input[type="submit"]:not(.link-button):not([disabled]):active {
 }
 
 .table-posts > tbody > tr > th {
-	display: flex;
-	gap: 4px;
 	padding: 4px;
 	background: var(--table-th-bg);
 	border: 1px solid var(--table-border);

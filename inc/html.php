@@ -633,7 +633,7 @@ function managePage($text, $action = '') {
 	return pageHeader() . '<body' . $onload . '>' .
 		pageWrapper(ATOM_BOARD_DESCRIPTION, true)  . (
 			$loginStatus === 'disabled' ? '' : '<hr>
-		<div id="panel-adminbar" class="panel">
+		<div class="panel-adminbar" class="panel">
 			<a class="link-button" href="?manage">Status</a>' .
 			($isAdmin || $loginStatus === 'moderator' ? '
 			<a class="link-button" href="?manage&bans">Bans</a>
@@ -1093,7 +1093,7 @@ function makeUserInfoManager($token, $ip, $posts) {
 	$postsHtml = '';
 	foreach ($posts as $post) {
 		$postsHtml .= '
-			<tr><th>' . makePostManageButtons($token, $post) . '
+			<tr><th class="panel-adminbar">' . makePostManageButtons($token, $post) . '
 			</th></tr>
 			<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . '
 			</td></tr>';
@@ -1458,7 +1458,7 @@ function makeStatusManager($token) {
 				continue;
 			}
 			$reportsHtml .= '
-			<tr><th>' .
+			<tr><th class="panel-adminbar">' .
 				getPostManageBtn($token,
 					'Close reports',
 					['deletereports' => $postId],
@@ -1478,7 +1478,7 @@ function makeStatusManager($token) {
 		$reqModPosts = getLatestPosts(false, 20);
 		foreach ($reqModPosts as $post) {
 			$reqModPostHtml .= '
-			<tr><th>' .
+			<tr><th class="panel-adminbar">' .
 				getPostManageBtn($token,
 					'Approve',
 					['approve' => $post['id']],
@@ -1496,7 +1496,7 @@ function makeStatusManager($token) {
 	$posts = getLatestPosts(true, $recentCount);
 	foreach ($posts as $post) {
 		$postsHtml .= '
-			<tr><th>' . makePostManageButtons($token, $post) . '
+			<tr><th class="panel-adminbar">' . makePostManageButtons($token, $post) . '
 			</th></tr>
 			<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . '
 			</td></tr>';
