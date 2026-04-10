@@ -56,8 +56,8 @@ function pageWrapper($description, $needReturn) {
 		<div id="panel-top" class="panel">' .
 			($needReturn ? '
 			<a class="link-button" href="/' . ATOM_BOARD . '/" title="Return to board">Return</a>' : '') . '
-			<a class="link-button" href="#" title="Navigate to bottom"' .
-				' onclick="window.scroll(0, document.body.scrollHeight); return false;">To bottom</a>
+			<button class="link-button" title="Navigate to bottom"' .
+				' onclick="window.scroll(0, document.body.scrollHeight); return false;">To bottom</button>
 		</div>
 		';
 }
@@ -67,8 +67,8 @@ function pageFooter($needReturn) {
 		<div id="panel-bottom" class="panel">' .
 			($needReturn ? '
 			<a class="link-button" href="/' . ATOM_BOARD . '/" title="Return to board">Return</a>' : '') . '
-			<a class="link-button" href="#" title="Navigate to top"' .
-				' onclick="window.scroll(0, 0); return false;">To top</a>
+			<button class="link-button" title="Navigate to top"' .
+				' onclick="window.scroll(0, 0); return false;">To top</button>
 		</div>
 		<hr>
 		<footer>
@@ -633,7 +633,7 @@ function managePage($text, $action = '') {
 	return pageHeader() . '<body' . $onload . '>' .
 		pageWrapper(ATOM_BOARD_DESCRIPTION, true)  . (
 			$loginStatus === 'disabled' ? '' : '<hr>
-		<div class="panel-adminbar" class="panel">
+		<div class="panel-adminbar">
 			<a class="link-button" href="?manage">Status</a>' .
 			($isAdmin || $loginStatus === 'moderator' ? '
 			<a class="link-button" href="?manage&bans">Bans</a>
@@ -806,6 +806,61 @@ function makeChangePasswForm($token) {
 		</form>';
 }
 
+function makeBansTable($bans) {
+	$geoipReader = ATOM_GEOIP === 'geoip2' ?
+		new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
+	$bansHtml = '
+		<table class="table"><thead>
+			<tr>
+				<th>IP-address</th>
+				<th>Set at</th>
+				<th>Expires</th>
+				<th>Reason provided</th>
+				<th>&nbsp;</th>
+			</tr>
+		</thead><tbody>';
+	foreach ($bans as $ban) {
+		if ($ban['expire'] == 1) {
+			$expire = 'Warning';
+		} else if ($ban['expire'] > 0) {
+			$expire = date('d.m.Y D H:i:s', $ban['expire']);
+		} else {
+			$expire = 'Does not expire';
+		}
+		$ipFrom = $ban['ip_from'];
+		$ipTo = $ban['ip_to'];
+		$bansHtml .= '
+			<tr>
+				<td style="white-space: nowrap;">' .
+					(ATOM_GEOIP ? getCountryIcon(long2ip($ipFrom), $geoipReader) . '&nbsp;' : '') .
+					getIpUserInfoLink(ip2cidr($ipFrom, $ipTo)) . '</td>
+				<td>' . date('d.m.Y D H:i:s', $ban['timestamp']) . '</td>
+				<td>' . $expire . '</td><td>' . ($ban['reason'] !== '' ?
+					htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8') : '&nbsp;') . '</td>
+				<td><a href="?manage&bans&lift=' . $ban['id'] . '">lift</a></td>
+			</tr>';
+	}
+	return $bansHtml . '
+		</tbody></table>';
+}
+
+function makeIpField($ip, $formName, $fieldName) {
+	return '
+				<div class="form-row">
+					<div class="form-row-label">IP-address (CIDR format):</div>
+					<input type="text" name="' . $fieldName . '" value="' . $ip .
+						'" placeholder="0.0.0.0" required>
+					<div>
+						<button class="link-button" onclick="var el = document.' . $formName . '.' .
+						$fieldName . '; el.value = el.value.split(\'/\')[0] + \'/24\'; return false;">
+							subnet /24</button>
+						<button class="link-button" onclick="var el = document.' . $formName . '.' .
+						$fieldName . '; el.value = el.value.split(\'/\')[0] + \'/16\'; return false;">
+							subnet /16</button>
+					</div>
+				</div>';
+}
+
 function makeBansManager($token) {
 	global $atom_ban_reasons;
 	$banReasons = '';
@@ -813,46 +868,37 @@ function makeBansManager($token) {
 		$banReasonsLen = count($atom_ban_reasons);
 		for ($i = 0; $i < $banReasonsLen; $i++) {
 			$banReasons .= '
-								<option value="' . $atom_ban_reasons[$i] . '">' .
-									$atom_ban_reasons[$i] . '</option>';
+						<option value="' . $atom_ban_reasons[$i] . '">' .
+							$atom_ban_reasons[$i] . '</option>';
 		}
 	}
-	$getAllBans = getAllBans();
-	$bansCount = count($getAllBans);
-	$text = '<h2>Ban an IP-address</h2>
+	$bans = getAllBans();
+	$bansCount = count($bans);
+	$bansHtml = '<h2>Ban an IP-address</h2>
 		<form name="form_bans" method="post" action="?manage&bans">
 			<input type="hidden" name="token" value="' . $token . '">
-			<div class="form-container">
-				<div class="form-row">
-					<div class="form-row-label">IP-address (CIDR format):</div>
-					<input type="text" name="ip" value="' . $_GET['bans'] . '" placeholder="0.0.0.0" required>
-					<div>
-						<a class="link-button" href="#" onclick="var el = document.form_bans.ip;' .
-						' el.value = el.value.split(\'/\')[0] + \'/24\'; return false;">subnet /24</a>
-						<a class="link-button" href="#" onclick="var el = document.form_bans.ip;' .
-						' el.value = el.value.split(\'/\')[0] + \'/16\'; return false;">subnet /16 </a>
-					</div>
-				</div>
+			<div class="form-container">' .
+				makeIpField($_GET['bans'], 'form_bans', 'ip') . '
 				<div class="form-row">
 					<div class="form-row-label">Expire (sec):</div>
 					<input type="text" name="expire" value="0">
 					<div>
-						<a class="link-button" href="#" onclick="document.form_bans.expire.value=' .
-							'\'3600\'; return false;">1hr</a>
-						<a class="link-button" href="#" onclick="document.form_bans.expire.value=' .
-							'\'86400\'; return false;">1d</a>
-						<a class="link-button" href="#" onclick="document.form_bans.expire.value=' .
-							'\'172800\'; return false;">2d</a>
-						<a class="link-button" href="#" onclick="document.form_bans.expire.value=' .
-							'\'604800\'; return false;">1w</a>
-						<a class="link-button" href="#" onclick="document.form_bans.expire.value=' .
-							'\'1209600\'; return false;">2w</a>
-						<a class="link-button" href="#" onclick="document.form_bans.expire.value=' .
-							'\'2592000\'; return false;">30d</a>
-						<a class="link-button" href="#" onclick="document.form_bans.expire.value=' .
-							'\'0\'; return false;">never</a>
-						<a class="link-button" href="#" onclick="document.form_bans.expire.value=' .
-							'\'1\'; return false;">warning</a>
+						<button class="link-button" onclick="document.form_bans.expire.value = ' .
+							'\'3600\'; return false;">1hr</button>
+						<button class="link-button" onclick="document.form_bans.expire.value = ' .
+							'\'86400\'; return false;">1d</button>
+						<button class="link-button" onclick="document.form_bans.expire.value = ' .
+							'\'172800\'; return false;">2d</button>
+						<button class="link-button" onclick="document.form_bans.expire.value = ' .
+							'\'604800\'; return false;">1w</button>
+						<button class="link-button" onclick="document.form_bans.expire.value = ' .
+							'\'1209600\'; return false;">2w</button>
+						<button class="link-button" onclick="document.form_bans.expire.value = ' .
+							'\'2592000\'; return false;">30d</button>
+						<button class="link-button" onclick="document.form_bans.expire.value = ' .
+							'\'0\'; return false;">never</button>
+						<button class="link-button" onclick="document.form_bans.expire.value = ' .
+							'\'1\'; return false;">warning</button>
 					</div>
 				</div>
 				<div class="form-row">
@@ -879,43 +925,9 @@ function makeBansManager($token) {
 		<h2>Current bans</h2>
 		<center>Total bans: ' . $bansCount . '</center>';
 	if ($bansCount > 0) {
-		$geoipReader = ATOM_GEOIP === 'geoip2' ?
-			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
-		$text .= '
-		<table class="table"><thead>
-			<tr>
-				<th>IP-address</th>
-				<th>Set at</th>
-				<th>Expires</th>
-				<th>Reason provided</th>
-				<th>&nbsp;</th>
-			</tr></thead><tbody>';
-		foreach ($getAllBans as $ban) {
-			if ($ban['expire'] == 1) {
-				$expire = 'Warning';
-			} else if ($ban['expire'] > 0) {
-				$expire = date('d.m.Y D H:i:s', $ban['expire']);
-			} else {
-				$expire = 'Does not expire';
-			}
-			$ipFrom = $ban['ip_from'];
-			$ipTo = $ban['ip_to'];
-			$cidrIP = ip2cidr($ipFrom, $ipTo);
-			$text .= '
-			<tr>
-				<td style="white-space: nowrap;">' .
-					(ATOM_GEOIP ? getCountryIcon(long2ip($ipFrom), $geoipReader) . '&nbsp;' : '') .
-					($ipFrom == $ipTo ? getIpUserInfoLink($cidrIP) : $cidrIP) . '</td>
-				<td>' . date('d.m.Y D H:i:s', $ban['timestamp']) . '</td>
-				<td>' . $expire . '</td><td>' . ($ban['reason'] !== '' ?
-					htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8') : '&nbsp;') . '</td>
-				<td><a href="?manage&bans&lift=' . $ban['id'] . '">lift</a></td>
-			</tr>';
-		}
-		$text .= '
-		</tbody></table>';
+		$bansHtml .= makeBansTable($bans);
 	}
-	return $text;
+	return $bansHtml;
 }
 
 function makePasscodesManager($token) {
@@ -931,12 +943,12 @@ function makePasscodesManager($token) {
 					<div class="form-row-label">Passcode duration (sec):</div>
 					<input type="text" name="expires" value="31536000" required>
 					<div>
-						<a class="link-button" href="#" onclick="document.form_passcode_new.expires.value=' .
-							'\'2592000\'; return false;">30d</a>
-						<a class="link-button" href="#" onclick="document.form_passcode_new.expires.value=' .
-							'\'15780000\'; return false;">6m</a>
-						<a class="link-button" href="#" onclick="document.form_passcode_new.expires.value=' .
-							'\'31536000\'; return false;">1y</a>
+						<button class="link-button" onclick="document.form_passcode_new.expires.value = ' .
+							'\'2592000\'; return false;">30d</button>
+						<button class="link-button" onclick="document.form_passcode_new.expires.value = ' .
+							'\'15780000\'; return false;">6m</button>
+						<button class="link-button" onclick="document.form_passcode_new.expires.value = ' .
+							'\'31536000\'; return false;">1y</button>
 					</div>
 				</div>
 				<div class="form-row">
@@ -983,20 +995,19 @@ function makePasscodesManager($token) {
 						(isset($editPass['blocked_till']) && $editPass['blocked_till'] ?
 							date('Y-m-d\TH:i', $editPass['blocked_till']) : '') . '">
 					<div>
-						<a class="link-button" href="#" onclick="this.parentNode.previousElementSibling.value=' .
-							'new Date(Date.now()+36E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">1hr</a>
-						<a class="link-button" href="#" onclick="this.parentNode.previousElementSibling.value=' .
-							'new Date(Date.now()+864E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">1d</a>
-						<a class="link-button" href="#" onclick="this.parentNode.previousElementSibling.value=' .
-							'new Date(Date.now()+1728E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">2d</a>
-						<a class="link-button" href="#" onclick="this.parentNode.previousElementSibling.value=' .
-							'new Date(Date.now()+6048E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">1w</a>
-						<a class="link-button" href="#" onclick="this.parentNode.previousElementSibling.value=' .
-							'new Date(Date.now()+12096E5-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">2w</a>
-						<a class="link-button" href="#" onclick="this.parentNode.previousElementSibling.value=' .
-							'new Date(Date.now()+2592E6-(new Date).getTimezoneOffset()*6E4).toISOString().slice(0,16); return false;">30d</a>
-						<a class="link-button" href="#" onclick="this.parentNode.previousElementSibling.value=' .
-							'\'\'; return false;">unblock</a>
+						<button class="link-button" onclick="this.parentNode.previousElementSibling.value = ' .
+							'new Date(Date.now() + 36E5 - (new Date).getTimezoneOffset() * 6E4).toISOString().slice(0, 16); return false;">1hr</button>
+						<button class="link-button" onclick="this.parentNode.previousElementSibling.value = ' .
+							'new Date(Date.now() + 864E5 - (new Date).getTimezoneOffset() * 6E4).toISOString().slice(0, 16); return false;">1d</button>
+						<button class="link-button" onclick="this.parentNode.previousElementSibling.value = ' .
+							'new Date(Date.now() + 1728E5 - (new Date).getTimezoneOffset() * 6E4).toISOString().slice(0, 16); return false;">2d</button>
+						<button class="link-button" onclick="this.parentNode.previousElementSibling.value = ' .
+							'new Date(Date.now() + 6048E5 - (new Date).getTimezoneOffset() * 6E4).toISOString().slice(0, 16); return false;">1w</button>
+						<button class="link-button" onclick="this.parentNode.previousElementSibling.value = ' .
+							'new Date(Date.now() + 12096E5 - (new Date).getTimezoneOffset() * 6E4).toISOString().slice(0, 16); return false;">2w</button>
+						<button class="link-button" onclick="this.parentNode.previousElementSibling.value = ' .
+							'new Date(Date.now() + 2592E6 - (new Date).getTimezoneOffset() * 6E4).toISOString().slice(0, 16); return false;">30d</button>
+						<button class="link-button" onclick="this.parentNode.previousElementSibling.value = \'\'; return false;">unblock</button>
 					</div>
 				</div>
 				<div class="form-row">
@@ -1071,17 +1082,8 @@ function makeUserInfoForm($ip = '') {
 	return '<h2>View user IP info</h2>
 		<form name="form_ipinfo" method="get" action="?">
 			<input type="hidden" name="manage" value="">
-			<div class="form-container">
-				<div class="form-row">
-					<div class="form-row-label">IP-address (CIDR format):</div>
-					<input type="text" name="ipinfo" value="' . $ip . '" placeholder="0.0.0.0" required>
-					<div>
-						<a class="link-button" href="#" onclick="' .
-						'document.form_ipinfo.ipinfo.value+=\'/24\'; return false;">subnet /24</a>
-						<a class="link-button" href="#" onclick="' .
-						'document.form_ipinfo.ipinfo.value+=\'/16\'; return false;">subnet /16 </a>
-					</div>
-				</div>
+			<div class="form-container">' .
+				makeIpField($ip, 'form_ipinfo', 'ipinfo') . '
 				<input class="link-button" type="submit" value="Submit">
 			</div>
 		</form>';
@@ -1098,30 +1100,8 @@ function makeUserInfoManager($token, $ip, $posts) {
 			<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . '
 			</td></tr>';
 	}
-	$banHtml = '';
 	$ban = banByIP($ip);
-	if ($ban) {
-		if ($ban['expire'] == 1) {
-			$expire = 'Warning';
-		} else if ($ban['expire'] > 0) {
-			$expire = date('d.m.Y D H:i:s', $ban['expire']);
-		} else {
-			$expire = 'Does not expire';
-		}
-		$banHtml = '
-			<tr>
-				<th>Set at</th>
-				<th>Expires</th>
-				<th>Reason provided</th>
-				<th>&nbsp;</th>
-			</tr></thead><tbody>
-			<tr>
-				<td>' . date('d.m.Y D H:i:s', $ban['timestamp']) . '</td>
-				<td>' . $expire . '</td><td>' . ($ban['reason'] !== '' ?
-					htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8') : '&nbsp;') . '</td>
-				<td><a href="?manage&bans&lift=' . $ban['id'] . '">lift</a></td>
-			</tr>';
-	}
+	$banHtml = $ban ? makeBansTable([$ban]) : '';
 	$ipLookupHtml = '';
 	if (ATOM_IPLOOKUPS_KEY) {
 		$ipLookup = lookupByIP($ip);
@@ -1142,7 +1122,7 @@ function makeUserInfoManager($token, $ip, $posts) {
 	}
 	return 	makeUserInfoForm($ip) . '
 		<hr>
-		<h2>Moderating ip ' . $ip . '</h2>
+		<h2>Moderating IP ' . $ip . '</h2>
 		<div class="form-container">' .
 			getIpModBtns($token, $loginStatus, $ip) . '
 		</div>
@@ -1247,10 +1227,10 @@ function getPostModBtn($token, $label, $description, $params, $icon = '', $confi
 function getIpModBtns($token, $loginStatus, $ip, $thrId = NULL) {
 	$modButtons = getPostModBtn($token,
 		'Delete all',
-		'Delete all posts and threads in /' . ATOM_BOARD . ' from ip ' . $ip,
+		'Delete all posts and threads in /' . ATOM_BOARD . ' from IP ' . $ip,
 		['delall' => $ip],
 		'',
-		'Are you sure to delete ALL POSTS AND THERADS in /' . ATOM_BOARD . ' from ip ' . $ip . '?');
+		'Are you sure to delete ALL POSTS AND THERADS in /' . ATOM_BOARD . ' from IP ' . $ip . '?');
 	$isBanned = banByIP($ip);
 	$isMod = $loginStatus === 'admin' || $loginStatus === 'moderator';
 	$modButtons .= '
@@ -1264,8 +1244,8 @@ function getIpModBtns($token, $loginStatus, $ip, $thrId = NULL) {
 						($isBanned || !$isMod ? ' disabled' : '') . '>' . 
 						($isBanned ? 'Already banned!' : 'Ban user') . '</button>
 				</form>
-				<div class="mod-description">' . ($isBanned ? 'Ban record exists for ip ' . $ip :
-					($isMod ? 'Ban ip ' . $ip : 'Janitors can\'t ban')) . '</div>
+				<div class="mod-description">' . ($isBanned ? 'Ban record exists for IP ' . $ip :
+					($isMod ? 'Ban IP ' . $ip : 'Janitors can\'t ban')) . '</div>
 			</div>';
 	return $modButtons;
 }
@@ -1306,11 +1286,11 @@ function makePostModManager($token, $post) {
 	$thrId = $post['parent'] ?: $postId;
 	$modButtons .= getPostModBtn($token,
 		'DelAll in thread',
-		'Delete all posts from ip ' . $ip . ' in thread <a href="/' . ATOM_BOARD . '/res/' . $thrId .
+		'Delete all posts from IP ' . $ip . ' in thread <a href="/' . ATOM_BOARD . '/res/' . $thrId .
 			'.html#' . $postId . '" target="_blank">№' . $thrId . '</a>',
 		['delall' => $ip, 'thrid' => $thrId],
 		'',
-		'Are you sure to delete all posts from ip ' . $ip . ' in thread №' . $thrId . '?');
+		'Are you sure to delete all posts from IP ' . $ip . ' in thread №' . $thrId . '?');
 	$modButtons .= getIpModBtns($token, $loginStatus, $ip, $thrId);
 	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
 	if ($passcodeNum) {
@@ -1393,17 +1373,17 @@ function makePostManageButtons($token, $post) {
 	$res .= getPostManageBtn($token,
 		'DelAll in thread',
 		['delall' => $ip, 'thrid' => $thrId],
-		'Delete all posts from ip ' . $ip . ' in thread №' . $thrId, 
-		'Are you sure to delete all posts from ip ' . $ip . ' in thread №' . $thrId . '?');
+		'Delete all posts from IP ' . $ip . ' in thread №' . $thrId, 
+		'Are you sure to delete all posts from IP ' . $ip . ' in thread №' . $thrId . '?');
 	$res .= getPostManageBtn($token, 'Delete all', ['delall' => $ip],
-		'Delete all posts and threads in /' . ATOM_BOARD . ' from ip ' . $ip, 
-		'Are you sure to delete ALL POSTS AND THERADS in /' . ATOM_BOARD . ' from ip ' . $ip . '?');
+		'Delete all posts and threads in /' . ATOM_BOARD . ' from IP ' . $ip, 
+		'Are you sure to delete ALL POSTS AND THERADS in /' . ATOM_BOARD . ' from IP ' . $ip . '?');
 	if ($loginStatus === 'admin' || $loginStatus === 'moderator') {
 		$isBanned = banByIP($ip);
 		$res .= '
 				<a class="link-button" target="_blank" href="/' . ATOM_BOARD .
 					'/imgboard.php?manage=&bans=' . $ip . '&thrid=' . $thrId . '" title="' . 
-					($isBanned ? 'Already banned!' : 'Ban ip ' . $ip) .'">' .
+					($isBanned ? 'Already banned!' : 'Ban IP ' . $ip) .'">' .
 					($isBanned ? 'Banned!' : 'Ban user') . '</a>';
 	}
 	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;

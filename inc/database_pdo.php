@@ -226,16 +226,29 @@ function getPost($id) {
 }
 
 function getPostsByIP($ip) {
-	$ipArr = cidr2ip($ip);
-	$isSingleIp = ($ipArr[0] === $ipArr[1]);
-	$result = pdoQuery($isSingleIp ?
-		"SELECT * FROM " . ATOM_DBPOSTS . "
-		WHERE ip = ?
-		ORDER BY timestamp DESC" :
-		"SELECT * FROM " . ATOM_DBPOSTS . "
-		WHERE INET_ATON(ip) >= ? AND INET_ATON(ip) <= ?
-		ORDER BY timestamp DESC",
-		$isSingleIp ? [$ip] : $ipArr);
+	if (ATOM_DBDRIVER === 'pgsql') {
+		$result = pdoQuery(
+			"SELECT * FROM " . ATOM_DBPOSTS . "
+			WHERE ip::inet <<= ?::inet
+			ORDER BY timestamp DESC",
+			[$ip]);
+	} else {
+		$ipArr = cidr2ip($ip);
+		$isSingleIp = ($ipArr[0] === $ipArr[1]);
+		if ($isSingleIp) {
+			$result = pdoQuery(
+				"SELECT * FROM " . ATOM_DBPOSTS . "
+				WHERE ip = ?
+				ORDER BY timestamp DESC",
+				[$ip]);
+		} else {
+			$result = pdoQuery(
+				"SELECT * FROM " . ATOM_DBPOSTS . " 
+				WHERE INET_ATON(ip) >= ? AND INET_ATON(ip) <= ? 
+				ORDER BY timestamp DESC",
+				$ipArr);
+		}
+	}
 	return $result->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
 
@@ -453,11 +466,11 @@ function banByID($id) {
 }
 
 function banByIP($ip) {
-	$ip_long = ip2long($ip);
+	$ipArr = cidr2ip($ip);
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBBANS . "
 		WHERE ip_from <= ? AND ip_to >= ? LIMIT 1",
-		[$ip_long, $ip_long]);
+		[(float)$ipArr[1], (float)$ipArr[0]]);
 	return $result->fetch(PDO::FETCH_ASSOC);
 }
 

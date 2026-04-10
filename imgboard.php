@@ -262,7 +262,7 @@ function managementRequest() {
 			$_POST['to'] ?? date("Y-m-d", strtotime("+1 day")))));
 	}
 	
-	/* --------[ View all posts from ip ]-------- */
+	/* --------[ View all posts from IP ]-------- */
 
 	if (isset($_GET['ipinfo'])) {
 		$ip = $_GET['ipinfo'];
@@ -292,16 +292,16 @@ function managementRequest() {
 		die(managePage(manageInfo('Post №' . $id . ' has been deleted.')));
 	}
 
-	/* --------[ Delete all posts from ip ]-------- */
+	/* --------[ Delete all posts from IP ]-------- */
 
 	if (isset($_POST['delall'])) {
 		$ip = $_POST['delall'];
 		if (is_numeric($_POST['thrid'] ?? null)) {
 			$thrid = $_POST['thrid'];
-			die(managePage(manageInfo('Posts from ip ' . $ip . ' in thread №' . $thrid .
+			die(managePage(manageInfo('Posts from IP ' . $ip . ' in thread №' . $thrid .
 				' have been deleted: №' . deleteAllPosts($ip, $thrid) . '.')));
 		} else {
-			die(managePage(manageInfo('Posts from ip ' . $ip . ' have been deleted: №' .
+			die(managePage(manageInfo('Posts from IP ' . $ip . ' have been deleted: №' .
 				deleteAllPosts($ip, NULL) . '.')));
 		}
 	}

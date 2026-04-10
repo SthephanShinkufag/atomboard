@@ -438,7 +438,7 @@ function deleteAllPosts($ip, $parentId) {
 	foreach ($updThreads as $updThreadId) {
 		rebuildThreadPage($updThreadId);
 	}
-	modLog('Deleted all posts from ip ' . $ip . ': №' . $deletedPosts . '.');
+	modLog('Deleted all posts from IP ' . $ip . ': №' . $deletedPosts . '.');
 	rebuildIndexPages();
 	return $deletedPosts;
 }
@@ -833,19 +833,25 @@ function clearPass() {
 /* ==[ IP ]================================================================================================ */
 
 function cidr2ip($cidr) {
-	$ipArr = explode('/', $cidr);
-	if (count($ipArr) == 1) {
-		$start = ip2long($ipArr[0]);
-		return [$start, $start];
+	$parts = explode('/', $cidr);
+	$start = ip2long($parts[0]);
+	if ($start === false) {
+		return ['0', '0'];
 	}
-	$start = ip2long($ipArr[0]);
-	$nm = $ipArr[1];
-	$num = pow(2, 32 - $nm);
-	// Filter out incorrect cidr when least significant bits are specified
-	$bitmask = 0x100000000 - $num;
-	$start &= $bitmask;
-	$end = $start + $num - 1;
-	return [$start, $end];
+	if (count($parts) == 1) {
+		$val = sprintf("%u", $start);
+		return [$val, $val];
+	}
+	$nm = (int)$parts[1];
+	if ($nm < 0) {
+		$nm = 0;
+	}
+	if ($nm > 32) {
+		$nm = 32;
+	}
+	$start &= ~((1 << (32 - $nm)) - 1);
+	$end = $start + pow(2, 32 - $nm) - 1;
+	return [sprintf("%u", $start), sprintf("%u", $end)];
 }
 
 function ip2cidr($ipFrom, $ipTo) {
@@ -881,7 +887,7 @@ function getCountryCode($ip, $geoipReader) {
 	return $countryCode ? $countryCode : 'ANON';
 }
 
-// Check for dirty ip using external service - ipregistry.co
+// Check for dirty IP using external service - ipregistry.co
 function isDirtyIP($ip) {
 	$ipLookup = lookupByIP($ip);
 	if ($ipLookup) {
