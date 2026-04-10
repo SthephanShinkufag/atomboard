@@ -1294,10 +1294,12 @@ function makePostModManager($token, $post) {
 	$modButtons .= getIpModBtns($token, $loginStatus, $ip, $thrId);
 	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
 	if ($passcodeNum) {
-		$modButtons .= getPostModBtn($token,
-			'Manage passcode',
-			'Manage passcode №' . $passcodeNum,
-			['passcode' => $passcodeNum, 'passcodes' => 'manage']);
+		$modButtons .= '
+			<div class="mod-row">
+				<a class="mod-button link-button" target="_blank" href="/' . ATOM_BOARD .
+					'/imgboard.php?manage=&passcode=' . $passcodeNum . '&passcodes=manage">Manage passcode</a>
+				<div class="mod-description">Manage passcode №' . $passcodeNum .'</div>
+			</div>';
 	}
 	$reports = reportsByPostID($postId);
 	$reportsCount = count($reports);
@@ -1388,10 +1390,10 @@ function makePostManageButtons($token, $post) {
 	}
 	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
 	if ($passcodeNum) {
-		$res .= getPostManageBtn($token,
-			'Manage passcode',
-			['passcode' => $passcodeNum, 'passcodes' => 'manage'],
-			'Manage passcode №' . $passcodeNum);
+		$res .= '
+				<a class="link-button" target="_blank" href="/' . ATOM_BOARD .
+					'/imgboard.php?manage=&passcode=' . $passcodeNum .
+					'&passcodes=manage" title="Manage passcode №' . $passcodeNum .'">Manage passcode</a>';
 	}
 	return $res;
 }

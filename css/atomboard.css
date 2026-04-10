@@ -203,11 +203,11 @@ article.reply {
 	width: 280px;
 	max-height: 350px;
 	height: 350px;
+	margin: 3px;
 	padding-left: 3px;
 	padding-right: 3px;
-	text-align: center;
-	margin: 3px;
 	padding-top: 6px;
+	text-align: center;
 	background: var(--reply-bg);
 	border: 1px solid var(--reply-border);
 	border-radius: 8px;
@@ -504,7 +504,9 @@ input[type="submit"]:not(.link-button):not([disabled]):active {
 	color: var(--link-button-color) !important;
 	border: none;
 	border-radius: 4px;
+	box-sizing: border-box;
 	font: bold 13px Helvetica, Arial, sans-serif;
+	text-align: center;
 	text-decoration: none;
 	cursor: pointer;
 }
