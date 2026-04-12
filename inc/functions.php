@@ -932,26 +932,16 @@ function checkCaptcha() {
 	if (ATOM_CAPTCHA === 'recaptcha') {
 		require_once 'inc/recaptcha/autoload.php';
 		$captcha = $_POST['g-recaptcha-response'] ?? '';
-		$failedCaptcha = true;
 		$recaptcha = new \ReCaptcha\ReCaptcha(ATOM_RECAPTCHA_SECRET);
-		$resp = $recaptcha->verify($captcha, $_SERVER['REMOTE_ADDR']);
-		if ($resp->isSuccess()) {
-			$failedCaptcha = false;
-		}
-		if ($failedCaptcha) {
-			$captchaError = 'Failed CAPTCHA.';
-			$errCodes = $resp->getErrorCodes();
-			$errReason = '';
-			if (count($errCodes) == 1) {
-				$errReason = $errCodes[0];
-			}
+		$response = $recaptcha->verify($captcha, $_SERVER['REMOTE_ADDR']);
+		if (!$response->isSuccess()) {
+			$captchaError = 'Captcha error: ';
+			$errCodes = $response->getErrorCodes();
+			$errReason = $errCodes[0] ?? '';
 			if ($errReason === 'missing-input-response') {
 				$captchaError .= ' Please click the checkbox labeled "I\'m not a robot".';
 			} else {
-				$captchaError .= ' Reason:';
-				foreach ($errCodes as $error) {
-					$captchaError .= '<br>' . $error;
-				}
+				$captchaError .= implode(';<br>', $errCodes);
 			}
 			if ($isJson) {
 				die('{ "result": "error", "message": ' . json_encode($captchaError) . ' }');
@@ -964,17 +954,11 @@ function checkCaptcha() {
 	// Check for simple captcha
 	elseif (ATOM_CAPTCHA) {
 		$captcha = strtolower(trim($_POST['captcha'] ?? ''));
-		if ($captcha === '') {
-			$captchaError = 'Please enter the CAPTCHA text.';
-			if ($isJson) {
-				die('{ "result": "error", "message": "' . $captchaError . '" }');
-			} else {
-				fancyDie($captchaError);
-			}
-		}
-		if ($captcha != strtolower(trim($_SESSION['atom_captcha'] ?? ''))) {
-			$captchaError = 'Incorrect CAPTCHA text entered, please try again.<br>' .
-				'Click the image to retrieve a new CAPTCHA.';
+		$captchaError = $captcha === '' ? 'Captcha error: The captcha text was not entered.' :
+			($captcha != strtolower(trim($_SESSION['atom_captcha'] ?? '')) ?
+				'Captcha error: Incorrect captcha text entered, please try again.<br>' .
+				'Click the image to retrieve a new captcha.' : '');
+		if ($captchaError) {
 			if ($isJson) {
 				die('{ "result": "error", "message": "' . $captchaError . '" }');
 			} else {

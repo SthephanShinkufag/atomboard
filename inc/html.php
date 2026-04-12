@@ -616,7 +616,7 @@ function manageError($text) {
 		';
 }
 
-function managePage($text, $action = '') {
+function manageDie($text, $action = '') {
 	global $loginStatus;
 	$onload = '';
 	switch ($action) {
@@ -630,8 +630,8 @@ function managePage($text, $action = '') {
 	case 'staffpost': $onload = ' onload="document.postform.parent.focus();"'; break;
 	}
 	$isAdmin = $loginStatus === 'admin';
-	return pageHeader() . '<body' . $onload . '>' .
-		pageWrapper(ATOM_BOARD_DESCRIPTION, true)  . (
+	die(pageHeader() . '<body' . $onload . '>' .
+		pageWrapper(ATOM_BOARD_DESCRIPTION, true) . (
 			$loginStatus === 'disabled' ? '' : '<hr>
 		<div class="panel-adminbar">
 			<a class="link-button" href="?manage">Status</a>' .
@@ -650,8 +650,7 @@ function managePage($text, $action = '') {
 		</div>
 		') . '<hr>
 		' . $text . '
-		<hr>' .
-	pageFooter(true);
+		<hr>' . pageFooter(true));
 }
 
 function makeManageLoginForm() {
@@ -682,8 +681,7 @@ function makePasscodeLoginForm($action, $pass = NULL) {
 				</div>
 				<input class="link-button" type="submit" value="Use Passcode">
 			</div>
-		</form>
-		<br>';
+		</form>';
 	} else if ($action === 'valid') {
 		return '<center><b>You are using a valid passcode.</b><br>' .
 			'<br>Issued: ' . date('d.m.Y D H:i:s', $pass['issued']) .
@@ -812,7 +810,7 @@ function makeBansTable($bans) {
 	$bansHtml = '
 		<table class="table"><thead>
 			<tr>
-				<th>IP-address</th>
+				<th>IP address</th>
 				<th>Set at</th>
 				<th>Expires</th>
 				<th>Reason provided</th>
@@ -847,7 +845,7 @@ function makeBansTable($bans) {
 function makeIpField($ip, $formName, $fieldName) {
 	return '
 				<div class="form-row">
-					<div class="form-row-label">IP-address (CIDR format):</div>
+					<div class="form-row-label">IP address (CIDR format):</div>
 					<input type="text" name="' . $fieldName . '" value="' . $ip .
 						'" placeholder="0.0.0.0" required>
 					<div>
@@ -874,7 +872,7 @@ function makeBansManager($token) {
 	}
 	$bans = getAllBans();
 	$bansCount = count($bans);
-	$bansHtml = '<h2>Ban an IP-address</h2>
+	$bansHtml = '<h2>Ban an IP address</h2>
 		<form name="form_bans" method="post" action="?manage&bans">
 			<input type="hidden" name="token" value="' . $token . '">
 			<div class="form-container">' .
@@ -1117,7 +1115,7 @@ function makeUserInfoManager($token, $ip, $posts) {
 			<tr><td>VPN</td><td' . ($ipLookup['vpn'] ? $red : '>0') . '</td></tr>
 		</tbody></table>';
 		} else {
-			$ipLookupHtml = '<center>This IP address has not yet been verified.</center>';
+			$ipLookupHtml = '<center>This IP has not yet been verified.</center>';
 		}
 	}
 	return 	makeUserInfoForm($ip) . '
@@ -1143,8 +1141,7 @@ function makeUserInfoManager($token, $ip, $posts) {
 		<table class="table-posts"><tbody>' .
 			$postsHtml . '
 		</tbody></table>' : '
-		No posts or threads from this IP on this board.') . '
-		<br>';
+		<center>No posts or threads from this IP on this board.</center>');
 }
 
 function makeReportPostForm($post) {
@@ -1192,14 +1189,13 @@ function getPostReports($reports, $geoipReader) {
 	foreach ($reports as $report) {
 		$ip = $report['ip'];
 		$reportsHtml .= '
-				<div class="reply report">
+				<article class="reply report">
 					&nbsp;' . (ATOM_GEOIP ? getCountryIcon($ip, $geoipReader) . '&nbsp;' : '') .
 					getIpUserInfoLink($ip) . '
 					(' . date('d.m.y D H:i:s', $report['timestamp']) . ')
 					<br>
 					<blockquote class="post-message">' . $report['reason'] . '</blockquote>
-				</div>
-				<br>';
+				</article>';
 	}
 	return $reportsHtml;
 }
