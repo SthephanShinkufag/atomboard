@@ -923,6 +923,24 @@ function isDirtyIP($ip) {
 		ATOM_IPLOOKUPS_BLOCK_VPN && $ipLookupVpn;
 }
 
+function checkIP($ip, $validPasscode, $isJson) {
+	// Check for dirty IP
+	if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY && !$validPasscode && isDirtyIP($ip)) {
+		$message = 'Error: Your IP ' . $ip . ' is not allowed due to abuse (proxy, Tor, VPN, VPS).';
+		if ($isJson) {
+			jsonDie('error', $message);
+		} else {
+			fancyDie($message);
+		}
+	}
+
+	// Check for ban
+	$ban = banByIP($ip);
+	if ($ban) {
+		checkForBans($ip, $ban, $validPasscode, $isJson);
+	}
+}
+
 /* ==[ Captcha ]=========================================================================================== */
 
 function checkCaptcha() {
@@ -943,11 +961,6 @@ function checkCaptcha() {
 			} else {
 				$captchaError .= implode(';<br>', $errCodes);
 			}
-			if ($isJson) {
-				die('{ "result": "error", "message": ' . json_encode($captchaError) . ' }');
-			} else {
-				fancyDie($captchaError);
-			}
 		}
 	}
 
@@ -958,13 +971,15 @@ function checkCaptcha() {
 			($captcha != strtolower(trim($_SESSION['atom_captcha'] ?? '')) ?
 				'Captcha error: Incorrect captcha text entered, please try again.<br>' .
 				'Click the image to retrieve a new captcha.' : '');
-		if ($captchaError) {
-			if ($isJson) {
-				die('{ "result": "error", "message": "' . $captchaError . '" }');
-			} else {
-				fancyDie($captchaError);
-			}
-		}
 		unset($_SESSION['atom_captcha']);
+	}
+
+	// Output error if captcha check failed
+	if ($captchaError) {
+		if ($isJson) {
+			jsonDie('error', $captchaError);
+		} else {
+			fancyDie($captchaError);
+		}
 	}
 }

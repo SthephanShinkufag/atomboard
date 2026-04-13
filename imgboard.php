@@ -17,20 +17,33 @@ if (function_exists('ob_get_level')) {
 /* ==[ Utils ]============================================================================================= */
 
 function fancyDie($message) {
+	$referer = isset($_SERVER['HTTP_REFERER']) ? htmlspecialchars($_SERVER['HTTP_REFERER']) : '';
+	header('Content-Type: text/html; charset=utf-8');
 	die('<!DOCTYPE html>
-
-<html data-theme="' . ATOM_THEME . '">
+<html lang="en" data-theme="' . htmlspecialchars(ATOM_THEME) . '">
 <head>
-	<link rel="stylesheet" type="text/css" href="/' . ATOM_BOARD . '/css/atomboard.css?2026040900">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Notice</title>
+	<link rel="stylesheet" type="text/css" href="/' . htmlspecialchars(ATOM_BOARD) .
+		'/css/atomboard.css?2026040900">
 </head>
-<body align="center">
-	<br>
-	<div class="reply" style="display: inline-block; padding: 8px 20px; font-size: 1.25em;">' .
-		$message . '</div>
-	<br>
+<body align="center" style="text-align: center;">
+	<div class="reply notice">' . $message . '</div>
 	<hr>
-	<a class="link-button" href="javascript: window.history.go(-1);" title="Return to board">Return</a>
-</body>');
+	<a class="link-button" href="' .
+		($referer ?: 'javascript:history.back();') . '" title="Return to board">Return</a>
+</body>
+</html>');
+}
+
+function jsonDie(string $result, ?string $message = null, array $optionalData = []): void {
+	header('Content-Type: application/json; charset=utf-8');
+	$response = ['result' => $result];
+	if ($message !== null) {
+		$response['message'] = $message;
+	}
+	die(json_encode(array_merge($response, $optionalData), JSON_UNESCAPED_UNICODE));
 }
 
 /* ==[ Administration and moderation requests ]============================================================ */
@@ -483,20 +496,11 @@ function postingRequest() {
 				fancyDie('Posting error: Posting from your country (' . $countryCode . ') is prohibited.');
 			}
 		}
+		
+		// Check for dirty IP and bans
+		checkIP($ip, $validPasscode, false);
 
-		// Check for dirty ip
-		if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY && !$validPasscode && isDirtyIP($ip)) {
-			fancyDie('Posting error: Your IP ' . $ip .
-				' is not allowed to post due to abuse (proxy, Tor, VPN, VPS).');
-		}
-
-		// Check for ban
-		$ban = banByIP($ip);
-		if ($ban) {
-			checkForBans($ip, $ban, $validPasscode, false, false);
-		}
-
-		// Check for floodF
+		// Check for flooding
 		if (ATOM_POSTING_DELAY > 0) {
 			$lastpost = getLastPostByIP();
 			if ($lastpost && (time() - $lastpost['timestamp']) < ATOM_POSTING_DELAY) {
@@ -1118,40 +1122,45 @@ function postingRequest() {
 }
 
 /* ==[ Banned request ]==================================================================================== */
-
-function checkForBans($ip, $ban, $validPasscode, $isCloseWarning, $isJson) {
-	$directBan = $ban['ip_from'] == $ban['ip_to'];
+function checkForBans($ip, $ban, $validPasscode, $isJson = false, $isCloseWarning = false) {
+	$isRangeBan = $ban['ip_from'] !== $ban['ip_to'];
 	// Range bans do not affect passcode users
-	if (!$directBan && $validPasscode) {
+	if ($validPasscode && $isRangeBan) {
 		return;
 	}
 	$message = '';
-	$reason = $ban['reason'] !== '' ? '<br><br>Reason: ' . $ban['reason'] : '';
-	if ($ban['expire'] == 1) {
+	$reason = $ban['reason'] !== '' ? "\nReason: " . $ban['reason'] : '';
+	if ($ban['expire'] === 1) {
+		$message = 'Your IP ' . $ip . ' has been issued a warning.' . $reason . "\n\n";
 		if ($isCloseWarning) {
 			deleteBan($ban['id']);
-			$message = 'Your IP ' . $ip . ' has been issued a warning:<br><br>' . $ban['reason'] .
-				'<br><br>Please make sure you have read and understood the rules.<br>
-				This warning has been automatically removed, you may continue posting now.';
+			$message .= 'Please make sure you have read and understood the [rules](/rules/).' .
+				"\nThis warning has been automatically removed, you may continue posting now.";
 		} else {
-			$message = 'Your IP ' . $ip . ' has been issued a warning.<br>To continue posting,' .
-				' please read <a href="/' . ATOM_BOARD . '/imgboard.php?banned">this page</a>.' . $reason;
+			$message .= 'To continue posting, please visit [this page](/' .
+				ATOM_BOARD . '/imgboard.php?banned).';
 		}
-	} else if ($ban['expire'] == 0 || $ban['expire'] > time()) {
-		$message = 'Your IP ' . $ip . ' has been banned from posting on this imageboard. ' . (
-			$ban['expire'] > 0 ? '<br>This ban will expire ' . date('d.m.Y D H:i:s', $ban['expire']) :
-				'<br>This ban is permanent and will not expire.' .
-				(!$directBan ? '<br>This is a range ban (affects a whole subnet).' : '') .
-				(ATOM_PASSCODES_ENABLED && !$directBan ? '<br><br><a href="/' . ATOM_BOARD .
-					'/imgboard.php?passcode">Passcode users</a> are not affected by subnet bans.' : '')
-		) . $reason;
+	} elseif ($ban['expire'] === 0 || $ban['expire'] > time()) {
+		$expireText = $ban['expire'] > 0 ?
+			'This ban will expire ' . date('d.m.Y D H:i:s', $ban['expire']) . '.' :
+			'This ban is permanent and will not expire.';
+		$rangeText = $isRangeBan ? "\nThis is a range ban (affects a whole subnet)." : '';
+		$passcodeText = ATOM_PASSCODES_ENABLED && $isRangeBan ? "\nBy the way, [Passcode users](/" .
+			ATOM_BOARD . '/imgboard.php?passcode) are not affected by range bans.' : '';
+		$message = 'Your IP ' . $ip . ' has been banned on this imageboard.' . $reason .
+			"\n\n" . $expireText . $rangeText . $passcodeText;
 	} else {
 		clearExpiredBans();
 	}
-	if ($message) {
+	if ($message !== '') {
 		if ($isJson) {
-			die('{ "result": "error", "message": "' . $message . '" }');
+			$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+			$baseUrl = $protocol . $_SERVER['HTTP_HOST'];
+			jsonDie('error', preg_replace('/\[(.*?)\]\((.*?)\)/', '$1 (' . $baseUrl . '$2)', $message));
 		} else {
+			// For normal output, convert \n to <br> and pseudo-BBCode to HTML links
+			$message = str_replace("\n", '<br>', $message);
+			$message = preg_replace('/\[(.*?)\]\((.*?)\)/', '<a href="$2">$1</a>', $message);
 			fancyDie($message);
 		}
 	}
@@ -1161,7 +1170,7 @@ function bannedRequest() {
 	$ip = $_SERVER['REMOTE_ADDR'];
 	$ban = banByIP($ip);
 	if ($ban) {
-		checkForBans($ip, $ban, checkPasscode()[0], true, false);
+		checkForBans($ip, $ban, checkPasscode()[0], false, true);
 	} else {
 		fancyDie('Your IP ' . $ip . ' is not banned at this time.');
 	}
@@ -1195,26 +1204,12 @@ function deletionRequest() {
 /* ==[ Post report request ]=============================================================================== */
 
 function reportRequest() {
-	$isJson = isset($_GET['json']) && $_GET['json'] == '1';
 	$ip = $_SERVER['REMOTE_ADDR'];
-	$ban = banByIP($ip);
-	if ($ban) {
-		checkForBans($ip, $ban, checkPasscode()[0], false, $isJson);
-	}
-
-	// Check for dirty ip
-	if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY && !checkPasscode()[0] && isDirtyIP($ip)) {
-		$message = 'Report error: Your IP ' . $ip .
-			' is not allowed to report due to abuse (proxy, Tor, VPN, VPS).';
-		if ($isJson) {
-			die('{ "result": "error", "message": "' . $message . '" }');
-		} else {
-			fancyDie($message);
-		}
-	}
-
+	$validPasscode = checkPasscode()[0];
+	$isJson = isset($_GET['json']) && $_GET['json'] == '1';
+	checkIP($ip, $validPasscode, $isJson); // Check for dirty IP and bans
 	if (isset($_GET['addreport'])) {
-		if (!checkPasscode()[0]) {
+		if (!$validPasscode) {
 			checkCaptcha();
 		}
 		$id = $_POST['id'];
@@ -1222,19 +1217,19 @@ function reportRequest() {
 		if ($report) {
 			if ($report === 'exists') {
 				if ($isJson) {
-					die('{ "result": "alreadysent" }');
+					jsonDie('alreadysent');
 				} else {
 					fancyDie('Report error: You have already sent a report to post №' . $id . '!');
 				}
 			}
 			if ($isJson) {
-				die('{ "result": "ok" }');
+				jsonDie('ok');
 			} else {
 				fancyDie('Report to post №' . $id . ' successfully sent.');
 			}
 		}
 		if ($isJson) {
-			die('{ "result": "error" }');
+			jsonDie('error');
 		} else {
 			fancyDie('Report error: An error occurred while sending the report.');
 		}
@@ -1263,10 +1258,10 @@ function checkPasscode($showMessages = false) {
 	$ip = $_SERVER['REMOTE_ADDR'];
 	$checkTill = $pass['last_used'] + ATOM_PASSCODES_USE_LIMIT;
 	if ($checkTill > time() && $pass['last_used_ip'] != $ip && $showMessages) {
-		fancyDie('Your passcode has been used recently by another ip.<br>Please wait till ' .
+		fancyDie('Your passcode has been used recently by another IP.<br>Please wait till ' .
 			date('d.m.y D H:i:s', $checkTill) . ' and try again.');
 	}
-	usePass($pass['id'], $ip); // Update passcode info (last used ip)
+	usePass($pass['id'], $ip); // Update passcode info (last used IP)
 	return $pass['number'] ? [$pass['number'], str_contains($pass['meta'], '[donator]')] : [0];
 }
 
@@ -1331,19 +1326,15 @@ function passcodeRequest() {
 
 function likeRequest() {
 	$ip = $_SERVER['REMOTE_ADDR'];
-	if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY && !checkPasscode()[0] && isDirtyIP($ip)) {
-		die('{ "result": "error", "message": "Like error: Your IP ' . $ip .
-			' is not allowed to like due to abuse (proxy, Tor, VPN, VPS)." }');
-	}
+	checkIP($ip, checkPasscode()[0], true); // Check for dirty IP and bans, JSON response
 	$postNum = $_GET['like'];
 	$result = toggleLike($postNum, $ip);
 	$post = getPost($postNum);
 	$post['likes'] = $result;
 	rebuildThread(getThreadId($post));
-	die('{ "result": "ok", "message": "' . (
-			$result[0] ? 'Post №' . $postNum . ' has been liked!' :
-			'The like to post №' . $postNum . ' has been cancelled!'
-		) . '", "likes": ' . $result[1] . ' }');
+	jsonDie('ok',
+		$result[0] ? 'Post №' . $postNum . ' has been liked!' : 'Post №' . $postNum . ' has been unliked!',
+		['likes' => $result[1]]);
 }
 
 /* ==[ Main ]============================================================================================== */
@@ -1423,8 +1414,8 @@ if (isset($_GET['like'])) {
 	likeRequest();
 }
 if (isset($_GET['ban_reasons'])) {
-	header('Content-type: application/json');
-	echo json_encode($atom_ban_reasons, JSON_UNESCAPED_UNICODE);
+	header('Content-Type: application/json; charset=utf-8');
+	die(json_encode($atom_ban_reasons, JSON_UNESCAPED_UNICODE));
 }
 
 // Initialization of empty board 
