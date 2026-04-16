@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 if (!defined('ATOM_BOARD')) {
 	die('');
 }
@@ -308,18 +309,18 @@ if (ATOM_DBMODE === 'pdo' && ATOM_DBDRIVER === 'pgsql') {
 
 /* ==[ Strings ]=========================================================================================== */
 
-function escapeHTML($string) {
+function escapeHTML(string $string): string {
 	return str_replace(['&', '<', '>'], ['&amp;', '&lt;', '&gt;'], $string);
 }
 
-function plural($singular, $count, $plural = 's') {
+function plural(string $singular, int $count, string $plural = 's'): string {
 	if ($plural === 's') {
 		$plural = $singular . $plural;
 	}
-	return ($count == 1 ? $singular : $plural);
+	return $count === 1 ? $singular : $plural;
 }
 
-function strallpos($haystack, $needle, $offset = 0) {
+function strallpos(string $haystack, string $needle, int $offset = 0): array {
 	$result = [];
 	for ($i = $offset; $i < strlen($haystack); $i++) {
 		$pos = strpos($haystack, $needle, $i);
@@ -334,11 +335,11 @@ function strallpos($haystack, $needle, $offset = 0) {
 	return $result;
 }
 
-function hslToHex($h, $s, $l) {
+function hslToHex(float $h, float $s, float $l): string {
 	$h /= 360;
 	$q = $l < 0.5 ? $l * (1 + $s) : $l + $s - $l * $s;
 	$p = 2 * $l - $q;
-	$f = function($t) use ($p, $q) {
+	$f = function(float $t) use ($p, $q): float {
 		if ($t < 0) $t += 1;
 		if ($t > 1) $t -= 1;
 		if ($t < 1/6) return $p + ($q - $p) * 6 * $t;
@@ -347,14 +348,14 @@ function hslToHex($h, $s, $l) {
 		return $p;
 	};
 	return sprintf('#%02x%02x%02x', 
-		round($f($h + 1/3) * 255), 
-		round($f($h) * 255), 
-		round($f($h - 1/3) * 255));
+		(int)round($f($h + 1/3) * 255), 
+		(int)round($f($h) * 255), 
+		(int)round($f($h - 1/3) * 255));
 }
 
 /* ==[ Posts ]============================================================================================= */
 
-function newPost($parent) {
+function newPost(int $parent): array {
 	return [
 		'parent' => $parent,
 		'timestamp' => '0',
@@ -414,19 +415,19 @@ function newPost($parent) {
 		'endless' => '0'];
 }
 
-function isOp($post) {
-	return $post['parent'] == ATOM_NEWTHREAD;
+function isOp(array $post): bool {
+	return (int)$post['parent'] === 0;
 }
 
-function deleteAllPosts($ip, $parentId) {
+function deleteAllPosts(string $ip, ?int $parentId): string {
 	$deletedPosts = '';
 	$updThreads = [];
 	$posts = getPostsByIP($ip);
 	$count = 0;
 	foreach ($posts as $post) {
-		$id = $post['id'];
-		$thrId = $post['parent'];
-		if (!isset($parentId) || $thrId === (int)$parentId) {
+		$id = (int)$post['id'];
+		$thrId = (int)$post['parent'];
+		if (!isset($parentId) || $thrId === $parentId) {
 			deletePost($id);
 			$deletedPosts .= ($count ? ', ' : '') . $id;
 			if (!isOp($post) && !in_array($thrId, $updThreads)) {
@@ -445,7 +446,7 @@ function deleteAllPosts($ip, $parentId) {
 
 /* ==[ Images/video files ]================================================================================ */
 
-function deletePostImageFiles($post, $imgList = []) {
+function deletePostImageFiles(array $post, array $imgList = []): void {
 	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT)) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = (int)trim(basename($index));
@@ -470,7 +471,7 @@ function deletePostImageFiles($post, $imgList = []) {
 	}
 }
 
-function deletePostThumbFiles($post, $imgList) {
+function deletePostThumbFiles(array $post, array $imgList): void {
 	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT)) {
 		foreach ($imgList as $arrayIndex => $index) {
 			$index = (int)trim(basename($index));
@@ -482,19 +483,19 @@ function deletePostThumbFiles($post, $imgList) {
 	}
 }
 
-function getThumbnailDimensions($post, $imgIndex = 0) {
-	if ($post['parent'] == ATOM_NEWTHREAD) {
-		$max_width = ATOM_FILE_MAXWOP;
-		$max_height = ATOM_FILE_MAXHOP;
+function getThumbnailDimensions(array $post, int $imgIdx = 0): array {
+	if (isOp($post)) {
+		$maxW = ATOM_FILE_MAXWOP;
+		$maxH = ATOM_FILE_MAXHOP;
 	} else {
-		$max_width = ATOM_FILE_MAXW;
-		$max_height = ATOM_FILE_MAXH;
+		$maxW = ATOM_FILE_MAXW;
+		$maxH = ATOM_FILE_MAXH;
 	}
 	return (
-		$post['image' . $imgIndex . '_width'] > $max_width ||
-		$post['image' . $imgIndex . '_height'] > $max_height
-	) ? [$max_width, $max_height] :
-		[$post['image' . $imgIndex . '_width'], $post['image' . $imgIndex . '_height']];
+		$post['image' . $imgIdx . '_width'] > $maxW ||
+		$post['image' . $imgIdx . '_height'] > $maxH
+	) ? [$maxW, $maxH] :
+		[$post['image' . $imgIdx . '_width'], $post['image' . $imgIdx . '_height']];
 }
 
 function fastimagecopyresampled(
@@ -565,145 +566,132 @@ function fastimagecopyresampled(
 	return true;
 }
 
-function createThumbnail($file_location, $thumb_location, $new_w, $new_h) {
+function createThumbnail(string $fileLocation, string $thumbLocation, int $newW, int $newH): bool {
 	if (ATOM_FILE_THUMBDRIVER === 'gd') {
-		$system = explode(".", $thumb_location);
-		$system = array_reverse($system);
-		if (preg_match("/jpg|jpeg/", $system[0])) {
-			$src_img = imagecreatefromjpeg($file_location);
-		} elseif (preg_match("/png/", $system[0])) {
-			$src_img = @imagecreatefrompng($file_location);
-		} elseif (preg_match("/gif/", $system[0])) {
-			$src_img = imagecreatefromgif($file_location);
-		} elseif (preg_match("/avif/", $system[0])) {
-			$src_img = imagecreatefromavif($file_location);
-		} elseif (preg_match("/webp/", $system[0])) {
-			$src_img = imagecreatefromwebp($file_location);
+		$system = array_reverse(explode('.', $thumbLocation));
+		if (preg_match('/jpg|jpeg/', $system[0])) {
+			$srcImg = imagecreatefromjpeg($fileLocation);
+		} elseif (preg_match('/png/', $system[0])) {
+			$srcImg = @imagecreatefrompng($fileLocation);
+		} elseif (preg_match('/gif/', $system[0])) {
+			$srcImg = imagecreatefromgif($fileLocation);
+		} elseif (preg_match('/avif/', $system[0])) {
+			$srcImg = imagecreatefromavif($fileLocation);
+		} elseif (preg_match('/webp/', $system[0])) {
+			$srcImg = imagecreatefromwebp($fileLocation);
 		} else {
 			return false;
 		}
-		if (!$src_img) {
+		if (!$srcImg) {
 			return false;
 		}
-		$old_x = imageSX($src_img);
-		$old_y = imageSY($src_img);
-		$percent = $old_x > $old_y ? $new_w / $old_x : $new_h / $old_y;
-		$thumb_w = round($old_x * $percent);
-		$thumb_h = round($old_y * $percent);
-		$dst_img = imagecreatetruecolor($thumb_w, $thumb_h);
-		if (preg_match("/png/", $system[0]) && imagepng($src_img, $thumb_location)) {
-			imagealphablending($dst_img, false);
-			imagesavealpha($dst_img, true);
-			$color = imagecolorallocatealpha($dst_img, 0, 0, 0, 0);
-			imagefilledrectangle($dst_img, 0, 0, $thumb_w, $thumb_h, $color);
-			imagecolortransparent($dst_img, $color);
-			imagecopyresampled($dst_img, $src_img, 0, 0, 0, 0, $thumb_w, $thumb_h, $old_x, $old_y);
+		$oldX = imageSX($srcImg);
+		$oldY = imageSY($srcImg);
+		$percent = $oldX > $oldY ? $newW / $oldX : $newH / $oldY;
+		$thumbW = (int)round($oldX * $percent);
+		$thumbH = (int)round($oldY * $percent);
+		$dstImg = imagecreatetruecolor($thumbW, $thumbH);
+		if (preg_match('/png/', $system[0]) && imagepng($srcImg, $thumbLocation)) {
+			imagealphablending($dstImg, false);
+			imagesavealpha($dstImg, true);
+			$color = imagecolorallocatealpha($dstImg, 0, 0, 0, 0);
+			imagefilledrectangle($dstImg, 0, 0, $thumbW, $thumbH, $color);
+			imagecolortransparent($dstImg, $color);
+			imagecopyresampled($dstImg, $srcImg, 0, 0, 0, 0, $thumbW, $thumbH, $oldX, $oldY);
 		} else {
-			fastimagecopyresampled($dst_img, $src_img, 0, 0, 0, 0, $thumb_w, $thumb_h, $old_x, $old_y);
+			fastimagecopyresampled($dstImg, $srcImg, 0, 0, 0, 0, $thumbW, $thumbH, $oldX, $oldY);
 		}
-		if (preg_match("/png/", $system[0])) {
-			if (!imagepng($dst_img, $thumb_location)) {
+		if (preg_match('/png/', $system[0])) {
+			if (!imagepng($dstImg, $thumbLocation)) {
 				return false;
 			}
-		} elseif (preg_match("/jpg|jpeg/", $system[0])) {
-			if (!imagejpeg($dst_img, $thumb_location, 70)) {
+		} elseif (preg_match('/jpg|jpeg/', $system[0])) {
+			if (!imagejpeg($dstImg, $thumbLocation, 70)) {
 				return false;
 			}
-		} elseif (preg_match("/gif/", $system[0])) {
-			if (!imagegif ($dst_img, $thumb_location)) {
+		} elseif (preg_match('/gif/', $system[0])) {
+			if (!imagegif ($dstImg, $thumbLocation)) {
 				return false;
 			}
-		} elseif (preg_match("/avif/", $system[0])) {
-			if (!imageavif($dst_img, $thumb_location, 70)) {
+		} elseif (preg_match('/avif/', $system[0])) {
+			if (!imageavif($dstImg, $thumbLocation, 70)) {
 				return false;
 			}
-		} elseif (preg_match("/webp/", $system[0])) {
-			if (!imagewebp($dst_img, $thumb_location, 70)) {
+		} elseif (preg_match('/webp/', $system[0])) {
+			if (!imagewebp($dstImg, $thumbLocation, 70)) {
 				return false;
 			}
 		}
-		imagedestroy($dst_img);
-		imagedestroy($src_img);
-	} else { // imagemagick
+		imagedestroy($dstImg);
+		imagedestroy($srcImg);
+	} else {
+		// Imagemagick
 		$discard = '';
-		$exit_status = 1;
-		$extension = pathinfo($thumb_location, PATHINFO_EXTENSION);
+		$exitStatus = 1;
+		$extension = pathinfo($thumbLocation, PATHINFO_EXTENSION);
 		if ($extension === 'gif' || $extension === 'webp') {
 			if (ATOM_FILE_ANIM_GIF) {
-				exec("convert " . $file_location . " -auto-orient -thumbnail '" . $new_w . "x" . $new_h .
-					"' -coalesce -layers OptimizeFrame -depth 4 -type palettealpha " .$thumb_location,
-					$discard, $exit_status);
+				exec("convert " . $fileLocation . " -auto-orient -thumbnail '" . $newW . "x" . $newH .
+					"' -coalesce -layers OptimizeFrame -depth 4 -type palettealpha " . $thumbLocation,
+					$discard, $exitStatus);
 			} else {
-				exec("convert '" . $file_location . "[0]' -auto-orient -thumbnail '" . $new_w . "x" . $new_h .
-					"' -layers OptimizeFrame -depth 4 -type palettealpha " . $thumb_location,
-					$discard, $exit_status);
+				exec("convert '" . $fileLocation . "[0]' -auto-orient -thumbnail '" . $newW . "x" . $newH .
+					"' -layers OptimizeFrame -depth 4 -type palettealpha " . $thumbLocation,
+					$discard, $exitStatus);
 			}
 		} else {
-			exec("convert " . $file_location . " -auto-orient -thumbnail '" . $new_w . "x" . $new_h .
-				"' -layers OptimizeFrame -depth 8 " . $thumb_location, $discard, $exit_status);
+			exec("convert " . $fileLocation . " -auto-orient -thumbnail '" . $newW . "x" . $newH .
+				"' -layers OptimizeFrame -depth 8 " . $thumbLocation, $discard, $exitStatus);
 		}
-		if ($exit_status != 0) {
+		if ($exitStatus !== 0) {
 			return false;
 		}
 	}
 	return true;
 }
 
-function addVideoOverlay($thumb_location) {
+function addVideoOverlay(string $thumbLocation): void {
 	if (!file_exists('icons/video_overlay.png')) {
 		return;
 	}
 	if (ATOM_FILE_THUMBDRIVER === 'imagemagick') {
 		$discard = '';
-		$exit_status = 1;
-		exec('convert ' . $thumb_location .
+		$exitStatus = 1;
+		exec('convert ' . $thumbLocation .
 			' icons/video_overlay.png -gravity center -composite -quality 75 ' .
-			$thumb_location, $discard, $exit_status);
+			$thumbLocation, $discard, $exitStatus);
 		return;
 	}
-	// gd
-	$thumbnail = substr($thumb_location, -4) === '.jpg' ? imagecreatefromjpeg($thumb_location) :
-		imagecreatefrompng($thumb_location);
-	list($width, $height, $type, $attr) = getimagesize($thumb_location);
+	// GD
+	$thumbnail = substr($thumbLocation, -4) === '.jpg' ? imagecreatefromjpeg($thumbLocation) :
+		imagecreatefrompng($thumbLocation);
+	list($width, $height, $type, $attr) = getimagesize($thumbLocation);
 	$overlay_play = imagecreatefrompng('icons/video_overlay.png');
 	imagealphablending($overlay_play, false);
 	imagesavealpha($overlay_play, true);
-	list(
-		$overlay_width,
-		$overlay_height,
-		$overlay_type,
-		$overlay_attr
-	) = getimagesize('icons/video_overlay.png');
-	if (substr($thumb_location, -4) === '.png') {
+	list($overlayWidth, $overlayHeight, $overlayType, $overlayAttr) = getimagesize('icons/video_overlay.png');
+	if (substr($thumbLocation, -4) === '.png') {
 		imagecolortransparent($thumbnail, imagecolorallocatealpha($thumbnail, 0, 0, 0, 127));
 		imagealphablending($thumbnail, true);
 		imagesavealpha($thumbnail, true);
 	}
-	imagecopy(
-		$thumbnail,
-		$overlay_play,
-		(int)($width / 2) - (int)($overlay_width / 2),
-		(int)($height / 2) - (int)($overlay_height / 2),
-		0,
-		0,
-		$overlay_width,
-		$overlay_height
-	);
-	if (substr($thumb_location, -4) === '.jpg') {
-		imagejpeg($thumbnail, $thumb_location);
+	imagecopy($thumbnail, $overlay_play, (int)($width / 2) - (int)($overlayWidth / 2),
+		(int)($height / 2) - (int)($overlayHeight / 2), 0, 0, $overlayWidth, $overlayHeight);
+	if (substr($thumbLocation, -4) === '.jpg') {
+		imagejpeg($thumbnail, $thumbLocation);
 	} else {
-		imagepng($thumbnail, $thumb_location);
+		imagepng($thumbnail, $thumbLocation);
 	}
 }
 
-function isEmbed($fileHex) {
+function isEmbed(string $fileHex): bool {
 	global $atom_embeds;
 	return in_array($fileHex, array_keys($atom_embeds));
 }
 
-function getEmbed($url) {
+function getEmbed(string $url): array {
 	global $atom_embeds;
-	if (sizeof($atom_embeds) != 0) {
+	if (sizeof($atom_embeds) !== 0) {
 		foreach ($atom_embeds as $service => $service_url) {
 			if (strpos(strtolower($url), strtolower($service)) !== false) {
 				$service_url = str_ireplace('ATOM_EMBED', urlencode($url), $service_url);
@@ -719,27 +707,36 @@ function getEmbed($url) {
 
 /* ==[ Threads ]=========================================================================================== */
 
-// Delete old posts in endless threads
-function trimThreadPostsCount($id) {
-	$postOP = getPost($id);
-	if ($postOP && (int)$postOP['endless'] == 1) {
-		$posts = getThreadPosts($id, false);
-		$overLimit = count($posts) - ATOM_THREAD_LIMIT + 1;
-		if ($overLimit > 0) {
-			for ($i = 1; $i < $overLimit; $i++) {
-				deletePost($posts[$i]['id']);
+function updateThreadPosts(int $thrId, array $post): void {
+	if (isOp($post)) {
+		return;
+	}
+	if (ATOM_THREAD_LIMIT === 0 || getThreadPostsCount($thrId) <= ATOM_THREAD_LIMIT) {
+		if (strtolower($post['email']) !== 'sage') {
+			bumpThread($thrId);
+		}
+	} elseif (ATOM_THREAD_LIMIT !== 0) {
+		// Delete old posts in endless threads
+		$postOP = getPost($thrId);
+		if ($postOP && (int)$postOP['endless'] === 1) {
+			$posts = getThreadPosts($thrId, false);
+			$overLimit = count($posts) - ATOM_THREAD_LIMIT + 1;
+			if ($overLimit > 0) {
+				for ($i = 1; $i < $overLimit; $i++) {
+					deletePost($posts[$i]['id']);
+				}
 			}
 		}
 	}
 }
 
-function getThreadId($post) {
-	return $post['parent'] == ATOM_NEWTHREAD ? $post['id'] : $post['parent'];
+function getThreadId(array $post): int {
+	return isOp($post) ? (int)$post['id'] : (int)$post['parent'];
 }
 
 /* ==[ Administration and moderation ]===================================================================== */
 
-function checkLogin() {
+function checkLogin(): string {
 	if (isset($_POST['manage_password'])) {
 		$passw = $_POST['manage_password'];
 		if (empty(getAllStaffMembers())) {
@@ -772,11 +769,11 @@ function checkLogin() {
 	return $loginStatus;
 }
 
-function isStaffPost() {
+function isStaffPost(): bool {
 	return isset($_POST['staffpost']) && checkLogin() !== 'disabled';
 }
 
-function deleteSession() {
+function deleteSession(): void {
 	session_unset();
 	session_destroy();
 	setcookie('atom_access', '', time() - 3600, '/' . ATOM_BOARD . '/');
@@ -785,7 +782,7 @@ function deleteSession() {
 
 /* ==[ File reading/writing ]============================================================================== */
 
-function url_get_contents($url) {
+function url_get_contents(string $url): string|false {
 	if (!function_exists('curl_init')) {
 		return file_get_contents($url);
 	}
@@ -798,68 +795,65 @@ function url_get_contents($url) {
 	return $output;
 }
 
-function writePage($filename, $contents) {
-	$tempfile = tempnam('res/', ATOM_BOARD . 'tmp'); /* Create the temporary file */
+function writePage(string $filename, string $contents): void {
+	$tempfile = tempnam('res/', ATOM_BOARD . 'tmp'); // Create a temporary file
 	$fp = fopen($tempfile, 'w');
 	fwrite($fp, $contents);
 	fclose($fp);
-	/* If we aren't able to use the rename function, try the alternate method */
+	// If not able to use the rename function, try the alternate method
 	if (!@rename($tempfile, $filename)) {
 		copy($tempfile, $filename);
 		unlink($tempfile);
 	}
-	chmod($filename, 0664); /* it was created 0600 */
+	chmod($filename, 0664);
 }
 
 /* ==[ Passcodes ]========================================================================================= */
 
-function isPassExpired($pass) {
+function isPassExpired(array $pass): bool {
 	return time() > $pass['expires'];
 }
 
-function isPassBlocked($pass) {
+function isPassBlocked(array $pass): string|false {
 	if ($pass['blocked_till'] > time()) {
 		return $pass['blocked_reason'];
 	} else {
-		return null;
+		return false;
 	}
 }
 
-function clearPass() {
+function clearPass(): void {
 	$_SESSION['passcode'] = '';
 	setcookie('passcode', '', -1, '/');
 }
 
 /* ==[ IP ]================================================================================================ */
 
-function cidr2ip($cidr) {
+function cidr2ip(string $cidr): array {
 	$parts = explode('/', $cidr);
-	$start = ip2long($parts[0]);
+	$ip = $parts[0];
+	$start = ip2long($ip);
 	if ($start === false) {
-		return ['0', '0'];
+		return [0, 0];
 	}
-	if (count($parts) == 1) {
-		$val = sprintf("%u", $start);
-		return [$val, $val];
+	if (!isset($parts[1])) {
+		return [$start, $start];
 	}
 	$nm = (int)$parts[1];
-	if ($nm < 0) {
-		$nm = 0;
-	}
-	if ($nm > 32) {
-		$nm = 32;
-	}
-	$start &= ~((1 << (32 - $nm)) - 1);
-	$end = $start + pow(2, 32 - $nm) - 1;
-	return [sprintf("%u", $start), sprintf("%u", $end)];
+	$nm = max(0, min(32, $nm));
+	// Calculating the range
+	$mask = ~((1 << (32 - $nm)) - 1);
+	$start &= $mask;
+	$end = $start + (pow(2, 32 - $nm) - 1);
+	return [(int)$start, (int)$end];
 }
 
-function ip2cidr($ipFrom, $ipTo) {
-	if ($ipTo == $ipFrom) {
+function ip2cidr(int $ipFrom, int $ipTo): string {
+	if ($ipTo === $ipFrom) {
 		return long2ip($ipFrom);
 	}
 	$range = $ipTo - $ipFrom + 1;
-	if ((($range - 1) & $range) != 0) {
+	if ((($range - 1) & $range) !== 0) {
 		// Not a power of two
 		return long2ip($ipFrom) . '/???';
 	}
@@ -867,28 +861,32 @@ function ip2cidr($ipFrom, $ipTo) {
 	return long2ip($ipFrom) . '/' . $b;
 }
 
-function getCountryCode($ip, $geoipReader) {
+function getCountryCode(string $ip, ?\GeoIp2\Database\Reader $geoipReader): string {
 	$countryCode = '';
-	if ($ip) {
+	if ($ip !== '') {
 		if (ATOM_GEOIP === 'geoip2') {
 			if (!$geoipReader) {
-				$geoipReader = new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
+				try {
+					$geoipReader = new \GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb');
+				} catch (\Exception $e) {
+					return 'ANON';
+				}
 			}
 			try {
 				$record = $geoipReader->country($ip);
-				$countryCode = $record->country->isoCode;
+				$countryCode = (string)$record->country->isoCode;
 			} catch (\GeoIp2\Exception\AddressNotFoundException $e) {
 				$countryCode = 'ANON';
 			}
-		} else if (ATOM_GEOIP === 'geoip') {
-			$countryCode = geoip_country_code_by_name($ip);
+		} else if (ATOM_GEOIP === 'geoip' && function_exists('geoip_country_code_by_name')) {
+			$countryCode = (string)geoip_country_code_by_name($ip);
 		}
 	}
-	return $countryCode ? $countryCode : 'ANON';
+	return $countryCode ?: 'ANON';
 }
 
 // Check for dirty IP using external service - ipregistry.co
-function isDirtyIP($ip) {
+function isDirtyIP(string $ip): bool {
 	$ipLookup = lookupByIP($ip);
 	if ($ipLookup) {
 		$ipLookupAbuser = $ipLookup['abuser'];
@@ -923,9 +921,9 @@ function isDirtyIP($ip) {
 		ATOM_IPLOOKUPS_BLOCK_VPN && $ipLookupVpn;
 }
 
-function checkIP($ip, $validPasscode, $isJson) {
+function checkIP(string $ip, bool $isPasscode, bool $isJson): void {
 	// Check for dirty IP
-	if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY && !$validPasscode && isDirtyIP($ip)) {
+	if (defined('ATOM_IPLOOKUPS_KEY') && ATOM_IPLOOKUPS_KEY && !$isPasscode && isDirtyIP($ip)) {
 		$message = 'Error: Your IP ' . $ip . ' is not allowed due to abuse (proxy, Tor, VPN, VPS).';
 		if ($isJson) {
 			jsonDie('error', $message);
@@ -937,14 +935,15 @@ function checkIP($ip, $validPasscode, $isJson) {
 	// Check for ban
 	$ban = banByIP($ip);
 	if ($ban) {
-		checkForBans($ip, $ban, $validPasscode, $isJson);
+		checkForBans($ip, $ban, $isPasscode, $isJson);
 	}
 }
 
 /* ==[ Captcha ]=========================================================================================== */
 
-function checkCaptcha() {
-	$isJson = isset($_GET['json']) && $_GET['json'] == '1';
+function checkCaptcha(): void {
+	$captchaError = '';
+	$isJson = isset($_GET['json']) && $_GET['json'] === '1';
 
 	// Check for recaptcha
 	if (ATOM_CAPTCHA === 'recaptcha') {
@@ -968,7 +967,7 @@ function checkCaptcha() {
 	elseif (ATOM_CAPTCHA) {
 		$captcha = strtolower(trim($_POST['captcha'] ?? ''));
 		$captchaError = $captcha === '' ? 'Captcha error: The captcha text was not entered.' :
-			($captcha != strtolower(trim($_SESSION['atom_captcha'] ?? '')) ?
+			($captcha !== strtolower(trim($_SESSION['atom_captcha'] ?? '')) ?
 				'Captcha error: Incorrect captcha text entered, please try again.<br>' .
 				'Click the image to retrieve a new captcha.' : '');
 		unset($_SESSION['atom_captcha']);

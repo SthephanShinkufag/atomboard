@@ -1,24 +1,25 @@
 <?php
+declare(strict_types=1);
 if (!defined('ATOM_BOARD')) {
 	die('');
 }
 
 /* ==[ Common elements ]=================================================================================== */
 
-function getCountryIcon($ip, $geoipReader) {
+function getCountryIcon(string $ip, ?\GeoIp2\Database\Reader $geoipReader): string {
 	$countryCode = getCountryCode(filter_var($ip, FILTER_VALIDATE_IP), $geoipReader);
 	return '<img class="poster-country" title="' . $countryCode . '" src="/' . ATOM_BOARD .
 		'/icons/flag-icons/' . $countryCode . '.png" alt="' . $countryCode . ' flag">';
 }
 
-function getIpUserInfoLink($ip) {
+function getIpUserInfoLink(string $ip): string {
 	return '<a href="/' . ATOM_BOARD . '/imgboard.php?manage=&ipinfo=' . $ip .
 		'" target="_blank" title="View user IP info">' . $ip . '</a>';
 }
 
 /* ==[ Page elements ]===================================================================================== */
 
-function pageHeader() {
+function pageHeader(): string {
 	return '<!DOCTYPE html>
 
 <html data-theme="' . ATOM_THEME . '">
@@ -37,7 +38,7 @@ function pageHeader() {
 ';
 }
 
-function pageWrapper($description, $needReturn) {
+function pageWrapper(string $description, bool $needReturn): string {
 	return '
 	<nav id="navigation-top" class="navigation" aria-label="Top menu">' . ATOM_HTML_NAVIGATION . '
 		<a class="navigation-link" href="/' . ATOM_BOARD . '/catalog.html" title="Go to catalog">Catalog</a>
@@ -62,7 +63,7 @@ function pageWrapper($description, $needReturn) {
 		';
 }
 
-function pageFooter($needReturn) {
+function pageFooter(bool $needReturn): string {
 	return '
 		<div id="panel-bottom" class="panel">' .
 			($needReturn ? '
@@ -106,7 +107,7 @@ function pageFooter($needReturn) {
 
 /* ==[ Postform ]========================================================================================== */
 
-function getCaptcha() {
+function getCaptcha(): string {
 	return 	ATOM_CAPTCHA ? '
 					<tr id="captchablock">
 						<td class="postblock"></td>
@@ -149,7 +150,7 @@ function getCaptcha() {
 					</tr>' : '';
 }
 
-function supportedFileTypes() {
+function supportedFileTypes(): string {
 	global $atom_uploads;
 	if (empty($atom_uploads)) {
 		return '';
@@ -157,16 +158,16 @@ function supportedFileTypes() {
 	$typesAllowed = array_map('strtoupper', array_unique(array_column($atom_uploads, 0)));
 	$typesLast = array_pop($typesAllowed);
 	$typesFormatted = $typesAllowed ? implode(', ', $typesAllowed) . ' and ' . $typesLast : $typesLast;
-	return 'Supported file type' . (count($atom_uploads) != 1 ? 's are ' : ' is ') . $typesFormatted . '.';
+	return 'Supported file type' . (count($atom_uploads) !== 1 ? 's are ' : ' is ') . $typesFormatted . '.';
 }
 
-function buildPostForm($parent, $isStaffPost = false) {
+function buildPostForm(int $parent, bool $isStaffPost = false): string {
 	global $atom_hidefieldsop, $atom_hidefields, $atom_uploads, $atom_embeds;
-	$isOnPage = $parent == ATOM_NEWTHREAD;
-	$hideFields = $isOnPage ? $atom_hidefieldsop : $atom_hidefields;
+	$isInThread = $parent !== 0;
+	$hideFields = $isInThread ? $atom_hidefields : $atom_hidefieldsop;
 	$postformExtra = ['name' => '', 'email' => '', 'subject' => '', 'footer' => ''];
 	$inputSubmit = '<input type="submit" value="' .
-		($isStaffPost ? 'New post' : ($isOnPage ? 'New thread' : 'Reply')) . '" accesskey="z">';
+		($isStaffPost ? 'New post' : ($isInThread ? 'Reply' : 'New thread')) . '" accesskey="z">';
 	if ($isStaffPost || !in_array('subject', $hideFields)) {
 		$postformExtra['subject'] = $inputSubmit;
 	} elseif (!in_array('email', $hideFields)) {
@@ -221,7 +222,7 @@ function buildPostForm($parent, $isStaffPost = false) {
 		isset($atom_uploads['image/webp'])
 	) {
 		$thumbnailsHtml = '<li>Images greater than ' . ATOM_FILE_MAXWOP . 'x' . ATOM_FILE_MAXHOP . (
-			ATOM_FILE_MAXW == ATOM_FILE_MAXWOP && ATOM_FILE_MAXH == ATOM_FILE_MAXHOP ? '' :
+			ATOM_FILE_MAXW === ATOM_FILE_MAXWOP && ATOM_FILE_MAXH === ATOM_FILE_MAXHOP ? '' :
 				' (new thread) or ' . ATOM_FILE_MAXW . 'x' . ATOM_FILE_MAXH . ' (reply)'
 			) . ' will be thumbnailed.</li>';
 	}
@@ -286,7 +287,7 @@ function buildPostForm($parent, $isStaffPost = false) {
 						<td class="postblock"></td>
 						<td>
 							<textarea id="message" name="message" placeholder="Message' .
-								($isOnPage ? '' : ' - reply in thread') . '" accesskey="m"></textarea>
+								($isInThread ? ' - reply in thread' : '') . '" accesskey="m"></textarea>
 						</td>
 					</tr>' : ''
 				) . getCaptcha() . '
@@ -328,7 +329,7 @@ function buildPostForm($parent, $isStaffPost = false) {
 
 /* ==[ Post ]============================================================================================== */
 
-function buildPost($post, $res, $mode = '') {
+function buildPost(array $post, bool $isInThread = false, string $mode = ''): string {
 	$isEditPost = $mode === 'edit';
 	$showIP = $mode === 'ip';
 	if (!isset($post['omitted'])) {
@@ -336,7 +337,7 @@ function buildPost($post, $res, $mode = '') {
 	}
 
 	// Post files
-	$postId = $post['id'];
+	$postId = (int)$post['id'];
 	$thrId = getThreadId($post);
 	$isOp = isOp($post);
 	$fileHtml = '';
@@ -345,8 +346,8 @@ function buildPost($post, $res, $mode = '') {
 		if (!$fileHex) {
 			continue;
 		}
-		$fileWidth = $post['image' . $i . '_width'];
-		$fileHeight = $post['image' . $i . '_height'];
+		$fileWidth = (int)$post['image' . $i . '_width'];
+		$fileHeight = (int)$post['image' . $i . '_height'];
 		$hasSize = $fileWidth > 0 && $fileHeight > 0;
 		$fileName = $post['file' . $i];
 		$fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
@@ -397,7 +398,7 @@ function buildPost($post, $res, $mode = '') {
 
 	// Truncate messages on board index pages for readability
 	$message = $post['message'];
-	if (!$res && !$isEditPost) {
+	if (!$isInThread && !$isEditPost) {
 		$truncLen = 0;
 		if (ATOM_TRUNC_LINES > 0 && substr_count($message, '<br>') > ATOM_TRUNC_LINES) {
 			$brOffsets = strallpos($message, '<br>');
@@ -422,8 +423,8 @@ function buildPost($post, $res, $mode = '') {
 	$ip = $post['ip'];
 	$omitted = $post['omitted'];
 	$likes = $post['likes'];
-	$replyBtn = $isOp && $res == ATOM_INDEXPAGE ? '<a class="link-button" href="res/' .
-		$postId . '.html" title="Reply to thread №' . $postId . '">Reply</a>' : '';
+	$replyBtn = $isOp && !$isInThread ? '<a class="link-button" href="res/' . $postId .
+		'.html" title="Reply to thread №' . $postId . '">Reply</a>' : '';
 	$reflink = '<a href="/' . ATOM_BOARD . '/res/' . $thrId . '.html#' . $postId . '"';
 	$messageHtml = '';
 	if ($isEditPost) {
@@ -465,7 +466,7 @@ function buildPost($post, $res, $mode = '') {
 						<input type="checkbox" name="delete" value="' . $postId . '">' .
 						($post['subject'] !== '' ? '
 						<span class="post-subject">' . $post['subject'] . '</span>' : '') . '
-						' . (ATOM_GEOIP ? getCountryIcon($ip, NULL) : '') .
+						' . (ATOM_GEOIP ? getCountryIcon($ip, null) : '') .
 						($showIP || $isEditPost ? '&nbsp;' . getIpUserInfoLink($ip) : '') . '
 						' . $post['nameblock'] . '
 						<span class="post-id">
@@ -481,13 +482,13 @@ function buildPost($post, $res, $mode = '') {
 									<svg><use xlink:href="#symbol-like"></use></svg>
 								</span><span class="like-counter">' . ($likes ? $likes : '') . '</span>
 							</span>' : '') .
-							($post['stickied'] === '1' ? '
+							($post['stickied'] === 1 ? '
 							<img src="/' . ATOM_BOARD . '/icons/sticky.png"' .
 								' title="Thread is stickied to top" width="16" height="16">' : '') .
-							($post['locked'] === '1' ? '
+							($post['locked'] === 1 ? '
 							<img src="/' . ATOM_BOARD . '/icons/locked.png"' .
 								' title="Thread is locked for posting" width="11" height="16">' : '') .
-							($post['endless'] === '1' ? '
+							($post['endless'] === 1 ? '
 							<img src="/' . ATOM_BOARD . '/icons/endless.png"' .
 								' title="Thread is endless" width="16" height="16">' : '') . '
 							' . $replyBtn . '
@@ -496,7 +497,7 @@ function buildPost($post, $res, $mode = '') {
 					<div class="post-body">' .
 						$messageHtml . '
 					</div>
-				</article>' . ($isOp && $res == ATOM_INDEXPAGE && $omitted > 0 ? '
+				</article>' . ($isOp && !$isInThread && $omitted > 0 ? '
 				<div class="omittedposts">
 					' . $omitted . ' ' . plural('post', $omitted) .
 					' omitted. Click ' . $replyBtn . ' to view.
@@ -505,24 +506,24 @@ function buildPost($post, $res, $mode = '') {
 
 /* ==[ Page ]============================================================================================== */
 
-function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
+function buildPage(string $htmlPosts, int $parent, int $pages = 0, int $thisPage = 0): string {
 	// Build page links: [Previous] [0] [1] [2] [Next]
 	$pagelinks = '';
-	$isInThread = $parent != ATOM_NEWTHREAD;
+	$isInThread = $parent !== 0;
 	if (!$isInThread) {
 		$pages = max($pages, 0);
-		$pagelinks = ($thispage == 0 ?
+		$pagelinks = ($thisPage === 0 ?
 			'<span class="pagelist-previous">[Previous]</span>' :
 			'<span class="pagelist-previous">[<a href="' .
-				($thispage == 1 ? 'index' : $thispage - 1) . '.html">Previous</a>]</span>') . '
+				($thisPage === 1 ? 'index' : $thisPage - 1) . '.html">Previous</a>]</span>') . '
 			<span class="pagelist-links">';
 		for ($i = 0; $i <= $pages; $i++) {
-			$pagelinks .= $thispage == $i ? '[' . $i . '] ' :
-				'[<a href="' . ($i == 0 ? "index" : $i) . '.html">' . $i . '</a>] ';
+			$pagelinks .= $thisPage === $i ? '[' . $i . '] ' :
+				'[<a href="' . ($i === 0 ? "index" : $i) . '.html">' . $i . '</a>] ';
 		}
-		$pagelinks .= '</span>' . ($pages <= $thispage ? '
+		$pagelinks .= '</span>' . ($pages <= $thisPage ? '
 			<span class="pagelist-next">[Next]</span>' : '
-			<span class="pagelist-next">[<a href="' . ($thispage + 1) . '.html">Next</a>]</span>');
+			<span class="pagelist-next">[<a href="' . ($thisPage + 1) . '.html">Next</a>]</span>');
 	}
 	// Build page's body
 	return pageHeader() . '<body class="tinyib atomboard de-runned">' .
@@ -551,12 +552,12 @@ function buildPage($htmlPosts, $parent, $pages = 0, $thispage = 0) {
 
 /* ==[ Rebuilding ]======================================================================================== */
 
-function rebuildThreadPage($thrId) {
+function rebuildThreadPage(int $thrId): void {
 	$htmlPosts = '
 			<section class="thread" id="thread' . $thrId . '">';
 	$posts = getThreadPosts($thrId);
 	foreach ($posts as $post) {
-		$htmlPosts .= buildPost($post, ATOM_RESPAGE);
+		$htmlPosts .= buildPost($post, true);
 	}
 	$htmlPosts .= '
 			</section>
@@ -564,59 +565,60 @@ function rebuildThreadPage($thrId) {
 	writePage('res/' . $thrId . '.html', buildPage($htmlPosts, $thrId));
 }
 
-function rebuildIndexPages() {
+function rebuildIndexPages(): void {
 	$page = 0;
 	$i = 0;
 	$htmlPosts = '';
 	$threads = getThreads();
-	$pages = ceil(count($threads) / ATOM_THREADSPERPAGE) - 1;
+	$pages = (int)ceil(count($threads) / ATOM_THREADSPERPAGE) - 1;
 	foreach ($threads as $thread) {
-		$replies = getThreadPosts($thread['id']);
+		$thrId = (int)$thread['id'];
+		$replies = getThreadPosts($thrId);
 		$thread['omitted'] = max(0, count($replies) - ATOM_PREVIEWREPLIES - 1);
 		// Build replies for preview
 		$htmlReplies = [];
 		for ($j = count($replies) - 1; $j > $thread['omitted']; $j--) {
-			$htmlReplies[] = buildPost($replies[$j], ATOM_INDEXPAGE);
+			$htmlReplies[] = buildPost($replies[$j]);
 		}
 		$htmlPosts .= '
-			<section class="thread" id="thread' . $thread['id'] . '">' .
-				buildPost($thread, ATOM_INDEXPAGE) . implode('', array_reverse($htmlReplies)) . '
+			<section class="thread" id="thread' . $thrId . '">' .
+				buildPost($thread) . implode('', array_reverse($htmlReplies)) . '
 			</section>
 			<hr>';
 		if (++$i >= ATOM_THREADSPERPAGE) {
-			$file = $page == 0 ? ATOM_INDEX : $page . '.html';
+			$file = $page === 0 ? ATOM_INDEX : $page . '.html';
 			writePage($file, buildPage($htmlPosts, 0, $pages, $page));
 			$page++;
 			$i = 0;
 			$htmlPosts = '';
 		}
 	}
-	if ($page == 0 || $htmlPosts !== '') {
-		$file = $page == 0 ? ATOM_INDEX : $page . '.html';
+	if ($page === 0 || $htmlPosts !== '') {
+		$file = $page === 0 ? ATOM_INDEX : $page . '.html';
 		writePage($file, buildPage($htmlPosts, 0, $pages, $page));
 	}
 	// Create catalog
 	writePage('catalog.html', makeCatalogPage());
 }
 
-function rebuildThread($thrId) {
+function rebuildThread(int $thrId): void {
 	rebuildThreadPage($thrId);
 	rebuildIndexPages();
 }
 
 /* ==[ Manage ]============================================================================================ */
 
-function manageInfo($text) {
+function manageInfo(string $text): string {
 	return '<div class="manage-info">' . $text . '</div>
 		';
 }
 
-function manageError($text) {
+function manageError(string $text): string {
 	return '<div class="manage-error">' . $text . '</div>
 		';
 }
 
-function manageDie($text, $action = '') {
+function manageDie(string $text, string $action = ''): void {
 	global $loginStatus;
 	$onload = '';
 	switch ($action) {
@@ -653,7 +655,7 @@ function manageDie($text, $action = '') {
 		<hr>' . pageFooter(true));
 }
 
-function makeManageLoginForm() {
+function makeManageLoginForm(): string {
 	return '<h2>Login</h2>
 		<form name="form_login_staff" method="post" action="?manage">
 			<div class="form-container">
@@ -670,7 +672,7 @@ function makeManageLoginForm() {
 		</form>';
 }
 
-function makePasscodeLoginForm($action, $pass = NULL) {
+function makePasscodeLoginForm(string $action, ?array $pass = null): string {
 	if ($action === 'login') {
 		return '<h2>Enter your passcode</h2>
 		<form name="form_passcode_login" method="post" action="?passcode">
@@ -688,9 +690,10 @@ function makePasscodeLoginForm($action, $pass = NULL) {
 			'<br>Expires: ' . date('d.m.Y D H:i:s', $pass['expires']) .
 			'<br><a href="/' . ATOM_BOARD . '/imgboard.php?passcode&logout">Log Out.</a></center>';
 	}
+	return '';
 }
 
-function makeAdminCreateForm() {
+function makeAdminCreateForm(): string {
 	return '<h2>Initial Setup: Create admin account</h2>
 		<form method="post" action="?manage">
 			<div class="form-container">
@@ -711,8 +714,8 @@ function makeAdminCreateForm() {
 		</form>';
 }
 
-function formatTimestamp($time) {
-	if ($time == 0) {
+function formatTimestamp(int $time): string {
+	if ($time === 0) {
 		return 'Never';
 	}
 	$diff = time() - $time;
@@ -720,15 +723,15 @@ function formatTimestamp($time) {
 		return 'Just now';
 	}
 	if ($diff < 3600) {
-		return floor($diff / 60) . 'm ago';
+		return (int)floor($diff / 60) . 'm ago';
 	}
 	if ($diff < 86400) {
-		return floor($diff / 3600) . 'h ago';
+		return (int)floor($diff / 3600) . 'h ago';
 	}
 	return date('d.m.Y H:i', $time);
 }
 
-function makeStaffManager($token) {
+function makeStaffManager(string $token): string {
 	$html = '<h2>Add new staff member</h2>
 		<form method="post" action="?manage&staff">
 			<input type="hidden" name="token" value="' . $token . '">
@@ -762,7 +765,7 @@ function makeStaffManager($token) {
 			</tr></thead><tbody>';
 	$staffList = getAllStaffMembers();
 	foreach ($staffList as $person) {
-		$lastSeen = formatTimestamp($person['last_login']);
+		$lastSeen = formatTimestamp((int)$person['last_login']);
 		$username = htmlspecialchars($person['username']);
 		$html .= '
 			<tr>
@@ -772,9 +775,8 @@ function makeStaffManager($token) {
 					$lastSeen . '</td>
 				<td>' . (
 					$person['role'] === 'admin' ? '---' :
-					'<a href="?manage&staff&delete_staff=' . (int)$person['id'] .
-						'" onclick="return confirm(\'Delete ' . $username . '?\')">' .
-						'Delete</a>') . '</td>
+					'<a href="?manage&staff&delete_staff=' . $person['id'] .
+						'" onclick="return confirm(\'Delete ' . $username . '?\')">Delete</a>') . '</td>
 			</tr>';
 	}
 	$html .= '
@@ -782,7 +784,7 @@ function makeStaffManager($token) {
 	return $html;
 }
 
-function makeChangePasswForm($token) {
+function makeChangePasswForm(string $token): string {
 	return '<h2>Account settings (' . htmlspecialchars($_SESSION['atom_user']) . ')</h2>
 		<form method="post" action="?manage&account">
 			<input type="hidden" name="token" value="' . $token . '">
@@ -804,9 +806,9 @@ function makeChangePasswForm($token) {
 		</form>';
 }
 
-function makeBansTable($bans) {
+function makeBansTable(array $bans): string {
 	$geoipReader = ATOM_GEOIP === 'geoip2' ?
-		new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
+		new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : null;
 	$bansHtml = '
 		<table class="table"><thead>
 			<tr>
@@ -818,22 +820,23 @@ function makeBansTable($bans) {
 			</tr>
 		</thead><tbody>';
 	foreach ($bans as $ban) {
-		if ($ban['expire'] == 1) {
-			$expire = 'Warning';
-		} else if ($ban['expire'] > 0) {
-			$expire = date('d.m.Y D H:i:s', $ban['expire']);
+		$expire = (int)$ban['expire'];
+		if ($expire === 1) {
+			$expireText = 'Warning';
+		} else if ($expire > 0) {
+			$expireText = date('d.m.Y D H:i:s', $expire);
 		} else {
-			$expire = 'Does not expire';
+			$expireText = 'Does not expire';
 		}
-		$ipFrom = $ban['ip_from'];
-		$ipTo = $ban['ip_to'];
+		$ipFrom = (int)$ban['ip_from'];
+		$ipTo = (int)$ban['ip_to'];
 		$bansHtml .= '
 			<tr>
 				<td style="white-space: nowrap;">' .
 					(ATOM_GEOIP ? getCountryIcon(long2ip($ipFrom), $geoipReader) . '&nbsp;' : '') .
 					getIpUserInfoLink(ip2cidr($ipFrom, $ipTo)) . '</td>
 				<td>' . date('d.m.Y D H:i:s', $ban['timestamp']) . '</td>
-				<td>' . $expire . '</td><td>' . ($ban['reason'] !== '' ?
+				<td>' . $expireText . '</td><td>' . ($ban['reason'] !== '' ?
 					htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8') : '&nbsp;') . '</td>
 				<td><a href="?manage&bans&lift=' . $ban['id'] . '">lift</a></td>
 			</tr>';
@@ -842,7 +845,7 @@ function makeBansTable($bans) {
 		</tbody></table>';
 }
 
-function makeIpField($ip, $formName, $fieldName) {
+function makeIpField(string $ip, string $formName, string $fieldName): string {
 	return '
 				<div class="form-row">
 					<div class="form-row-label">IP address (CIDR format):</div>
@@ -859,7 +862,7 @@ function makeIpField($ip, $formName, $fieldName) {
 				</div>';
 }
 
-function makeBansManager($token) {
+function makeBansManager(string $token): string {
 	global $atom_ban_reasons;
 	$banReasons = '';
 	if (!empty($atom_ban_reasons)) {
@@ -928,7 +931,7 @@ function makeBansManager($token) {
 	return $bansHtml;
 }
 
-function makePasscodesManager($token) {
+function makePasscodesManager(string $token): string {
 	global $loginStatus;
 	$isAdmin = $loginStatus === 'admin';
 	$passHtml = '';
@@ -963,8 +966,8 @@ function makePasscodesManager($token) {
 		<hr>
 		';
 	}
-	$passNum = $_GET['passcode'] ?? NULL;
-	if ($passNum) {
+	$passNum = (int)($_GET['passcode'] ?? 0);
+	if ($passNum > 0) {
 		$editPass = passByNum($passNum);
 	}
 	$passHtml .= '<h2>Manage the passcode</h2>
@@ -973,7 +976,7 @@ function makePasscodesManager($token) {
 			<div class="form-container">
 				<div class="form-row">
 					<div class="form-row-label">Passcode number:</div>
-					<input type="text" name="id" value="' . ($passNum ? $passNum : '') . '" required>
+					<input type="text" name="id" value="' . ($passNum ?: '') . '" required>
 				</div>
 				<div class="form-row">
 					<div class="form-row-label">Meta (related info):</div>
@@ -1039,7 +1042,7 @@ function makePasscodesManager($token) {
 			</tr></thead><tbody>';
 		$passcodes = getAllPasscodes();
 		$geoipReader = ATOM_GEOIP === 'geoip2' ?
-			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
+			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : null;
 		foreach ($passcodes as $pass) {
 			$ip = $pass['last_used_ip'];
 			$countryIcon = '';
@@ -1076,7 +1079,7 @@ function makePasscodesManager($token) {
 	return $passHtml;
 }
 
-function makeUserInfoForm($ip = '') {
+function makeUserInfoForm(string $ip = ''): string {
 	return '<h2>View user IP info</h2>
 		<form name="form_ipinfo" method="get" action="?">
 			<input type="hidden" name="manage" value="">
@@ -1087,7 +1090,7 @@ function makeUserInfoForm($ip = '') {
 		</form>';
 }
 
-function makeUserInfoManager($token, $ip, $posts) {
+function makeUserInfoManager(string $token, string $ip, array $posts): string {
 	global $loginStatus;
 	$isMod = $loginStatus === 'admin' || $loginStatus === 'moderator';
 	$postsHtml = '';
@@ -1095,7 +1098,7 @@ function makeUserInfoManager($token, $ip, $posts) {
 		$postsHtml .= '
 			<tr><th class="panel-adminbar">' . makePostManageButtons($token, $post) . '
 			</th></tr>
-			<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . '
+			<tr><td>' . buildPost($post, false, 'ip') . '
 			</td></tr>';
 	}
 	$ban = banByIP($ip);
@@ -1144,7 +1147,7 @@ function makeUserInfoManager($token, $ip, $posts) {
 		<center>No posts or threads from this IP on this board.</center>');
 }
 
-function makeReportPostForm($post) {
+function makeReportPostForm(array $post): string {
 	$isOp = isOp($post);
 	return '<h2>Report a ' . ($isOp ? 'thread' : 'post') . ' to moderators</h2>
 		<form name="form_report_post" method="post" action="?report&addreport">
@@ -1162,10 +1165,10 @@ function makeReportPostForm($post) {
 		</form>
 		<hr>
 		<h2>' . ($isOp ? 'OP-post' : 'Post') . ' view</h2>' .
-		buildPost($post, ATOM_INDEXPAGE);
+		buildPost($post);
 }
 
-function makePostModForm() {
+function makePostModForm(): string {
 	return '<h2>Moderate a post</h2>
 		<form name="form_moderate_post" method="get" action="?">
 			<input type="hidden" name="manage" value="">
@@ -1184,7 +1187,7 @@ function makePostModForm() {
 		</form>';
 }
 
-function getPostReports($reports, $geoipReader) {
+function getPostReports(array $reports, ?\GeoIp2\Database\Reader $geoipReader): string {
 	$reportsHtml = '';
 	foreach ($reports as $report) {
 		$ip = $report['ip'];
@@ -1200,12 +1203,14 @@ function getPostReports($reports, $geoipReader) {
 	return $reportsHtml;
 }
 
-function getPostModBtn($token, $label, $description, $params, $icon = '', $confirm = '') {
+function getPostModBtn(string $token, string $label, string $description, array $params,
+	string $icon = '', string $confirm = ''
+): string {
 	$hiddenInputs = '<input type="hidden" name="token" value="' . $token . '">';
 	foreach ($params as $name => $value) {
 		$hiddenInputs .= '
 					<input type="hidden" name="' . htmlspecialchars($name) .
-					'" value="' . htmlspecialchars($value) . '">';
+					'" value="' . htmlspecialchars((string)$value) . '">';
 	}
 	$iconHtml = $icon ? '<img src="/' . ATOM_BOARD . '/icons/' . $icon .
 		'" width="16" height="16" style="vertical-align: -3px;"> ' : '';
@@ -1220,7 +1225,7 @@ function getPostModBtn($token, $label, $description, $params, $icon = '', $confi
 			</div>';
 }
 
-function getIpModBtns($token, $loginStatus, $ip, $thrId = NULL) {
+function getIpModBtns(string $token, string $loginStatus, string $ip, ?int $thrId = null): string {
 	$modButtons = getPostModBtn($token,
 		'Delete all',
 		'Delete all posts and threads in /' . ATOM_BOARD . ' from IP ' . $ip,
@@ -1246,9 +1251,9 @@ function getIpModBtns($token, $loginStatus, $ip, $thrId = NULL) {
 	return $modButtons;
 }
 
-function makePostModManager($token, $post) {
+function makePostModManager(string $token, array $post): string {
 	global $loginStatus;
-	$postId = $post['id'];
+	$postId = (int)$post['id'];
 	$isOp = isOp($post);
 
 	// Post modreation buttons
@@ -1279,7 +1284,7 @@ function makePostModManager($token, $post) {
 		$isOp ? 'This will delete the entire thread' : 'This will delete the post',
 		['delete' => $postId]);
 	$ip = $post['ip'];
-	$thrId = $post['parent'] ?: $postId;
+	$thrId = ((int)$post['parent']) ?: $postId;
 	$modButtons .= getPostModBtn($token,
 		'DelAll in thread',
 		'Delete all posts from IP ' . $ip . ' in thread <a href="/' . ATOM_BOARD . '/res/' . $thrId .
@@ -1308,7 +1313,7 @@ function makePostModManager($token, $post) {
 
 	// Likes table
 	$geoipReader = ATOM_GEOIP === 'geoip2' ?
-		new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
+		new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : null;
 	$likes = likesByPostID($postId);
 	$likesHtml = '';
 	foreach ($likes as $like) {
@@ -1328,7 +1333,7 @@ function makePostModManager($token, $post) {
 		getPostReports($reports, $geoipReader) : '') . '
 		<hr>
 		<h2>' . ($isOp ? 'OP-post' : 'Post') . ' view</h2>' .
-		buildPost($post, ATOM_INDEXPAGE, 'edit') .
+		buildPost($post, false, 'edit') .
 		($likesHtml ? '
 		<hr>
 		<h2>Likes received: ' . count($likes) . '</h2>
@@ -1339,7 +1344,9 @@ function makePostModManager($token, $post) {
 		</tbody></table>' : '');
 }
 
-function getPostManageBtn($token, $label, $params, $title = '', $confirm = '') {
+function getPostManageBtn(string $token, string $label, array $params,
+	string $title = '', string $confirm = ''
+): string {
 	$inputs = '<input type="hidden" name="token" value="' . $token . '">';
 	foreach ($params as $name => $value) {
 		$inputs .= '
@@ -1354,31 +1361,31 @@ function getPostManageBtn($token, $label, $params, $title = '', $confirm = '') {
 				</form>';
 };
 
-function makePostManageButtons($token, $post) {
+function makePostManageButtons(string $token, array $post): string {
 	global $loginStatus;
-	$postId = $post['id'];
-	$thrId = $post['parent'] ?: $postId;
+	$postId = (int)$post['id'];
+	$thrId = ((int)$post['parent']) ?: $postId;
 	$ip = $post['ip'];
 	$isOp = isOp($post);
-	$res = '
+	$result = '
 				<a class="link-button" target="_blank" href="/' . ATOM_BOARD .
 					'/imgboard.php?manage&moderate=' . $postId . '" title="Advanced options">Manage ' .
 					($isOp ? 'thread' : 'post') . '</a>';
-	$res .= getPostManageBtn($token,
+	$result .= getPostManageBtn($token,
 		$isOp ? 'Delete thread' : 'Delete post',
 		['delete' => $postId],
 		$isOp ? 'Delete entire thread' : 'Delete post');
-	$res .= getPostManageBtn($token,
+	$result .= getPostManageBtn($token,
 		'DelAll in thread',
 		['delall' => $ip, 'thrid' => $thrId],
 		'Delete all posts from IP ' . $ip . ' in thread №' . $thrId, 
 		'Are you sure to delete all posts from IP ' . $ip . ' in thread №' . $thrId . '?');
-	$res .= getPostManageBtn($token, 'Delete all', ['delall' => $ip],
+	$result .= getPostManageBtn($token, 'Delete all', ['delall' => $ip],
 		'Delete all posts and threads in /' . ATOM_BOARD . ' from IP ' . $ip, 
 		'Are you sure to delete ALL POSTS AND THERADS in /' . ATOM_BOARD . ' from IP ' . $ip . '?');
 	if ($loginStatus === 'admin' || $loginStatus === 'moderator') {
 		$isBanned = banByIP($ip);
-		$res .= '
+		$result .= '
 				<a class="link-button" target="_blank" href="/' . ATOM_BOARD .
 					'/imgboard.php?manage=&bans=' . $ip . '&thrid=' . $thrId . '" title="' . 
 					($isBanned ? 'Already banned!' : 'Ban IP ' . $ip) .'">' .
@@ -1386,15 +1393,15 @@ function makePostManageButtons($token, $post) {
 	}
 	$passcodeNum = ATOM_PASSCODES_ENABLED ? $post['pass'] : 0;
 	if ($passcodeNum) {
-		$res .= '
+		$result .= '
 				<a class="link-button" target="_blank" href="/' . ATOM_BOARD .
 					'/imgboard.php?manage=&passcode=' . $passcodeNum .
 					'&passcodes=manage" title="Manage passcode №' . $passcodeNum .'">Manage passcode</a>';
 	}
-	return $res;
+	return $result;
 }
 
-function makeStatusManager($token) {
+function makeStatusManager(string $token): string {
 	global $loginStatus;
 
 	// Build reports table
@@ -1403,14 +1410,14 @@ function makeStatusManager($token) {
 	$reportsHtml = '';
 	if ($reportsCount) {
 		$geoipReader = ATOM_GEOIP === 'geoip2' ?
-			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : NULL;
+			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : null;
 		$reportsByPost = [];
 		foreach ($reports as $report) {
-			$postId = $report['postnum'];
+			$postId = (int)$report['postnum'];
 			if (!isset($reportsByPost[$postId])) {
 				$reportsByPost[$postId] = [];
 			}
-			$reportsByPost[$report['postnum']][] = $report;
+			$reportsByPost[$postId][] = $report;
 		}
 		foreach (array_keys($reportsByPost) as $postId) {
 			$post = getPost($postId);
@@ -1426,7 +1433,7 @@ function makeStatusManager($token) {
 				makePostManageButtons($token, $post) . '
 			</th></tr>
 			<tr><td>' .
-				buildPost($post, ATOM_INDEXPAGE, 'ip') .
+				buildPost($post, false, 'ip') .
 				getPostReports($reportsByPost[$postId], $geoipReader) . '
 			</td></tr>';
 		}
@@ -1445,7 +1452,7 @@ function makeStatusManager($token) {
 					'Allow to be published') .
 				makePostManageButtons($token, $post) . '
 			</th></tr>
-			<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . '
+			<tr><td>' . buildPost($post, false, 'ip') . '
 			</td></tr>';
 		}
 	}
@@ -1458,7 +1465,7 @@ function makeStatusManager($token) {
 		$postsHtml .= '
 			<tr><th class="panel-adminbar">' . makePostManageButtons($token, $post) . '
 			</th></tr>
-			<tr><td>' . buildPost($post, ATOM_INDEXPAGE, 'ip') . '
+			<tr><td>' . buildPost($post, false, 'ip') . '
 			</td></tr>';
 	}
 
@@ -1500,14 +1507,14 @@ function makeStatusManager($token) {
 
 /* ==[ Catalog ]=========================================================================================== */
 
-function makeCatalogPage() {
+function makeCatalogPage(): string {
 	$catalogHtml = '';
 	$thumb = 'icons/noimage.png';
 	$thumbWidth = ATOM_FILE_MAXW;
 	$thumbHeight = ATOM_FILE_MAXH;
 	$OPposts = getThreads();
 	foreach ($OPposts as $post) {
-		$postId = $post['id'];
+		$postId = (int)$post['id'];
 		$numOfReplies = getThreadPostsCount($postId);
 		$OPpostMessage = '';
 		if (function_exists('mb_substr') && extension_loaded('mbstring')) {
@@ -1560,25 +1567,25 @@ function makeCatalogPage() {
 
 /* ==[ Modlog ]============================================================================================ */
 
-function makeModLogManager($token, $periodStartDate, $periodEndDate) {
+function makeModLogManager(string $token, string $startDate, string $endDate): string {
 	$html = '<h2>Moderation period</h2>
 		<form method="post" action="?manage&modlog">
 			<input type="hidden" name="token" value="' . $token . '">
 			<div class="form-container">
 				<div class="form-row">
 					<div class="form-row-label">From:</div>
-					<input type="date" name="from" value="' . $periodStartDate . '">
+					<input type="date" name="from" value="' . $startDate . '">
 				</div>
 				<div class="form-row">
 					<div class="form-row-label">To:</div>
-					<input type="date" name="to" value="' . $periodEndDate . '">
+					<input type="date" name="to" value="' . $endDate . '">
 				</div>
 				<input class="link-button" type="submit" value="Show records">
 			</div>
 		</form>
 		<hr>
 		';
-	$records = getModLogRecords('1', (int)strtotime($periodStartDate), (int)strtotime($periodEndDate));
+	$records = getModLogRecords((int)strtotime($startDate), (int)strtotime($endDate));
 	if (empty($records)) {
 		return $html . '<div class="notice">No moderation records found for the selected period.</div>';
 	}

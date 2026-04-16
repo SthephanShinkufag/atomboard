@@ -1,10 +1,11 @@
 <?php
+declare(strict_types=1);
 if (!defined('ATOM_BOARD')) {
 	die('');
 }
 
 try {
-	$dsn = ATOM_DBDSN != '' ? ATOM_DBDSN :
+	$dsn = ATOM_DBDSN !== '' ? ATOM_DBDSN :
 		ATOM_DBDRIVER . ':host=' . ATOM_DBHOST .
 		(ATOM_DBPORT > 0 ? ';port=' . ATOM_DBPORT : '') .
 		';dbname=' . ATOM_DBNAME;
@@ -21,38 +22,38 @@ try {
 // Creating tables that don't exist
 if (ATOM_DBDRIVER === 'pgsql') {
 	$isPostsExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
-		$dbh->quote(ATOM_DBPOSTS))->fetchColumn() != 0;
+		$dbh->quote(ATOM_DBPOSTS))->fetchColumn() !== 0;
 	$isStaffExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
-		$dbh->quote(ATOM_DBSTAFF))->fetchColumn() != 0;
+		$dbh->quote(ATOM_DBSTAFF))->fetchColumn() !== 0;
 	$isBansExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
-		$dbh->quote(ATOM_DBBANS))->fetchColumn() != 0;
+		$dbh->quote(ATOM_DBBANS))->fetchColumn() !== 0;
 	$isIplookupExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
-		$dbh->quote(ATOM_DBIPLOOKUPS))->fetchColumn() != 0;
+		$dbh->quote(ATOM_DBIPLOOKUPS))->fetchColumn() !== 0;
 	$isReportsExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
-		$dbh->quote(ATOM_DBREPORTS))->fetchColumn() != 0;
+		$dbh->quote(ATOM_DBREPORTS))->fetchColumn() !== 0;
 	$isPassExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
-		$dbh->quote(ATOM_DBPASS))->fetchColumn() != 0;
+		$dbh->quote(ATOM_DBPASS))->fetchColumn() !== 0;
 	$isLikesExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
-		$dbh->quote(ATOM_DBLIKES))->fetchColumn() != 0;
+		$dbh->quote(ATOM_DBLIKES))->fetchColumn() !== 0;
 	$isModlogExists = $dbh->query("SELECT COUNT(*) FROM pg_catalog.pg_tables WHERE tablename LIKE " .
-		$dbh->quote(ATOM_DBMODLOG))->fetchColumn() != 0;
+		$dbh->quote(ATOM_DBMODLOG))->fetchColumn() !== 0;
 } else {
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBPOSTS));
-	$isPostsExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$isPostsExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() !== 0;
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBSTAFF));
-	$isStaffExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$isStaffExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() !== 0;
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBBANS));
-	$isBansExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$isBansExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() !== 0;
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBIPLOOKUPS));
-	$isIplookupExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$isIplookupExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() !== 0;
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBREPORTS));
-	$isReportsExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$isReportsExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() !== 0;
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBPASS));
-	$isPassExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$isPassExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() !== 0;
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBLIKES));
-	$isLikesExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$isLikesExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() !== 0;
 	$dbh->query("SHOW TABLES LIKE " . $dbh->quote(ATOM_DBMODLOG));
-	$isModlogExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() != 0;
+	$isModlogExists = $dbh->query("SELECT FOUND_ROWS()")->fetchColumn() !== 0;
 }
 if (!$isPostsExists) {
 	$dbh->exec($postsQuery);
@@ -79,7 +80,7 @@ if (!$isIplookupExists) {
 	$dbh->exec($ipLookupsQuery);
 }
 
-function pdoQuery($query, $params = NULL) {
+function pdoQuery(string $query, ?array $params = null): PDOStatement {
 	global $dbh;
 	if ($params) {
 		$statement = $dbh->prepare($query);
@@ -92,7 +93,7 @@ function pdoQuery($query, $params = NULL) {
 
 /* ==[ Posts ]============================================================================================= */
 
-function insertPost($post) {
+function insertPost(array $post): int {
 	global $dbh;
 	$now = time();
 	pdoQuery(
@@ -214,18 +215,18 @@ function insertPost($post) {
 			$post['endless'],
 			$post['pass']
 		]);
-	return $dbh->lastInsertId();
+	return (int)$dbh->lastInsertId();
 }
 
-function getPost($id) {
+function getPost(int $id): ?array {
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE id = ? LIMIT 1",
-		[(int)$id]);
-	return $result->fetch(PDO::FETCH_ASSOC);
+		[$id]);
+	return $result->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
-function getPostsByIP($ip) {
+function getPostsByIP(string $ip): array {
 	if (ATOM_DBDRIVER === 'pgsql') {
 		$result = pdoQuery(
 			"SELECT * FROM " . ATOM_DBPOSTS . "
@@ -233,8 +234,8 @@ function getPostsByIP($ip) {
 			ORDER BY timestamp DESC",
 			[$ip]);
 	} else {
-		$ipArr = cidr2ip($ip);
-		$isSingleIp = ($ipArr[0] === $ipArr[1]);
+		$ipRange = cidr2ip($ip);
+		$isSingleIp = ($ipRange[0] === $ipRange[1]);
 		if ($isSingleIp) {
 			$result = pdoQuery(
 				"SELECT * FROM " . ATOM_DBPOSTS . "
@@ -246,81 +247,83 @@ function getPostsByIP($ip) {
 				"SELECT * FROM " . ATOM_DBPOSTS . " 
 				WHERE INET_ATON(ip) >= ? AND INET_ATON(ip) <= ? 
 				ORDER BY timestamp DESC",
-				$ipArr);
+				$ipRange);
 		}
 	}
 	return $result->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
 
-function getPostsByImageHex($hex) {
+function getPostsByImageHex(string $hex): ?array {
 	$result = pdoQuery(
 		"SELECT id, parent FROM " . ATOM_DBPOSTS . "
 		WHERE (file0_hex = ? OR file1_hex = ? OR file2_hex = ? OR file3_hex = ?)
 			AND moderated = 1 LIMIT 1",
 		[$hex, $hex, $hex, $hex]);
-	return $result->fetch(PDO::FETCH_ASSOC);
+	return $result->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
-function getLatestPosts($moderated, $limit) {
+function getLatestPosts(bool $moderated, int $limit): array {
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE moderated = ?
-		ORDER BY timestamp DESC LIMIT " . (int)$limit,
+		ORDER BY timestamp DESC LIMIT " . $limit,
 		[$moderated ? '1' : '0']);
 	return $result->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
 
-function getLastPostByIP() {
+function getLastPostByIP(): ?array {
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE ip = ?
 		ORDER BY id DESC LIMIT 1",
 		[$_SERVER['REMOTE_ADDR']]);
-	return $result->fetch(PDO::FETCH_ASSOC);
+	return $result->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
-function getUniquePostersCount() {
+function getUniquePostersCount(): int {
 	$result = pdoQuery(
 		"SELECT COUNT(DISTINCT(ip)) FROM " . ATOM_DBPOSTS);
 	return (int)$result->fetchColumn();
 }
 
-function approvePost($id) {
+function approvePost(int $id): void {
 	pdoQuery(
 		"UPDATE " . ATOM_DBPOSTS . "
 		SET moderated = ?
 		WHERE id = ?",
-		['1', (int)$id]);
+		['1', $id]);
 }
 
-function deletePost($id) {
-	$posts = getThreadPosts((int)$id, false);
+function deletePost(int $id): void {
+	$posts = getThreadPosts($id, false);
 	foreach ($posts as $post) {
-		if ($post['id'] != $id) {
+		$postId = (int)$post['id'];
+		if ($postId !== $id) {
 			deletePostImageFiles($post);
 			pdoQuery(
 				"DELETE FROM " . ATOM_DBPOSTS . "
 				WHERE id = ?",
-				[(int)$post['id']]);
+				[$postId]);
 		} else {
 			$thispost = $post;
 		}
 	}
 	if (isset($thispost)) {
-		if ($thispost['parent'] == ATOM_NEWTHREAD) {
-			@unlink('res/' . $thispost['id'] . '.html');
+		$thispostId = (int)$thispost['id'];
+		if ($thispost['parent'] === 0) {
+			@unlink('res/' . $thispostId . '.html');
 		}
 		deletePostImageFiles($thispost);
 		pdoQuery(
 			"DELETE FROM " . ATOM_DBPOSTS . "
 			WHERE id = ?",
-			[(int)$thispost['id']]);
+			[$thispostId]);
 	}
 	deleteReports($id);
 	deleteLikes($id);
 }
 
-function deletePostImages($post, $imgList) {
+function deletePostImages(array $post, array $imgList): void {
 	deletePostImageFiles($post, $imgList);
 	if ($imgList && count($imgList) <= ATOM_FILES_COUNT) {
 		foreach ($imgList as $arrayIndex => $index) {
@@ -343,7 +346,7 @@ function deletePostImages($post, $imgList) {
 	}
 }
 
-function hidePostImages($post, $imgList) {
+function hidePostImages(array $post, array $imgList): void {
 	deletePostThumbFiles($post, $imgList);
 	if ($imgList && (count($imgList) <= ATOM_FILES_COUNT) ) {
 		foreach ($imgList as $arrayIndex => $index) {
@@ -359,25 +362,25 @@ function hidePostImages($post, $imgList) {
 	}
 }
 
-function editPostMessage($id, $newMessage) {
+function editPostMessage(int $id, string $newMessage): void {
 	pdoQuery(
 		"UPDATE " . ATOM_DBPOSTS . "
 		SET message = ?
 		WHERE id = ?",
-		[$newMessage, (int)$id]);
+		[$newMessage, $id]);
 }
 
 /* ==[ Threads ]=========================================================================================== */
 
-function isThreadExists($id) {
+function isThreadExists(int $id): bool {
 	$result = pdoQuery(
 		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
 		WHERE id = ? AND parent = 0 AND moderated = 1",
-		[(int)$id]);
-	return $result->fetchColumn() != 0;
+		[$id]);
+	return $result->fetchColumn() !== 0;
 }
 
-function getThreads() {
+function getThreads(): array {
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE parent = 0 AND moderated = 1
@@ -385,14 +388,14 @@ function getThreads() {
 	return $result->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
 
-function getThreadsCount() {
+function getThreadsCount(): int {
 	$result = pdoQuery(
 		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
 		WHERE parent = 0 AND moderated = 1");
 	return (int)$result->fetchColumn();
 }
 
-function trimThreadsCount() {
+function trimThreadsCount(): void {
 	$limit = (int)ATOM_MAXTHREADS;
 	if ($limit > 0) {
 		$result = pdoQuery(
@@ -405,102 +408,102 @@ function trimThreadsCount() {
 	}
 }
 
-function getThreadPosts($id, $moderatedOnly = true) {
+function getThreadPosts(int $id, bool $moderatedOnly = true): array {
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBPOSTS . "
 		WHERE (id = ? OR parent = ?)" .
 		($moderatedOnly ? " AND moderated = 1" : "") . "
 		ORDER BY id ASC",
-		[(int)$id, (int)$id]);
+		[$id, $id]);
 	return $result->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
 
-function getThreadPostsCount($id) {
+function getThreadPostsCount(int $id): int {
 	$result = pdoQuery(
 		"SELECT COUNT(*) FROM " . ATOM_DBPOSTS . "
 		WHERE parent = ? AND moderated = 1",
-		[(int)$id]);
+		[$id]);
 	return (int)$result->fetchColumn();
 }
 
-function toggleStickyThread($id, $isStickied) {
+function toggleStickyThread(int $id, int $isStickied): void {
 	pdoQuery(
 		"UPDATE " . ATOM_DBPOSTS . "
 		SET stickied = ?
 		WHERE id = ?",
-		[(int)$isStickied, (int)$id]);
+		[$isStickied, $id]);
 }
 
-function toggleLockThread($id, $isLocked) {
+function toggleLockThread(int $id, int $isLocked): void {
 	pdoQuery(
 		"UPDATE " . ATOM_DBPOSTS . "
 		SET locked = ?
 		WHERE id = ?",
-		[(int)$isLocked, (int)$id]);
+		[$isLocked, $id]);
 }
 
-function toggleEndlessThread($id, $isEndless) {
+function toggleEndlessThread(int $id, int $isEndless): void {
 	pdoQuery(
 		"UPDATE " . ATOM_DBPOSTS . "
 		SET endless = ?
 		WHERE id = ?",
-		[(int)$isEndless, (int)$id]);
+		[$isEndless, $id]);
 }
 
-function bumpThread($id) {
+function bumpThread(int $id): void {
 	pdoQuery(
 		"UPDATE " . ATOM_DBPOSTS . "
 		SET bumped = ?
 		WHERE id = ?",
-		[time(), (int)$id]);
+		[time(), $id]);
 }
 
 /* ==[ Bans ]============================================================================================== */
 
-function banByID($id) {
+function banByID(int $id): ?array {
 	$result = pdoQuery(
 		"SELECT ip_from, ip_to FROM " . ATOM_DBBANS . "
 		WHERE id = ? LIMIT 1",
-		[(int)$id]);
-	return $result->fetch(PDO::FETCH_ASSOC);
+		[$id]);
+	return $result->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
-function banByIP($ip) {
-	$ipArr = cidr2ip($ip);
+function banByIP(string $ip): ?array {
+	$ipRange = cidr2ip($ip);
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBBANS . "
 		WHERE ip_from <= ? AND ip_to >= ? LIMIT 1",
-		[(float)$ipArr[1], (float)$ipArr[0]]);
-	return $result->fetch(PDO::FETCH_ASSOC);
+		[$ipRange[1], $ipRange[0]]);
+	return $result->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
-function getAllBans() {
+function getAllBans(): array {
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBBANS . "
 		ORDER BY timestamp DESC");
 	return $result->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
 
-function insertBan($ban) {
+function insertBan(string $ip, int $expire, string $reason): int {
 	global $dbh;
-	$range = cidr2ip($ban['ip']);
+	$ipRange = cidr2ip($ip);
 	$now = time();
 	pdoQuery(
 		"INSERT INTO " . ATOM_DBBANS . "
 		(ip_from, ip_to, timestamp, expire, reason)
 		VALUES (?, ?, ?, ?, ?)",
-		[$range[0], $range[1], $now, $ban['expire'], $ban['reason']]);
-	return $dbh->lastInsertId();
+		[$ipRange[0], $ipRange[1], $now, $expire, $reason]);
+	return (int)$dbh->lastInsertId();
 }
 
-function deleteBan($id) {
+function deleteBan(int $id): void {
 	pdoQuery(
 		"DELETE FROM " . ATOM_DBBANS . "
 		WHERE id = ?",
-		[(int)$id]);
+		[$id]);
 }
 
-function clearExpiredBans() {
+function clearExpiredBans(): void {
 	pdoQuery(
 		"DELETE FROM " . ATOM_DBBANS . "
 		WHERE expire > 1 AND expire <= ?",
@@ -509,15 +512,15 @@ function clearExpiredBans() {
 
 /* ==[ Dirty IP lookups ]================================================================================== */
 
-function lookupByIP($ip) {
+function lookupByIP(string $ip): ?array {
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBIPLOOKUPS . "
 		WHERE ip = ? AND last_updated > ? LIMIT 1",
 		[$ip, (int)(time() - (ATOM_IPLOOKUPS_TIMEOUT * 86400))]);
-	return $result->fetch(PDO::FETCH_ASSOC);
+	return $result->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
-function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
+function storeLookupResult(string $ip, int $abuser, int $vps, int $proxy, int $tor, int $vpn): void {
 	if (ATOM_DBDRIVER === 'pgsql') {
 		$sql = "INSERT INTO " . ATOM_DBIPLOOKUPS . "
 			(ip, abuser, vps, proxy, tor, vpn, last_updated)
@@ -533,10 +536,10 @@ function storeLookupResult($ip, $abuser, $vps, $proxy, $tor, $vpn) {
 			abuser = VALUES(abuser), vps = VALUES(vps), proxy = VALUES(proxy),
 			tor = VALUES(tor), vpn = VALUES(vpn), last_updated = VALUES(last_updated)";
 	}
-	pdoQuery($sql, [$ip, (int)$abuser, (int)$vps, (int)$proxy, (int)$tor, (int)$vpn, time()]);
+	pdoQuery($sql, [$ip, $abuser, $vps, $proxy, $tor, $vpn, time()]);
 }
 
-function deleteOldLookups() {
+function deleteOldLookups(): void {
 	pdoQuery(
 		"DELETE FROM " . ATOM_DBIPLOOKUPS . "
 		WHERE last_updated < ?",
@@ -545,16 +548,16 @@ function deleteOldLookups() {
 
 /* ==[ Posts reports ]===================================================================================== */
 
-function reportsByPostID($id) {
+function reportsByPostID(int $id): array {
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBREPORTS . "
 		WHERE postnum = ?
 		ORDER BY timestamp DESC",
-		[(int)$id]);
+		[$id]);
 	return $result->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
 
-function getAllReports() {
+function getAllReports(): array {
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBREPORTS . "
 		WHERE board = ?
@@ -563,12 +566,12 @@ function getAllReports() {
 	return $result->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
 
-function insertReport($id, $board, $ip, $reason) {
+function insertReport(int $id, string $board, string $ip, string $reason): int|string {
 	global $dbh;
 	$check = pdoQuery(
-		"SELECT id FROM " . ATOM_DBREPORTS . "
+		"SELECT 1 FROM " . ATOM_DBREPORTS . "
 		WHERE ip = ? AND board = ? AND postnum = ? LIMIT 1",
-		[$ip, $board, (int)$id]);
+		[$ip, $board, $id]);
 	if ($check->fetchColumn()) {
 		return 'exists';
 	}
@@ -576,54 +579,54 @@ function insertReport($id, $board, $ip, $reason) {
 		"INSERT INTO " . ATOM_DBREPORTS . "
 		(ip, board, postnum, reason, timestamp)
 		VALUES (?, ?, ?, ?, ?)",
-		[$ip, $board, (int)$id, $reason, time()]);
-	return $dbh->lastInsertId();
+		[$ip, $board, $id, $reason, time()]);
+	return (int)$dbh->lastInsertId();
 }
 
-function deleteReports($id) {
+function deleteReports(int $id): void {
 	pdoQuery(
 		"DELETE FROM " . ATOM_DBREPORTS . "
 		WHERE board = ? AND postnum = ?",
-		[ATOM_BOARD, (int)$id]);
+		[ATOM_BOARD, $id]);
 }
 
 /* ==[ Passcodes ]========================================================================================= */
 
-function passByID($passId) {
+function passByID(string $passId): ?array {
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBPASS . "
 		WHERE id = ? LIMIT 1",
 		[$passId]);
-	return $result->fetch(PDO::FETCH_ASSOC);
+	return $result->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
-function passByNum($passNum) {
+function passByNum(int $passNum): ?array {
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBPASS . "
 		WHERE number = ? LIMIT 1",
-		[(int)$passNum]);
-	return $result->fetch(PDO::FETCH_ASSOC);
+		[$passNum]);
+	return $result->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
-function getAllPasscodes() {
+function getAllPasscodes(): array {
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBPASS . "
 		ORDER BY number ASC");
 	return $result->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
 
-function insertPass($expires, $meta, $metaAdmin) {
+function insertPass(int $expires, string $meta, string $metaAdmin): string {
 	$passId = bin2hex(random_bytes(32));
 	$now = time();
 	pdoQuery(
 		"INSERT INTO " . ATOM_DBPASS . "
 		(id, issued, expires, blocked_till, meta, meta_admin)
 		VALUES (?, ?, ?, ?, ?, ?)",
-		[$passId, $now, $now + (int)$expires, 0, $meta, $metaAdmin]);
+		[$passId, $now, $now + $expires, 0, $meta, $metaAdmin]);
 	return $passId;
 }
 
-function usePass($passId, $ip) {
+function usePass(string $passId, string $ip): void {
 	pdoQuery(
 		"UPDATE " . ATOM_DBPASS . "
 		SET last_used = ?, last_used_ip = ?
@@ -631,23 +634,19 @@ function usePass($passId, $ip) {
 		[time(), $ip, $passId]);
 }
 
-function changePass($passNum, $meta, $expires, $blockTill, $blockReason) {
-	if ($expires) {
-		pdoQuery(
-			"UPDATE " . ATOM_DBPASS . "
-			SET meta = ?, expires = ?, blocked_till = ?, blocked_reason = ?
-			WHERE number = ?",
-			[$meta, (int)$expires, (int)$blockTill, $blockReason, (int)$passNum]);
-	} else {
-		pdoQuery(
-			"UPDATE " . ATOM_DBPASS . "
-			SET meta = ?, blocked_till = ?, blocked_reason = ?
-			WHERE number = ?",
-			[$meta, (int)$blockTill, $blockReason, (int)$passNum]);
+function changePass(int $passNum, string $meta, ?int $expires, int $blockTill, string $blockReason): void {
+	$params = [$meta];
+	$sql = "UPDATE " . ATOM_DBPASS . " SET meta = ?";
+	if ($expires !== null) {
+		$sql .= ", expires = ?";
+		$params[] = $expires;
 	}
+	$sql .= ", blocked_till = ?, blocked_reason = ? WHERE number = ?";
+	array_push($params, $blockTill, $blockReason, $passNum);
+	pdoQuery($sql, $params);
 }
 
-function deletePass($passId) {
+function deletePass(string $passId): void {
 	pdoQuery(
 		"DELETE FROM " . ATOM_DBPASS . "
 		WHERE id = ?",
@@ -656,15 +655,15 @@ function deletePass($passId) {
 
 /* ==[ Likes ]============================================================================================= */
 
-function likesByPostID($id) {
+function likesByPostID(int $id): array {
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBLIKES . "
 		WHERE board = ? AND postnum = ?",
-		[ATOM_BOARD, (int)$id]);
+		[ATOM_BOARD, $id]);
 	return $result->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
 
-function getAllLikes() {
+function getAllLikes(): array {
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBLIKES . "
 		WHERE board = ?
@@ -673,9 +672,7 @@ function getAllLikes() {
 	return $result->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
 
-function toggleLike($id, $ip) {
-	$id = (int)$id;
-
+function toggleLike(int $id, string $ip): array {
 	// Check is like exists for a post from this ip
 	$res = pdoQuery(
 		"SELECT id FROM " . ATOM_DBLIKES . "
@@ -715,31 +712,31 @@ function toggleLike($id, $ip) {
 	return [$status, $count];
 }
 
-function deleteLikes($id) {
+function deleteLikes(int $id): void {
 	pdoQuery(
 		"DELETE FROM " . ATOM_DBLIKES . "
 		WHERE board = ? AND postnum = ?",
-		[ATOM_BOARD, (int)$id]);
+		[ATOM_BOARD, $id]);
 }
 
 /* ==[ Administration and moderation ]===================================================================== */
 
-function getStaffMember($userName) {
+function getStaffMember(string $userName): ?array {
 	$result = pdoQuery(
 		"SELECT username, password_hash, role FROM " . ATOM_DBSTAFF . "
 		WHERE username = ? LIMIT 1",
 		[$userName]);
-	return $result->fetch(PDO::FETCH_ASSOC);
+	return $result->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
-function getAllStaffMembers() {
+function getAllStaffMembers(): array {
 	$result = pdoQuery(
 		"SELECT id, username, role, last_login FROM " . ATOM_DBSTAFF . "
 		ORDER BY role ASC, last_login DESC");
 	return $result->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
 
-function addStaffMember($userName, $passw, $role) {
+function addStaffMember(string $userName, string $passw, string $role): bool {
 	try {
 		pdoQuery(
 			"INSERT INTO " . ATOM_DBSTAFF . "
@@ -749,21 +746,21 @@ function addStaffMember($userName, $passw, $role) {
 		);
 		return true; 
 	} catch (PDOException $e) {
-		if ($e->getCode() == 23505) { // Unique key conflict - user already exists
+		if ($e->getCode() === '23505') { // Unique key conflict - user already exists
 			return false;
 		}
 		throw $e;
 	}
 }
 
-function deleteStaffMember($id) {
+function deleteStaffMember(int $id): void {
 	pdoQuery(
 		"DELETE FROM " . ATOM_DBSTAFF . "
 		WHERE id = ? AND role != 'admin'",
-		[(int)$id]);
+		[$id]);
 }
 
-function changeStaffMember($userName, $passw) {
+function changeStaffMember(string $userName, string $passw): void {
 	pdoQuery(
 		"UPDATE " . ATOM_DBSTAFF . "
 		SET password_hash = ?
@@ -771,25 +768,25 @@ function changeStaffMember($userName, $passw) {
 		[password_hash($passw, PASSWORD_DEFAULT), $userName]);
 }
 
-function updateStaffLogin($username) {
+function updateStaffLogin(string $username): void {
 	pdoQuery(
 		"UPDATE " . ATOM_DBSTAFF . " SET last_login = ?
 		WHERE username = ?",
 		[time(), $username]);
 }
 
-function getModLogRecords($private = '0', $periodStartDate = 0, $periodEndDate = 0) {
+function getModLogRecords(int $startDate = 0, int $endDate = 0, bool $isPublicOnly = false): array {
 	$sql = "SELECT timestamp, username, action, color FROM " . ATOM_DBMODLOG . " WHERE boardname = ?";
 	$params = [ATOM_BOARD];
-	if ($private === '0') {
+	if ($isPublicOnly) {
 		// Public posts only (no date filter, last 100)
 		$sql .= " AND private = '0' ORDER BY timestamp DESC LIMIT 100";
 	} else {
 		// Admin panel (private + public records)
-		if ($periodStartDate > 0 && $periodEndDate > 0) {
+		if ($startDate > 0 && $endDate > 0) {
 			$sql .= " AND timestamp >= ? AND timestamp <= ? ORDER BY timestamp DESC";
-			$params[] = (int)$periodStartDate;
-			$params[] = (int)$periodEndDate;
+			$params[] = $startDate;
+			$params[] = $endDate;
 		} else {
 			$sql .= " ORDER BY timestamp DESC LIMIT 100";
 		}
@@ -801,7 +798,7 @@ function getModLogRecords($private = '0', $periodStartDate = 0, $periodEndDate =
 // modLog('Text to show in modlog', '1/0', 'Color');
 // '1/0': 1 = Private record, 0 = Public record.
 // 'Color': The color for this record
-function modLog($action, $private = '0', $color = 'Black') {
+function modLog(string $action, string $private = '0', string $color = 'Black'): void {
 	$userName = $_SESSION['atom_user'] ?? 'UNKNOWN';
 	pdoQuery(
 		"INSERT INTO " . ATOM_DBMODLOG . "
