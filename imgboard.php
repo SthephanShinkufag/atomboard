@@ -959,6 +959,7 @@ function postingRequest(): void {
 			}
 
 			// Get video info and its thumbnail
+			$thumbIdx = 'thumb' . $index;
 			if (in_array($fileMime, ['audio/webm', 'video/webm', 'video/mp4', 'video/quicktime'])) {
 				// Get all data (W, H, Duration) with one call to mediainfo
 				// Use the | separator to parse the string.
@@ -977,7 +978,6 @@ function postingRequest(): void {
 
 				// Thumnail generation with ffmpegthumbnailer
 				[$thumbMaxW, $thumbMaxH] = getThumbnailDimensions($post, $index);
-				$thumbIdx = 'thumb' . $index;
 				$post[$thumbIdx] = $fileName . 's.jpg';
 				$thumbPath = 'thumb/' . $post[$thumbIdx];
 				$size = max($thumbMaxW, $thumbMaxH);
