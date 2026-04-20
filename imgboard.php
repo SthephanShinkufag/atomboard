@@ -201,7 +201,7 @@ function managementRequest(): void {
 				$expire = 0;
 				$expireType = 'permanent';
 			}
-			if(!insertBan($ip, $expire, $reason)) {
+			if (!insertBan($ip, $expire, $reason)) {
 				fancyDie('Ban error: Failed to add a ban record for IP ' . $ip . '.');
 			}
 			modLog('Ban record added for ' . $ip . ' (' . $expireType . '). Reason: ' . $reason);
@@ -542,12 +542,12 @@ function postingRequest(): void {
 		$delimPos = strpbrk($postName, '#!');
 		if ($delimPos !== false) {
 			$capDelimiter = $delimPos[0];
-			list($namePart, $capPart) = explode($capDelimiter, $postName, 2);
+			[$namePart, $capPart] = explode($capDelimiter, $postName, 2);
 			$tripcode = '';
 			$isSecure = false;
 			// Check for a second level (secure trip) within the tail. For example: name#cap#secure
 			if (strpos($capPart, $capDelimiter) !== false) {
-				list($cap, $capSecure) = explode($capDelimiter, $capPart, 2);
+				[$cap, $capSecure] = explode($capDelimiter, $capPart, 2);
 				$isSecure = true;
 			} else {
 				$cap = $capPart;
@@ -795,7 +795,7 @@ function postingRequest(): void {
 		if (isset($_FILES['file']) && $_FILES['file']['name'][0] !== '') {
 			fancyDie('Posting error: Adding a file and embed URL at the same time is not supported.');
 		}
-		list($service, $embed) = getEmbed(trim($_POST['embed']));
+		[$service, $embed] = getEmbed(trim($_POST['embed']));
 		if (empty($embed) || !isset($embed['html'], $embed['title'], $embed['thumbnail_url'])) {
 			fancyDie('Posting error: Invalid embed URL.<br>Only ' .
 				(implode(' / ', array_keys($atom_embeds))) . ' URLs are supported.');
@@ -816,15 +816,16 @@ function postingRequest(): void {
 		default: fancyDie('Posting error: Unsupported embed URL file type.');
 		}
 		$thumbLocation = 'thumb/' . $post['thumb0'];
-		list($thumbMaxW, $thumbMaxH) = getThumbnailDimensions($post, 0);
-		if (!createThumbnail($fileLocation, $thumbLocation, $thumbMaxW, $thumbMaxH)) {
+		[$thumbMaxW, $thumbMaxH] = getThumbnailDimensions($post, 0);
+		try {
+			if (!createThumbnail($fileLocation, $thumbLocation, (int)$thumbMaxW, (int)$thumbMaxH)) {
+				throw new Exception('Posting error: Error while creating thumbnail for the embed URL.');
+			}
+		} catch (Exception $e) {
 			@unlink($fileLocation);
-			fancyDie('Posting error: Could not create a thumbnail for the embed URL.');
+			fancyDie('Posting error: ' . $e->getMessage() . ' (for the embed URL).');
 		}
 		@unlink($fileLocation);
-		if (ATOM_VIDEO_OVERLAY) {
-			addVideoOverlay($thumbLocation);
-		}
 		$thumbInfo = getimagesize($thumbLocation);
 		$post['thumb0_width'] = $thumbInfo[0];
 		$post['thumb0_height'] = $thumbInfo[1];
@@ -939,8 +940,8 @@ function postingRequest(): void {
 				$fileMime = mime_content_type($file);
 			}
 			if (empty($fileMime) || !isset($atom_uploads[$fileMime])) {
-				fancyDie('Posting error: Unsupported file type for ' . $fileIdxTxt .
-					'.<br>' . supportedFileTypes());
+				fancyDie('Posting error: Unsupported file type for ' . $fileIdxTxt . ' ('. $fileMime .
+					').<br>' . supportedFileTypes());
 			}
 
 			// Generate file name and location
@@ -958,44 +959,45 @@ function postingRequest(): void {
 			}
 
 			// Get video info and its thumbnail
-			$thumbIdx = 'thumb' . $index;
-			if ($fileMime === 'audio/webm' ||
-				$fileMime === 'video/webm' ||
-				$fileMime === 'video/mp4' ||
-				$fileMime === 'video/quicktime'
-			) {
-				preg_match('/^%(\d+)%/',
-					shell_exec('mediainfo --Inform="Video;%%Width%%" ' . $fileLocation), $match);
-				$videoWidth = $post['image' . $index . '_width'] = max(0, (int)$match[1]);
-				preg_match('/^%(\d+)%/',
-					shell_exec('mediainfo --Inform="Video;%%Height%%" ' . $fileLocation), $match);
-				$videoHeight = $post['image' . $index . '_height'] = max(0, (int)$match[1]);
-				if ($videoWidth > 0 && $videoHeight > 0) {
-					list($thumbMaxW, $thumbMaxH) = getThumbnailDimensions($post, $index);
-					$post[$thumbIdx] = $fileName . 's.jpg';
-					shell_exec('ffmpegthumbnailer -t 1 -s ' . max($thumbMaxW, $thumbMaxH) .
-						' -i ' . $fileLocation . ' -o thumb/' . $post[$thumbIdx]);
-					$thumbInfo = getimagesize('thumb/' . $post[$thumbIdx]);
-					$post[$thumbIdx . '_width'] = $thumbInfo[0];
-					$post[$thumbIdx . '_height'] = $thumbInfo[1];
-					if ($post[$thumbIdx . '_width'] <= 0 || $videoWidth > 32766 ||
-						$post[$thumbIdx . '_height'] <= 0 || $videoHeight > 32766
-					) {
-						@unlink($fileLocation);
-						@unlink('thumb/' . $post[$thumbIdx]);
-						fancyDie('Posting error: Your video ' . $fileIdxTxt . ' appears to be corrupt.');
-					}
-					if (ATOM_VIDEO_OVERLAY) {
-						addVideoOverlay('thumb/' . $post[$thumbIdx]);
-					}
+			if (in_array($fileMime, ['audio/webm', 'video/webm', 'video/mp4', 'video/quicktime'])) {
+				// Get all data (W, H, Duration) with one call to mediainfo
+				// Use the | separator to parse the string.
+				$infoRaw = shell_exec("mediainfo --Inform='Video;%Width%|%Height%|%Duration%' " .
+					escapeshellarg($fileLocation));
+				$infoData = explode('|', trim($infoRaw));
+				$videoWidth  = (int)($infoData[0] ?? 0);
+				$videoHeight = (int)($infoData[1] ?? 0);
+				$durationMs  = (int)($infoData[2] ?? 0);
+				if ($videoWidth <= 0 || $videoHeight <= 0 || $videoWidth > 32766 || $videoHeight > 32766) {
+					@unlink($fileLocation);
+					fancyDie('Posting error: Video ' . $fileIdxTxt . ' appears to be corrupt or too large.');
 				}
-				$duration = (int)shell_exec('mediainfo --Inform="General;%Duration%" ' . $fileLocation);
-				if ($duration > 0) {
-					$mins = floor(round($duration / 1000) / 60);
-					$secs = str_pad((string)floor(round($duration / 1000) % 60), 2, '0', STR_PAD_LEFT);
-					$post['file' . $index . '_original'] = $mins . ':' . $secs .
-						($post['file' . $index . '_original'] !== '' ?
-							(', ' . $post['file' . $index . '_original']) : '');
+				$post['image' . $index . '_width']  = $videoWidth;
+				$post['image' . $index . '_height'] = $videoHeight;
+
+				// Thumnail generation with ffmpegthumbnailer
+				[$thumbMaxW, $thumbMaxH] = getThumbnailDimensions($post, $index);
+				$thumbIdx = 'thumb' . $index;
+				$post[$thumbIdx] = $fileName . 's.jpg';
+				$thumbPath = 'thumb/' . $post[$thumbIdx];
+				$size = max($thumbMaxW, $thumbMaxH);
+				// -t 10% to capture a frame from the middle of the video
+				shell_exec('ffmpegthumbnailer -i ' . escapeshellarg($fileLocation) . ' -o ' .
+					escapeshellarg($thumbPath) . ' -s ' . $size . ' -t 10%');
+				if (!file_exists($thumbPath) || !($thumbInfo = @getimagesize($thumbPath))) {
+					@unlink($fileLocation);
+					fancyDie('Posting error: Could not create video thumbnail for ' . $fileIdxTxt . '.');
+				}
+				$post[$thumbIdx . '_width']  = $thumbInfo[0];
+				$post[$thumbIdx . '_height'] = $thumbInfo[1];
+
+				// Formatting Duration
+				if ($durationMs > 0) {
+					$totalSecs = floor($durationMs / 1000);
+					$mins = floor($totalSecs / 60);
+					$secs = str_pad((string)($totalSecs % 60), 2, '0', STR_PAD_LEFT);
+					$post['file' . $index . '_size_formatted'] = $mins . ':' . $secs . ', ' .
+						$post['file' . $index . '_size_formatted'];
 				}
 			}
 
@@ -1027,16 +1029,24 @@ function postingRequest(): void {
 			elseif (in_array($fileMime, [
 				'image/avif',
 				'image/gif',
+				'image/heif',
 				'image/jpeg',
 				'image/pjpeg',
 				'image/png',
 				'image/webp'
 			])) {
 				$post[$thumbIdx] = $fileName . 's.' . $atom_uploads[$fileMime][0];
-				list($thumbMaxW, $thumbMaxH) = getThumbnailDimensions($post, $index);
-				if (!createThumbnail($fileLocation, 'thumb/' . $post[$thumbIdx], $thumbMaxW, $thumbMaxH)) {
+				[$thumbMaxW, $thumbMaxH] = getThumbnailDimensions($post, $index);
+				try {
+					if (!createThumbnail($fileLocation, 'thumb/' . $post[$thumbIdx],
+						(int)$thumbMaxW, (int)$thumbMaxH)
+					) {
+						throw new Exception('Posting error: Error while creating thumbnail for ' .
+							$fileIdxTxt . '.');
+					}
+				} catch (Exception $e) {
 					@unlink($fileLocation);
-					fancyDie('Posting error: Could not create a thumbnail for ' . $fileIdxTxt . '.');
+					fancyDie('Posting error: ' . $e->getMessage() . ' (for ' . $fileIdxTxt . ').');
 				}
 			}
 
@@ -1174,10 +1184,11 @@ function bannedRequest(): void {
 
 function deletionRequest(): void {
 	global $loginStatus;
-	if (!isset($_POST['delete'])) {
+	if (!is_numeric($_POST['delete'] ?? null)) {
 		fancyDie('Deleting error: Tick the box next to a post and click "Delete" to delete it.');
 	}
-	$post = getPost($_POST['delete']);
+	$id = (int)$_POST['delete'];
+	$post = getPost($id);
 	if (!$post) {
 		fancyDie('Deleting error: An invalid post ID was sent.<br>' .
 			'Please go back, refresh the page, and try again.');
@@ -1185,11 +1196,10 @@ function deletionRequest(): void {
 	if ($loginStatus !== 'disabled' && $_POST['password'] === '') {
 		// Redirect to post moderation page
 		die('<meta http-equiv="refresh" content="0;url=' . basename($_SERVER['PHP_SELF']) .
-			'?manage&moderate=' . $_POST['delete'] . '">');
+			'?manage&moderate=' . $id . '">');
 	} elseif ($post['password'] === '' || md5(md5($_POST['password'])) !== $post['password']) {
 		fancyDie('Deleting error: Invalid password.');
 	}
-	$id = (int)$post['id'];
 	deletePost($id);
 	rebuildThread(getThreadId($post));
 	fancyDie('Post №' . $id . ' has been deleted.');

@@ -498,190 +498,104 @@ function getThumbnailDimensions(array $post, int $imgIdx = 0): array {
 		[$post['image' . $imgIdx . '_width'], $post['image' . $imgIdx . '_height']];
 }
 
-function fastimagecopyresampled(
-	&$dst_image,
-	&$src_image,
-	$dst_x,
-	$dst_y,
-	$src_x,
-	$src_y,
-	$dst_w,
-	$dst_h,
-	$src_w,
-	$src_h,
-	$quality = 3
-) {
-	// Author: Tim Eckel - Date: 12/17/04 - Project: FreeRingers.net - Freely distributable.
-	if (empty($src_image) || empty($dst_image)) {
-		return false;
-	}
-	if ($quality <= 1) {
-		$temp = imagecreatetruecolor($dst_w + 1, $dst_h + 1);
-		imagecopyresized(
-			$temp,
-			$src_image,
-			$dst_x,
-			$dst_y,
-			$src_x,
-			$src_y,
-			$dst_w + 1,
-			$dst_h + 1,
-			$src_w,
-			$src_h
-		);
-		imagecopyresized($dst_image, $temp, 0, 0, 0, 0, $dst_w, $dst_h, $dst_w, $dst_h);
-		imagedestroy($temp);
-	} elseif ($quality < 5 && (($dst_w * $quality) < $src_w || ($dst_h * $quality) < $src_h)) {
-		$tmp_w = $dst_w * $quality;
-		$tmp_h = $dst_h * $quality;
-		$temp = imagecreatetruecolor($tmp_w + 1, $tmp_h + 1);
-		imagecopyresized(
-			$temp,
-			$src_image,
-			$dst_x * $quality,
-			$dst_y * $quality,
-			$src_x,
-			$src_y,
-			$tmp_w + 1,
-			$tmp_h + 1,
-			$src_w,
-			$src_h
-		);
-		imagecopyresampled($dst_image, $temp, 0, 0, 0, 0, $dst_w, $dst_h, $tmp_w, $tmp_h);
-		imagedestroy($temp);
-	} else {
-		imagecopyresampled(
-			$dst_image,
-			$src_image,
-			$dst_x,
-			$dst_y,
-			$src_x,
-			$src_y,
-			$dst_w,
-			$dst_h,
-			$src_w,
-			$src_h
-		);
-	}
-	return true;
-}
-
 function createThumbnail(string $fileLocation, string $thumbLocation, int $newW, int $newH): bool {
-	if (ATOM_FILE_THUMBDRIVER === 'gd') {
-		$system = array_reverse(explode('.', $thumbLocation));
-		if (preg_match('/jpg|jpeg/', $system[0])) {
-			$srcImg = imagecreatefromjpeg($fileLocation);
-		} elseif (preg_match('/png/', $system[0])) {
-			$srcImg = @imagecreatefrompng($fileLocation);
-		} elseif (preg_match('/gif/', $system[0])) {
-			$srcImg = imagecreatefromgif($fileLocation);
-		} elseif (preg_match('/avif/', $system[0])) {
-			$srcImg = imagecreatefromavif($fileLocation);
-		} elseif (preg_match('/webp/', $system[0])) {
-			$srcImg = imagecreatefromwebp($fileLocation);
-		} else {
-			return false;
+	if (!file_exists($fileLocation)) {
+		throw new Exception('Original file not found');
+	}
+	if (ATOM_FILE_THUMBDRIVER === 'imagick') {
+		if (!extension_loaded('imagick')) {
+			throw new Exception('The Imagick driver is not installed on the server');
 		}
+		try {
+			$im = new Imagick($fileLocation);
+			$format = $im->getImageFormat();
+			// Check if the current Imagick can work with this format
+			if (empty(Imagick::queryFormats($format))) {
+				throw new Exception($format . ' format is not supported by your Imagick driver');
+			}
+			if ($im->getNumberImages() > 1) {
+				// Multiple frames detected, working with animation (GIF, WebP, APNG)
+				$im = $im->coalesceImages(); // Merge layers to remove artifacts
+				if (!ATOM_FILE_ANIM_GIF) {
+					// If animation is disabled, making a static first frame
+					$static = new Imagick();
+					$static->addImage($im->getImage());
+					$im->destroy();
+					$im = $static;
+				} else {
+					// If animation is allowed, resize each frame
+					foreach ($im as $frame) {
+						$frame->thumbnailImage($newW, $newH, true);
+						$frame->setImagePage($newW, $newH, 0, 0);
+					}
+					$im->stripImage();
+					return $im->writeImages($thumbLocation, true);
+				}
+			}
+			// Working with statics (JPG, PNG or the first frame taken above)
+			$im->thumbnailImage($newW, $newH, true);
+			$im->stripImage(); // Remove EXIF data
+			$im->setImageCompressionQuality(75); // Optimize quality for smaller file size
+			return $im->writeImage($thumbLocation);
+		} catch (Exception $e) {
+			throw new Exception('Imagick error: ' . $e->getMessage());
+		}
+	} else if (ATOM_FILE_THUMBDRIVER === 'gd') {
+		if (!extension_loaded('gd')) {
+			throw new Exception("The GD driver is not installed on the server.");
+		}
+		$info = @getimagesize($fileLocation);
+		if (!$info) {
+			throw new Exception('Could not read image data (file corrupted?)');
+		}
+		// Create source image based on type
+		$srcImg = match($info[2]) {
+			IMAGETYPE_JPEG => imagecreatefromjpeg($fileLocation),
+			IMAGETYPE_PNG  => imagecreatefrompng($fileLocation),
+			IMAGETYPE_GIF  => imagecreatefromgif($fileLocation),
+			IMAGETYPE_WEBP => function_exists('imagecreatefromwebp') ? imagecreatefromwebp($fileLocation) :
+				throw new Exception('WebP format is not supported by your GD driver'),
+			IMAGETYPE_AVIF => function_exists('imagecreatefromavif') ? imagecreatefromavif($fileLocation) :
+				throw new Exception('AVIF format is not supported by your GD driver'),
+			default => throw new Exception(($info['mime'] ?? 'unknown') .
+				' format is not supported by your GD driver'),
+		};
 		if (!$srcImg) {
-			return false;
+			throw new Exception(($info['mime'] ?? 'unknown') . ' format is not supported by your GD driver');
 		}
-		$oldX = imageSX($srcImg);
-		$oldY = imageSY($srcImg);
-		$percent = $oldX > $oldY ? $newW / $oldX : $newH / $oldY;
-		$thumbW = (int)round($oldX * $percent);
-		$thumbH = (int)round($oldY * $percent);
+		// Calculating proportions
+		$oldX = imagesx($srcImg);
+		$oldY = imagesy($srcImg);
+		$scale = min($newW / $oldX, $newH / $oldY);
+		$thumbW = (int)max(1, $oldX * $scale);
+		$thumbH = (int)max(1, $oldY * $scale);
+		// Creating new true color image
 		$dstImg = imagecreatetruecolor($thumbW, $thumbH);
-		if (preg_match('/png/', $system[0]) && imagepng($srcImg, $thumbLocation)) {
-			imagealphablending($dstImg, false);
-			imagesavealpha($dstImg, true);
-			$color = imagecolorallocatealpha($dstImg, 0, 0, 0, 0);
-			imagefilledrectangle($dstImg, 0, 0, $thumbW, $thumbH, $color);
-			imagecolortransparent($dstImg, $color);
-			imagecopyresampled($dstImg, $srcImg, 0, 0, 0, 0, $thumbW, $thumbH, $oldX, $oldY);
-		} else {
-			fastimagecopyresampled($dstImg, $srcImg, 0, 0, 0, 0, $thumbW, $thumbH, $oldX, $oldY);
-		}
-		if (preg_match('/png/', $system[0])) {
-			if (!imagepng($dstImg, $thumbLocation)) {
-				return false;
-			}
-		} elseif (preg_match('/jpg|jpeg/', $system[0])) {
-			if (!imagejpeg($dstImg, $thumbLocation, 70)) {
-				return false;
-			}
-		} elseif (preg_match('/gif/', $system[0])) {
-			if (!imagegif ($dstImg, $thumbLocation)) {
-				return false;
-			}
-		} elseif (preg_match('/avif/', $system[0])) {
-			if (!imageavif($dstImg, $thumbLocation, 70)) {
-				return false;
-			}
-		} elseif (preg_match('/webp/', $system[0])) {
-			if (!imagewebp($dstImg, $thumbLocation, 70)) {
-				return false;
-			}
-		}
+		// Handle transparency (PNG, WebP, AVIF)
+		imagealphablending($dstImg, false);
+		// Enable saving alpha channel
+		imagesavealpha($dstImg, true);
+		// Fill with transparent color
+		imagecopyresampled($dstImg, $srcImg, 0, 0, 0, 0, $thumbW, $thumbH, $oldX, $oldY);
+		// Saving thumbnail with appropriate function based on extension
+		$extension = strtolower(pathinfo($thumbLocation, PATHINFO_EXTENSION));
+		$result = match($extension) {
+			'jpg', 'jpeg' => imagejpeg($dstImg, $thumbLocation, 80),
+			'png'         => imagepng($dstImg, $thumbLocation),
+			'gif'         => imagegif($dstImg, $thumbLocation),
+			'webp'        => imagewebp($dstImg, $thumbLocation, 80),
+			'avif'        => imageavif($dstImg, $thumbLocation, 80),
+			default       => false,
+		};
 		imagedestroy($dstImg);
 		imagedestroy($srcImg);
-	} else {
-		// Imagemagick
-		$discard = '';
-		$exitStatus = 1;
-		$extension = pathinfo($thumbLocation, PATHINFO_EXTENSION);
-		if ($extension === 'gif' || $extension === 'webp') {
-			if (ATOM_FILE_ANIM_GIF) {
-				exec("convert " . $fileLocation . " -auto-orient -thumbnail '" . $newW . "x" . $newH .
-					"' -coalesce -layers OptimizeFrame -depth 4 -type palettealpha " . $thumbLocation,
-					$discard, $exitStatus);
-			} else {
-				exec("convert '" . $fileLocation . "[0]' -auto-orient -thumbnail '" . $newW . "x" . $newH .
-					"' -layers OptimizeFrame -depth 4 -type palettealpha " . $thumbLocation,
-					$discard, $exitStatus);
-			}
-		} else {
-			exec("convert " . $fileLocation . " -auto-orient -thumbnail '" . $newW . "x" . $newH .
-				"' -layers OptimizeFrame -depth 8 " . $thumbLocation, $discard, $exitStatus);
+		if (!$result) {
+			throw new Exception('The GD driver failed to save the output file to ' . $thumbLocation);
 		}
-		if ($exitStatus !== 0) {
-			return false;
-		}
+		return true;
 	}
-	return true;
-}
-
-function addVideoOverlay(string $thumbLocation): void {
-	if (!file_exists('icons/video_overlay.png')) {
-		return;
-	}
-	if (ATOM_FILE_THUMBDRIVER === 'imagemagick') {
-		$discard = '';
-		$exitStatus = 1;
-		exec('convert ' . $thumbLocation .
-			' icons/video_overlay.png -gravity center -composite -quality 75 ' .
-			$thumbLocation, $discard, $exitStatus);
-		return;
-	}
-	// GD
-	$thumbnail = substr($thumbLocation, -4) === '.jpg' ? imagecreatefromjpeg($thumbLocation) :
-		imagecreatefrompng($thumbLocation);
-	list($width, $height, $type, $attr) = getimagesize($thumbLocation);
-	$overlay_play = imagecreatefrompng('icons/video_overlay.png');
-	imagealphablending($overlay_play, false);
-	imagesavealpha($overlay_play, true);
-	list($overlayWidth, $overlayHeight, $overlayType, $overlayAttr) = getimagesize('icons/video_overlay.png');
-	if (substr($thumbLocation, -4) === '.png') {
-		imagecolortransparent($thumbnail, imagecolorallocatealpha($thumbnail, 0, 0, 0, 127));
-		imagealphablending($thumbnail, true);
-		imagesavealpha($thumbnail, true);
-	}
-	imagecopy($thumbnail, $overlay_play, (int)($width / 2) - (int)($overlayWidth / 2),
-		(int)($height / 2) - (int)($overlayHeight / 2), 0, 0, $overlayWidth, $overlayHeight);
-	if (substr($thumbLocation, -4) === '.jpg') {
-		imagejpeg($thumbnail, $thumbLocation);
-	} else {
-		imagepng($thumbnail, $thumbLocation);
-	}
+	throw new Exception('An unknown ATOM_FILE_THUMBDRIVER has been selected: "' .
+		ATOM_FILE_THUMBDRIVER . '"');
 }
 
 function isEmbed(string $fileHex): bool {

@@ -364,9 +364,9 @@ function buildPost(array $post, bool $isInThread = false, string $mode = ''): st
 			$fileInfoHtml .= $origName . '</span></a>,&nbsp;' . $fileHex;
 		} elseif ($fileName !== '') {
 			$fileInfoHtml .= pathinfo($origName !== '' ? $origName : $fileName, PATHINFO_FILENAME) .
-				'</span>.<span class="file-extension">' . $fileExt . '</span></a><br>(' .
+				'</span>.<span class="file-extension">' . $fileExt . '</span></a><br>' .
 				$post['file' . $i . '_size_formatted'] .
-				($hasSize ? ',&nbsp;' . $fileWidth . 'x' . $fileHeight : '') . ')';
+				($hasSize ? ',&nbsp;' . $fileWidth . 'x' . $fileHeight : '');
 		} else {
 			continue;
 		}
@@ -383,7 +383,8 @@ function buildPost(array $post, bool $isInThread = false, string $mode = ''): st
 									$fileHeight . '"' : '')) . '>' .
 								($post['thumb' . $i] !== '' ? '
 								<a ' . $linkHtml . '>
-									<img class="file-thumb' . ($isVideo ? ' file-thumb-video' : '') .
+									<img class="file-thumb' .
+										($isVideo || $isEmbed? ' file-thumb-video' : '') .
 										'" src="/' . ATOM_BOARD . '/thumb/' . $post['thumb' . $i] .
 										'" width="' . $post['thumb' . $i . '_width'] .
 										'" height="' . $post['thumb' . $i . '_height'] . '" alt="Thumbnail">
