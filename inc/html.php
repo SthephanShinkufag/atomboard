@@ -957,7 +957,12 @@ function makePasscodesManager(string $token): string {
 				<div class="form-row">
 					<div class="form-row-label">Meta for Admin (optional):</div>
 					<input type="text" name="meta_admin">
-				</div>
+				</div>' .
+				(ATOM_UNIQUEID ? '
+				<div class="form-row">
+					<div class="form-row-label">Fixed uid name (optional):</div>
+					<input type="text" name="name">
+				</div>' : '') . '
 				<input class="link-button" type="submit" value="Submit">
 			</div>
 		</form>
@@ -981,6 +986,12 @@ function makePasscodesManager(string $token): string {
 					<input type="text" name="meta" value="' .
 						($editPass['meta'] ?? '') . '" size="50">
 				</div>' .
+				(ATOM_UNIQUEID ? '
+				<div class="form-row">
+					<div class="form-row-label">Fixed uid name (optional):</div>
+					<input type="text" name="name" value="' .
+						($editPass['name'] ?? '') . '" size="50">
+				</div>' : '') .
 				($isAdmin ? '
 				<div class="form-row">
 					<div class="form-row-label">Expires:</div>
@@ -1030,7 +1041,9 @@ function makePasscodesManager(string $token): string {
 				($isAdmin ? '
 				<th>ID (admin)</th>
 				<th>Meta (admin)</th>' : '') . '
-				<th>Meta</th>
+				<th>Meta</th>' .
+				(ATOM_UNIQUEID ? '
+				<th>Name</th>' : '') . '
 				<th>Set at</th>
 				<th>Expires</th>
 				<th>Blocked till</th>
@@ -1038,7 +1051,6 @@ function makePasscodesManager(string $token): string {
 				<th>Last used</th>
 				<th>Last used IP</th>
 			</tr></thead><tbody>';
-		$passcodes = getAllPasscodes();
 		$geoipReader = ATOM_GEOIP === 'geoip2' ?
 			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : null;
 		foreach ($passcodes as $pass) {
@@ -1056,13 +1068,15 @@ function makePasscodesManager(string $token): string {
 				($isAdmin ? '
 				<td style="width: 200px; word-break: break-all;">' . $pass['id'] . '</td>
 				<td>' . $pass['meta_admin'] . '</td>' : '') . '
-				<td>' . str_replace('[donator]', '<img class="poster-achievement" height="18"' .
-					' title="Donator" src="/' . ATOM_BOARD . '/icons/donator.png">', $pass['meta']) . '</td>
-				<td>' . date('d.m.Y H:i:s', $pass['issued']) . '</td>
-				<td>' . date('d.m.Y H:i:s', $pass['expires']) . '</td>
-				<td>' . ($blockedTill ? date('d.m.Y H:i:s', $blockedTill) : '') . '</td>
+				<td>' . str_replace('[donator]', '<img class="poster-achievement" height="18" title=' .
+					'"Donator" src="/' . ATOM_BOARD . '/icons/donator.png">', $pass['meta']) . '</td>' .
+				(ATOM_UNIQUEID ? '
+				<td>' . ($pass['name'] ?: '') . '</td>' : '') . '
+				<td>' . date('d.m.Y H:i:s', (int)$pass['issued']) . '</td>
+				<td>' . date('d.m.Y H:i:s', (int)$pass['expires']) . '</td>
+				<td>' . ($blockedTill ? date('d.m.Y H:i:s', (int)$blockedTill) : '') . '</td>
 				<td>' . $pass['blocked_reason'] . '</td>
-				<td>' . ($pass['last_used'] ? date('d.m.Y H:i:s', $pass['last_used']) : '') . '</td>
+				<td>' . ($pass['last_used'] ? date('d.m.Y H:i:s', (int)$pass['last_used']) : '') . '</td>
 				<td style="white-space: nowrap;">' . ($ip ?
 					(ATOM_GEOIP ? getCountryIcon($ip, $geoipReader) . '&nbsp;' : '') .
 					getIpUserInfoLink($ip) : '') . '</td>

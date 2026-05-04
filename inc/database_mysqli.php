@@ -599,15 +599,15 @@ function getAllPasscodes(): array {
 	return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
-function insertPass(int $expires, string $meta, string $metaAdmin): string {
+function insertPass(int $expires, string $meta, string $metaAdmin, ?string $name): string {
 	global $mysqli;
 	$passId = bin2hex(random_bytes(32));
 	$now = time();
 	$mysqli->execute_query(
 		"INSERT INTO " . ATOM_DBPASS . "
-		(id, issued, expires, blocked_till, meta, meta_admin)
-		VALUES (?, ?, ?, ?, ?, ?)",
-		[$passId, $now, $now + $expires, 0, $meta, $metaAdmin]);
+		(id, issued, expires, blocked_till, meta, meta_admin, name)
+		VALUES (?, ?, ?, ?, ?, ?, ?)",
+		[$passId, $now, $now + $expires, 0, $meta, $metaAdmin, $name]);
 	return $passId;
 }
 
@@ -620,10 +620,16 @@ function usePass(string $passId, string $ip): void {
 	[time(), $ip, $passId]);
 }
 
-function changePass(int $passNum, string $meta, ?int $expires, int $blockTill, string $blockReason): void {
+function changePass(int $passNum, string $meta, ?string $name,
+	?int $expires, int $blockTill, string $blockReason
+): void {
 	global $mysqli;
 	$params = [$meta];
 	$sql = "UPDATE " . ATOM_DBPASS . " SET meta = ?";
+	if($name !== null) {
+		 $sql .= ", name = ?";
+		 $params[] = $name;
+	}
 	if ($expires !== null) {
 		$sql .= ", expires = ?";
 		$params[] = $expires;

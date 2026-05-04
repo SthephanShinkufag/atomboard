@@ -125,6 +125,7 @@ if (ATOM_DBMODE === 'pdo' && ATOM_DBDRIVER === 'pgsql') {
 		blocked_reason text,
 		meta text NOT NULL,
 		meta_admin text NOT NULL,
+		name text NOT NULL,
 		last_used integer NOT NULL DEFAULT 0,
 		last_used_ip varchar(64)
 	);
@@ -275,6 +276,7 @@ if (ATOM_DBMODE === 'pdo' && ATOM_DBDRIVER === 'pgsql') {
 		`blocked_reason` text,
 		`meta` text NOT NULL,
 		`meta_admin` text NOT NULL,
+		`name` text NOT NULL,
 		`last_used` int(20) NOT NULL DEFAULT 0,
 		`last_used_ip` varchar(64),
 		INDEX `num_idx` (`number`),

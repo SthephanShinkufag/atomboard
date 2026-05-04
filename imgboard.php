@@ -260,7 +260,8 @@ function managementRequest(): void {
 	if (ATOM_PASSCODES_ENABLED && isset($_GET['issuepasscode']) && $isAdmin) {
 		if (!empty($_POST['expires'])) {
 			manageDie(manageInfo('New passcode issued:<br>' .
-				insertPass($_POST['expires'], $_POST['meta'], $_POST['meta_admin'])) .
+				insertPass((int)$_POST['expires'], $_POST['meta'], $_POST['meta_admin'],
+					$_POST['name'] ?: null)) .
 				makePasscodesManager($token));
 		}
 	}
@@ -274,6 +275,7 @@ function managementRequest(): void {
 		changePass(
 			$id,
 			(string)$_POST['meta'],
+			isset($_POST['name']) ? (string)$_POST['name'] : null,
 			$expires,
 			!empty($_POST['block_till']) ? (int)strtotime($_POST['block_till']) : 0,
 			(string)$_POST['block_reason']);
@@ -756,14 +758,18 @@ function postingRequest(): void {
 		$ipHashInt = hexdec($ipHashHex);
 		$uidLabel = $ipHashHex;
 		if (ATOM_UNIQUENAME) {
-			global $firstNames, $lastNames;
-			// Generate firstname by main hash
-			$fName = !empty($firstNames) ? $firstNames[$ipHashInt % count($firstNames)] : '';
-			// Generate lastname by subnet /20 (using mask)
-			$subnet = long2ip(ip2long($ip) & 0xFFFFF000);
-			$subHashInt = hexdec(substr(hash_hmac('sha256', $subnet . $parentId, ATOM_TRIPSEED), 0, 8));
-			$lName = !empty($lastNames) ? $lastNames[$subHashInt % count($lastNames)] : '';
-			$uidLabel = trim($fName . ' ' . $lName) ?: $ipHashHex;
+			if($isPasscode && $passcode[2]) {
+				$uidLabel = $passcode[2];
+			} else {
+				global $firstNames, $lastNames;
+				// Generate firstname by main hash
+				$fName = !empty($firstNames) ? $firstNames[$ipHashInt % count($firstNames)] : '';
+				// Generate lastname by subnet /20 (using mask)
+				$subnet = long2ip(ip2long($ip) & 0xFFFFF000);
+				$subHashInt = hexdec(substr(hash_hmac('sha256', $subnet . $parentId, ATOM_TRIPSEED), 0, 8));
+				$lName = !empty($lastNames) ? $lastNames[$subHashInt % count($lastNames)] : '';
+				$uidLabel = trim($fName . ' ' . $lName) ?: $ipHashHex;
+			}
 		}
 		$postNameBlock .= sprintf(
 			' <span class="poster-uid" data-uid="%s" style="color: %s;">%s</span>',
@@ -1267,7 +1273,7 @@ function checkPasscode(bool $showMessages = false): array {
 			date('d.m.y D H:i:s', $checkTill) . ' and try again.');
 	}
 	usePass($pass['id'], $ip); // Update passcode info (last used IP)
-	return $pass['number'] ? [$pass['number'], str_contains($pass['meta'], '[donator]')] : [0];
+	return $pass['number'] ? [$pass['number'], str_contains($pass['meta'], '[donator]'), $pass['name']] : [0];
 }
 
 function passcodeRequest(): void {
