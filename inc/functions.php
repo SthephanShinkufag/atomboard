@@ -1,8 +1,5 @@
 <?php
 declare(strict_types=1);
-if (!defined('ATOM_BOARD')) {
-	die('');
-}
 
 /* ==[ Queries for creatsng new tables ]=================================================================== */
 
@@ -310,7 +307,7 @@ if (ATOM_DBMODE === 'pdo' && ATOM_DBDRIVER === 'pgsql') {
 /* ==[ Strings ]=========================================================================================== */
 
 function escapeHTML(string $string): string {
-	return str_replace(['&', '<', '>'], ['&amp;', '&lt;', '&gt;'], $string);
+	return htmlspecialchars($string, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
 function plural(string $singular, int $count, string $plural = 's'): string {

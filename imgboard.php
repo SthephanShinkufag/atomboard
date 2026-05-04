@@ -152,7 +152,7 @@ function managementRequest(): void {
 	if (isset($_GET['rebuildall']) && $isAdmin) {
 		$getThreads = getThreads();
 		foreach ($getThreads as $thread) {
-			rebuildThreadPage($thread['id']);
+			rebuildThreadPage((int)$thread['id']);
 		}
 		rebuildIndexPages();
 		deleteOldLookups();
@@ -577,17 +577,17 @@ function postingRequest(): void {
 			$post['name'] = $postName;
 			$post['tripcode'] = '';
 		}
-		$post['name'] = escapeHTML(mb_substr($post['name'], 0, 75));
+		$post['name'] = mb_substr($post['name'], 0, 75);
 	}
 
 	// Get email
 	if ($isStaffPost || !in_array('email', $hideFields)) {
-		$post['email'] = escapeHTML(str_replace('"', '&quot;', substr($_POST['email'], 0, 75)));
+		$post['email'] = mb_substr($_POST['email'], 0, 75);
 	}
 
 	// Get subject
 	if ($isStaffPost || !in_array('subject', $hideFields)) {
-		$post['subject'] = escapeHTML(mb_substr($_POST['subject'], 0, 100));
+		$post['subject'] = mb_substr($_POST['subject'], 0, 100);
 	}
 
 	// Get message
@@ -737,7 +737,7 @@ function postingRequest(): void {
 		ATOM_BOARD . '/icons/donator.png"> ' : '';
 	$nameClass = 'poster-name' .
 		($hasAccess && $post['name'] ? ($isAdmin ? ' poster-name-admin' : ' poster-name-mod') : '');
-	$posterName = htmlspecialchars(($post['name'] || $post['tripcode']) ? $post['name'] : ATOM_POSTERNAME);
+	$posterName = escapeHTML(($post['name'] || $post['tripcode']) ? $post['name'] : ATOM_POSTERNAME);
 	$posterTrip = $post['tripcode'] !== '' ?
 		'<span class="poster-trip">!' . $post['tripcode'] . '</span>' : '';
 	$postNameBlock = sprintf('%s<span class="%s">%s</span>%s', $pass, $nameClass, $posterName, $posterTrip);
@@ -775,7 +775,7 @@ function postingRequest(): void {
 		$lowEmail = strtolower($post['email']);
 		if ($lowEmail !== 'noko') {
 			$postNameBlock = sprintf('<a href="mailto:%s"%s>%s</a>',
-				htmlspecialchars($post['email'], ENT_QUOTES),
+				escapeHTML($post['email']),
 				($lowEmail === 'sage' ? ' class="sage"' : ''),
 				$postNameBlock);
 		}

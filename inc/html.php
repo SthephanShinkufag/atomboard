@@ -1,8 +1,5 @@
 <?php
 declare(strict_types=1);
-if (!defined('ATOM_BOARD')) {
-	die('');
-}
 
 /* ==[ Common elements ]=================================================================================== */
 
@@ -466,7 +463,7 @@ function buildPost(array $post, bool $isInThread = false, string $mode = ''): st
 					<header class="post-meta">
 						<input type="checkbox" name="delete" value="' . $postId . '">' .
 						($post['subject'] !== '' ? '
-						<span class="post-subject">' . $post['subject'] . '</span>' : '') . '
+						<span class="post-subject">' . escapeHTML($post['subject']) . '</span>' : '') . '
 						' . (ATOM_GEOIP ? getCountryIcon($ip, null) : '') .
 						($showIP || $isEditPost ? '&nbsp;' . getIpUserInfoLink($ip) : '') . '
 						' . $post['nameblock'] . '
@@ -1517,20 +1514,12 @@ function makeCatalogPage(): string {
 	foreach ($OPposts as $post) {
 		$postId = (int)$post['id'];
 		$numOfReplies = getThreadPostsCount($postId);
-		$OPpostMessage = '';
-		if (function_exists('mb_substr') && extension_loaded('mbstring')) {
-			$OPpostMessage = tidy_repair_string(
-				mb_substr($post['message'], 0, 160, 'UTF-8'),
-				['quiet' => true, 'show-body-only' => true],
-				'utf8');
-		} else {
-			$OPpostMessage = tidy_repair_string(
-				substr($post['message'], 0, 160),
-				['quiet' => true, 'show-body-only' => true],
-				'utf8');
-		}
-		$opSubject = $post['subject'];
-		$opUserName = $post['name'] ?: ATOM_POSTERNAME;
+		$message = tidy_repair_string(
+			mb_substr($post['message'], 0, 160, 'UTF-8'),
+			['quiet' => true, 'show-body-only' => true],
+			'utf8');
+		$subject = escapeHTML($post['subject']);
+		$userName = escapeHTML($post['name'] ?: ATOM_POSTERNAME);
 		if ($post['thumb0'] !== '' && $post['thumb0_width'] > 0 && $post['thumb0_height'] > 0) {
 			$thumb = 'thumb/' . $post['thumb0'];
 			$thumbWidth = $post['thumb0_width'];
@@ -1547,14 +1536,14 @@ function makeCatalogPage(): string {
 				</a>
 				<br>
 				<center>' .
-					($opSubject ? '
-					<span class="post-subject">' . $opSubject . '</span>
+					($subject ? '
+					<span class="post-subject">' . $subject . '</span>
 					<br>' : '') . '
-					<span class="poster-name">' . $opUserName . '</span>
+					<span class="poster-name">' . $userName . '</span>
 					<span>replies: ' . $numOfReplies . '</span>
 					<br>
 				</center>
-				<blockquote class="post-message" style="text-align: left">' . $OPpostMessage . '</blockquote>
+				<blockquote class="post-message" style="text-align: left">' . $message . '</blockquote>
 				<br>
 			</div>';
 	}
