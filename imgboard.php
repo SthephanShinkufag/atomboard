@@ -546,11 +546,10 @@ function postingRequest(): void {
 			$capDelimiter = $delimPos[0];
 			[$namePart, $capPart] = explode($capDelimiter, $postName, 2);
 			$tripcode = '';
-			$isSecure = false;
 			// Check for a second level (secure trip) within the tail. For example: name#cap#secure
+			$capSecure = '';
 			if (strpos($capPart, $capDelimiter) !== false) {
 				[$cap, $capSecure] = explode($capDelimiter, $capPart, 2);
-				$isSecure = true;
 			} else {
 				$cap = $capPart;
 			}
@@ -567,7 +566,7 @@ function postingRequest(): void {
 				$tripcode = substr(crypt($cap, $salt), -10);
 			}
 			// Secure tripcode (based on MD5 + SALT)
-			if ($isSecure) {
+			if ($capSecure !== '') {
 				if ($tripcode !== '') {
 					$tripcode .= '!';
 				}
@@ -990,9 +989,15 @@ function postingRequest(): void {
 				// -t 10% to capture a frame from the middle of the video
 				shell_exec('ffmpegthumbnailer -i ' . escapeshellarg($fileLocation) . ' -o ' .
 					escapeshellarg($thumbPath) . ' -s ' . $size . ' -t 10%');
-				if (!file_exists($thumbPath) || !($thumbInfo = @getimagesize($thumbPath))) {
+				if (!file_exists($thumbPath)) {
 					@unlink($fileLocation);
-					fancyDie('Posting error: Could not create video thumbnail for ' . $fileIdxTxt . '.');
+					fancyDie('Posting error: Failed to create the thumbnail for ' . $fileIdxTxt . '.');
+				}
+				$thumbInfo = @getimagesize($thumbPath);
+				if (!$thumbInfo) {
+					@unlink($fileLocation);
+					@unlink($thumbPath);
+					fancyDie('Posting error: Failed to read the thumbnail for ' . $fileIdxTxt . '.');
 				}
 				$post[$thumbIdx . '_width']  = $thumbInfo[0];
 				$post[$thumbIdx . '_height'] = $thumbInfo[1];

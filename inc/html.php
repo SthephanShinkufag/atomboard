@@ -85,7 +85,6 @@ function pageFooter(bool $needReturn): string {
 		<a class="navigation-link" href="/' . ATOM_BOARD .
 			'/' . basename($_SERVER['PHP_SELF']) . '?manage">Manage</a>
 		<select class="select-style navigation-link" onchange="setThemeStyle(this);">
-			<option value="Snow" selected>Snow</option>
 			<option value="Dark">Dark</option>
 			<option value="Light">Light</option>
 		</select>
@@ -1031,10 +1030,51 @@ function makePasscodesManager(string $token): string {
 	$passcodes = getAllPasscodes();
 	$passCount = count($passcodes);
 	if ($passCount > 0) {
+		$passTableHtml = '';
+		$nowTime = time();
+		$activePassCount = 0;
+		$geoipReader = ATOM_GEOIP === 'geoip2' ?
+			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : null;
+		foreach ($passcodes as $pass) {
+			$ip = $pass['last_used_ip'];
+			$passcodeNum = $pass['number'];
+			$blockedTill = $pass['blocked_till'];
+			$isExpired = $nowTime > $pass['expires'];
+			if (!$isExpired) {
+				$activePassCount++;
+			}
+			$passTableHtml .= '
+			<tr' . ($isExpired ? ' class="passcode-expired"' :
+				($nowTime < $blockedTill ? ' class="passcode-blocked"' : '')) . '>
+				<td><a class="link-button" target="_blank" href="/' . ATOM_BOARD .
+					'/imgboard.php?manage=&passcode=' . $passcodeNum .
+					'&passcodes=manage" title="Manage passcode №' . $passcodeNum . '">' .
+					$passcodeNum . '</a></td>' .
+				($isAdmin ? '
+				<td><input type="text" value="' . $pass['id'] . '" readonly></td>
+				<td style="word-break: break-all;">' . $pass['meta_admin'] . '</td>' : '') . '
+				<td style="word-break: break-all;">' .
+					str_replace('[donator]', '<img class="poster-achievement" height="18" title=' .
+					'"Donator" src="/' . ATOM_BOARD . '/icons/donator.png">', $pass['meta']) . '</td>' .
+				(ATOM_UNIQUEID ? '
+				<td>' . ($pass['name'] ?: '') . '</td>' : '') . '
+				<td>' . date('d.m.Y H:i:s', (int)$pass['issued']) . '</td>
+				<td>' . date('d.m.Y H:i:s', (int)$pass['expires']) . '</td>
+				<td>' . ($blockedTill ? date('d.m.Y H:i:s', (int)$blockedTill) : '') . '</td>
+				<td>' . $pass['blocked_reason'] . '</td>
+				<td>' . ($pass['last_used'] ? date('d.m.Y H:i:s', (int)$pass['last_used']) : '') . '</td>
+				<td style="white-space: nowrap;">' . ($ip ?
+					(ATOM_GEOIP ? getCountryIcon($ip, $geoipReader) . '&nbsp;' : '') .
+					getIpUserInfoLink($ip) : '') . '</td>
+			</tr>';
+		}
 		$passHtml .= '
 		<hr>
 		<h2>Issued passcodes</h2>
-		<center>Total passcodes: ' . $passCount . '</center>
+		<center>Total passcodes: ' . $passCount . ', active passcodes: ' . $activePassCount . '</center>
+		<div><input type="checkbox" id="show_expired" onchange="' .
+			'document.querySelectorAll(\'.passcode-expired\').forEach(' .
+				'el => el.style.display = this.checked ? \'\': \'none\');" checked> Show expired</div>
 		<table class="table"><thead>
 			<tr>
 				<th>№</th>' .
@@ -1050,39 +1090,8 @@ function makePasscodesManager(string $token): string {
 				<th>Blocked reason</th>
 				<th>Last used</th>
 				<th>Last used IP</th>
-			</tr></thead><tbody>';
-		$geoipReader = ATOM_GEOIP === 'geoip2' ?
-			new GeoIp2\Database\Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb') : null;
-		foreach ($passcodes as $pass) {
-			$ip = $pass['last_used_ip'];
-			$countryIcon = '';
-			$passcodeNum = $pass['number'];
-			$blockedTill = $pass['blocked_till'];
-			$nowTime = time();
-			$passHtml .= '
-			<tr' . ($nowTime > $pass['expires'] ? ' class="passcode-expired"' :
-				($nowTime < $blockedTill ? ' class="passcode-blocked"' : '')) . '>
-				<td><a target="_blank" href="/' . ATOM_BOARD . '/imgboard.php?manage=&passcode=' .
-					$passcodeNum . '&passcodes=manage" title="Manage passcode №' . $passcodeNum . '">' .
-					$passcodeNum . '</a></td>' .
-				($isAdmin ? '
-				<td style="width: 200px; word-break: break-all;">' . $pass['id'] . '</td>
-				<td>' . $pass['meta_admin'] . '</td>' : '') . '
-				<td>' . str_replace('[donator]', '<img class="poster-achievement" height="18" title=' .
-					'"Donator" src="/' . ATOM_BOARD . '/icons/donator.png">', $pass['meta']) . '</td>' .
-				(ATOM_UNIQUEID ? '
-				<td>' . ($pass['name'] ?: '') . '</td>' : '') . '
-				<td>' . date('d.m.Y H:i:s', (int)$pass['issued']) . '</td>
-				<td>' . date('d.m.Y H:i:s', (int)$pass['expires']) . '</td>
-				<td>' . ($blockedTill ? date('d.m.Y H:i:s', (int)$blockedTill) : '') . '</td>
-				<td>' . $pass['blocked_reason'] . '</td>
-				<td>' . ($pass['last_used'] ? date('d.m.Y H:i:s', (int)$pass['last_used']) : '') . '</td>
-				<td style="white-space: nowrap;">' . ($ip ?
-					(ATOM_GEOIP ? getCountryIcon($ip, $geoipReader) . '&nbsp;' : '') .
-					getIpUserInfoLink($ip) : '') . '</td>
-			</tr>';
-		}
-		$passHtml .= '
+			</tr></thead><tbody>' .
+			$passTableHtml . '
 		</tbody></table>';
 	} else {
 		$passHtml .= '
