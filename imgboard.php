@@ -189,7 +189,7 @@ function managementRequest(): void {
 			$reason = $_POST['reason'];
 			$threadId = (int)($_POST['thrid'] ?? 0);
 			if (banByIP(long2ip(cidr2ip($ip)[0] ?? 0))) {
-				fancyDie('Ban error: IP ' . $ip . ' is already banned.');
+				manageDie(manageError('Ban error: IP ' . $ip . ' is already banned.'));
 			}
 			if ($postExpire === 1) {
 				$expire = 1;
@@ -202,7 +202,7 @@ function managementRequest(): void {
 				$expireType = 'permanent';
 			}
 			if (!insertBan($ip, $expire, $reason)) {
-				fancyDie('Ban error: Failed to add a ban record for IP ' . $ip . '.');
+				manageDie(manageError('Ban error: Failed to add a ban record for IP ' . $ip . '.'));
 			}
 			modLog('Ban record added for ' . $ip . ' (' . $expireType . '). Reason: ' . $reason);
 			$bansHtml = 'Ban record added for ' . $ip . ' (' . $expireType . '). Reason: ' .
@@ -230,18 +230,18 @@ function managementRequest(): void {
 	if (is_numeric($_POST['deletereports'] ?? null)) {
 		$id = (int)$_POST['deletereports'];
 		deleteReports($id);
-		fancyDie('Post №' . $id . ' has been approved. Related reports are closed.');
+		manageDie(manageInfo('Post №' . $id . ' has been approved. Related reports are closed.'));
 	}
 
 	/* --------[ Close all reports on the board ]-------- */
-
+	
 	if (isset($_POST['deleteallreports'])) {
 		$reports = getAllReports();
 		if (count($reports)) {
 			foreach ($reports as $report) {
 				deleteReports((int)$report['postnum']);
 			}
-			fancyDie('All reports on the board /' . ATOM_BOARD . ' are closed.');
+			manageDie(manageInfo('All reports on the board /' . ATOM_BOARD . ' are closed.'));
 		}
 	}
 
@@ -306,7 +306,7 @@ function managementRequest(): void {
 		$id = (int)$_POST['delete'];
 		$post = getPost($id);
 		if (!$post) {
-			fancyDie('Deleting error: Post № ' . $id . ' does not exist.');
+			manageDie(manageError('Deleting error: Post № ' . $id . ' does not exist.'));
 		}
 		deletePost($id);
 		if (isOp($post)) {
@@ -338,12 +338,12 @@ function managementRequest(): void {
 
 	if (is_numeric($_GET['delete-files'] ?? null)) {
 		if (!isset($_GET['delete-file-mod'], $_GET['action'])) {
-			fancyDie('File deleting error: No files or actions selected.');
+			manageDie(manageError('File deleting error: No files or actions selected.'));
 		}
 		$id = (int)$_GET['delete-files'];
 		$post = getPost($id);
 		if (!$post) {
-			fancyDie('File deleting error: Post № ' . $id . ' does not exist.');
+			manageDie(manageError('File deleting error: Post № ' . $id . ' does not exist.'));
 		}
 		$thrId = getThreadId($post);
 		if ($_GET['action'] === 'delete') {
@@ -367,7 +367,7 @@ function managementRequest(): void {
 		$id = (int)$_GET['editpost'];
 		$post = getPost($id);
 		if (!$post) {
-			fancyDie('Post editing error: Post № ' . $id . ' does not exist.');
+			manageDie(manageError('Post editing error: Post № ' . $id . ' does not exist.'));
 		}
 		$thrId = getThreadId($post);
 		editPostMessage($id, $_POST['message'] . '<br><br><span style="color: purple;">Message edited: ' .
@@ -384,7 +384,7 @@ function managementRequest(): void {
 		$id = (int)$_POST['approve'];
 		$post = getPost($id);
 		if (!$post) {
-			fancyDie('Approval error: Post № ' . $id . ' does not exist.');
+			manageDie(manageError('Approval error: Post № ' . $id . ' does not exist.'));
 		}
 		$thrId = getThreadId($post);
 		approvePost($id);
@@ -400,7 +400,7 @@ function managementRequest(): void {
 		if (is_numeric($id) && $id > 0) {
 			$post = getPost($id);
 			if (!$post) {
-				fancyDie('Moderation error: Post № ' . $id . ' does not exist.');
+				manageDie(manageError('Moderation error: Post № ' . $id . ' does not exist.'));
 			}
 			manageDie(makePostModManager($token, $post));
 		}
@@ -413,7 +413,7 @@ function managementRequest(): void {
 		$id = (int)$_POST['stick'];
 		$post = getPost($id);
 		if (!$post || !isOp($post)) {
-			fancyDie('Sticking error: Thread № ' . $id . ' does not exist.');
+			manageDie(manageError('Sticking error: Thread № ' . $id . ' does not exist.'));
 		}
 		$isStickied = (int)$_POST['setsticky'];
 		toggleStickyThread($id, $isStickied);
@@ -429,7 +429,7 @@ function managementRequest(): void {
 		$id = (int)$_POST['lock'];
 		$post = getPost($id);
 		if (!$post || !isOp($post)) {
-			fancyDie('Locking error: Thread № ' . $id . ' does not exist.');
+			manageDie(manageError('Locking error: Thread № ' . $id . ' does not exist.'));
 		}
 		$isLocked = (int)$_POST['setlocked'];
 		toggleLockThread($id, $isLocked);
@@ -445,7 +445,7 @@ function managementRequest(): void {
 		$id = (int)$_POST['endless'];
 		$post = getPost($id);
 		if (!$post || !isOp($post)) {
-			fancyDie('Endless thread error: Thread № ' . $id . ' does not exist.');
+			manageDie(manageError('Endless thread error: Thread № ' . $id . ' does not exist.'));
 		}
 		$isEndless = (int)$_POST['setendless'];
 		toggleEndlessThread($id, $isEndless);

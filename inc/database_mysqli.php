@@ -453,7 +453,7 @@ function banByIP(string $ip): ?array {
 	$result = $mysqli->execute_query(
 		"SELECT * FROM " . ATOM_DBBANS . "
 		WHERE ip_from <= ? AND ip_to >= ? LIMIT 1",
-		[$ipRange[1], $ipRange[0]]);
+		[$ipRange[0], $ipRange[1]]);
 	return $result->fetch_assoc();
 }
 

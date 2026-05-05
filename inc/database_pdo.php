@@ -473,7 +473,7 @@ function banByIP(string $ip): ?array {
 	$result = pdoQuery(
 		"SELECT * FROM " . ATOM_DBBANS . "
 		WHERE ip_from <= ? AND ip_to >= ? LIMIT 1",
-		[$ipRange[1], $ipRange[0]]);
+		[$ipRange[0], $ipRange[1]]);
 	return $result->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
