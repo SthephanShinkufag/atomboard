@@ -683,8 +683,8 @@ function makePasscodeLoginForm(string $action, ?array $pass = null): string {
 		</form>';
 	} else if ($action === 'valid') {
 		return '<center><b>You are using a valid passcode.</b><br>' .
-			'<br>Issued: ' . date('d.m.Y D H:i:s', $pass['issued']) .
-			'<br>Expires: ' . date('d.m.Y D H:i:s', $pass['expires']) .
+			'<br>Issued: ' . date('d.m.Y D H:i:s', (int)$pass['issued']) .
+			'<br>Expires: ' . date('d.m.Y D H:i:s', (int)$pass['expires']) .
 			'<br><a href="/' . ATOM_BOARD . '/imgboard.php?passcode&logout">Log Out.</a></center>';
 	}
 	return '';
@@ -762,14 +762,14 @@ function makeStaffManager(string $token): string {
 			</tr></thead><tbody>';
 	$staffList = getAllStaffMembers();
 	foreach ($staffList as $person) {
-		$lastSeen = formatTimestamp((int)$person['last_login']);
+		$lastLogin = (int)$person['last_login'];
 		$username = htmlspecialchars($person['username']);
 		$html .= '
 			<tr>
 				<td>' . $username . '</td>
 				<td>' . ucfirst($person['role']) . '</td>
-				<td title="' . date('Y-m-d H:i:s', $person['last_login']) . '">' .
-					$lastSeen . '</td>
+				<td title="' . date('Y-m-d H:i:s', $lastLogin) . '">' .
+					formatTimestamp($lastLogin) . '</td>
 				<td>' . (
 					$person['role'] === 'admin' ? '---' :
 					'<a href="?manage&staff&delete_staff=' . $person['id'] .
@@ -832,7 +832,7 @@ function makeBansTable(array $bans): string {
 				<td style="white-space: nowrap;">' .
 					(ATOM_GEOIP ? getCountryIcon(long2ip($ipFrom), $geoipReader) . '&nbsp;' : '') .
 					getIpUserInfoLink(ip2cidr($ipFrom, $ipTo)) . '</td>
-				<td>' . date('d.m.Y D H:i:s', $ban['timestamp']) . '</td>
+				<td>' . date('d.m.Y D H:i:s', (int)$ban['timestamp']) . '</td>
 				<td>' . $expireText . '</td><td>' . ($ban['reason'] !== '' ?
 					htmlentities($ban['reason'], ENT_QUOTES, 'UTF-8') : '&nbsp;') . '</td>
 				<td><a href="?manage&bans&lift=' . $ban['id'] . '">lift</a></td>
@@ -995,14 +995,14 @@ function makePasscodesManager(string $token): string {
 				<div class="form-row">
 					<div class="form-row-label">Expires:</div>
 					<input type="datetime-local" name="expires" value="' .
-						(isset($editPass['expires']) ? date('Y-m-d\TH:i', $editPass['expires']) : '') .
+						(isset($editPass['expires']) ? date('Y-m-d\TH:i', (int)$editPass['expires']) : '') .
 						'" required>
 				</div>' : '') . '
 				<div class="form-row">
 					<div class="form-row-label">Block till:</div>
 					<input type="datetime-local" name="block_till" value="' .
 						(isset($editPass['blocked_till']) && $editPass['blocked_till'] ?
-							date('Y-m-d\TH:i', $editPass['blocked_till']) : '') . '">
+							date('Y-m-d\TH:i', (int)$editPass['blocked_till']) : '') . '">
 					<div>
 						<button class="link-button" onclick="this.parentNode.previousElementSibling.value = ' .
 							'new Date(Date.now() + 36E5 - (new Date).getTimezoneOffset() * 6E4).toISOString().slice(0, 16); return false;">1hr</button>

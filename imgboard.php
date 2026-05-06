@@ -1157,7 +1157,7 @@ function checkForBans(string $ip, array $ban, bool $isPasscode, bool $isJson = f
 		}
 	} elseif ($ban['expire'] === 0 || $ban['expire'] > time()) {
 		$expireText = $ban['expire'] > 0 ?
-			'This ban will expire ' . date('d.m.Y D H:i:s', $ban['expire']) . '.' :
+			'This ban will expire ' . date('d.m.Y D H:i:s', (int)$ban['expire']) . '.' :
 			'This ban is permanent and will not expire.';
 		$rangeText = $isRangeBan ? "\nThis is a range ban (affects a whole subnet)." : '';
 		$passcodeText = ATOM_PASSCODES_ENABLED && $isRangeBan ? "\nBy the way, [Passcode users](/" .
@@ -1262,13 +1262,13 @@ function checkPasscode(bool $showMessages = false): array {
 	if (!$pass || isPassExpired($pass)) {
 		clearPass();
 		if ($showMessages) {
-			fancyDie('Your passcode has expired on ' . date('d.m.Y D H:i:s', $pass['expires']) .
+			fancyDie('Your passcode has expired on ' . date('d.m.Y D H:i:s', (int)$pass['expires']) .
 				'.<br>Please issue a new passcode.');
 		}
 	}
 	$blocked = isPassBlocked($pass);
 	if ($blocked && $showMessages) {
-		fancyDie('Your passcode has been blocked till ' . date('d.m.y D H:i:s', $pass['blocked_till']) .
+		fancyDie('Your passcode has been blocked till ' . date('d.m.y D H:i:s', (int)$pass['blocked_till']) .
 			'.<br>Reason: ' . $blocked . '.<br>Please log in again after the block expires.');
 	}
 	$ip = $_SERVER['REMOTE_ADDR'];
@@ -1294,18 +1294,18 @@ function passcodeRequest(): void {
 		if (isPassExpired($pass)) {
 			clearPass();
 			manageDie(manageError('<b>Could not log in the provided passcode:</b><br>' .
-				'<br>This passcode has expired on ' . date('d.m.Y D H:i:s', $pass['expires']) .
+				'<br>This passcode has expired on ' . date('d.m.Y D H:i:s', (int)$pass['expires']) .
 				'.<br>Please issue a new passcode.'));
 		} else if ($blocked) {
 			clearPass();
-			manageDie(manageError('<b>Could not log in the provided passcode:</b><br>' .
-				'<br>This passcode has been blocked till ' . date('d.m.y D H:i:s', $pass['blocked_till']) .
+			manageDie(manageError('<b>Could not log in the provided passcode:</b><br><br>' .
+				'This passcode has been blocked till ' . date('d.m.y D H:i:s', (int)$pass['blocked_till']) .
 				'.<br>Reason: ' . $blocked . '.<br>Please log in again after the block expires.'));
 		}
 		setcookie('passcode', '1', $pass['expires'], '/');
 		$_SESSION['passcode'] = $passId;
 		manageDie(manageInfo('<b>You have logged in. You may post without entering the captcha.</b>' .
-			'<br>This passcode will expire on ' . date('d.m.Y D H:i:s', $pass['expires'])));
+			'<br>This passcode will expire on ' . date('d.m.Y D H:i:s', (int)$pass['expires'])));
 	}
 
 	// Check passcode status by imgboard.php?passcode&check
