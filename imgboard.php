@@ -30,7 +30,7 @@ function fancyDie(string $message): void {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Notice</title>
 	<link rel="stylesheet" type="text/css" href="/' . htmlspecialchars(ATOM_BOARD) .
-		'/css/atomboard.css?2026040900">
+		'/css/atomboard.css?2026051200">
 </head>
 <body align="center" style="text-align: center;">
 	<div class="reply notice">' . $message . '</div>
