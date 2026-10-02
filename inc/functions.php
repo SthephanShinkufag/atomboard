@@ -102,6 +102,7 @@ if (ATOM_DBMODE === 'pdo' && ATOM_DBDRIVER === 'pgsql') {
 		tor smallint NOT NULL DEFAULT 0,
 		vpn smallint NOT NULL DEFAULT 0,
 		as_type varchar(20) DEFAULT NULL,
+		provider_name varchar(100) DEFAULT NULL,
 		last_updated integer NOT NULL DEFAULT 0
 	);';
 
@@ -254,6 +255,7 @@ if (ATOM_DBMODE === 'pdo' && ATOM_DBDRIVER === 'pgsql') {
 		`tor` tinyint(1) NOT NULL DEFAULT 0,
 		`vpn` tinyint(1) NOT NULL DEFAULT 0,
 		`as_type` varchar(20) DEFAULT NULL,
+		`provider_name` varchar(100) DEFAULT NULL,
 		`last_updated` int(11) NOT NULL DEFAULT 0
 	) ENGINE=InnoDB;";
 
