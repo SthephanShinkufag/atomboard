@@ -4,16 +4,19 @@ if (!defined('ATOM_BOARD')) {
 	die('');
 }
 
+// Database connection
+$mysqli = null;
 if (!extension_loaded('mysqli')) {
 	fancyDie('MySQL library is not installed');
 }
-
 try {
 	$mysqli = new mysqli(ATOM_DBHOST, ATOM_DBUSERNAME, ATOM_DBPASSWORD, ATOM_DBNAME);
 } catch (mysqli_sql_exception $e) {
 	fancyDie('Failed to connect to the database: ' . $e->getMessage());
 }
-
+if (!$mysqli instanceof mysqli) {
+	fancyDie('Failed to initialize the database connection.');
+}
 $mysqli->set_charset('utf8mb4');
 
 // Creating tables that don't exist
@@ -497,23 +500,31 @@ function clearExpiredBans(): void {
 
 function lookupByIP(string $ip): ?array {
 	global $mysqli;
+	$timeLimit = (int)(time() - (ATOM_IPLOOKUPS_TIMEOUT * 86400));
 	$result = $mysqli->execute_query(
-		"SELECT * FROM " . ATOM_DBIPLOOKUPS . "
+		"SELECT abuser, vps, proxy, tor, vpn, as_type, provider_name FROM " . ATOM_DBIPLOOKUPS . "
 		WHERE ip = ? AND last_updated > ? LIMIT 1",
-		[$ip, (int)(time() - (ATOM_IPLOOKUPS_TIMEOUT * 86400))]);
+		[$ip, $timeLimit]);
 	return $result->fetch_assoc();
 }
 
-function storeLookupResult(string $ip, int $abuser, int $vps, int $proxy, int $tor, int $vpn): void {
+function storeLookupResult(string $ip, int $abuser, int $vps, int $proxy, int $tor, int $vpn,
+	string $asType, string $providerName): void {
 	global $mysqli;
 	$mysqli->execute_query(
 		"INSERT INTO " . ATOM_DBIPLOOKUPS . "
-		(ip, abuser, vps, proxy, tor, vpn, last_updated)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
+		(ip, abuser, vps, proxy, tor, vpn, as_type, provider_name, last_updated)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE
-		abuser = VALUES(abuser), vps = VALUES(vps), proxy = VALUES(proxy),
-		tor = VALUES(tor), vpn = VALUES(vpn), last_updated = VALUES(last_updated)",
-		[$ip, $abuser, $vps, $proxy, $tor, $vpn, time()]);
+		abuser = VALUES(abuser),
+		vps = VALUES(vps),
+		proxy = VALUES(proxy),
+		tor = VALUES(tor),
+		vpn = VALUES(vpn),
+		as_type = VALUES(as_type),
+		provider_name = VALUES(provider_name),
+		last_updated = VALUES(last_updated)",
+		[$ip, $abuser, $vps, $proxy, $tor, $vpn, $asType, $providerName, time()]);
 }
 
 function deleteOldLookups(): void {

@@ -1129,6 +1129,14 @@ function makeUserInfoManager(string $token, string $ip, array $posts): string {
 		$ipLookup = lookupByIP($ip);
 		if ($ipLookup) {
 			$red = ' style="background: #ff000060;">1';
+			$asType = isset($ipLookup['as_type']) ? strtolower($ipLookup['as_type']) : '';
+			$typeLabels = [
+				'isp'      => 'Consumer ISP',
+				'hosting'  => 'Data Center / Hosting',
+				'business' => 'Business Net',
+				'education'=> 'Educational',
+				'government'=> 'Government',
+				'unknown'  => 'Unknown'];
 			$ipLookupHtml = '<table class="table" style="width: auto; margin: 0 auto;">
 		<thead><tr><th>Type</th><th>Status</th></tr></thead>
 		<tbody>
@@ -1137,6 +1145,10 @@ function makeUserInfoManager(string $token, string $ip, array $posts): string {
 			<tr><td>Proxy</td><td' . ($ipLookup['proxy'] ? $red : '>0') . '</td></tr>
 			<tr><td>TOR</td><td' . ($ipLookup['tor'] ? $red : '>0') . '</td></tr>
 			<tr><td>VPN</td><td' . ($ipLookup['vpn'] ? $red : '>0') . '</td></tr>
+			<tr><td>Net Class</td><td>' .
+				htmlspecialchars($typeLabels[$asType] ?? ucfirst($asType)) . '</td></tr>
+			<tr><td>Provider</td><td>' .
+				htmlspecialchars($ipLookup['provider_name'] ?? 'Unknown') . '</td></tr>
 		</tbody></table>';
 		} else {
 			$ipLookupHtml = '<center>This IP has not yet been verified.</center>';

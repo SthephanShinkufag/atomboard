@@ -24,13 +24,14 @@ function fancyDie(string $message): void {
 	$referer = isset($_SERVER['HTTP_REFERER']) ? htmlspecialchars($_SERVER['HTTP_REFERER']) : '';
 	header('Content-Type: text/html; charset=utf-8');
 	die('<!DOCTYPE html>
-<html lang="en" data-theme="' . htmlspecialchars(ATOM_THEME) . '">
+<html lang="en" data-theme="' . (defined('ATOM_THEME') ? htmlspecialchars(ATOM_THEME) : 'Dark') . '">
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Notice</title>
-	<link rel="stylesheet" type="text/css" href="/' . htmlspecialchars(ATOM_BOARD) .
-		'/css/atomboard.css?2026051200">
+	<link rel="stylesheet" type="text/css" href="' .
+		(defined('ATOM_BOARD') ? '/' . htmlspecialchars(ATOM_BOARD) . '/' : '') .
+		'css/atomboard.css?2026051200">
 </head>
 <body align="center" style="text-align: center;">
 	<div class="reply notice">' . $message . '</div>

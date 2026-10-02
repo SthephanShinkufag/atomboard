@@ -4,6 +4,7 @@ if (!defined('ATOM_BOARD')) {
 	die('');
 }
 
+$dbh = null;
 try {
 	$dsn = ATOM_DBDSN !== '' ? ATOM_DBDSN :
 		ATOM_DBDRIVER . ':host=' . ATOM_DBHOST .
@@ -513,30 +514,45 @@ function clearExpiredBans(): void {
 /* ==[ Dirty IP lookups ]================================================================================== */
 
 function lookupByIP(string $ip): ?array {
+	$timeLimit = (int)(time() - (ATOM_IPLOOKUPS_TIMEOUT * 86400));
 	$result = pdoQuery(
-		"SELECT * FROM " . ATOM_DBIPLOOKUPS . "
+		"SELECT abuser, vps, proxy, tor, vpn, as_type, provider_name FROM " . ATOM_DBIPLOOKUPS . "
 		WHERE ip = ? AND last_updated > ? LIMIT 1",
-		[$ip, (int)(time() - (ATOM_IPLOOKUPS_TIMEOUT * 86400))]);
+		[$ip, $timeLimit]);
 	return $result->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
-function storeLookupResult(string $ip, int $abuser, int $vps, int $proxy, int $tor, int $vpn): void {
+function storeLookupResult(string $ip, int $abuser, int $vps, int $proxy, int $tor, int $vpn,
+	string $asType, string $providerName): void
+{
 	if (ATOM_DBDRIVER === 'pgsql') {
 		$sql = "INSERT INTO " . ATOM_DBIPLOOKUPS . "
-			(ip, abuser, vps, proxy, tor, vpn, last_updated)
-			VALUES (?, ?, ?, ?, ?, ?, ?)
+			(ip, abuser, vps, proxy, tor, vpn, as_type, provider_name, last_updated)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT (ip) DO UPDATE SET
-			abuser = EXCLUDED.abuser, vps = EXCLUDED.vps, proxy = EXCLUDED.proxy,
-			tor = EXCLUDED.tor, vpn = EXCLUDED.vpn, last_updated = EXCLUDED.last_updated";
+			abuser = EXCLUDED.abuser,
+			vps = EXCLUDED.vps,
+			proxy = EXCLUDED.proxy,
+			tor = EXCLUDED.tor,
+			vpn = EXCLUDED.vpn,
+			as_type = EXCLUDED.as_type,
+			provider_name = EXCLUDED.provider_name,
+			last_updated = EXCLUDED.last_updated";
 	} else {
 		$sql = "INSERT INTO " . ATOM_DBIPLOOKUPS . "
-			(ip, abuser, vps, proxy, tor, vpn, last_updated)
-			VALUES (?, ?, ?, ?, ?, ?, ?)
+			(ip, abuser, vps, proxy, tor, vpn, as_type, provider_name, last_updated)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 			ON DUPLICATE KEY UPDATE
-			abuser = VALUES(abuser), vps = VALUES(vps), proxy = VALUES(proxy),
-			tor = VALUES(tor), vpn = VALUES(vpn), last_updated = VALUES(last_updated)";
+			abuser = VALUES(abuser),
+			vps = VALUES(vps),
+			proxy = VALUES(proxy),
+			tor = VALUES(tor),
+			vpn = VALUES(vpn),
+			as_type = VALUES(as_type),
+			provider_name = VALUES(provider_name),
+			last_updated = VALUES(last_updated)";
 	}
-	pdoQuery($sql, [$ip, $abuser, $vps, $proxy, $tor, $vpn, time()]);
+	pdoQuery($sql, [$ip, $abuser, $vps, $proxy, $tor, $vpn, $asType, $providerName, time()]);
 }
 
 function deleteOldLookups(): void {

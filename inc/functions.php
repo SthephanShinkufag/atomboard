@@ -101,6 +101,7 @@ if (ATOM_DBMODE === 'pdo' && ATOM_DBDRIVER === 'pgsql') {
 		proxy smallint NOT NULL DEFAULT 0,
 		tor smallint NOT NULL DEFAULT 0,
 		vpn smallint NOT NULL DEFAULT 0,
+		as_type varchar(20) DEFAULT NULL,
 		last_updated integer NOT NULL DEFAULT 0
 	);';
 
@@ -252,6 +253,7 @@ if (ATOM_DBMODE === 'pdo' && ATOM_DBDRIVER === 'pgsql') {
 		`proxy` tinyint(1) NOT NULL DEFAULT 0,
 		`tor` tinyint(1) NOT NULL DEFAULT 0,
 		`vpn` tinyint(1) NOT NULL DEFAULT 0,
+		`as_type` varchar(20) DEFAULT NULL,
 		`last_updated` int(11) NOT NULL DEFAULT 0
 	) ENGINE=InnoDB;";
 
@@ -695,14 +697,32 @@ function deleteSession(): void {
 
 /* ==[ File reading/writing ]============================================================================== */
 
-function url_get_contents(string $url): string|false {
-	if (!function_exists('curl_init')) {
-		return file_get_contents($url);
+function url_get_contents(string $url, $use_include_path = false, $context = null): string|false {
+	// Extract the timeout from the context if provided (for cURL)
+	$timeout = 7; // Default value
+	if ($context) {
+		$options = stream_context_get_options($context);
+		if (isset($options['http']['timeout'])) {
+			$timeout = $options['http']['timeout'];
+		}
 	}
+
+	// If cURL is not installed, use the standard file_get_contents
+	if (!function_exists('curl_init')) {
+		// If context is not provided, create it locally with a timeout
+		if (!$context) {
+			$context = stream_context_create(['http' => ['timeout' => $timeout]]);
+		}
+		return file_get_contents($url, $use_include_path, $context);
+	}
+
+	// If cURL is available, use it with timeout support
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_URL, $url);
 	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout); // Timeout for connection
+	curl_setopt($ch, CURLOPT_TIMEOUT, $timeout); // Timeout for receiving data
 	$output = curl_exec($ch);
 	curl_close($ch);
 	return $output;
@@ -807,31 +827,47 @@ function isDirtyIP(string $ip): bool {
 		$ipLookupProxy = $ipLookup['proxy'];
 		$ipLookupTor = $ipLookup['tor'];
 		$ipLookupVpn = $ipLookup['vpn'];
+		$ipLookupAsType = $ipLookup['as_type'];
 	} else {
 		try {
-			$json = json_decode(url_get_contents(
-				'https://api.ipregistry.co/' . $ip . '?key=' . ATOM_IPLOOKUPS_KEY));
+			$ctx = stream_context_create(['http' => ['timeout' => 7]]); // Protection from request hanging
+			$response = @url_get_contents('https://api.ipregistry.co/' . $ip . '?key=' . ATOM_IPLOOKUPS_KEY,
+				false, $ctx);
+			$json = json_decode($response);
+			if (!$json || !isset($json->security)) {
+				throw new Exception('Invalid API response');
+			}
 			$ipLookupSecurity = $json->security;
-			$ipLookupAbuser = (int)($ipLookupSecurity->is_abuser ||
-				$ipLookupSecurity->is_threat || $ipLookupSecurity->is_attacker);
+			$ipLookupAbuser = (int)($ipLookupSecurity->is_threat ||
+				$ipLookupSecurity->is_abuser || $ipLookupSecurity->is_attacker);
 			$ipLookupVps = (int)($ipLookupSecurity->is_cloud_provider);
 			$ipLookupProxy = (int)($ipLookupSecurity->is_proxy);
 			$ipLookupTor = (int)($ipLookupSecurity->is_tor || $ipLookupSecurity->is_tor_exit);
 			$ipLookupVpn = (int)($ipLookupSecurity->is_vpn);
-			storeLookupResult($ip, $ipLookupAbuser, $ipLookupVps, $ipLookupProxy, $ipLookupTor, $ipLookupVpn);
+			$ipLookupAsType = isset($json->connection->type) ?
+				strtolower($json->connection->type) : 'unknown';
+			if (isset($json->carrier) && !empty($json->carrier->name)) {
+				$providerName = '[Mobile] ' . $json->carrier->name;
+			} else {
+				$providerName = isset($json->connection->organization) ?
+					$json->connection->organization : 'Unknown ISP';
+			}
+			storeLookupResult($ip, $ipLookupAbuser, $ipLookupVps, $ipLookupProxy, $ipLookupTor, $ipLookupVpn,
+				$ipLookupAsType, $providerName);
 		} catch (Exception $e) {
-			$ipLookupAbuser = false;
-			$ipLookupVps = false;
-			$ipLookupProxy = false;
-			$ipLookupTor = false;
-			$ipLookupVpn = false;
+			return false;
 		}
 	}
-	return ATOM_IPLOOKUPS_BLOCK_ABUSER && $ipLookupAbuser ||
-		ATOM_IPLOOKUPS_BLOCK_VPS && $ipLookupVps ||
-		ATOM_IPLOOKUPS_BLOCK_PROXY && $ipLookupProxy ||
-		ATOM_IPLOOKUPS_BLOCK_TOR && $ipLookupTor ||
-		ATOM_IPLOOKUPS_BLOCK_VPN && $ipLookupVpn;
+	// EXCEPTION: If it is a real provider (ISP or mobile), ignore false Proxy/VPN flags
+	if ($ipLookupAsType === 'isp' || str_starts_with($providerName, '[Mobile]')) {
+		return (ATOM_IPLOOKUPS_BLOCK_ABUSER && $ipLookupAbuser) || 
+			(ATOM_IPLOOKUPS_BLOCK_TOR && $ipLookupTor);
+	}
+	return (ATOM_IPLOOKUPS_BLOCK_ABUSER && $ipLookupAbuser) ||
+		(ATOM_IPLOOKUPS_BLOCK_VPS && $ipLookupVps) ||
+		(ATOM_IPLOOKUPS_BLOCK_PROXY && $ipLookupProxy) ||
+		(ATOM_IPLOOKUPS_BLOCK_TOR && $ipLookupTor) ||
+		(ATOM_IPLOOKUPS_BLOCK_VPN && $ipLookupVpn);
 }
 
 function checkIP(string $ip, bool $isPasscode, bool $isJson): void {
