@@ -36,4 +36,8 @@ test-pgsql:
 	@trap '$(PG_TEST_COMPOSE) down -v' EXIT; $(PG_TEST_COMPOSE) run --build --rm tests
 
 test-js:
-	node --test dev/atomboard.test.cjs
+	@mkdir -p dev/coverage/js
+	node --test --test-reporter=spec --test-reporter=junit \
+		--test-reporter-destination=stdout \
+		--test-reporter-destination=dev/coverage/js/junit.xml \
+		dev/atomboard.test.cjs

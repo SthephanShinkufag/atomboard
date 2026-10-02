@@ -23,7 +23,8 @@ Run `make test` and `make test-mysqli` to check both database paths with an
 isolated Apache board and database. See [dev/testing.md](dev/testing.md) for
 CLI and web request coverage results and current gaps.
 GitHub Actions runs `make test`, `make test-mysqli`, `make test-pgsql`, and
-`make test-js` on every push and pull request.
+`make test-js` on every push and pull request. Each job publishes a test summary
+and a downloadable JUnit report.
 
 Useful commands: `make status`, `make logs`, `make seed` (rebuild pages and add
 sample posts if absent), `make down` (stop containers), and `make reset` (remove

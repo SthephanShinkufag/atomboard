@@ -13,9 +13,12 @@ is reachable only inside the test network.
 CLI reports are generated at `dev/coverage/pdo/html/index.html` and
 `dev/coverage/mysqli/html/index.html`; Clover XML is beside each report. Combined
 CLI and web line coverage is in each mode's `http-summary.txt` and
-`http-summary.json`. The suite uses PHPUnit 11 and PCOV in dedicated PHP 8.3
-test images. The PHP suites require Docker and Make; the browser script tests
-also require Node.js.
+`http-summary.json`. Each PHP suite also writes `junit.xml` in its coverage
+directory. `make test-js` writes `dev/coverage/js/junit.xml`. GitHub Actions
+shows test counts and coverage in job summaries, annotates failures, and attaches
+the XML and HTML reports to the workflow run. The suite uses PHPUnit 11 and PCOV
+in dedicated PHP 8.3 test images. The PHP suites require Docker and Make; the
+browser script tests also require Node.js.
 
 The tests characterize current behavior. Unit tests cover text, IP, passcode
 time rules, thumbnail creation, and HTML rendering. Database integration tests
