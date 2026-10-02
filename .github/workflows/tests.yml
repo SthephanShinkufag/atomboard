@@ -1,0 +1,40 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  php:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: PDO / MariaDB
+            target: test
+          - name: mysqli / MariaDB
+            target: test-mysqli
+          - name: PDO / PostgreSQL
+            target: test-pgsql
+    steps:
+      - uses: actions/checkout@v7
+      - name: Run tests
+        run: make ${{ matrix.target }}
+
+  browser-script:
+    name: Browser script
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Run tests
+        run: make test-js

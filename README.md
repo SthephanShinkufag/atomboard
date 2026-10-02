@@ -1,5 +1,35 @@
 # Atomboard &mdash; A lightweight and efficient PHP imageboard.
 
+## Local test board with Docker
+
+Run `make up` from this directory. Docker Compose builds the PHP/Apache image,
+starts MariaDB, creates the `/test/` board, and seeds one thread with eight
+replies. Open [http://localhost:8080/test/](http://localhost:8080/test/).
+The initial management password is `test-admin-password`; use **Manage** to
+create an administrator account. This setup is intended for local testing.
+Passcodes are enabled on this board. Use `atomboard-local-test-passcode` in the
+**Passcode** page to test the visitor login flow; administrators can issue and
+manage additional passcodes.
+
+Optional: copy `dev/env.example` to `.env` before starting to change the port,
+database passwords, initial management password, tripcode seed, or test
+passcode. The sample posts and passcode are added only once. Database records
+and uploaded files persist in Docker volumes, and generated pages are rebuilt
+at startup.
+
+The user journeys and suggested test cases are in
+[dev/user-interactions.md](dev/user-interactions.md).
+Run `make test` and `make test-mysqli` to check both database paths with an
+isolated Apache board and database. See [dev/testing.md](dev/testing.md) for
+CLI and web request coverage results and current gaps.
+GitHub Actions runs `make test`, `make test-mysqli`, `make test-pgsql`, and
+`make test-js` on every push and pull request.
+
+Useful commands: `make status`, `make logs`, `make seed` (rebuild pages and add
+sample posts if absent), `make down` (stop containers), and `make reset` (remove
+containers **and all database/uploads volumes**). Run `make up` again after
+changing PHP source files to rebuild the image.
+
 This project is a further development of an old (now defunc'd) [TinyIB](https://github.com/tslocum/TinyIB) engine version.
 
 Features
@@ -43,7 +73,7 @@ Features
 - Post files:
   - You can upload up to 4 files per post.
   - Supported GIF, JPG, PNG, AVIF, MP4, MOV, WebM and WebP upload.
-  - You can also upload, view and expand videos without instaled `mediainfo` and `ffmpegthumbnailer`. Videos will be injected right in page without generated thumbnails.
+  - Video uploads use `mediainfo` and `ffmpegthumbnailer` to read dimensions and generate thumbnails. The local Docker image includes both tools.
   - Allow new threads without requiring a file, or even disallow sending of files entirely.
 - Posts:
   - Reference links >>1234 to posts.

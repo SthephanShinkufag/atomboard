@@ -1,0 +1,11 @@
+.git
+coverage
+dev/coverage
+js/extension/.git
+settings.php
+*.html
+res/*
+src/*
+thumb/*
+!thumb/spoiler.png
+.env
