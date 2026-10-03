@@ -1,0 +1,45 @@
+services:
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: atomboard
+      MARIADB_USER: atomboard
+      MARIADB_PASSWORD: ${DB_PASSWORD:-atomboard_dev}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-atomboard_root_dev}
+    volumes:
+      - database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  web:
+    build:
+      context: .
+      dockerfile: dev/Dockerfile
+    ports:
+      - "${PORT:-8080}:80"
+    environment:
+      DB_PASSWORD: ${DB_PASSWORD:-atomboard_dev}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-test-admin-password}
+      TRIP_SEED: ${TRIP_SEED:-atomboard-local-test-seed}
+      TEST_PASSCODE: ${TEST_PASSCODE:-atomboard-local-test-passcode}
+    volumes:
+      - images:/var/www/html/test/src
+      - thumbnails:/var/www/html/test/thumb
+      - threads:/var/www/html/test/res
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "php -r 'exit(str_contains(file_get_contents(\"http://localhost/test/index.html\"), \"Atomboard Test Board\") ? 0 : 1);'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  database:
+  images:
+  thumbnails:
+  threads:

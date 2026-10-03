@@ -1,5 +1,7 @@
 DirectoryIndex index.html
 Options -Indexes
+RewriteEngine On
+RewriteRule ^dev(/|$) - [F,L]
 AddCharset UTF-8 .html
 AddCharset UTF-8 .php
 

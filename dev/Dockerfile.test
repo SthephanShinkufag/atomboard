@@ -1,0 +1,15 @@
+FROM php:8.3-cli
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl libcurl4-openssl-dev libfreetype6-dev libjpeg62-turbo-dev libonig-dev libpng-dev libpq-dev libtidy-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" curl gd mbstring mysqli pdo_mysql pdo_pgsql tidy \
+    && pecl install pcov \
+    && docker-php-ext-enable pcov \
+    && curl -fsSL https://phar.phpunit.de/phpunit-11.5.27.phar -o /usr/local/bin/phpunit \
+    && chmod +x /usr/local/bin/phpunit \
+    && phpunit --version \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY . /app
+WORKDIR /app
