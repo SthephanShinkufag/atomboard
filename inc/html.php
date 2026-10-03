@@ -1128,26 +1128,26 @@ function makeUserInfoManager(string $token, string $ip, array $posts): string {
 	if (ATOM_IPLOOKUPS_KEY) {
 		$ipLookup = lookupByIP($ip);
 		if ($ipLookup) {
-			$red = ' style="background: #ff000060;">1';
-			$asType = isset($ipLookup['as_type']) ? strtolower($ipLookup['as_type']) : '';
+			$bgRed = ' style="background: #ff000045;"';
+			$asType = strtolower($ipLookup['as_type'] ?? '');
 			$typeLabels = [
-				'isp'      => 'Consumer ISP',
+				'isp'      => 'Consumer provider', 
 				'hosting'  => 'Data Center / Hosting',
-				'business' => 'Business Net',
-				'education'=> 'Educational',
-				'government'=> 'Government',
-				'unknown'  => 'Unknown'];
+				'business' => 'Business Network'];
 			$ipLookupHtml = '<table class="table" style="width: auto; margin: 0 auto;">
-		<thead><tr><th>Type</th><th>Status</th></tr></thead>
+		<thead>
+			<tr><th>Parameter</th><th>Status / Value</th></tr>
+		</thead>
 		<tbody>
-			<tr><td>Abuser</td><td' . ($ipLookup['abuser'] ? $red : '>0') . '</td></tr>
-			<tr><td>VPS</td><td' . ($ipLookup['vps'] ? $red : '>0') . '</td></tr>
-			<tr><td>Proxy</td><td' . ($ipLookup['proxy'] ? $red : '>0') . '</td></tr>
-			<tr><td>TOR</td><td' . ($ipLookup['tor'] ? $red : '>0') . '</td></tr>
-			<tr><td>VPN</td><td' . ($ipLookup['vpn'] ? $red : '>0') . '</td></tr>
-			<tr><td>Net Class</td><td>' .
-				htmlspecialchars($typeLabels[$asType] ?? ucfirst($asType)) . '</td></tr>
-			<tr><td>Provider</td><td>' .
+			<tr><td>Abuser</td><td' . ($ipLookup['abuser'] ? $bgRed . '>1' : '>0') . '</td></tr>
+			<tr><td>VPS</td><td' . ($ipLookup['vps'] ? $bgRed . '>1' : '>0') . '</td></tr>
+			<tr><td>Proxy</td><td' . ($ipLookup['proxy'] ? $bgRed . '>1' : '>0') . '</td></tr>
+			<tr><td>TOR</td><td' . ($ipLookup['tor'] ? $bgRed . '>1' : '>0') . '</td></tr>
+			<tr><td>VPN</td><td' . ($ipLookup['vpn'] ? $bgRed . '>1' : '>0') . '</td></tr>
+			<tr><td colspan="2" style="padding: 0; height: 1px;"></td></tr>
+			<tr><td>Net Class</td><td>' . htmlspecialchars($typeLabels[$asType] ??
+				($asType !== '' ? ucfirst($asType) : 'Unknown')) . '</td></tr>
+			<tr><td>Provider</td><td style="font-style: italic;">' .
 				htmlspecialchars($ipLookup['provider_name'] ?? 'Unknown') . '</td></tr>
 		</tbody></table>';
 		} else {
@@ -1170,6 +1170,8 @@ function makeUserInfoManager(string $token, string $ip, array $posts): string {
 		(ATOM_IPLOOKUPS_KEY ? '
 		<hr>
 		<h2>IP Lookup</h2>
+		<center><a class="link-button" href="https://ipregistry.co/' .
+			urlencode($ip) .'">More IP info</a></center><br>
 		' . $ipLookupHtml : '') . '
 		<hr>
 		<h2>User posts and threads</h2>' .

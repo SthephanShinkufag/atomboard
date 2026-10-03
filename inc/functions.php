@@ -824,52 +824,53 @@ function getCountryCode(string $ip, ?\GeoIp2\Database\Reader $geoipReader): stri
 function isDirtyIP(string $ip): bool {
 	$ipLookup = lookupByIP($ip);
 	if ($ipLookup) {
-		$ipLookupAbuser = $ipLookup['abuser'];
-		$ipLookupVps = $ipLookup['vps'];
-		$ipLookupProxy = $ipLookup['proxy'];
-		$ipLookupTor = $ipLookup['tor'];
-		$ipLookupVpn = $ipLookup['vpn'];
-		$ipLookupAsType = $ipLookup['as_type'];
+		$isAbuser     = (bool)$ipLookup['abuser'];
+		$isVps        = (bool)$ipLookup['vps'];
+		$isProxy      = (bool)$ipLookup['proxy'];
+		$isTor        = (bool)$ipLookup['tor'];
+		$isVpn        = (bool)$ipLookup['vpn'];
+		$asType       = strtolower($ipLookup['as_type'] ?? '');
+		$providerName = $ipLookup['provider_name'] ?? '';
 	} else {
 		try {
+			$url = 'https://api.ipregistry.co/' . $ip . '?key=' . ATOM_IPLOOKUPS_KEY;
 			$ctx = stream_context_create(['http' => ['timeout' => 7]]); // Protection from request hanging
-			$response = @url_get_contents('https://api.ipregistry.co/' . $ip . '?key=' . ATOM_IPLOOKUPS_KEY,
-				false, $ctx);
+			$response = @url_get_contents($url, false, $ctx);
 			$json = json_decode($response);
 			if (!$json || !isset($json->security)) {
 				throw new Exception('Invalid API response');
 			}
-			$ipLookupSecurity = $json->security;
-			$ipLookupAbuser = (int)($ipLookupSecurity->is_threat ||
-				$ipLookupSecurity->is_abuser || $ipLookupSecurity->is_attacker);
-			$ipLookupVps = (int)($ipLookupSecurity->is_cloud_provider);
-			$ipLookupProxy = (int)($ipLookupSecurity->is_proxy);
-			$ipLookupTor = (int)($ipLookupSecurity->is_tor || $ipLookupSecurity->is_tor_exit);
-			$ipLookupVpn = (int)($ipLookupSecurity->is_vpn);
-			$ipLookupAsType = isset($json->connection->type) ?
-				strtolower($json->connection->type) : 'unknown';
-			if (isset($json->carrier) && !empty($json->carrier->name)) {
+			$security = $json->security;
+			$isAbuser = (int)($security->is_threat || $security->is_abuser || $security->is_attacker);
+			$isVps    = (int)($security->is_cloud_provider);
+			$isProxy  = (int)($security->is_proxy);
+			$isTor    = (int)($security->is_tor || $security->is_tor_exit);
+			$isVpn    = (int)($security->is_vpn);
+			$asType = isset($json->connection->type) ? strtolower($json->connection->type) : 'unknown';
+			if (!empty($json->carrier?->name)) {
 				$providerName = '[Mobile] ' . $json->carrier->name;
 			} else {
-				$providerName = isset($json->connection->organization) ?
-					$json->connection->organization : 'Unknown ISP';
+				$providerName = $json->connection?->organization ?? 'Unknown ISP';
 			}
-			storeLookupResult($ip, $ipLookupAbuser, $ipLookupVps, $ipLookupProxy, $ipLookupTor, $ipLookupVpn,
-				$ipLookupAsType, $providerName);
+			storeLookupResult($ip, $isAbuser, $isVps, $isProxy, $isTor, $isVpn, $asType, $providerName);
+			$isAbuser = (bool)$isAbuser;
+			$isVps    = (bool)$isVps;
+			$isProxy  = (bool)$isProxy;
+			$isTor    = (bool)$isTor;
+			$isVpn    = (bool)$isVpn;
 		} catch (Exception $e) {
 			return false;
 		}
 	}
 	// EXCEPTION: If it is a real provider (ISP or mobile), ignore false Proxy/VPN flags
-	if ($ipLookupAsType === 'isp' || str_starts_with($providerName, '[Mobile]')) {
-		return (ATOM_IPLOOKUPS_BLOCK_ABUSER && $ipLookupAbuser) || 
-			(ATOM_IPLOOKUPS_BLOCK_TOR && $ipLookupTor);
+	if ($asType === 'isp' || str_starts_with($providerName, '[Mobile]')) {
+		return (ATOM_IPLOOKUPS_BLOCK_ABUSER && $isAbuser) || (ATOM_IPLOOKUPS_BLOCK_TOR && $isTor);
 	}
-	return (ATOM_IPLOOKUPS_BLOCK_ABUSER && $ipLookupAbuser) ||
-		(ATOM_IPLOOKUPS_BLOCK_VPS && $ipLookupVps) ||
-		(ATOM_IPLOOKUPS_BLOCK_PROXY && $ipLookupProxy) ||
-		(ATOM_IPLOOKUPS_BLOCK_TOR && $ipLookupTor) ||
-		(ATOM_IPLOOKUPS_BLOCK_VPN && $ipLookupVpn);
+	return (ATOM_IPLOOKUPS_BLOCK_ABUSER && $isAbuser) ||
+		(ATOM_IPLOOKUPS_BLOCK_VPS && $isVps) ||
+		(ATOM_IPLOOKUPS_BLOCK_PROXY && $isProxy) ||
+		(ATOM_IPLOOKUPS_BLOCK_TOR && $isTor) ||
+		(ATOM_IPLOOKUPS_BLOCK_VPN && $isVpn);
 }
 
 function checkIP(string $ip, bool $isPasscode, bool $isJson): void {
