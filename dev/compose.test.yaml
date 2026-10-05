@@ -1,0 +1,59 @@
+name: atomboard-tests
+
+services:
+  db-test:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: atomboard_test
+      MARIADB_USER: atomboard_test
+      MARIADB_PASSWORD: atomboard_test
+      MARIADB_ROOT_PASSWORD: atomboard_test_root
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  web-test:
+    build:
+      context: .
+      dockerfile: dev/Dockerfile
+      target: http-test
+    environment:
+      DB_HOST: db-test
+      DB_USER: atomboard_test
+      DB_PASSWORD: atomboard_test
+      DB_NAME: atomboard_test
+      DB_MODE: ${TEST_DB_MODE:-pdo}
+      SEED_TEST_DATA: "0"
+      TRIP_SEED: atomboard-http-test-seed
+    volumes:
+      - web-coverage:/web-coverage
+    depends_on:
+      db-test:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "php -r 'exit(file_get_contents(\"http://localhost/test/imgboard.php\") === false ? 1 : 0);'"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  tests:
+    build:
+      context: .
+      dockerfile: dev/Dockerfile.test
+    environment:
+      TEST_DB_HOST: db-test
+      TEST_DB_MODE: ${TEST_DB_MODE:-pdo}
+      TEST_HTTP_BASE: http://web-test/test/
+      TEST_CAPTCHA_TEXT: "48291"
+    volumes:
+      - ./dev/coverage/${TEST_DB_MODE:-pdo}:/coverage
+      - web-coverage:/web-coverage
+    depends_on:
+      web-test:
+        condition: service_healthy
+    command: ["sh", "dev/run-suite.sh"]
+
+volumes:
+  web-coverage:

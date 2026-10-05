@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd"
+         bootstrap="bootstrap.php"
+         colors="true"
+         failOnWarning="true"
+         cacheDirectory="/tmp/phpunit-cache">
+    <testsuites>
+        <testsuite name="engine characterization">
+            <directory>.</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <file>../imgboard.php</file>
+            <directory suffix=".php">../inc</directory>
+        </include>
+        <exclude>
+            <directory>../inc/recaptcha</directory>
+            <directory>../inc/usernames</directory>
+        </exclude>
+    </source>
+</phpunit>

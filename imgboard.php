@@ -971,6 +971,10 @@ function postingRequest(): void {
 				// Use the | separator to parse the string.
 				$infoRaw = shell_exec("mediainfo --Inform='Video;%Width%|%Height%|%Duration%' " .
 					escapeshellarg($fileLocation));
+				if (!is_string($infoRaw) || trim($infoRaw) === '') {
+					@unlink($fileLocation);
+					fancyDie('Posting error: Could not inspect video ' . $fileIdxTxt . '.');
+				}
 				$infoData = explode('|', trim($infoRaw));
 				$videoWidth  = (int)($infoData[0] ?? 0);
 				$videoHeight = (int)($infoData[1] ?? 0);

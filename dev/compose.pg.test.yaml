@@ -1,0 +1,30 @@
+name: atomboard-pg-tests
+
+services:
+  db-test:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: atomboard_test
+      POSTGRES_USER: atomboard_test
+      POSTGRES_PASSWORD: atomboard_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atomboard_test -d atomboard_test"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  tests:
+    build:
+      context: .
+      dockerfile: dev/Dockerfile.test
+    environment:
+      TEST_DB_HOST: db-test
+      TEST_DB_MODE: pdo
+      TEST_DB_DRIVER: pgsql
+      TEST_DB_PORT: "5432"
+    volumes:
+      - ./dev/coverage/pgsql:/coverage
+    depends_on:
+      db-test:
+        condition: service_healthy
+    command: ["sh", "dev/run-pg-suite.sh"]

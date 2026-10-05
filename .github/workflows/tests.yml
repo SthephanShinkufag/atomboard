@@ -1,0 +1,63 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  php:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: PDO / MariaDB
+            target: test
+            report: pdo
+          - name: mysqli / MariaDB
+            target: test-mysqli
+            report: mysqli
+          - name: PDO / PostgreSQL
+            target: test-pgsql
+            report: pgsql
+    steps:
+      - uses: actions/checkout@v7
+      - name: Run tests
+        run: make ${{ matrix.target }}
+      - name: Summarize tests
+        if: always()
+        run: python3 dev/report-tests.py "${{ matrix.name }}" "dev/coverage/${{ matrix.report }}/junit.xml"
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report-${{ matrix.report }}
+          path: dev/coverage/${{ matrix.report }}/
+          if-no-files-found: warn
+
+  browser-script:
+    name: Browser script
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Run tests
+        run: make test-js
+      - name: Summarize tests
+        if: always()
+        run: python3 dev/report-tests.py "Browser script" dev/coverage/js/junit.xml
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report-js
+          path: dev/coverage/js/
+          if-no-files-found: warn

@@ -1,2 +1,4 @@
 *.html
 settings.php
+.env
+coverage/
