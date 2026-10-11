@@ -20,6 +20,7 @@ ENTRYPOINT ["atomboard-entrypoint"]
 CMD ["apache2-foreground"]
 
 FROM app AS http-test
+COPY dev/bot-http-test.conf /etc/apache2/conf-enabled/bot-http-test.conf
 RUN php dev/inject-captcha.php \
     && php dev/inject-embed.php \
     && pecl install pcov \

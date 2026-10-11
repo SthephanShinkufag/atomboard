@@ -3,7 +3,7 @@ set -u
 
 php -d pcov.enabled=1 -d pcov.directory=/app /usr/local/bin/phpunit \
     --configuration dev/phpunit.xml \
-    --filter 'DatabaseTest|FunctionsTest|RenderingTest' \
+    --filter 'DatabaseTest|FunctionsTest|RenderingTest|BotTest' \
     --log-junit /coverage/junit.xml \
     --coverage-text \
     --coverage-clover /coverage/clover.xml \

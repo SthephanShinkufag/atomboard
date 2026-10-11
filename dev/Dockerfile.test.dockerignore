@@ -9,3 +9,5 @@ src/*
 thumb/*
 !thumb/spoiler.png
 .env
+
+web
