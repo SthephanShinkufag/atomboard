@@ -25,10 +25,19 @@ services:
       DB_PASSWORD: atomboard_test
       DB_NAME: atomboard_test
       DB_MODE: ${TEST_DB_MODE:-pdo}
+      BOT_API_TOKEN_FILE: /web-coverage/bot-api-token
       SEED_TEST_DATA: "0"
       TRIP_SEED: atomboard-http-test-seed
     volumes:
       - web-coverage:/web-coverage
+    command:
+      - sh
+      - -c
+      - >-
+        php -r 'umask(0077); $$path = getenv("BOT_API_TOKEN_FILE");
+        file_put_contents($$path, bin2hex(random_bytes(32)));
+        chown($$path, "www-data");'
+        && exec apache2-foreground
     depends_on:
       db-test:
         condition: service_healthy
@@ -46,6 +55,8 @@ services:
       TEST_DB_HOST: db-test
       TEST_DB_MODE: ${TEST_DB_MODE:-pdo}
       TEST_HTTP_BASE: http://web-test/test/
+      TEST_BOT_HTTP_BASE: http://web-test:8081/test/
+      TEST_BOT_API_TOKEN_FILE: /web-coverage/bot-api-token
       TEST_CAPTCHA_TEXT: "48291"
     volumes:
       - ./dev/coverage/${TEST_DB_MODE:-pdo}:/coverage
