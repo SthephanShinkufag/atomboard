@@ -526,6 +526,29 @@ input[type="submit"]:not(.link-button):not([disabled]):active {
 	transform: translateY(1px);
 }
 
+.link-bytebeat {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+}
+
+.link-bytebeat::before {
+	content: "t";
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 14px;
+	height: 14px;
+	flex-shrink: 0;
+	background-color: #275696;
+	color: #ffffff;
+	font-family: monospace;
+	font-weight: bold;
+	line-height: 1;
+	border-radius: 2px;
+	text-decoration: none;
+}
+
 /* ==[ Navigation panels ]================================================================================= */
 
 .navigation {

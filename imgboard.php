@@ -683,9 +683,23 @@ function postingRequest(): void {
 					fancyDie('Posting error: Too many external links in your message (' .
 						++$urlCount . ').<br>The maximum allowed is ' . ATOM_POSTING_MAXURL . '.');
 				}
-				return !empty($m[3]) ? 
-					'<a href="' . $m[3] . '" target="_blank">' . $m[3] . '</a>' : // 3=hyperlink
-					'<a href="' . $m[2] . '" target="_blank">' . $m[1] . '</a>'; // 2=markdown URL, 1=markdown text
+
+				// 1=markdown text 2=markdown URL 3=hyperlink
+				$isMarkdown = empty($m[3]); // 3=hyperlink
+				$url = $isMarkdown ? $m[2] : $m[3];
+				$text = $isMarkdown ? $m[1] : $m[3];
+				$classAttr = '';
+
+				// A bytebeat song link has a specific format - add class and text
+				// Check if the link is a song from dollchan.net/bytebeat (#4 or #v3b64)
+				if (preg_match('/^https:\/\/dollchan\.net\/bytebeat\/#(?:4|v3b64)/i', $url)) {
+					$classAttr = ' class="link-bytebeat"';
+					if (!$isMarkdown || trim($text) === '') {
+						$text = 'Bytebeat-code';
+					}
+				}
+
+				return '<a' . $classAttr . ' href="' . $url . '" target="_blank">' . $text . '</a>';
 			}, $msg);
 
 		// Line breaks
